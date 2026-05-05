@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Catálogo de bloques — Simple Block Builder</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --azul:#222F47;
+  --celeste:#A3BDCB;
+  --crema:#F3F3E7;
+  --gris:#252525;
+  --gris-2:#666;
+  --fondo:#F5F6F7;
+  --borde:#E5E7EA;
+}
+
+/* ── catálogo ── */
+*{box-sizing:border-box;}
+body{margin:0;background:var(--fondo);font-family:"Roboto",Arial,sans-serif;color:var(--gris);}
+.cat-top{background:#fff;border-bottom:1px solid var(--borde);padding:18px 24px;}
+.cat-top h1{margin:0;font-size:20px;font-weight:600;color:var(--azul);}
+.cat-top p{margin:4px 0 0;font-size:12.5px;color:var(--gris-2);}
+.cat-grid{max-width:1200px;margin:0 auto;padding:24px;display:grid;gap:24px;}
+.cat-card{background:#fff;border:1px solid var(--borde);border-radius:12px;overflow:hidden;}
+.cat-head{padding:13px 16px;border-bottom:1px solid var(--borde);display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;}
+.cat-name{font-size:13.5px;font-weight:600;color:var(--azul);}
+.cat-name code{background:var(--fondo);padding:2px 6px;border-radius:4px;font-size:11.5px;font-family:Menlo,Consolas,monospace;color:var(--gris-2);font-weight:400;margin-left:6px;}
+.cat-link{font-size:11.5px;color:var(--azul);text-decoration:none;border:1px solid var(--borde);border-radius:6px;padding:5px 10px;font-weight:500;transition:all .14s;}
+.cat-link:hover{background:var(--azul);color:#fff;border-color:var(--azul);}
+.cat-render{padding:18px;background:var(--fondo);}
+
+/* ── estilos de los componentes (todos juntos) ── */
+.sbb-header{background:var(--azul);color:#fff;padding:18px 0 21px;}
+.sbb-header .sbb-wrap{max-width:920px;margin:0 auto;padding:0 18px;}
+.sbb-header-top{display:flex;justify-content:flex-start;align-items:flex-start;gap:16px;margin-bottom:17px;}
+.sbb-header .sbb-logo{width:128px;display:block;}
+.sbb-header .sbb-eyebrow{margin:0 0 5px;color:var(--celeste);font-size:12px;text-transform:uppercase;letter-spacing:.08em;font-weight:500;}
+.sbb-header h1{margin:0;font-size:clamp(27px,4.8vw,39px);line-height:1.05;font-weight:600;}
+.sbb-header .sbb-desc{margin:8px 0 0;max-width:660px;font-size:14.5px;line-height:1.42;color:rgba(255,255,255,.84);font-weight:300;}
+
+.sbb-clima-strip{display:grid;grid-template-columns:repeat(4,1fr);gap:7px;}
+.sbb-clima-item{background:#fff;border:1px solid var(--borde);border-radius:13px;padding:9px 10px;}
+.sbb-clima-item span{display:block;margin-bottom:3px;color:var(--gris-2);font-size:11px;line-height:1.2;}
+.sbb-clima-item strong{color:var(--azul);font-size:14.5px;line-height:1.2;font-weight:600;}
+
+.sbb-reloj{background:#fff;border:1px solid var(--borde);border-radius:13px;padding:9px 10px;max-width:200px;}
+.sbb-reloj span{display:block;margin-bottom:3px;color:var(--gris-2);font-size:11px;line-height:1.2;}
+.sbb-reloj strong{color:var(--azul);font-size:14.5px;line-height:1.2;font-weight:600;}
+
+.sbb-dia-divisor{background:var(--azul);color:#fff;border-radius:13px;padding:10px 13px;font-size:14px;font-weight:600;line-height:1;}
+
+.sbb-evento{background:#fff;border:1px solid var(--borde);border-radius:15px;padding:11px 12px;color:var(--gris);transition:transform .14s ease,box-shadow .14s ease;}
+.sbb-evento.principal{background:var(--crema);border-color:#dedecd;}
+.sbb-evento:hover{transform:translateY(-1px);box-shadow:0 8px 18px rgba(34,47,71,.075);}
+.sbb-evento-row{display:grid;grid-template-columns:118px 1fr;gap:11px;align-items:start;}
+.sbb-time{background:var(--celeste);color:#fff;border-radius:999px;padding:7px 9px;text-align:center;font-size:13px;line-height:1;font-weight:600;white-space:nowrap;}
+.sbb-title-line{display:flex;flex-wrap:wrap;align-items:center;gap:7px;margin-bottom:4px;}
+.sbb-title-line h2{margin:0;color:var(--azul);font-size:16.5px;line-height:1.22;font-weight:600;}
+.sbb-tag{display:inline-flex;align-items:center;border:1px solid var(--borde);border-radius:999px;padding:4px 8px;color:var(--azul);background:#FAFAFA;font-size:11px;font-weight:600;line-height:1;white-space:nowrap;}
+.sbb-meta{color:var(--gris-2);font-size:12.5px;line-height:1.3;}
+.sbb-address{margin-top:5px;color:#555;font-size:12.5px;line-height:1.33;}
+.sbb-actions{margin-top:8px;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;}
+
+.sbb-btn{display:inline-flex;align-items:center;justify-content:center;min-height:32px;border:1px solid var(--borde);border-radius:999px;background:#FAFAFA;color:var(--azul);padding:7px 14px;font-family:"Roboto",Arial,sans-serif;font-size:12.3px;font-weight:600;text-align:center;text-decoration:none;cursor:pointer;transition:background .14s ease,border-color .14s ease,transform .14s ease;}
+.sbb-btn:hover{background:rgba(163,189,203,.26);border-color:var(--celeste);transform:translateY(-1px);}
+
+.sbb-note{background:rgba(255,255,255,.72);border:1px solid var(--borde);border-radius:11px;padding:7px 9px;font-size:12.5px;line-height:1.33;color:#444;}
+.sbb-note strong{color:var(--azul);font-weight:600;}
+
+.sbb-footer{color:#777;text-align:center;font-size:12px;line-height:1.5;}
+
+@media(max-width:760px){
+  .sbb-clima-strip{grid-template-columns:repeat(2,1fr);}
+  .sbb-evento-row{grid-template-columns:1fr;gap:8px;}
+  .sbb-time{width:fit-content;}
+}
+
+.btn-row{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;}
+</style>
+</head>
+<body>
+
+<div class="cat-top">
+  <h1>Catálogo de bloques · Simple Block Builder</h1>
+  <p>Cada bloque es un archivo independiente en <code>componentes/</code>. Abre el individual para ver su código y copiarlo.</p>
+</div>
+
+<div class="cat-grid">
+
+  <!-- 1. HEADER -->
+  <div class="cat-card">
+    <div class="cat-head">
+      <div class="cat-name">1. Header <code>componentes/header.html</code></div>
+      <a class="cat-link" href="componentes/header.html" target="_blank">Abrir →</a>
+    </div>
+    <div class="cat-render" style="padding:0;">
+      <header class="sbb-header">
+        <div class="sbb-wrap">
+          <div class="sbb-header-top">
+            <img class="sbb-logo" src="assets/radar-logotipo-blanco.png" alt="Logo">
+          </div>
+          <p class="sbb-eyebrow">Hoja de viaje</p>
+          <h1>Título principal del envío</h1>
+          <p class="sbb-desc">Bajada o descripción corta. Cámbiala según el contexto.</p>
+        </div>
+      </header>
+    </div>
+  </div>
+
+  <!-- 2. CLIMA STRIP -->
+  <div class="cat-card">
+    <div class="cat-head">
+      <div class="cat-name">2. Strip de clima (4 columnas) <code>componentes/clima-strip.html</code></div>
+      <a class="cat-link" href="componentes/clima-strip.html" target="_blank">Abrir →</a>
+    </div>
+    <div class="cat-render">
+      <section class="sbb-clima-strip">
+        <div class="sbb-clima-item"><span>Hora actual</span><strong>14:32</strong></div>
+        <div class="sbb-clima-item"><span>Clima actual · León</span><strong>☀️ 18°C · despejado</strong></div>
+        <div class="sbb-clima-item"><span>Domingo noche</span><strong>🌤️ 18°C · fresco</strong></div>
+        <div class="sbb-clima-item"><span>Lunes</span><strong>☀️ 34° / 18°</strong></div>
+      </section>
+    </div>
+  </div>
+
+  <!-- 3. CLIMA ITEM -->
+  <div class="cat-card">
+    <div class="cat-head">
+      <div class="cat-name">3. Tarjeta de clima individual <code>componentes/clima-item.html</code></div>
+      <a class="cat-link" href="componentes/clima-item.html" target="_blank">Abrir →</a>
+    </div>
+    <div class="cat-render">
+      <div class="sbb-clima-item" style="max-width:220px;">
+        <span>Clima actual · León</span>
+        <strong>☀️ 18°C · despejado</strong>
+      </div>
+    </div>
+  </div>
+
+  <!-- 4. RELOJ -->
+  <div class="cat-card">
+    <div class="cat-head">
+      <div class="cat-name">4. Reloj en vivo (con JS) <code>componentes/reloj.html</code></div>
+      <a class="cat-link" href="componentes/reloj.html" target="_blank">Abrir →</a>
+    </div>
+    <div class="cat-render">
+      <div class="sbb-reloj">
+        <span>Hora actual</span>
+        <strong id="cat-reloj">--:--</strong>
+      </div>
+    </div>
+  </div>
+
+  <!-- 5. DÍA DIVISOR -->
+  <div class="cat-card">
+    <div class="cat-head">
+      <div class="cat-name">5. Día divisor <code>componentes/dia-divisor.html</code></div>
+      <a class="cat-link" href="componentes/dia-divisor.html" target="_blank">Abrir →</a>
+    </div>
+    <div class="cat-render">
+      <div class="sbb-dia-divisor">Domingo, 26 de abril</div>
+    </div>
+  </div>
+
+  <!-- 6. EVENTO -->
+  <div class="cat-card">
+    <div class="cat-head">
+      <div class="cat-name">6. Evento (card) — 3 variantes <code>componentes/evento.html</code></div>
+      <a class="cat-link" href="componentes/evento.html" target="_blank">Abrir →</a>
+    </div>
+    <div class="cat-render" style="display:grid;gap:11px;">
+      <article class="sbb-evento">
+        <div class="sbb-evento-row">
+          <div class="sbb-time">22:20 – 22:40</div>
+          <div>
+            <div class="sbb-title-line"><h2>Check-in</h2><span class="sbb-tag">Hotel</span></div>
+            <div class="sbb-meta">Amanda · Herbert</div>
+          </div>
+        </div>
+      </article>
+      <article class="sbb-evento principal">
+        <div class="sbb-evento-row">
+          <div class="sbb-time">21:40 – 22:20</div>
+          <div>
+            <div class="sbb-title-line"><h2>Desplazamiento al Hotel</h2><span class="sbb-tag">Carro</span></div>
+            <div class="sbb-meta">Amanda · Herbert</div>
+            <div class="sbb-address">P.º de los Insurgentes 3360, León, Gto.</div>
+            <div class="sbb-actions">
+              <a class="sbb-btn" href="#">📍 Maps</a>
+              <a class="sbb-btn" href="#">☎ Llamar</a>
+              <a class="sbb-btn" href="#">📎 Reserva</a>
+            </div>
+            <div class="sbb-note"><strong>Nota:</strong> habitación pagada. Incluye desayuno y estacionamiento.</div>
+          </div>
+        </div>
+      </article>
+    </div>
+  </div>
+
+  <!-- 7-10. BOTONES -->
+  <div class="cat-card">
+    <div class="cat-head">
+      <div class="cat-name">7-10. Botones de acción <code>componentes/boton-*.html</code></div>
+      <div style="display:flex;gap:6px;flex-wrap:wrap;">
+        <a class="cat-link" href="componentes/boton-mapa.html" target="_blank">Mapa</a>
+        <a class="cat-link" href="componentes/boton-telefono.html" target="_blank">Teléfono</a>
+        <a class="cat-link" href="componentes/boton-whatsapp.html" target="_blank">WhatsApp</a>
+        <a class="cat-link" href="componentes/boton-reserva.html" target="_blank">Reserva</a>
+      </div>
+    </div>
+    <div class="cat-render">
+      <div class="btn-row">
+        <a class="sbb-btn" href="#">📍 Abrir en Maps</a>
+        <a class="sbb-btn" href="#">☎ Llamar</a>
+        <a class="sbb-btn" href="#">💬 WhatsApp Joaquín</a>
+        <a class="sbb-btn" href="#">📎 Ver reserva</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- 11. NOTA -->
+  <div class="cat-card">
+    <div class="cat-head">
+      <div class="cat-name">11. Nota destacada <code>componentes/nota.html</code></div>
+      <a class="cat-link" href="componentes/nota.html" target="_blank">Abrir →</a>
+    </div>
+    <div class="cat-render">
+      <div class="sbb-note">
+        <strong>Nota:</strong> ingreso mediante código QR (acceso y estacionamiento). Se adjunta el de Amanda y Herbert.
+      </div>
+    </div>
+  </div>
+
+  <!-- 12. FOOTER -->
+  <div class="cat-card">
+    <div class="cat-head">
+      <div class="cat-name">12. Footer <code>componentes/footer.html</code></div>
+      <a class="cat-link" href="componentes/footer.html" target="_blank">Abrir →</a>
+    </div>
+    <div class="cat-render">
+      <footer class="sbb-footer">Radar On Tour · Viaje a León · 26 y 27 de abril de 2026</footer>
+    </div>
+  </div>
+
+</div>
+
+<script>
+(function(){
+  function tic(){
+    var n=document.getElementById("cat-reloj");
+    if(!n)return;
+    n.textContent=new Date().toLocaleTimeString("es-MX",{hour:"2-digit",minute:"2-digit"});
+  }
+  tic();setInterval(tic,1000);
+})();
+</script>
+
+</body>
+</html>

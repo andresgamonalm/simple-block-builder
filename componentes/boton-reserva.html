@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Botón Reserva — Simple Block Builder</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+/* ── demo (no copiar) ── */
+body{margin:0;background:#F5F6F7;font-family:"Roboto",Arial,sans-serif;color:#252525;padding:40px 18px;}
+.demo-wrap{max-width:340px;margin:0 auto;display:flex;justify-content:center;}
+.demo-note{margin-top:14px;color:#888;font-size:11px;text-align:center;max-width:340px;margin-left:auto;margin-right:auto;line-height:1.5;}
+
+/* ─────────── COPIAR DESDE AQUÍ ─────────── */
+:root{
+  --azul:#222F47;
+  --celeste:#A3BDCB;
+  --borde:#E5E7EA;
+}
+.sbb-btn{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  min-height:32px;
+  border:1px solid var(--borde);
+  border-radius:999px;
+  background:#FAFAFA;
+  color:var(--azul);
+  padding:7px 14px;
+  font-family:"Roboto",Arial,sans-serif;
+  font-size:12.3px;
+  font-weight:600;
+  text-align:center;
+  text-decoration:none;
+  cursor:pointer;
+  transition:background .14s ease,border-color .14s ease,transform .14s ease;
+}
+.sbb-btn:hover{
+  background:rgba(163,189,203,.26);
+  border-color:var(--celeste);
+  transform:translateY(-1px);
+}
+/* ─────────── HASTA AQUÍ ─────────── */
+</style>
+</head>
+<body>
+<div class="demo-wrap">
+
+<!-- ─────────── COPIAR DESDE AQUÍ ─────────── -->
+<!-- Variante simple (1 archivo): enlace directo. Funciona en email también. -->
+<a class="sbb-btn" href="../assets/documentos/reserva-almuerzo.png" target="_blank" rel="noopener noreferrer">📎 Ver reserva</a>
+
+<!-- Variante multi-archivo (abre ventana con varios documentos):
+     usar SOLO en web/invitaciones, NO en email (requiere JS).
+<button class="sbb-btn" type="button" onclick="sbbAbrirArchivos(this)" data-titulo="Reserva hotel" data-archivos='["../assets/documentos/hotel-reserva-1.JPG","../assets/documentos/hotel-reserva-2.JPG"]'>📎 Ver reserva</button>
+
+<script>
+function sbbAbrirArchivos(boton){
+  var data={titulo:boton.dataset.titulo,archivos:JSON.parse(boton.dataset.archivos)};
+  var ventana=window.open("","_blank");
+  if(!ventana){window.location.href=data.archivos[0];return;}
+  var contenido=data.archivos.map(function(url){
+    var ext=url.split(".").pop().toLowerCase();
+    if(ext==="pdf")return '<iframe src="'+url+'" style="width:100%;height:92vh;border:0;margin:0 0 22px;"></iframe>';
+    return '<img src="'+url+'" style="width:100%;max-width:920px;display:block;margin:0 auto 22px;">';
+  }).join("");
+  ventana.document.write('<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>'+data.titulo+'</title><style>body{margin:0;padding:16px;background:#F5F6F7;font-family:Arial,sans-serif;}</style></head><body>'+contenido+'</body></html>');
+  ventana.document.close();
+}
+</script>
+-->
+<!-- ─────────── HASTA AQUÍ ─────────── -->
+
+</div>
+<p class="demo-note">⚠ Variante 1 (enlace directo) funciona en cualquier lado: email, web, invitación. Variante 2 (multi-archivo) solo web — los clientes de email bloquean JS.</p>
+</body>
+</html>

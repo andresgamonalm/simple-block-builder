@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Reloj en vivo — Simple Block Builder</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+/* ── demo (no copiar) ── */
+body{margin:0;background:#F5F6F7;font-family:"Roboto",Arial,sans-serif;color:#252525;padding:40px 18px;}
+.demo-wrap{max-width:240px;margin:0 auto;}
+.demo-note{margin-top:14px;color:#888;font-size:11px;text-align:center;}
+
+/* ─────────── COPIAR DESDE AQUÍ ─────────── */
+:root{
+  --azul:#222F47;
+  --gris-2:#666;
+  --borde:#E5E7EA;
+}
+.sbb-reloj{
+  background:#fff;
+  border:1px solid var(--borde);
+  border-radius:13px;
+  padding:9px 10px;
+  font-family:"Roboto",Arial,sans-serif;
+}
+.sbb-reloj span{
+  display:block;
+  margin-bottom:3px;
+  color:var(--gris-2);
+  font-size:11px;
+  line-height:1.2;
+}
+.sbb-reloj strong{
+  color:var(--azul);
+  font-size:14.5px;
+  line-height:1.2;
+  font-weight:600;
+}
+/* ─────────── HASTA AQUÍ ─────────── */
+</style>
+</head>
+<body>
+<div class="demo-wrap">
+
+<!-- ─────────── COPIAR DESDE AQUÍ ─────────── -->
+<div class="sbb-reloj">
+  <span>Hora actual</span>
+  <strong id="sbb-reloj-valor">--:--</strong>
+</div>
+
+<script>
+(function(){
+  function actualizar(){
+    var nodo=document.getElementById("sbb-reloj-valor");
+    if(!nodo)return;
+    nodo.textContent=new Date().toLocaleTimeString("es-MX",{hour:"2-digit",minute:"2-digit"});
+  }
+  actualizar();
+  setInterval(actualizar,1000);
+})();
+</script>
+<!-- ─────────── HASTA AQUÍ ─────────── -->
+
+</div>
+<p class="demo-note">⚠ El reloj con JS solo funciona en páginas web e invitaciones. En email no se ejecuta — usar valor fijo.</p>
+</body>
+</html>

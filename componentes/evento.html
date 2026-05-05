@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Evento — card completo — Simple Block Builder</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+/* ── demo (no copiar) ── */
+body{margin:0;background:#F5F6F7;font-family:"Roboto",Arial,sans-serif;color:#252525;padding:40px 18px;}
+.demo-wrap{max-width:920px;margin:0 auto;display:grid;gap:11px;}
+.demo-label{font-size:11px;color:#888;text-transform:uppercase;letter-spacing:.08em;font-weight:600;margin-top:8px;}
+
+/* ─────────── COPIAR DESDE AQUÍ ─────────── */
+:root{
+  --azul:#222F47;
+  --celeste:#A3BDCB;
+  --crema:#F3F3E7;
+  --gris:#252525;
+  --gris-2:#666;
+  --borde:#E5E7EA;
+}
+.sbb-evento{
+  background:#fff;
+  border:1px solid var(--borde);
+  border-radius:15px;
+  padding:11px 12px;
+  font-family:"Roboto",Arial,sans-serif;
+  color:var(--gris);
+  transition:transform .14s ease,box-shadow .14s ease;
+}
+.sbb-evento.principal{
+  background:var(--crema);
+  border-color:#dedecd;
+}
+.sbb-evento:hover{
+  transform:translateY(-1px);
+  box-shadow:0 8px 18px rgba(34,47,71,.075);
+}
+.sbb-evento-row{
+  display:grid;
+  grid-template-columns:118px 1fr;
+  gap:11px;
+  align-items:start;
+}
+.sbb-time{
+  background:var(--celeste);
+  color:#fff;
+  border-radius:999px;
+  padding:7px 9px;
+  text-align:center;
+  font-size:13px;
+  line-height:1;
+  font-weight:600;
+  white-space:nowrap;
+}
+.sbb-title-line{
+  display:flex;
+  flex-wrap:wrap;
+  align-items:center;
+  gap:7px;
+  margin-bottom:4px;
+}
+.sbb-title-line h2{
+  margin:0;
+  color:var(--azul);
+  font-size:16.5px;
+  line-height:1.22;
+  font-weight:600;
+}
+.sbb-tag{
+  display:inline-flex;
+  align-items:center;
+  border:1px solid var(--borde);
+  border-radius:999px;
+  padding:4px 8px;
+  color:var(--azul);
+  background:#FAFAFA;
+  font-size:11px;
+  font-weight:600;
+  line-height:1;
+  white-space:nowrap;
+}
+.sbb-meta{
+  color:var(--gris-2);
+  font-size:12.5px;
+  line-height:1.3;
+}
+.sbb-address{
+  margin-top:5px;
+  color:#555;
+  font-size:12.5px;
+  line-height:1.33;
+}
+.sbb-actions{
+  margin-top:8px;
+  display:grid;
+  grid-template-columns:repeat(3,minmax(0,1fr));
+  gap:6px;
+}
+.sbb-btn{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  min-height:32px;
+  border:1px solid var(--borde);
+  border-radius:999px;
+  background:#FAFAFA;
+  color:var(--azul);
+  padding:7px 9px;
+  font-size:12.3px;
+  font-weight:600;
+  text-align:center;
+  text-decoration:none;
+  cursor:pointer;
+  transition:background .14s ease,border-color .14s ease,transform .14s ease;
+}
+.sbb-btn:hover{
+  background:rgba(163,189,203,.26);
+  border-color:var(--celeste);
+  transform:translateY(-1px);
+}
+.sbb-note{
+  margin-top:7px;
+  background:rgba(255,255,255,.72);
+  border:1px solid var(--borde);
+  border-radius:11px;
+  padding:7px 9px;
+  font-size:12.5px;
+  line-height:1.33;
+  color:#444;
+}
+.sbb-note strong{
+  color:var(--azul);
+  font-weight:600;
+}
+@media(max-width:760px){
+  .sbb-evento-row{grid-template-columns:1fr;gap:8px;}
+  .sbb-time{width:fit-content;}
+  .sbb-btn{font-size:11.8px;padding:7px 6px;}
+}
+@media(max-width:420px){
+  .sbb-actions{grid-template-columns:repeat(2,minmax(0,1fr));}
+}
+/* ─────────── HASTA AQUÍ ─────────── */
+</style>
+</head>
+<body>
+<div class="demo-wrap">
+
+<div class="demo-label">Variante simple — solo título y participantes</div>
+<!-- ─────────── EVENTO SIMPLE — COPIAR ─────────── -->
+<article class="sbb-evento">
+  <div class="sbb-evento-row">
+    <div class="sbb-time">22:20 – 22:40</div>
+    <div>
+      <div class="sbb-title-line">
+        <h2>Check-in</h2>
+        <span class="sbb-tag">Hotel</span>
+      </div>
+      <div class="sbb-meta">Amanda · Herbert</div>
+    </div>
+  </div>
+</article>
+<!-- ─────────── HASTA AQUÍ ─────────── -->
+
+<div class="demo-label">Variante con dirección y nota</div>
+<!-- ─────────── EVENTO CON DIRECCIÓN Y NOTA — COPIAR ─────────── -->
+<article class="sbb-evento">
+  <div class="sbb-evento-row">
+    <div class="sbb-time">17:00 – 21:40</div>
+    <div>
+      <div class="sbb-title-line">
+        <h2>Viaje CDMX a León</h2>
+        <span class="sbb-tag">Carro</span>
+      </div>
+      <div class="sbb-meta">Amanda · Herbert</div>
+      <div class="sbb-note"><strong>Nota:</strong> hay entre 7 y 9 casetas de peaje, costo total aproximado $800 MXN.</div>
+    </div>
+  </div>
+</article>
+<!-- ─────────── HASTA AQUÍ ─────────── -->
+
+<div class="demo-label">Variante principal (fondo crema) — completo con botones</div>
+<!-- ─────────── EVENTO PRINCIPAL COMPLETO — COPIAR ─────────── -->
+<article class="sbb-evento principal">
+  <div class="sbb-evento-row">
+    <div class="sbb-time">21:40 – 22:20</div>
+    <div>
+      <div class="sbb-title-line">
+        <h2>Desplazamiento al Hotel Hyatt Centric Campestre León</h2>
+        <span class="sbb-tag">Carro</span>
+      </div>
+      <div class="sbb-meta">Amanda · Herbert</div>
+      <div class="sbb-address">P.º de los Insurgentes 3360, 37330 León de los Aldama, Gto.</div>
+      <div class="sbb-actions">
+        <a class="sbb-btn" href="https://maps.app.goo.gl/nfHsYeEXKF1U8ZzV8" target="_blank" rel="noopener noreferrer">📍 Abrir en Maps</a>
+        <a class="sbb-btn" href="tel:4776371234">☎ Llamar</a>
+        <a class="sbb-btn" href="../assets/documentos/hotel-reserva-1.JPG" target="_blank" rel="noopener noreferrer">📎 Ver reserva</a>
+      </div>
+      <div class="sbb-note"><strong>Nota:</strong> habitación pagada. Incluye desayuno buffet y estacionamiento.</div>
+    </div>
+  </div>
+</article>
+<!-- ─────────── HASTA AQUÍ ─────────── -->
+
+</div>
+</body>
+</html>

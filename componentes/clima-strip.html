@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Clima — strip de 4 — Simple Block Builder</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+/* ── demo (no copiar) ── */
+body{margin:0;background:#F5F6F7;font-family:"Roboto",Arial,sans-serif;color:#252525;padding:40px 18px;}
+.demo-wrap{max-width:920px;margin:0 auto;}
+
+/* ─────────── COPIAR DESDE AQUÍ ─────────── */
+:root{
+  --azul:#222F47;
+  --gris-2:#666;
+  --borde:#E5E7EA;
+}
+.sbb-clima-strip{
+  display:grid;
+  grid-template-columns:repeat(4,1fr);
+  gap:7px;
+  font-family:"Roboto",Arial,sans-serif;
+}
+.sbb-clima-strip .sbb-clima-item{
+  background:#fff;
+  border:1px solid var(--borde);
+  border-radius:13px;
+  padding:9px 10px;
+}
+.sbb-clima-strip .sbb-clima-item span{
+  display:block;
+  margin-bottom:3px;
+  color:var(--gris-2);
+  font-size:11px;
+  line-height:1.2;
+}
+.sbb-clima-strip .sbb-clima-item strong{
+  color:var(--azul);
+  font-size:14.5px;
+  line-height:1.2;
+  font-weight:600;
+}
+@media(max-width:760px){
+  .sbb-clima-strip{grid-template-columns:repeat(2,1fr);}
+}
+/* ─────────── HASTA AQUÍ ─────────── */
+</style>
+</head>
+<body>
+<div class="demo-wrap">
+
+<!-- ─────────── COPIAR DESDE AQUÍ ─────────── -->
+<section class="sbb-clima-strip">
+  <div class="sbb-clima-item">
+    <span>Hora actual</span>
+    <strong>14:32</strong>
+  </div>
+  <div class="sbb-clima-item">
+    <span>Clima actual · León</span>
+    <strong>☀️ 18°C · despejado</strong>
+  </div>
+  <div class="sbb-clima-item">
+    <span>Domingo noche</span>
+    <strong>🌤️ 18°C · fresco</strong>
+  </div>
+  <div class="sbb-clima-item">
+    <span>Lunes</span>
+    <strong>☀️ 34° / 18°</strong>
+  </div>
+</section>
+<!-- ─────────── HASTA AQUÍ ─────────── -->
+
+</div>
+</body>
+</html>

@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Header — Simple Block Builder</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+/* ── demo (no copiar) ── */
+body{margin:0;background:#F5F6F7;font-family:"Roboto",Arial,sans-serif;color:#252525;}
+.demo-wrap{padding:24px 0;}
+
+/* ─────────── COPIAR DESDE AQUÍ ─────────── */
+:root{
+  --azul:#222F47;
+  --celeste:#A3BDCB;
+}
+.sbb-header{
+  background:var(--azul);
+  color:#fff;
+  padding:18px 0 21px;
+  font-family:"Roboto",Arial,sans-serif;
+}
+.sbb-header .sbb-wrap{
+  max-width:920px;
+  margin:0 auto;
+  padding:0 18px;
+}
+.sbb-header-top{
+  display:flex;
+  justify-content:flex-start;
+  align-items:flex-start;
+  gap:16px;
+  margin-bottom:17px;
+}
+.sbb-header .sbb-logo{
+  width:128px;
+  display:block;
+}
+.sbb-header .sbb-eyebrow{
+  margin:0 0 5px;
+  color:var(--celeste);
+  font-size:12px;
+  text-transform:uppercase;
+  letter-spacing:.08em;
+  font-weight:500;
+}
+.sbb-header h1{
+  margin:0;
+  font-size:clamp(27px,4.8vw,39px);
+  line-height:1.05;
+  font-weight:600;
+}
+.sbb-header .sbb-desc{
+  margin:8px 0 0;
+  max-width:660px;
+  font-size:14.5px;
+  line-height:1.42;
+  color:rgba(255,255,255,.84);
+  font-weight:300;
+}
+@media(max-width:760px){
+  .sbb-header{padding:16px 0 19px;}
+  .sbb-header .sbb-wrap{padding:0 14px;}
+  .sbb-header-top{align-items:center;margin-bottom:14px;}
+  .sbb-header .sbb-logo{width:110px;}
+}
+/* ─────────── HASTA AQUÍ ─────────── */
+</style>
+</head>
+<body>
+<div class="demo-wrap">
+
+<!-- ─────────── COPIAR DESDE AQUÍ ─────────── -->
+<header class="sbb-header">
+  <div class="sbb-wrap">
+    <div class="sbb-header-top">
+      <img class="sbb-logo" src="../assets/radar-logotipo-blanco.png" alt="Logo">
+    </div>
+    <p class="sbb-eyebrow">Hoja de viaje</p>
+    <h1>Título principal del envío</h1>
+    <p class="sbb-desc">
+      Bajada o descripción corta. Cámbiala según el contexto: itinerario, invitación, newsletter, banner.
+    </p>
+  </div>
+</header>
+<!-- ─────────── HASTA AQUÍ ─────────── -->
+
+</div>
+</body>
+</html>
