@@ -1,0 +1,14 @@
+# Copia este archivo a .dev.vars para desarrollo local con `wrangler pages dev`.
+# .dev.vars está en .gitignore, no se commitea.
+
+# Secret para firmar la cookie de sesión (obligatorio).
+JWT_SECRET=cambia-esto-por-un-string-aleatorio-largo
+
+# Lista de emails con acceso, separados por coma.
+ALLOWED_EMAILS=hola@andresgamonal.com
+
+# API key de Resend para enviar enlaces de login.
+RESEND_KEY=re_xxx_pega_tu_api_key_de_resend
+
+# (Opcional) Email simulado para saltarte el login en desarrollo local.
+# DEV_USER_EMAIL=hola@andresgamonal.com

@@ -1,0 +1,23 @@
+name = "simple-block-builder"
+compatibility_date = "2026-05-01"
+pages_build_output_dir = "."
+
+[[d1_databases]]
+binding       = "DB"
+database_name = "simple-block-builder"
+database_id   = "3b91f996-d02d-45b1-8f21-820f2e97bd19"
+
+# Variables NO sensibles. Se administran aquí (no en el dashboard).
+# Para agregar a alguien al sistema, edita ALLOWED_EMAILS y haz git push.
+[vars]
+SITE_URL          = "https://simple-block-builder.gamonal.app"
+SUPER_ADMIN_EMAIL = "hola@andresgamonal.com"
+RESEND_FROM       = "Simple Block Builder <onboarding@resend.dev>"
+ALLOWED_EMAILS    = "hola@andresgamonal.com"
+
+# Las variables sensibles (cifradas) se configuran como Secrets en
+# Cloudflare Pages → Settings → Variables y secretos:
+#   - JWT_SECRET   (firma la cookie de sesión)
+#   - RESEND_KEY   (API key de Resend para enviar correos)
+#
+# Para desarrollo local, defínelas en .dev.vars (ver .dev.vars.example).
