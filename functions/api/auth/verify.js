@@ -7,7 +7,7 @@ import { sha256B64, signJWT, buildSessionCookie, isEmailAllowed } from '../_shar
 export async function onRequestGet({ request, env }) {
   const url = new URL(request.url);
   const token = url.searchParams.get('t');
-  const home = `${env.SITE_URL || ''}/editor.html`;
+  const home = `${env.SITE_URL || ''}/editor`;
   const errorRedirect = `${env.SITE_URL || ''}/?login_error=`;
 
   if (!token) return Response.redirect(errorRedirect + 'sin_token', 302);

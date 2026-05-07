@@ -93,7 +93,7 @@ input[type=email]:disabled{opacity:.6;cursor:not-allowed;}
   // Si ya hay sesión, redirigir directo al editor
   try {
     const r = await fetch("/api/whoami", { credentials: "include" });
-    if (r.ok) { location.replace("/editor.html"); return; }
+    if (r.ok) { location.replace("/editor"); return; }
   } catch (e) {}
 
   splash.classList.add("hidden");

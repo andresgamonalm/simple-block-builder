@@ -1,1 +1,2 @@
-/editor /editor.html 200
+# Cloudflare Pages sirve automáticamente editor.html en /editor.
+# No se necesita rewrite. Si en el futuro hay rutas SPA, agregarlas acá.
