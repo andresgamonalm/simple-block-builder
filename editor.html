@@ -1276,7 +1276,7 @@ function renderCampoSimple(c, datos){
     return `<div class="form-row"><label>${esc(c.label)} (${Object.keys(ICONOS_SVG).length} disponibles)</label><div class="icon-grid">${opts}</div></div>`;
   }
   if(c.tipo === "codigo-textarea"){
-    return `<div class="form-row"><label>${esc(c.label)}</label><textarea class="codigo-textarea" oninput="actualizarDato('${c.key}',this.value)" placeholder="<style>...</style>&#10;<div>...</div>&#10;<script>...</script>" spellcheck="false">${esc(val||"")}</textarea><div style="font-size:10.5px;color:#888;margin-top:4px;">⚠ El JS funciona en el HTML exportado y en navegadores. En email los &lt;script&gt; se ignoran. Refrescar si tu CSS no aparece.</div></div>`;
+    return `<div class="form-row"><label>${esc(c.label)}</label><textarea class="codigo-textarea" oninput="actualizarDato('${c.key}',this.value)" placeholder="<style>...<\/style>&#10;<div>...<\/div>&#10;<script>...<\/script>" spellcheck="false">${esc(val||"")}</textarea><div style="font-size:10.5px;color:#888;margin-top:4px;">⚠ El JS funciona en el HTML exportado y en navegadores. En email los &lt;script&gt; se ignoran. Refrescar si tu CSS no aparece.</div></div>`;
   }
   if(c.tipo === "lista"){
     const items = Array.isArray(val) ? val : [];
