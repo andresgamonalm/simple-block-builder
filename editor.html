@@ -13,8 +13,20 @@
     if (!r.ok) { location.replace("/"); return; }
     const data = await r.json();
     window.SBB_USER = data;
+    // Mostrar email + chip de usuario cuando el DOM esté listo
+    const set = () => {
+      const chip = document.getElementById("user-chip");
+      const em = document.getElementById("user-email");
+      if (chip && em) { em.textContent = data.email; chip.style.display = "flex"; }
+    };
+    if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", set);
+    else set();
   } catch (e) { location.replace("/"); }
 })();
+async function cerrarSesion(){
+  try { await fetch("/api/auth/logout", { method:"POST", credentials:"include" }); } catch(e) {}
+  location.replace("/");
+}
 </script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -33,8 +45,16 @@ button,input,select,textarea{font-family:inherit;}
 .topbar-row.tools::-webkit-scrollbar{height:0;}
 .topbar-row.piezas{height:42px;border-top:1px solid #f0f0f4;background:#fff;padding:0 12px;gap:4px;overflow-x:auto;}
 .topbar-row.piezas::-webkit-scrollbar{height:0;}
-.brand{font-size:14.5px;font-weight:600;color:#040764;display:flex;align-items:center;gap:8px;flex-shrink:0;}
-.brand small{font-weight:400;color:#888;font-size:11px;}
+.brand{display:flex;align-items:center;gap:10px;flex-shrink:0;text-decoration:none;}
+.brand-logo{width:36px;height:36px;border-radius:8px;flex-shrink:0;display:block;}
+.brand-text{display:flex;flex-direction:column;line-height:1.1;}
+.brand-text .n{font-size:14px;font-weight:600;color:#040764;}
+.brand-text .s{font-size:10.5px;color:#888;font-weight:400;margin-top:2px;}
+
+.user-chip{display:flex;align-items:center;gap:8px;padding:5px 8px 5px 12px;border:1px solid #e5e7ea;border-radius:999px;font-size:12px;color:#444;flex-shrink:0;background:#fafafc;}
+.user-chip .em{max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.user-chip button{border:none;background:#f0f0f4;color:#666;width:24px;height:24px;border-radius:50%;cursor:pointer;font-size:12px;display:flex;align-items:center;justify-content:center;transition:all .14s;}
+.user-chip button:hover{background:#fee;color:#c0392b;}
 .tb-sep{width:1px;height:22px;background:#e5e7ea;margin:0 4px;flex-shrink:0;}
 .tb-group{display:flex;align-items:center;gap:6px;flex-shrink:0;}
 .tb-label{font-size:10.5px;color:#888;font-weight:600;text-transform:uppercase;letter-spacing:.05em;}
@@ -337,7 +357,17 @@ button,input,select,textarea{font-family:inherit;}
 <div class="app">
   <header class="topbar">
     <div class="topbar-row">
-      <div class="brand">Simple Block Builder<small>By Andrés Gamonal</small></div>
+      <a class="brand" href="/editor">
+        <svg class="brand-logo" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg">
+          <rect width="512" height="512" rx="96" fill="#1c73cb"/>
+          <rect x="100" y="100" width="312" height="312" rx="26" fill="#fce865"/>
+          <circle cx="178" cy="178" r="44" fill="#c9b525"/><circle cx="178" cy="178" r="38" fill="#FFFFFF"/>
+          <circle cx="334" cy="178" r="44" fill="#c9b525"/><circle cx="334" cy="178" r="38" fill="#FFFFFF"/>
+          <circle cx="178" cy="334" r="44" fill="#c9b525"/><circle cx="178" cy="334" r="38" fill="#FFFFFF"/>
+          <circle cx="334" cy="334" r="44" fill="#c9b525"/><circle cx="334" cy="334" r="38" fill="#FFFFFF"/>
+        </svg>
+        <div class="brand-text"><div class="n">Simple Block Builder</div><div class="s">By Andrés Gamonal</div></div>
+      </a>
       <div class="tb-sep"></div>
       <div class="tb-group"><span class="tb-label">Formato</span>
         <select id="fmt" onchange="cambiarFormato(this.value)">
@@ -357,6 +387,10 @@ button,input,select,textarea{font-family:inherit;}
       <button class="tb-btn" onclick="abrirImportar()">📥 Importar</button>
       <button class="tb-btn primary" onclick="abrirExportar()">📤 Exportar HTML</button>
       <button class="tb-btn danger icon-only" onclick="vaciarCanvas()" title="Vaciar pieza actual">🗑</button>
+      <div class="user-chip" id="user-chip" style="display:none;">
+        <span class="em" id="user-email"></span>
+        <button onclick="cerrarSesion()" title="Cerrar sesión">↩</button>
+      </div>
     </div>
     <div class="topbar-row piezas" id="piezas-row"></div>
     <div class="topbar-row tools">
@@ -414,7 +448,7 @@ button,input,select,textarea{font-family:inherit;}
 <div class="toast" id="toast"></div>
 
 <script>
-const STORAGE_KEY = "sbb-project-v7";
+const STORAGE_KEY = "sbb-project-v8";
 let proyecto = { piezas: [], activa: null };
 let seleccionado = null;
 let dragInfo = null;
