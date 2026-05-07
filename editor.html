@@ -27,6 +27,17 @@ async function cerrarSesion(){
   try { await fetch("/api/auth/logout", { method:"POST", credentials:"include" }); } catch(e) {}
   location.replace("/");
 }
+function toggleTemaPop(e){
+  if(e) e.stopPropagation();
+  const p = document.getElementById("tema-popover");
+  if(p) p.classList.toggle("open");
+}
+document.addEventListener("click", (e) => {
+  if (!e.target.closest(".tema-wrapper")) {
+    const p = document.getElementById("tema-popover");
+    if (p) p.classList.remove("open");
+  }
+});
 </script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -54,26 +65,35 @@ button,input,select,textarea{font-family:inherit;}
 
 /* ─── TOP BAR ─── */
 .topbar{background:var(--white);border-bottom:1px solid var(--bdr);flex-shrink:0;}
-.topbar-row{height:var(--tb);display:flex;align-items:center;padding:0 16px;gap:10px;}
-.topbar-row.tools{height:var(--tb-tools);border-top:1px solid var(--bdr);background:var(--bg);padding:0 16px;gap:8px;overflow-x:auto;}
-.topbar-row.tools::-webkit-scrollbar{height:0;}
-.topbar-row.piezas{height:var(--tb-tabs);border-top:1px solid var(--bdr);background:var(--white);padding:0 12px;gap:4px;overflow-x:auto;}
-.topbar-row.piezas::-webkit-scrollbar{height:0;}
+.topbar-row{display:flex;align-items:center;padding:0 18px;gap:10px;}
+.topbar-row.primary{height:var(--tb);}
+.topbar-row.secondary{height:44px;border-top:1px solid var(--bdr);background:#fafafc;padding:0 18px;gap:10px;overflow-x:auto;}
+.topbar-row.secondary::-webkit-scrollbar{height:0;}
 
-/* Strip de piezas inline en el topbar principal */
-.piezas-strip{display:flex;align-items:center;gap:4px;flex:0 1 auto;min-width:0;overflow-x:auto;max-width:50%;}
+/* Strip de piezas */
+.piezas-strip{display:flex;align-items:center;gap:5px;flex:0 1 auto;min-width:0;overflow-x:auto;}
 .piezas-strip::-webkit-scrollbar{height:0;}
 
-.plantilla-sel{font-family:var(--f);min-width:100px;padding-right:24px!important;}
+.plantilla-sel{font-family:var(--f);min-width:120px;}
 
-/* Color picker compacto con hex visible */
-.tb-color{display:inline-flex;align-items:center;gap:6px;flex-shrink:0;background:var(--white);border:1px solid var(--bdr);border-radius:7px;padding:3px 8px 3px 4px;height:30px;transition:border-color .15s;}
-.tb-color:hover{border-color:var(--bdr2);}
-.tb-color label{font-size:10px;color:var(--ink3);font-weight:500;cursor:pointer;}
-.tb-color input[type=color]{width:24px;height:24px;border:1px solid var(--bdr);border-radius:5px;padding:1px;cursor:pointer;background:none;flex-shrink:0;}
-.tb-color .hex{font-size:10.5px;color:var(--ink2);font-family:Menlo,Consolas,monospace;font-weight:500;}
+/* Color picker compacto con hex */
+.tb-color{display:inline-flex;align-items:center;gap:8px;flex-shrink:0;background:var(--white);border:1px solid var(--bdr);border-radius:7px;padding:3px 10px 3px 4px;height:32px;}
+.tb-color input[type=color]{width:26px;height:26px;border:1px solid var(--bdr);border-radius:5px;padding:1px;cursor:pointer;background:none;flex-shrink:0;}
+.tb-color .hex{font-size:11px;color:var(--ink2);font-family:Menlo,Consolas,monospace;font-weight:500;letter-spacing:.02em;}
 
-.tools-hint{font-size:11px;color:var(--ink3);font-style:italic;}
+/* Tema popover */
+.tema-wrapper{position:relative;flex-shrink:0;}
+.tema-toggle{background:var(--white);}
+.tema-popover{position:absolute;top:calc(100% + 8px);right:0;background:var(--white);border:1px solid var(--bdr);border-radius:12px;box-shadow:0 12px 40px rgba(4,7,100,.18);padding:14px 16px 16px;display:none;z-index:50;min-width:300px;}
+.tema-popover.open{display:block;animation:popIn .14s ease;}
+@keyframes popIn{from{opacity:0;transform:translateY(-4px);}to{opacity:1;transform:translateY(0);}}
+.tema-pop-head{font-size:11px;font-weight:600;color:var(--ink3);text-transform:uppercase;letter-spacing:.07em;padding-bottom:10px;margin-bottom:12px;border-bottom:1px solid var(--bdr);}
+.tema-pop-row{display:flex;align-items:center;gap:10px;margin-bottom:10px;}
+.tema-pop-row:last-child{margin-bottom:0;}
+.tema-pop-row label{font-size:11.5px;color:var(--ink2);font-weight:500;flex:0 0 96px;}
+.tema-pop-row select,.tema-pop-row input[type=text]{flex:1;border:1px solid var(--bdr);border-radius:6px;padding:6px 10px;font-size:12px;background:var(--white);outline:none;color:var(--ink);font-family:var(--f);}
+.tema-pop-row select:focus,.tema-pop-row input[type=text]:focus{border-color:var(--navy);}
+.tema-pop-row .tb-color{flex:1;}
 
 .brand{display:flex;align-items:center;gap:10px;flex-shrink:0;text-decoration:none;padding:4px 8px 4px 4px;border-radius:8px;transition:background .15s;}
 .brand:hover{background:var(--navy-l);}
@@ -539,6 +559,13 @@ button,input,select,textarea{font-family:inherit;}
 .sbb-features .txt .t{font-size:13.5px;font-weight:600;color:inherit;}
 .sbb-features .txt .s{font-size:12px;color:#888;margin-top:2px;line-height:1.45;}
 
+/* TABLA */
+.sbb-tabla{width:100%;border-collapse:collapse;font-family:inherit;font-size:13px;}
+.sbb-tabla th,.sbb-tabla td{padding:10px 14px;text-align:left;color:inherit;line-height:1.45;vertical-align:top;}
+.sbb-tabla.bordes th,.sbb-tabla.bordes td{border:1px solid;}
+.sbb-tabla.rayas tbody tr:nth-child(even){background:rgba(0,0,0,.025);}
+.sbb-tabla th{font-weight:600;font-size:11.5px;text-transform:uppercase;letter-spacing:.05em;}
+
 /* GRID MULTI-COLUMNA */
 .sbb-grid{display:grid;font-family:inherit;}
 .sbb-grid-cell{min-width:0;}
@@ -575,7 +602,7 @@ button,input,select,textarea{font-family:inherit;}
 <body>
 <div class="app">
   <header class="topbar">
-    <div class="topbar-row">
+    <div class="topbar-row primary">
       <a class="brand" href="/editor">
         <svg class="brand-logo" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg">
           <rect width="512" height="512" rx="96" fill="#1c73cb"/>
@@ -587,8 +614,6 @@ button,input,select,textarea{font-family:inherit;}
         </svg>
         <div class="brand-text"><div class="n">Simple Block Builder</div><div class="s">By Andrés Gamonal</div></div>
       </a>
-      <div class="tb-sep"></div>
-      <div class="piezas-strip" id="piezas-row"></div>
       <div class="spacer"></div>
       <select class="tb-btn plantilla-sel" onchange="if(this.value){cargarPlantilla(this.value);this.value='';}" title="Cargar plantilla">
         <option value="">⚡ Plantilla</option>
@@ -596,7 +621,7 @@ button,input,select,textarea{font-family:inherit;}
         <option value="agenda">Agenda (invitación)</option>
         <option value="display-set">Display kit · 3 banners</option>
       </select>
-      <button class="tb-btn" onclick="abrirImportar()" title="Importar HTML">📥</button>
+      <button class="tb-btn" onclick="abrirImportar()" title="Importar HTML">📥 Importar</button>
       <button class="tb-btn primary" onclick="abrirExportar()">📤 Exportar HTML</button>
       <button class="tb-btn danger icon-only" onclick="vaciarCanvas()" title="Vaciar pieza actual">🗑</button>
       <div class="user-chip" id="user-chip" style="display:none;">
@@ -604,7 +629,9 @@ button,input,select,textarea{font-family:inherit;}
         <button onclick="cerrarSesion()" title="Cerrar sesión">↩</button>
       </div>
     </div>
-    <div class="topbar-row tools">
+    <div class="topbar-row secondary">
+      <div class="piezas-strip" id="piezas-row"></div>
+      <div class="spacer"></div>
       <div class="tb-group">
         <span class="tb-label">Formato</span>
         <select id="fmt" onchange="cambiarFormato(this.value)">
@@ -617,20 +644,34 @@ button,input,select,textarea{font-family:inherit;}
           <option value="libre">Libre · 920px</option>
         </select>
       </div>
-      <div class="tb-sep"></div>
-      <div class="tb-group"><span class="tb-label">Fuente</span>
-        <select id="tema-font" onchange="cambiarTema('font',this.value)">
-          <option value="Inter">Inter</option><option value="Roboto">Roboto</option><option value="Open Sans">Open Sans</option><option value="Lato">Lato</option><option value="Montserrat">Montserrat</option><option value="Poppins">Poppins</option><option value="Playfair Display">Playfair (serif)</option><option value="Merriweather">Merriweather (serif)</option><option value="Arial">Arial</option><option value="Georgia">Georgia</option>
-        </select>
+      <div class="tema-wrapper">
+        <button class="tb-btn tema-toggle" onclick="toggleTemaPop(event)" title="Personalizar tema de la pieza">🎨 Tema</button>
+        <div class="tema-popover" id="tema-popover">
+          <div class="tema-pop-head">Tema de esta pieza</div>
+          <div class="tema-pop-row">
+            <label>Fuente</label>
+            <select id="tema-font" onchange="cambiarTema('font',this.value)">
+              <option value="Inter">Inter</option><option value="Roboto">Roboto</option><option value="Open Sans">Open Sans</option><option value="Lato">Lato</option><option value="Montserrat">Montserrat</option><option value="Poppins">Poppins</option><option value="Playfair Display">Playfair (serif)</option><option value="Merriweather">Merriweather (serif)</option><option value="Arial">Arial</option><option value="Georgia">Georgia</option>
+            </select>
+          </div>
+          <div class="tema-pop-row">
+            <label>Color principal</label>
+            <div class="tb-color"><input type="color" id="tema-primary" onchange="cambiarTema('primary',this.value)"><span class="hex" id="hex-primary">#000000</span></div>
+          </div>
+          <div class="tema-pop-row">
+            <label>Color de texto</label>
+            <div class="tb-color"><input type="color" id="tema-text" onchange="cambiarTema('text',this.value)"><span class="hex" id="hex-text">#000000</span></div>
+          </div>
+          <div class="tema-pop-row">
+            <label>Color de fondo</label>
+            <div class="tb-color"><input type="color" id="tema-bg" onchange="cambiarTema('bg',this.value)"><span class="hex" id="hex-bg">#000000</span></div>
+          </div>
+          <div class="tema-pop-row">
+            <label>Ancho canvas</label>
+            <input type="text" id="tema-ancho" onchange="cambiarTema('ancho',this.value)" placeholder="auto, 600px">
+          </div>
+        </div>
       </div>
-      <div class="tb-sep"></div>
-      <div class="tb-color"><label class="tb-label">Principal</label><input type="color" id="tema-primary" onchange="cambiarTema('primary',this.value)"><span class="hex" id="hex-primary">#000000</span></div>
-      <div class="tb-color"><label class="tb-label">Texto</label><input type="color" id="tema-text" onchange="cambiarTema('text',this.value)"><span class="hex" id="hex-text">#000000</span></div>
-      <div class="tb-color"><label class="tb-label">Fondo</label><input type="color" id="tema-bg" onchange="cambiarTema('bg',this.value)"><span class="hex" id="hex-bg">#000000</span></div>
-      <div class="tb-sep"></div>
-      <div class="tb-group"><span class="tb-label">Ancho</span><input type="text" id="tema-ancho" onchange="cambiarTema('ancho',this.value)" placeholder="auto"></div>
-      <div class="spacer"></div>
-      <span class="tools-hint">Estos ajustes solo se aplican a la pieza activa</span>
     </div>
   </header>
 
@@ -1224,6 +1265,43 @@ const BLOQUES = {
     }
   },
 
+  tabla: {
+    cat:"Datos", nombre:"Tabla", icono:"📋", sub:"Filas + columnas (pricing, datos)",
+    defaults: Object.assign({}, styleDefaults, {
+      padTop:"6", padBottom:"6",
+      filasTexto:"Plan | Precio | Acción\nBásico | $9 | Empezar\nPro | $19 | Empezar\nPremium | $49 | Empezar",
+      primeraFilaHeader:true, bordes:true, rayasAlternas:false,
+      colorBorde:"#e5e7ea", colorHeaderFondo:"", colorHeaderTexto:"#ffffff",
+      colorFondo:"#ffffff", colorTexto:"", radio:"10"
+    }),
+    campos: [
+      {key:"filasTexto",label:"Filas (una por línea, celdas separadas por |)",tipo:"codigo-textarea"},
+      {tipo:"row2", izq:{key:"primeraFilaHeader",label:"Primera fila como header",tipo:"check"}, der:{key:"bordes",label:"Mostrar bordes",tipo:"check"}},
+      {key:"rayasAlternas",label:"Rayas alternas en filas",tipo:"check"},
+      {grupo:"Colores"},
+      {tipo:"row2", izq:{key:"colorFondo",label:"Fondo tabla",tipo:"color"}, der:{key:"colorTexto",label:"Texto (vacío = tema)",tipo:"color"}},
+      {tipo:"row2", izq:{key:"colorHeaderFondo",label:"Fondo header (vacío = tema)",tipo:"color"}, der:{key:"colorHeaderTexto",label:"Texto header",tipo:"color"}},
+      {tipo:"row2", izq:{key:"colorBorde",label:"Color borde",tipo:"color"}, der:{key:"radio",label:"Radio (px)",tipo:"range",min:0,max:24,step:1}},
+      ...styleFields()
+    ],
+    render: (d) => {
+      const filas = (d.filasTexto||"").split("\n").map(l => l.split("|").map(c => c.trim())).filter(r => r.length && r.some(c => c));
+      const headerFondo = d.colorHeaderFondo || getTema().primary;
+      const txtColor = d.colorTexto || "inherit";
+      const cls = `sbb-tabla${d.bordes?" bordes":""}${d.rayasAlternas?" rayas":""}`;
+      let head = "", body = "";
+      filas.forEach((f, i) => {
+        const cells = f.map(c => esc(c)).join("__SEP__");
+        if (i === 0 && d.primeraFilaHeader) {
+          head = `<thead><tr>${f.map(c => `<th style="background:${esc(headerFondo)};color:${esc(d.colorHeaderTexto)};border-color:${esc(d.colorBorde)};">${esc(c)}</th>`).join("")}</tr></thead>`;
+        } else {
+          body += `<tr>${f.map(c => `<td style="border-color:${esc(d.colorBorde)};">${esc(c)}</td>`).join("")}</tr>`;
+        }
+      });
+      return wrap(d, `<div style="overflow:hidden;border-radius:${esc(d.radio)}px;background:${esc(d.colorFondo)};color:${esc(txtColor)};border:1px solid ${esc(d.colorBorde)};"><table class="${cls}">${head}<tbody>${body}</tbody></table></div>`);
+    }
+  },
+
   grid: {
     cat:"Estructura", nombre:"Grid 2/3/4 columnas", icono:"▦", sub:"Contenedor multi-columna",
     defaults: Object.assign({}, styleDefaults, {
@@ -1379,16 +1457,31 @@ const BLOQUES = {
 
   product: {
     cat:"Cards", nombre:"Tarjeta de producto", icono:"🛍", sub:"Imagen + nombre + precio + CTA",
-    defaults: Object.assign({}, styleDefaults, { padTop:"6", padBottom:"6", imagenUrl:"https://placehold.co/600x400/e5e7ea/9ca3af?text=Producto", nombre:"Producto", descripcion:"Descripción corta", precio:"$0.00", ctaTexto:"Comprar", ctaUrl:"" }),
+    defaults: Object.assign({}, styleDefaults, {
+      padTop:"6", padBottom:"6",
+      imagenUrl:"https://placehold.co/600x400/e5e7ea/9ca3af?text=Producto",
+      nombre:"Producto", descripcion:"Descripción corta", precio:"$0.00",
+      ctaTexto:"Comprar", ctaUrl:"",
+      alineacionTexto:"left", tamanoNombre:"15", tamanoPrecio:"15",
+      colorFondo:"#ffffff", colorTexto:"", colorPrecio:""
+    }),
     campos: [
       {key:"imagenUrl",label:"URL de la imagen",tipo:"text"},
       {key:"nombre",label:"Nombre",tipo:"text"},
       {key:"descripcion",label:"Descripción",tipo:"text"},
       {key:"precio",label:"Precio",tipo:"text"},
       {tipo:"row2", izq:{key:"ctaTexto",label:"Texto CTA",tipo:"text"}, der:{key:"ctaUrl",label:"URL CTA",tipo:"text"}},
+      {grupo:"Estilo"},
+      {key:"alineacionTexto",label:"Alineación texto",tipo:"alignH"},
+      {tipo:"row2", izq:{key:"tamanoNombre",label:"Tamaño nombre (px)",tipo:"range",min:12,max:24,step:1}, der:{key:"tamanoPrecio",label:"Tamaño precio (px)",tipo:"range",min:12,max:30,step:1}},
+      {tipo:"row2", izq:{key:"colorFondo",label:"Fondo",tipo:"color"}, der:{key:"colorTexto",label:"Texto",tipo:"color"}},
+      {key:"colorPrecio",label:"Color del precio (vacío=tema)",tipo:"color"},
       ...styleFields()
     ],
-    render: (d) => wrap(d, `<div class="sbb-product"><img src="${esc(d.imagenUrl)}" alt=""><div class="body"><div class="head"><div class="name">${esc(d.nombre)}</div><div class="price">${esc(d.precio)}</div></div>${d.descripcion?`<div class="desc">${esc(d.descripcion)}</div>`:""}${d.ctaTexto&&d.ctaUrl?`<a class="cta" href="${esc(d.ctaUrl)}" target="_blank" rel="noopener">${esc(d.ctaTexto)}</a>`:""}</div></div>`)
+    render: (d) => {
+      const colorPrecio = d.colorPrecio || getTema().primary;
+      return wrap(d, `<div class="sbb-product" style="background:${esc(d.colorFondo)};color:${esc(d.colorTexto||"inherit")};text-align:${esc(d.alineacionTexto)};"><img src="${esc(d.imagenUrl)}" alt=""><div class="body"><div class="head" style="justify-content:${d.alineacionTexto==="center"?"center":d.alineacionTexto==="right"?"flex-end":"space-between"};"><div class="name" style="font-size:${esc(d.tamanoNombre)}px;">${esc(d.nombre)}</div><div class="price" style="font-size:${esc(d.tamanoPrecio)}px;color:${esc(colorPrecio)};">${esc(d.precio)}</div></div>${d.descripcion?`<div class="desc">${esc(d.descripcion)}</div>`:""}${d.ctaTexto&&d.ctaUrl?`<a class="cta" href="${esc(d.ctaUrl)}" target="_blank" rel="noopener">${esc(d.ctaTexto)}</a>`:""}</div></div>`);
+    }
   },
 
   profileCard: {
@@ -1412,45 +1505,110 @@ const BLOQUES = {
 
   testimonial: {
     cat:"Cards", nombre:"Testimonio", icono:"💬", sub:"Cita + autor",
-    defaults: Object.assign({}, styleDefaults, { padTop:"6", padBottom:"6", cita:"Escribe aquí la cita o testimonio del cliente.", avatarUrl:"https://placehold.co/72x72/e5e7ea/9ca3af?text=A", autor:"Nombre Apellido", cargo:"Cargo · Empresa" }),
+    defaults: Object.assign({}, styleDefaults, {
+      padTop:"6", padBottom:"6",
+      cita:"Escribe aquí la cita o testimonio del cliente.",
+      avatarUrl:"https://placehold.co/72x72/e5e7ea/9ca3af?text=A",
+      autor:"Nombre Apellido", cargo:"Cargo · Empresa",
+      alineacionTexto:"left", tamanoCita:"14.5",
+      colorFondo:"#ffffff", colorTexto:"", colorAcento:""
+    }),
     campos: [
       {key:"cita",label:"Cita / testimonio",tipo:"textarea"},
       {key:"avatarUrl",label:"URL avatar",tipo:"text"},
-      {key:"autor",label:"Nombre del autor",tipo:"text"},
-      {key:"cargo",label:"Cargo / empresa",tipo:"text"},
+      {tipo:"row2", izq:{key:"autor",label:"Nombre",tipo:"text"}, der:{key:"cargo",label:"Cargo · empresa",tipo:"text"}},
+      {grupo:"Estilo"},
+      {tipo:"row2", izq:{key:"alineacionTexto",label:"Alineación",tipo:"alignH"}, der:{key:"tamanoCita",label:"Tamaño cita (px)",tipo:"range",min:12,max:24,step:1}},
+      {tipo:"row2", izq:{key:"colorFondo",label:"Fondo card",tipo:"color"}, der:{key:"colorTexto",label:"Texto (vacío=tema)",tipo:"color"}},
+      {key:"colorAcento",label:"Acento (comilla, vacío=tema)",tipo:"color"},
       ...styleFields()
     ],
-    render: (d) => wrap(d, `<div class="sbb-testi"><div class="quote">${escMultiline(d.cita)}</div><div class="author"><img class="avatar" src="${esc(d.avatarUrl)}" alt=""><div><div class="n">${esc(d.autor)}</div><div class="r">${esc(d.cargo)}</div></div></div></div>`)
+    render: (d) => {
+      const colorAc = d.colorAcento || getTema().primary;
+      return wrap(d, `<div class="sbb-testi" style="background:${esc(d.colorFondo)};color:${esc(d.colorTexto||"inherit")};text-align:${esc(d.alineacionTexto)};">
+        <div class="quote" style="font-size:${esc(d.tamanoCita)}px;"><span style="color:${esc(colorAc)};">"</span>${escMultiline(d.cita)}</div>
+        <div class="author" style="justify-content:${d.alineacionTexto==="center"?"center":d.alineacionTexto==="right"?"flex-end":"flex-start"};"><img class="avatar" src="${esc(d.avatarUrl)}" alt=""><div><div class="n">${esc(d.autor)}</div><div class="r">${esc(d.cargo)}</div></div></div>
+      </div>`);
+    }
   },
 
   article: {
     cat:"Cards", nombre:"Artículo / Post", icono:"📰", sub:"Imagen + título + lead + link",
-    defaults: Object.assign({}, styleDefaults, { padTop:"6", padBottom:"6", imagenUrl:"https://placehold.co/600x320/e5e7ea/9ca3af?text=Imagen", categoria:"Categoría", titulo:"Título del artículo", lead:"Lead del artículo en una o dos líneas para generar interés.", linkTexto:"Leer más →", linkUrl:"" }),
+    defaults: Object.assign({}, styleDefaults, {
+      padTop:"6", padBottom:"6",
+      imagenUrl:"https://placehold.co/600x320/e5e7ea/9ca3af?text=Imagen",
+      categoria:"Categoría", titulo:"Título del artículo",
+      lead:"Lead del artículo en una o dos líneas para generar interés.",
+      linkTexto:"Leer más →", linkUrl:"",
+      alineacionTexto:"left", tamanoTitulo:"18", tamanoLead:"13",
+      colorFondo:"#ffffff", colorTexto:"", colorCategoria:"", colorEnlace:""
+    }),
     campos: [
       {key:"imagenUrl",label:"URL de la imagen",tipo:"text"},
       {key:"categoria",label:"Categoría / kicker",tipo:"text"},
       {key:"titulo",label:"Título",tipo:"text"},
       {key:"lead",label:"Lead",tipo:"textarea"},
       {tipo:"row2", izq:{key:"linkTexto",label:"Texto enlace",tipo:"text"}, der:{key:"linkUrl",label:"URL",tipo:"text"}},
+      {grupo:"Estilo"},
+      {key:"alineacionTexto",label:"Alineación",tipo:"alignH"},
+      {tipo:"row2", izq:{key:"tamanoTitulo",label:"Tamaño título (px)",tipo:"range",min:14,max:36,step:1}, der:{key:"tamanoLead",label:"Tamaño lead (px)",tipo:"range",min:11,max:18,step:1}},
+      {tipo:"row2", izq:{key:"colorFondo",label:"Fondo",tipo:"color"}, der:{key:"colorTexto",label:"Texto",tipo:"color"}},
+      {tipo:"row2", izq:{key:"colorCategoria",label:"Categoría (vacío=tema)",tipo:"color"}, der:{key:"colorEnlace",label:"Enlace (vacío=tema)",tipo:"color"}},
       ...styleFields()
     ],
-    render: (d) => wrap(d, `<div class="sbb-article"><img src="${esc(d.imagenUrl)}" alt=""><div class="body">${d.categoria?`<div class="cat">${esc(d.categoria)}</div>`:""}<h3 class="title">${esc(d.titulo)}</h3>${d.lead?`<div class="lead">${escMultiline(d.lead)}</div>`:""}${d.linkTexto&&d.linkUrl?`<a class="more" href="${esc(d.linkUrl)}" target="_blank" rel="noopener">${esc(d.linkTexto)}</a>`:""}</div></div>`)
+    render: (d) => {
+      const colorCat = d.colorCategoria || getTema().primary;
+      const colorLink = d.colorEnlace || getTema().primary;
+      return wrap(d, `<div class="sbb-article" style="background:${esc(d.colorFondo)};color:${esc(d.colorTexto||"inherit")};text-align:${esc(d.alineacionTexto)};"><img src="${esc(d.imagenUrl)}" alt=""><div class="body">${d.categoria?`<div class="cat" style="color:${esc(colorCat)};">${esc(d.categoria)}</div>`:""}<h3 class="title" style="font-size:${esc(d.tamanoTitulo)}px;">${esc(d.titulo)}</h3>${d.lead?`<div class="lead" style="font-size:${esc(d.tamanoLead)}px;">${escMultiline(d.lead)}</div>`:""}${d.linkTexto&&d.linkUrl?`<a class="more" href="${esc(d.linkUrl)}" target="_blank" rel="noopener" style="color:${esc(colorLink)};">${esc(d.linkTexto)}</a>`:""}</div></div>`);
+    }
   },
 
   pricing: {
     cat:"Cards", nombre:"Plan de precios", icono:"💳", sub:"Tier + precio + features + CTA",
-    defaults: Object.assign({}, styleDefaults, { padTop:"6", padBottom:"6", destacado:false, tier:"PRO", precio:"$49", periodo:"/mes", features:[ {tipo:"feat",texto:"Todo lo del plan básico"}, {tipo:"feat",texto:"Soporte prioritario"}, {tipo:"feat",texto:"Sin límite de usuarios"} ], ctaTexto:"Empezar", ctaUrl:"" }),
+    defaults: Object.assign({}, styleDefaults, {
+      padTop:"6", padBottom:"6", destacado:false,
+      tier:"PRO", precio:"$49", periodo:"/mes",
+      features:[ {tipo:"feat",texto:"Todo lo del plan básico"}, {tipo:"feat",texto:"Soporte prioritario"}, {tipo:"feat",texto:"Sin límite de usuarios"} ],
+      ctaTexto:"Empezar", ctaUrl:"",
+      alineacionTexto:"center",
+      tamanoTier:"11", tamanoPrecio:"38", tamanoFeatures:"13",
+      colorFondo:"", colorTexto:"", colorTier:"", colorAcento:""
+    }),
     campos: [
       {key:"destacado",label:"⭐ Plan destacado (fondo color)",tipo:"check"},
-      {key:"tier",label:"Nombre del plan",tipo:"text"},
+      {grupo:"Contenido"},
+      {key:"tier",label:"Nombre del plan (kicker)",tipo:"text"},
       {tipo:"row2", izq:{key:"precio",label:"Precio",tipo:"text"}, der:{key:"periodo",label:"Periodo (/mes, /año)",tipo:"text"}},
       {key:"features",label:"Features",tipo:"lista",itemTipos:[{valor:"feat",label:"Feature",camposItem:[{k:"texto",l:"Texto"}]}]},
       {tipo:"row2", izq:{key:"ctaTexto",label:"Texto CTA",tipo:"text"}, der:{key:"ctaUrl",label:"URL CTA",tipo:"text"}},
+      {grupo:"Tipografía"},
+      {key:"alineacionTexto",label:"Alineación de los textos",tipo:"alignH"},
+      {tipo:"row2", izq:{key:"tamanoTier",label:"Tamaño tier (px)",tipo:"range",min:9,max:18,step:1}, der:{key:"tamanoPrecio",label:"Tamaño precio (px)",tipo:"range",min:24,max:72,step:1}},
+      {key:"tamanoFeatures",label:"Tamaño features (px)",tipo:"range",min:11,max:18,step:1},
+      {grupo:"Colores (vacío = tema)"},
+      {tipo:"row2", izq:{key:"colorFondo",label:"Fondo card",tipo:"color"}, der:{key:"colorTexto",label:"Texto",tipo:"color"}},
+      {tipo:"row2", izq:{key:"colorTier",label:"Color del tier",tipo:"color"}, der:{key:"colorAcento",label:"Acento (precio/CTA)",tipo:"color"}},
       ...styleFields()
     ],
     render: (d) => {
-      const feats = (d.features||[]).map(f => `<li>${esc(f.texto||"")}</li>`).join("");
-      return wrap(d, `<div class="sbb-pricing${d.destacado?" destacado":""}"><div class="tier">${esc(d.tier)}</div><div class="price-row"><span class="price">${esc(d.precio)}</span><span class="period">${esc(d.periodo)}</span></div><ul class="features">${feats}</ul>${d.ctaTexto?`<a class="cta" href="${esc(d.ctaUrl||"#")}" target="_blank" rel="noopener">${esc(d.ctaTexto)}</a>`:""}</div>`);
+      const feats = (d.features||[]).map(f => `<li style="font-size:${esc(d.tamanoFeatures)}px;">${esc(f.texto||"")}</li>`).join("");
+      const ta = d.alineacionTexto || "center";
+      const tema = getTema();
+      const fondo = d.colorFondo || (d.destacado ? tema.primary : "#ffffff");
+      const colorTexto = d.colorTexto || (d.destacado ? "#ffffff" : "inherit");
+      const colorTier = d.colorTier || (d.destacado ? "#fce865" : tema.primary);
+      const colorAcento = d.colorAcento || (d.destacado ? "#fce865" : tema.primary);
+      const ctaBg = d.destacado ? "#fce865" : tema.primary;
+      const ctaColor = d.destacado ? "#040764" : "#ffffff";
+      return wrap(d, `<div class="sbb-pricing${d.destacado?" destacado":""}" style="background:${esc(fondo)};color:${esc(colorTexto)};text-align:${esc(ta)};">
+        <div class="tier" style="font-size:${esc(d.tamanoTier)}px;color:${esc(colorTier)};">${esc(d.tier)}</div>
+        <div class="price-row" style="justify-content:${ta==="left"?"flex-start":ta==="right"?"flex-end":"center"};">
+          <span class="price" style="font-size:${esc(d.tamanoPrecio)}px;color:${esc(colorAcento)};">${esc(d.precio)}</span>
+          <span class="period" style="color:${d.destacado?"rgba(255,255,255,.7)":"#888"};">${esc(d.periodo)}</span>
+        </div>
+        <ul class="features" style="text-align:${esc(ta)};">${feats}</ul>
+        ${d.ctaTexto?`<a class="cta" href="${esc(d.ctaUrl||"#")}" target="_blank" rel="noopener" style="background:${esc(ctaBg)};color:${esc(ctaColor)};">${esc(d.ctaTexto)}</a>`:""}
+      </div>`);
     }
   },
 
