@@ -347,6 +347,141 @@ button,input,select,textarea{font-family:inherit;}
 /* ESPACIADOR */
 .sbb-spacer{display:block;}
 
+/* ── DATOS / KPI ──────────────────────────────────── */
+.sbb-kpi{padding:18px 20px;border-radius:14px;background:#fff;border:1px solid #ebedf0;font-family:inherit;}
+.sbb-kpi .icon{font-size:20px;display:block;margin-bottom:8px;}
+.sbb-kpi .num{font-size:36px;font-weight:600;line-height:1.05;letter-spacing:-.02em;font-variant-numeric:tabular-nums;color:inherit;}
+.sbb-kpi .lbl{font-size:11px;color:#888;text-transform:uppercase;letter-spacing:.06em;font-weight:600;margin-top:6px;}
+.sbb-kpi .trend{display:inline-flex;align-items:center;gap:4px;margin-top:10px;font-size:12.5px;font-weight:600;}
+.sbb-kpi .trend.up{color:#16a34a;}
+.sbb-kpi .trend.down{color:#dc2626;}
+.sbb-kpi .trend.flat{color:#888;}
+
+/* PROGRESS RING */
+.sbb-ring{display:inline-flex;flex-direction:column;align-items:center;font-family:inherit;}
+.sbb-ring .ring-wrap{position:relative;display:flex;align-items:center;justify-content:center;}
+.sbb-ring svg{display:block;transform:rotate(-90deg);}
+.sbb-ring .pct{position:absolute;font-size:1.8em;font-weight:600;color:inherit;letter-spacing:-.02em;}
+.sbb-ring .lbl{font-size:11px;color:#888;text-transform:uppercase;letter-spacing:.06em;font-weight:600;margin-top:10px;}
+
+/* STAT GRID */
+.sbb-stat-grid{display:grid;gap:8px;font-family:inherit;}
+.sbb-stat-grid .stat{background:#fafafc;border:1px solid #ebedf0;border-radius:10px;padding:12px 8px;text-align:center;}
+.sbb-stat-grid .stat .num{font-size:22px;font-weight:600;line-height:1.1;color:inherit;font-variant-numeric:tabular-nums;}
+.sbb-stat-grid .stat .lbl{font-size:10px;color:#888;text-transform:uppercase;letter-spacing:.06em;font-weight:600;margin-top:3px;}
+
+/* SPARKLINE METRIC */
+.sbb-spark{padding:18px 20px;border-radius:14px;background:#fff;border:1px solid #ebedf0;font-family:inherit;}
+.sbb-spark .top{display:flex;align-items:baseline;justify-content:space-between;gap:8px;margin-bottom:10px;}
+.sbb-spark .num{font-size:30px;font-weight:600;line-height:1;color:inherit;font-variant-numeric:tabular-nums;}
+.sbb-spark .trend{font-size:12.5px;font-weight:600;}
+.sbb-spark .trend.up{color:#16a34a;}
+.sbb-spark .trend.down{color:#dc2626;}
+.sbb-spark svg{width:100%;display:block;}
+.sbb-spark .lbl{font-size:11px;color:#888;text-transform:uppercase;letter-spacing:.06em;font-weight:600;margin-top:8px;}
+
+/* RATING */
+.sbb-rating{display:inline-flex;align-items:center;gap:8px;font-family:inherit;}
+.sbb-rating .stars{color:#fbbf24;font-size:18px;letter-spacing:1px;}
+.sbb-rating .stars .empty{color:#e5e7ea;}
+.sbb-rating .num{font-size:13px;font-weight:600;color:inherit;}
+.sbb-rating .reviews{font-size:11.5px;color:#888;}
+
+/* PRODUCT CARD */
+.sbb-product{background:#fff;border-radius:14px;overflow:hidden;border:1px solid #ebedf0;font-family:inherit;}
+.sbb-product img{width:100%;height:auto;display:block;background:#f5f5f7;}
+.sbb-product .body{padding:14px 16px 16px;}
+.sbb-product .head{display:flex;justify-content:space-between;align-items:baseline;gap:10px;}
+.sbb-product .name{font-size:15px;font-weight:600;color:inherit;line-height:1.3;}
+.sbb-product .price{font-size:15px;font-weight:600;color:var(--sbb-primary,#040764);white-space:nowrap;}
+.sbb-product .desc{font-size:12px;color:#888;margin-top:3px;line-height:1.45;}
+.sbb-product .cta{margin-top:12px;display:inline-block;background:var(--sbb-primary,#040764);color:#fff;padding:8px 18px;border-radius:6px;font-size:12.5px;font-weight:600;text-decoration:none;}
+
+/* PROFILE CARD */
+.sbb-profile{background:#fff;border-radius:14px;border:1px solid #ebedf0;padding:18px;font-family:inherit;}
+.sbb-profile .head{display:flex;align-items:center;gap:12px;}
+.sbb-profile .avatar{width:48px;height:48px;border-radius:50%;background:#f0f0f4;flex-shrink:0;object-fit:cover;}
+.sbb-profile .who{flex:1;min-width:0;}
+.sbb-profile .name{font-size:14px;font-weight:600;color:inherit;}
+.sbb-profile .sub{font-size:12px;color:#888;margin-top:1px;}
+.sbb-profile .cta{display:inline-block;background:var(--sbb-primary,#040764);color:#fff;padding:6px 14px;border-radius:6px;font-size:11.5px;font-weight:600;text-decoration:none;flex-shrink:0;}
+.sbb-profile .stats{display:flex;justify-content:space-between;margin-top:14px;padding-top:14px;border-top:1px solid #f0f0f4;}
+.sbb-profile .stats .stat{flex:1;text-align:center;}
+.sbb-profile .stats .num{font-size:16px;font-weight:600;color:inherit;}
+.sbb-profile .stats .lbl{font-size:10.5px;color:#888;margin-top:2px;}
+
+/* TESTIMONIAL */
+.sbb-testi{background:#fff;border-radius:14px;border:1px solid #ebedf0;padding:22px;font-family:inherit;}
+.sbb-testi .quote{font-size:14.5px;line-height:1.6;color:inherit;margin-bottom:16px;font-style:italic;}
+.sbb-testi .quote::before{content:"\201C";font-size:36px;color:var(--sbb-primary,#040764);font-weight:600;line-height:0;margin-right:4px;vertical-align:-14px;font-style:normal;}
+.sbb-testi .author{display:flex;align-items:center;gap:10px;}
+.sbb-testi .avatar{width:36px;height:36px;border-radius:50%;background:#f0f0f4;object-fit:cover;}
+.sbb-testi .author .n{font-size:13px;font-weight:600;color:inherit;}
+.sbb-testi .author .r{font-size:11.5px;color:#888;}
+
+/* ARTICLE PREVIEW */
+.sbb-article{background:#fff;border-radius:14px;border:1px solid #ebedf0;overflow:hidden;font-family:inherit;}
+.sbb-article img{width:100%;height:auto;display:block;}
+.sbb-article .body{padding:16px 18px 18px;}
+.sbb-article .cat{font-size:10.5px;color:var(--sbb-primary,#040764);text-transform:uppercase;letter-spacing:.08em;font-weight:700;}
+.sbb-article .title{font-size:18px;font-weight:600;line-height:1.3;color:inherit;margin:6px 0 8px;}
+.sbb-article .lead{font-size:13px;line-height:1.55;color:#666;margin-bottom:10px;}
+.sbb-article .more{font-size:13px;color:var(--sbb-primary,#040764);font-weight:600;text-decoration:none;}
+
+/* PRICING TIER */
+.sbb-pricing{background:#fff;border-radius:14px;border:1px solid #ebedf0;padding:24px;font-family:inherit;text-align:center;}
+.sbb-pricing.destacado{background:var(--sbb-primary,#040764);color:#fff;border-color:var(--sbb-primary,#040764);box-shadow:0 12px 28px rgba(0,0,0,.08);}
+.sbb-pricing .tier{font-size:11px;text-transform:uppercase;letter-spacing:.1em;font-weight:700;color:var(--sbb-primary,#040764);margin-bottom:6px;}
+.sbb-pricing.destacado .tier{color:#fce865;}
+.sbb-pricing .price-row{display:flex;align-items:baseline;justify-content:center;gap:6px;margin-bottom:4px;}
+.sbb-pricing .price{font-size:38px;font-weight:600;line-height:1;letter-spacing:-.02em;}
+.sbb-pricing .period{font-size:13px;color:#888;}
+.sbb-pricing.destacado .period{color:rgba(255,255,255,.7);}
+.sbb-pricing .features{list-style:none;padding:0;margin:18px 0;text-align:left;}
+.sbb-pricing .features li{padding:6px 0;font-size:13px;color:inherit;display:flex;gap:8px;align-items:flex-start;}
+.sbb-pricing .features li::before{content:"\2713";color:var(--sbb-primary,#040764);font-weight:700;flex-shrink:0;}
+.sbb-pricing.destacado .features li::before{color:#fce865;}
+.sbb-pricing .cta{display:inline-block;background:var(--sbb-primary,#040764);color:#fff;padding:11px 28px;border-radius:8px;font-size:13.5px;font-weight:600;text-decoration:none;margin-top:6px;}
+.sbb-pricing.destacado .cta{background:#fce865;color:#040764;}
+
+/* HERO CON OVERLAY */
+.sbb-hero{position:relative;border-radius:14px;overflow:hidden;font-family:inherit;color:#fff;}
+.sbb-hero .bg{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;}
+.sbb-hero .veil{position:absolute;inset:0;}
+.sbb-hero .content{position:relative;padding:42px 32px;display:flex;flex-direction:column;justify-content:center;}
+.sbb-hero h2{font-size:28px;font-weight:600;line-height:1.15;margin-bottom:8px;color:#fff;letter-spacing:-.01em;}
+.sbb-hero p{font-size:14px;line-height:1.55;color:rgba(255,255,255,.88);margin-bottom:16px;max-width:80%;}
+.sbb-hero a{display:inline-block;background:#fff;color:#040764;padding:11px 24px;border-radius:8px;font-weight:600;font-size:13.5px;text-decoration:none;width:fit-content;}
+
+/* BANNER ALERTA */
+.sbb-alert{padding:14px 18px;border-radius:10px;display:flex;gap:12px;align-items:flex-start;font-family:inherit;}
+.sbb-alert.info{background:#eff6ff;border-left:3px solid #2563eb;color:#1e40af;}
+.sbb-alert.warning{background:#fffbeb;border-left:3px solid #f59e0b;color:#92400e;}
+.sbb-alert.success{background:#f0fdf4;border-left:3px solid #16a34a;color:#15803d;}
+.sbb-alert.error{background:#fef2f2;border-left:3px solid #dc2626;color:#991b1b;}
+.sbb-alert .ico{font-size:18px;flex-shrink:0;line-height:1.2;}
+.sbb-alert .body{flex:1;}
+.sbb-alert .title{font-size:13.5px;font-weight:600;margin-bottom:2px;}
+.sbb-alert .msg{font-size:12.5px;line-height:1.5;opacity:.95;}
+
+/* FEATURES (lista con íconos) */
+.sbb-features{font-family:inherit;}
+.sbb-features h3{font-size:16px;font-weight:600;color:inherit;margin-bottom:14px;}
+.sbb-features ul{list-style:none;padding:0;margin:0;}
+.sbb-features li{display:flex;gap:12px;padding:10px 0;align-items:flex-start;}
+.sbb-features li:not(:last-child){border-bottom:1px solid #f0f0f4;}
+.sbb-features .ico{width:36px;height:36px;border-radius:8px;background:#f0f0f4;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0;color:var(--sbb-primary,#040764);}
+.sbb-features .txt .t{font-size:13.5px;font-weight:600;color:inherit;}
+.sbb-features .txt .s{font-size:12px;color:#888;margin-top:2px;line-height:1.45;}
+
+/* AUDIO CARD */
+.sbb-audio{background:#0f172a;color:#fff;border-radius:14px;padding:14px;display:flex;align-items:center;gap:14px;font-family:inherit;}
+.sbb-audio .cover{width:60px;height:60px;border-radius:8px;background:#1e293b;flex-shrink:0;object-fit:cover;}
+.sbb-audio .info{flex:1;min-width:0;}
+.sbb-audio .title{font-size:14px;font-weight:600;color:#fff;line-height:1.3;}
+.sbb-audio .artist{font-size:12px;color:rgba(255,255,255,.6);margin-top:2px;}
+.sbb-audio .play{width:42px;height:42px;border-radius:50%;background:var(--sbb-primary,#040764);color:#fff;display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0;text-decoration:none;}
+
 /* FOOTER */
 .sbb-footer{text-align:center;font-size:12px;color:#888;line-height:1.6;border-top:1px solid #f0f0f4;font-family:inherit;}
 .sbb-footer .empresa{font-weight:600;color:#555;}
@@ -1001,6 +1136,245 @@ const BLOQUES = {
     }
   },
 
+  kpi: {
+    cat:"Datos", nombre:"Tarjeta KPI", icono:"📊", sub:"Número grande + tendencia",
+    defaults: Object.assign({}, styleDefaults, { icono:"", numero:"1,258", label:"Total clicks", mostrarTrend:true, trendValor:"+12.5%", trendDireccion:"up", color:"#1a1a1a", colorFondo:"#ffffff", radio:"14" }),
+    campos: [
+      {key:"icono",label:"Emoji o ícono superior (opcional)",tipo:"text"},
+      {key:"numero",label:"Número grande",tipo:"text"},
+      {key:"label",label:"Etiqueta",tipo:"text"},
+      {key:"mostrarTrend",label:"Mostrar tendencia",tipo:"check"},
+      {tipo:"row2", izq:{key:"trendValor",label:"Texto tendencia",tipo:"text"}, der:{key:"trendDireccion",label:"Dirección",tipo:"select",opciones:[["up","↑ subiendo"],["down","↓ bajando"],["flat","→ estable"]]}},
+      {grupo:"Estilo"},
+      {tipo:"row2", izq:{key:"colorFondo",label:"Fondo",tipo:"color"}, der:{key:"color",label:"Texto",tipo:"color"}},
+      {key:"radio",label:"Radio (px)",tipo:"range",min:0,max:30,step:1},
+      ...styleFields()
+    ],
+    render: (d) => {
+      const tCls = d.trendDireccion || "up";
+      const ar = tCls==="up"?"↑":tCls==="down"?"↓":"→";
+      return wrap(d, `<div class="sbb-kpi" style="background:${esc(d.colorFondo)};color:${esc(d.color)};border-radius:${esc(d.radio)}px;">${d.icono?`<span class="icon">${esc(d.icono)}</span>`:""}<div class="num">${esc(d.numero)}</div><div class="lbl">${esc(d.label)}</div>${d.mostrarTrend?`<span class="trend ${tCls}">${ar} ${esc(d.trendValor)}</span>`:""}</div>`);
+    }
+  },
+
+  ring: {
+    cat:"Datos", nombre:"Anillo de progreso", icono:"⭕", sub:"Gauge circular con %",
+    defaults: Object.assign({}, styleDefaults, { valor:"65", label:"Performance", color:"", colorPista:"#f0f0f4", grosor:"12", tamano:"160" }),
+    campos: [
+      {key:"valor",label:"Valor (0-100)",tipo:"range",min:0,max:100,step:1},
+      {key:"label",label:"Etiqueta",tipo:"text"},
+      {tipo:"row2", izq:{key:"tamano",label:"Tamaño (px)",tipo:"range",min:80,max:300,step:10}, der:{key:"grosor",label:"Grosor línea",tipo:"range",min:4,max:30,step:1}},
+      {tipo:"row2", izq:{key:"color",label:"Color (vacío = tema)",tipo:"color"}, der:{key:"colorPista",label:"Pista",tipo:"color"}},
+      ...styleFields()
+    ],
+    render: (d) => {
+      const v = Math.max(0, Math.min(100, parseInt(d.valor)||0));
+      const tam = parseInt(d.tamano)||160;
+      const gr = parseInt(d.grosor)||12;
+      const r = (tam/2) - gr;
+      const circ = 2 * Math.PI * r;
+      const offset = circ - (v/100)*circ;
+      const color = d.color || getTema().primary;
+      return wrap(d, `<div class="sbb-ring"><div class="ring-wrap" style="width:${tam}px;height:${tam}px;font-size:${tam*0.18}px;"><svg width="${tam}" height="${tam}"><circle cx="${tam/2}" cy="${tam/2}" r="${r}" fill="none" stroke="${esc(d.colorPista)}" stroke-width="${gr}"/><circle cx="${tam/2}" cy="${tam/2}" r="${r}" fill="none" stroke="${esc(color)}" stroke-width="${gr}" stroke-dasharray="${circ}" stroke-dashoffset="${offset}" stroke-linecap="round"/></svg><span class="pct">${v}%</span></div>${d.label?`<div class="lbl">${esc(d.label)}</div>`:""}</div>`);
+    }
+  },
+
+  statGrid: {
+    cat:"Datos", nombre:"Grilla de stats", icono:"🔢", sub:"Múltiples métricas en grid",
+    defaults: Object.assign({}, styleDefaults, { columnas:"3", items:[ {num:"560",lbl:"Steps"}, {num:"120",lbl:"BPM"}, {num:"89",lbl:"Score"} ] }),
+    campos: [
+      {key:"columnas",label:"Columnas",tipo:"select",opciones:[["2","2 columnas"],["3","3 columnas"],["4","4 columnas"]]},
+      {key:"items",label:"Stats",tipo:"lista",itemTipos:[{valor:"stat",label:"Stat",camposItem:[{k:"num",l:"Número"},{k:"lbl",l:"Etiqueta"}]}]},
+      ...styleFields()
+    ],
+    render: (d) => {
+      const cols = parseInt(d.columnas)||3;
+      const items = (d.items||[]).map(it => `<div class="stat"><div class="num">${esc(it.num||"")}</div><div class="lbl">${esc(it.lbl||"")}</div></div>`).join("");
+      return wrap(d, `<div class="sbb-stat-grid" style="grid-template-columns:repeat(${cols},1fr);">${items}</div>`);
+    }
+  },
+
+  spark: {
+    cat:"Datos", nombre:"Métrica con sparkline", icono:"📈", sub:"Número + mini gráfico",
+    defaults: Object.assign({}, styleDefaults, { numero:"9956", label:"Total Progress", trendValor:"+38.69%", trendDireccion:"up", datos:"4,8,6,12,9,15,11,18,14,22,19,28,24,30", color:"" }),
+    campos: [
+      {key:"numero",label:"Número",tipo:"text"},
+      {key:"label",label:"Etiqueta",tipo:"text"},
+      {tipo:"row2", izq:{key:"trendValor",label:"Texto tendencia",tipo:"text"}, der:{key:"trendDireccion",label:"Dirección",tipo:"select",opciones:[["up","↑ subiendo"],["down","↓ bajando"]]}},
+      {key:"datos",label:"Datos (números separados por coma)",tipo:"text"},
+      {key:"color",label:"Color línea (vacío = tema)",tipo:"color"},
+      ...styleFields()
+    ],
+    render: (d) => {
+      const nums = (d.datos||"").split(",").map(s => parseFloat(s.trim())).filter(n => !isNaN(n));
+      const w = 200, h = 50;
+      let path = "";
+      if(nums.length > 1){
+        const max = Math.max(...nums), min = Math.min(...nums), range = max-min || 1;
+        path = nums.map((n,i) => {
+          const x = (i / (nums.length-1)) * w;
+          const y = h - ((n - min) / range) * h;
+          return (i===0?"M":"L") + x.toFixed(1) + " " + y.toFixed(1);
+        }).join(" ");
+      }
+      const color = d.color || getTema().primary;
+      const tCls = d.trendDireccion || "up";
+      const ar = tCls==="up"?"↑":"↓";
+      return wrap(d, `<div class="sbb-spark"><div class="top"><span class="num">${esc(d.numero)}</span><span class="trend ${tCls}">${ar} ${esc(d.trendValor)}</span></div><svg viewBox="0 0 ${w} ${h}" preserveAspectRatio="none" style="height:50px;"><path d="${path}" fill="none" stroke="${esc(color)}" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg><div class="lbl">${esc(d.label)}</div></div>`);
+    }
+  },
+
+  rating: {
+    cat:"Datos", nombre:"Rating de estrellas", icono:"⭐", sub:"5 estrellas + score",
+    defaults: Object.assign({}, styleDefaults, { valor:"4.5", max:"5", reviews:"234 reviews" }),
+    campos: [
+      {tipo:"row2", izq:{key:"valor",label:"Valor",tipo:"text"}, der:{key:"max",label:"Máximo",tipo:"text"}},
+      {key:"reviews",label:"Texto reviews",tipo:"text"},
+      ...styleFields()
+    ],
+    render: (d) => {
+      const v = parseFloat(d.valor)||0;
+      const max = parseInt(d.max)||5;
+      let stars = "";
+      for(let i=1; i<=max; i++) stars += i <= v ? `<span>★</span>` : (i-0.5<=v ? `<span>★</span>` : `<span class="empty">★</span>`);
+      return wrap(d, `<div class="sbb-rating"><div class="stars">${stars}</div><span class="num">${esc(d.valor)}</span>${d.reviews?`<span class="reviews">${esc(d.reviews)}</span>`:""}</div>`);
+    }
+  },
+
+  product: {
+    cat:"Cards", nombre:"Tarjeta de producto", icono:"🛍", sub:"Imagen + nombre + precio + CTA",
+    defaults: Object.assign({}, styleDefaults, { padTop:"6", padBottom:"6", imagenUrl:"https://placehold.co/600x400/e5e7ea/9ca3af?text=Producto", nombre:"Producto", descripcion:"Descripción corta", precio:"$0.00", ctaTexto:"Comprar", ctaUrl:"" }),
+    campos: [
+      {key:"imagenUrl",label:"URL de la imagen",tipo:"text"},
+      {key:"nombre",label:"Nombre",tipo:"text"},
+      {key:"descripcion",label:"Descripción",tipo:"text"},
+      {key:"precio",label:"Precio",tipo:"text"},
+      {tipo:"row2", izq:{key:"ctaTexto",label:"Texto CTA",tipo:"text"}, der:{key:"ctaUrl",label:"URL CTA",tipo:"text"}},
+      ...styleFields()
+    ],
+    render: (d) => wrap(d, `<div class="sbb-product"><img src="${esc(d.imagenUrl)}" alt=""><div class="body"><div class="head"><div class="name">${esc(d.nombre)}</div><div class="price">${esc(d.precio)}</div></div>${d.descripcion?`<div class="desc">${esc(d.descripcion)}</div>`:""}${d.ctaTexto&&d.ctaUrl?`<a class="cta" href="${esc(d.ctaUrl)}" target="_blank" rel="noopener">${esc(d.ctaTexto)}</a>`:""}</div></div>`)
+  },
+
+  profileCard: {
+    cat:"Cards", nombre:"Tarjeta de perfil", icono:"👤", sub:"Avatar + nombre + stats + CTA",
+    defaults: Object.assign({}, styleDefaults, { padTop:"6", padBottom:"6", avatarUrl:"https://placehold.co/96x96/e5e7ea/9ca3af?text=A", nombre:"Nombre", sub:"@usuario", mostrarCta:true, ctaTexto:"Seguir", ctaUrl:"", mostrarStats:true, stats:[ {num:"198",lbl:"Comentarios"}, {num:"389",lbl:"Personas"} ] }),
+    campos: [
+      {key:"avatarUrl",label:"URL del avatar",tipo:"text"},
+      {key:"nombre",label:"Nombre",tipo:"text"},
+      {key:"sub",label:"Subtítulo",tipo:"text"},
+      {key:"mostrarCta",label:"Mostrar botón",tipo:"check"},
+      {tipo:"row2", izq:{key:"ctaTexto",label:"Texto CTA",tipo:"text"}, der:{key:"ctaUrl",label:"URL CTA",tipo:"text"}},
+      {key:"mostrarStats",label:"Mostrar stats al pie",tipo:"check"},
+      {key:"stats",label:"Stats",tipo:"lista",itemTipos:[{valor:"stat",label:"Stat",camposItem:[{k:"num",l:"Número"},{k:"lbl",l:"Etiqueta"}]}]},
+      ...styleFields()
+    ],
+    render: (d) => {
+      const stats = d.mostrarStats && d.stats && d.stats.length ? `<div class="stats">${d.stats.map(s => `<div class="stat"><div class="num">${esc(s.num||"")}</div><div class="lbl">${esc(s.lbl||"")}</div></div>`).join("")}</div>` : "";
+      return wrap(d, `<div class="sbb-profile"><div class="head"><img class="avatar" src="${esc(d.avatarUrl)}" alt=""><div class="who"><div class="name">${esc(d.nombre)}</div><div class="sub">${esc(d.sub)}</div></div>${d.mostrarCta?`<a class="cta" href="${esc(d.ctaUrl||"#")}" target="_blank" rel="noopener">${esc(d.ctaTexto)}</a>`:""}</div>${stats}</div>`);
+    }
+  },
+
+  testimonial: {
+    cat:"Cards", nombre:"Testimonio", icono:"💬", sub:"Cita + autor",
+    defaults: Object.assign({}, styleDefaults, { padTop:"6", padBottom:"6", cita:"Escribe aquí la cita o testimonio del cliente.", avatarUrl:"https://placehold.co/72x72/e5e7ea/9ca3af?text=A", autor:"Nombre Apellido", cargo:"Cargo · Empresa" }),
+    campos: [
+      {key:"cita",label:"Cita / testimonio",tipo:"textarea"},
+      {key:"avatarUrl",label:"URL avatar",tipo:"text"},
+      {key:"autor",label:"Nombre del autor",tipo:"text"},
+      {key:"cargo",label:"Cargo / empresa",tipo:"text"},
+      ...styleFields()
+    ],
+    render: (d) => wrap(d, `<div class="sbb-testi"><div class="quote">${escMultiline(d.cita)}</div><div class="author"><img class="avatar" src="${esc(d.avatarUrl)}" alt=""><div><div class="n">${esc(d.autor)}</div><div class="r">${esc(d.cargo)}</div></div></div></div>`)
+  },
+
+  article: {
+    cat:"Cards", nombre:"Artículo / Post", icono:"📰", sub:"Imagen + título + lead + link",
+    defaults: Object.assign({}, styleDefaults, { padTop:"6", padBottom:"6", imagenUrl:"https://placehold.co/600x320/e5e7ea/9ca3af?text=Imagen", categoria:"Categoría", titulo:"Título del artículo", lead:"Lead del artículo en una o dos líneas para generar interés.", linkTexto:"Leer más →", linkUrl:"" }),
+    campos: [
+      {key:"imagenUrl",label:"URL de la imagen",tipo:"text"},
+      {key:"categoria",label:"Categoría / kicker",tipo:"text"},
+      {key:"titulo",label:"Título",tipo:"text"},
+      {key:"lead",label:"Lead",tipo:"textarea"},
+      {tipo:"row2", izq:{key:"linkTexto",label:"Texto enlace",tipo:"text"}, der:{key:"linkUrl",label:"URL",tipo:"text"}},
+      ...styleFields()
+    ],
+    render: (d) => wrap(d, `<div class="sbb-article"><img src="${esc(d.imagenUrl)}" alt=""><div class="body">${d.categoria?`<div class="cat">${esc(d.categoria)}</div>`:""}<h3 class="title">${esc(d.titulo)}</h3>${d.lead?`<div class="lead">${escMultiline(d.lead)}</div>`:""}${d.linkTexto&&d.linkUrl?`<a class="more" href="${esc(d.linkUrl)}" target="_blank" rel="noopener">${esc(d.linkTexto)}</a>`:""}</div></div>`)
+  },
+
+  pricing: {
+    cat:"Cards", nombre:"Plan de precios", icono:"💳", sub:"Tier + precio + features + CTA",
+    defaults: Object.assign({}, styleDefaults, { padTop:"6", padBottom:"6", destacado:false, tier:"PRO", precio:"$49", periodo:"/mes", features:[ {tipo:"feat",texto:"Todo lo del plan básico"}, {tipo:"feat",texto:"Soporte prioritario"}, {tipo:"feat",texto:"Sin límite de usuarios"} ], ctaTexto:"Empezar", ctaUrl:"" }),
+    campos: [
+      {key:"destacado",label:"⭐ Plan destacado (fondo color)",tipo:"check"},
+      {key:"tier",label:"Nombre del plan",tipo:"text"},
+      {tipo:"row2", izq:{key:"precio",label:"Precio",tipo:"text"}, der:{key:"periodo",label:"Periodo (/mes, /año)",tipo:"text"}},
+      {key:"features",label:"Features",tipo:"lista",itemTipos:[{valor:"feat",label:"Feature",camposItem:[{k:"texto",l:"Texto"}]}]},
+      {tipo:"row2", izq:{key:"ctaTexto",label:"Texto CTA",tipo:"text"}, der:{key:"ctaUrl",label:"URL CTA",tipo:"text"}},
+      ...styleFields()
+    ],
+    render: (d) => {
+      const feats = (d.features||[]).map(f => `<li>${esc(f.texto||"")}</li>`).join("");
+      return wrap(d, `<div class="sbb-pricing${d.destacado?" destacado":""}"><div class="tier">${esc(d.tier)}</div><div class="price-row"><span class="price">${esc(d.precio)}</span><span class="period">${esc(d.periodo)}</span></div><ul class="features">${feats}</ul>${d.ctaTexto?`<a class="cta" href="${esc(d.ctaUrl||"#")}" target="_blank" rel="noopener">${esc(d.ctaTexto)}</a>`:""}</div>`);
+    }
+  },
+
+  hero: {
+    cat:"Estructura", nombre:"Hero con overlay", icono:"🌅", sub:"Imagen full + texto encima",
+    defaults: Object.assign({}, styleDefaults, { padTop:"0", padBottom:"0", imagenUrl:"https://placehold.co/1200x500/040764/9ca3af?text=Hero", titulo:"Título del hero", sub:"Subtítulo que acompaña al título", ctaTexto:"Saber más", ctaUrl:"", alturaHero:"320", oscurecer:"50" }),
+    campos: [
+      {key:"imagenUrl",label:"URL imagen de fondo",tipo:"text"},
+      {key:"titulo",label:"Título",tipo:"text"},
+      {key:"sub",label:"Subtítulo",tipo:"textarea"},
+      {tipo:"row2", izq:{key:"ctaTexto",label:"Texto CTA",tipo:"text"}, der:{key:"ctaUrl",label:"URL CTA",tipo:"text"}},
+      {tipo:"row2", izq:{key:"alturaHero",label:"Alto (px)",tipo:"range",min:140,max:600,step:10}, der:{key:"oscurecer",label:"Oscurecer (%)",tipo:"range",min:0,max:80,step:5}},
+      ...styleFields()
+    ],
+    render: (d) => {
+      const veil = `background:linear-gradient(180deg,rgba(0,0,0,0) 0%,rgba(0,0,0,${(parseInt(d.oscurecer)||50)/100}) 100%);`;
+      return wrap(d, `<div class="sbb-hero" style="height:${esc(d.alturaHero)}px;"><img class="bg" src="${esc(d.imagenUrl)}" alt=""><div class="veil" style="${veil}"></div><div class="content" style="height:${esc(d.alturaHero)}px;"><h2>${esc(d.titulo)}</h2>${d.sub?`<p>${escMultiline(d.sub)}</p>`:""}${d.ctaTexto&&d.ctaUrl?`<a href="${esc(d.ctaUrl)}" target="_blank" rel="noopener">${esc(d.ctaTexto)}</a>`:""}</div></div>`);
+    }
+  },
+
+  alert: {
+    cat:"Estructura", nombre:"Banner / Alerta", icono:"🔔", sub:"Aviso info / warning / éxito / error",
+    defaults: Object.assign({}, styleDefaults, { padTop:"6", padBottom:"6", tipo:"info", icono:"ℹ", titulo:"Información importante", mensaje:"Mensaje que el destinatario debe leer." }),
+    campos: [
+      {key:"tipo",label:"Tipo",tipo:"select",opciones:[["info","ℹ Info (azul)"],["warning","⚠ Warning (amarillo)"],["success","✓ Éxito (verde)"],["error","✗ Error (rojo)"]]},
+      {key:"icono",label:"Emoji o ícono",tipo:"text"},
+      {key:"titulo",label:"Título",tipo:"text"},
+      {key:"mensaje",label:"Mensaje",tipo:"textarea"},
+      ...styleFields()
+    ],
+    render: (d) => wrap(d, `<div class="sbb-alert ${esc(d.tipo)}"><span class="ico">${esc(d.icono||"ℹ")}</span><div class="body">${d.titulo?`<div class="title">${esc(d.titulo)}</div>`:""}${d.mensaje?`<div class="msg">${escMultiline(d.mensaje)}</div>`:""}</div></div>`)
+  },
+
+  features: {
+    cat:"Contenido", nombre:"Lista de features", icono:"✨", sub:"Items con ícono + título + sub",
+    defaults: Object.assign({}, styleDefaults, { padTop:"6", padBottom:"6", titulo:"", items:[ {ico:"⚡",t:"Velocidad",s:"Carga instantánea en cualquier dispositivo."}, {ico:"🔒",t:"Seguridad",s:"Cifrado de extremo a extremo."}, {ico:"💎",t:"Calidad",s:"Diseño premium en cada detalle."} ] }),
+    campos: [
+      {key:"titulo",label:"Título superior (opcional)",tipo:"text"},
+      {key:"items",label:"Features",tipo:"lista",itemTipos:[{valor:"feat",label:"Feature",camposItem:[{k:"ico",l:"Emoji"},{k:"t",l:"Título"},{k:"s",l:"Subtítulo"}]}]},
+      ...styleFields()
+    ],
+    render: (d) => {
+      const items = (d.items||[]).map(it => `<li><div class="ico">${esc(it.ico||"")}</div><div class="txt"><div class="t">${esc(it.t||"")}</div>${it.s?`<div class="s">${esc(it.s)}</div>`:""}</div></li>`).join("");
+      return wrap(d, `<div class="sbb-features">${d.titulo?`<h3>${esc(d.titulo)}</h3>`:""}<ul>${items}</ul></div>`);
+    }
+  },
+
+  audio: {
+    cat:"Multimedia", nombre:"Audio / Podcast", icono:"🎵", sub:"Cover + título + play",
+    defaults: Object.assign({}, styleDefaults, { padTop:"6", padBottom:"6", coverUrl:"https://placehold.co/120x120/0f172a/fce865?text=♪", titulo:"Título del audio", artista:"Artista o autor", url:"" }),
+    campos: [
+      {key:"coverUrl",label:"URL del cover",tipo:"text"},
+      {key:"titulo",label:"Título",tipo:"text"},
+      {key:"artista",label:"Artista / autor",tipo:"text"},
+      {key:"url",label:"URL del audio (Spotify, etc.)",tipo:"text"},
+      ...styleFields()
+    ],
+    render: (d) => wrap(d, `<a class="sbb-audio" href="${esc(d.url||"#")}" target="_blank" rel="noopener" style="text-decoration:none;"><img class="cover" src="${esc(d.coverUrl)}" alt=""><div class="info"><div class="title">${esc(d.titulo)}</div><div class="artist">${esc(d.artista)}</div></div><span class="play">▶</span></a>`)
+  },
+
   footer: {
     cat:"Estructura", nombre:"Footer", icono:"🔻", sub:"Pie de pieza",
     defaults: Object.assign({}, styleDefaults, { padTop:"24", padBottom:"32", empresa:"Empresa", direccion:"", copyright:"", mostrarUnsub:false, unsubTexto:"Darme de baja", unsubUrl:"" }),
@@ -1105,7 +1479,7 @@ function renderBiblioteca(){
   const cont = document.getElementById("biblioteca");
   const cats = {};
   Object.entries(BLOQUES).forEach(([tipo,b]) => { const c=b.cat||"Otros"; if(!cats[c])cats[c]=[]; cats[c].push([tipo,b]); });
-  const orden = ["Estructura","Contenido","Acción","Agenda","Widgets"];
+  const orden = ["Estructura","Contenido","Acción","Agenda","Datos","Cards","Multimedia","Widgets","Decoración","Avanzado"];
   let html = "";
   orden.concat(Object.keys(cats).filter(c=>!orden.includes(c))).forEach(cat => {
     if(!cats[cat]) return;
