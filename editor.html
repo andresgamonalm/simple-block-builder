@@ -1686,6 +1686,10 @@ const BLOQUES = {
   }
 };
 
+// Formatos de tamaño fijo (banners): el Formato manda y el "Ancho canvas"
+// del Tema no debe aplicarse, para que no se pisen entre sí.
+const FORMATOS_FIJOS = new Set(["linkedin","display-300x250","display-728x90","display-300x600"]);
+
 const HINTS = {
   "email":{badge:"Email",txt:"600px de ancho. Ideal para HubSpot, Gmail, Outlook."},
   "invitacion":{badge:"Invitación",txt:"920px responsive. Para invitaciones digitales."},
@@ -1699,6 +1703,8 @@ function cambiarFormato(f){
   const p = pieza(); if(!p) return;
   p.formato = f;
   document.getElementById("canvas-frame").dataset.formato = f;
+  aplicarTema();   // reconcilia el ancho inline según el nuevo formato
+  renderCanvas();  // banners de alto fijo distribuyen los bloques con flex
   renderTabsPiezas();
   persistir();
 }
@@ -1710,13 +1716,20 @@ function aplicarTema(){
   f.style.setProperty("--sbb-primary", t.primary);
   f.style.setProperty("--sbb-text", t.text);
   f.style.setProperty("--sbb-bg", t.bg);
-  if(t.ancho && /^\d+$/.test(t.ancho)) f.style.maxWidth = t.ancho+"px";
+  // El "Ancho canvas" solo aplica a formatos flexibles. En banners de tamaño
+  // fijo se ignora (lo manda el Formato) para que no se pisen entre sí.
+  const formatoFijo = FORMATOS_FIJOS.has(getFormato());
+  if(!formatoFijo && t.ancho && /^\d+$/.test(t.ancho)) f.style.maxWidth = t.ancho+"px";
   else f.style.maxWidth = "";
   document.getElementById("tema-font").value = t.font;
   document.getElementById("tema-primary").value = t.primary;
   document.getElementById("tema-text").value = t.text;
   document.getElementById("tema-bg").value = t.bg;
-  document.getElementById("tema-ancho").value = t.ancho || "";
+  const anchoInput = document.getElementById("tema-ancho");
+  anchoInput.value = t.ancho || "";
+  // Deshabilita el campo cuando el formato fija el tamaño, para que quede claro.
+  anchoInput.disabled = formatoFijo;
+  anchoInput.title = formatoFijo ? "El tamaño lo define el formato del banner" : "";
   // refresca los hex visibles
   const setHex = (id, v) => { const el = document.getElementById(id); if(el) el.textContent = (v||"").toUpperCase(); };
   setHex("hex-primary", t.primary);
