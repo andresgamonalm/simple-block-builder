@@ -2195,7 +2195,14 @@ function generarHTMLDePieza(p){
   const ancho = (p.tema.ancho && /^\d+$/.test(p.tema.ancho)) ? p.tema.ancho :
     (p.formato==="email"?"600":p.formato==="display-300x250"||p.formato==="display-300x600"?"300":p.formato==="display-728x90"?"728":p.formato==="linkedin"?"1584":"920");
   const altoFijo = p.formato==="linkedin"?"396":p.formato==="display-300x250"?"250":p.formato==="display-728x90"?"90":p.formato==="display-300x600"?"600":"";
-  const css = document.querySelector("style").textContent.split("/* ═══════════════════════════════════════════════════════════════\n   COMPONENT STYLES")[1] || "";
+  // CSS de componentes: desde el marcador COMPONENT STYLES hasta el final del
+  // <style>. Si el marcador cambiara, incluimos TODO el CSS (nunca vacío), para
+  // que el HTML exportado siempre lleve sus estilos (clave para HubSpot).
+  const cssFull = (document.querySelector("style") && document.querySelector("style").textContent) || "";
+  const cssIdx = cssFull.indexOf("COMPONENT STYLES");
+  let css;
+  if(cssIdx >= 0){ const cierre = cssFull.indexOf("*/", cssIdx); css = cierre >= 0 ? cssFull.slice(cierre + 2) : cssFull.slice(cssIdx); }
+  else { css = cssFull; }
   const cuerpo = p.canvas.map(item => {
     const meta = JSON.stringify({tipo:item.tipo, datos:item.datos});
     return `<!--SBB:${meta}:SBB-->\n${BLOQUES[item.tipo].render(item.datos).trim()}\n<!--/SBB-->`;
@@ -2213,13 +2220,15 @@ function generarHTMLDePieza(p){
   })();
   const fonts = `<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=${encodeURIComponent(p.tema.font)}:wght@300;400;500;600;700&display=swap" rel="stylesheet">`;
-  const liveScript = `<script>
+  // JS solo si la pieza realmente lo usa (reloj/countdown en vivo).
+  const necesitaJS = /data-(reloj|countdown)/.test(cuerpo);
+  const liveScript = necesitaJS ? `<script>
 (function(){
   const MESES=${JSON.stringify(MESES_ES)},DIAS=${JSON.stringify(DIAS_ES)};
   document.querySelectorAll("[data-reloj]").forEach(el=>{const tick=()=>{const showSeg=el.dataset.segundos==="1",showFecha=el.dataset.fecha==="1",h24=el.dataset.h24==="1",now=new Date();let h=now.getHours();const ampm=h>=12?"PM":"AM";if(!h24)h=h%12||12;const hh=String(h).padStart(2,"0"),mm=String(now.getMinutes()).padStart(2,"0"),ss=String(now.getSeconds()).padStart(2,"0"),horaEl=el.querySelector(".hora");if(horaEl)horaEl.innerHTML=hh+'<span class="sep">:</span>'+mm+(showSeg?'<span class="sep">:</span><span class="seg">'+ss+'</span>':'')+(!h24?' <span class="seg">'+ampm+'</span>':'');if(showFecha){const fEl=el.querySelector(".fecha");if(fEl){const dow=DIAS[now.getDay()];fEl.textContent=dow.charAt(0).toUpperCase()+dow.slice(1)+", "+now.getDate()+" de "+MESES[now.getMonth()];}}};tick();setInterval(tick,1000);});
   document.querySelectorAll("[data-countdown]").forEach(el=>{const tick=()=>{const target=new Date(el.dataset.target).getTime();let diff=Math.max(0,target-Date.now());const d=Math.floor(diff/86400000);diff-=d*86400000;const h=Math.floor(diff/3600000);diff-=h*3600000;const m=Math.floor(diff/60000);diff-=m*60000;const s=Math.floor(diff/1000);const u=el.querySelectorAll(".unit .num");if(u[0])u[0].textContent=String(d).padStart(2,"0");if(u[1])u[1].textContent=String(h).padStart(2,"0");if(u[2])u[2].textContent=String(m).padStart(2,"0");if(u[3])u[3].textContent=String(s).padStart(2,"0");};tick();setInterval(tick,1000);});
 })();
-<\/script>`;
+<\/script>` : "";
   // ── Banners de tamaño fijo (LinkedIn / Display): salida con alto fijo ──
   if(esBanner){
     return `<!DOCTYPE html>
