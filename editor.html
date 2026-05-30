@@ -673,6 +673,10 @@ button,input,select,textarea{font-family:inherit;}
             <div class="tb-color"><input type="color" id="tema-bg" onchange="cambiarTema('bg',this.value)"><span class="hex" id="hex-bg">#000000</span></div>
           </div>
           <div class="tema-pop-row">
+            <label>Fondo de página</label>
+            <input type="text" id="tema-bgpagina" onchange="cambiarTema('bgPagina',this.value)" placeholder="igual al contenido">
+          </div>
+          <div class="tema-pop-row">
             <label>Ancho canvas</label>
             <input type="text" id="tema-ancho" onchange="cambiarTema('ancho',this.value)" placeholder="auto, 600px">
           </div>
@@ -728,7 +732,7 @@ let livePreviewIntervals = [];
 function pieza(){ return proyecto.piezas.find(p => p.id === proyecto.activa); }
 function getCanvas(){ return pieza()?.canvas || []; }
 function getFormato(){ return pieza()?.formato || "email"; }
-function getTema(){ return pieza()?.tema || { font:"Inter", primary:"#040764", text:"#1a1a1a", bg:"#ffffff", ancho:"" }; }
+function getTema(){ return pieza()?.tema || { font:"Inter", primary:"#040764", text:"#1a1a1a", bg:"#ffffff", bgPagina:"", ancho:"" }; }
 
 function esc(s){ if(s==null) return ""; return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;"); }
 function escMultiline(s){ return esc(s||"").replace(/\n/g,"<br>"); }
@@ -1797,6 +1801,8 @@ function aplicarTema(){
   document.getElementById("tema-primary").value = t.primary;
   document.getElementById("tema-text").value = t.text;
   document.getElementById("tema-bg").value = t.bg;
+  const bgpInput = document.getElementById("tema-bgpagina");
+  if(bgpInput) bgpInput.value = t.bgPagina || "";
   const anchoInput = document.getElementById("tema-ancho");
   anchoInput.value = t.ancho || "";
   // Deshabilita el campo cuando el formato fija el tamaño, para que quede claro.
@@ -1811,7 +1817,7 @@ function aplicarTema(){
 function cambiarTema(key, valor){ const p = pieza(); if(!p) return; p.tema[key] = valor; aplicarTema(); renderCanvas(); persistir(); }
 
 function crearPieza(formato, nombre){
-  const p = { id:uid(), nombre: nombre || `Pieza ${proyecto.piezas.length+1}`, formato: formato||"email", canvas:[], tema: { font:"Inter", primary:"#040764", text:"#1a1a1a", bg:"#ffffff", ancho:"" } };
+  const p = { id:uid(), nombre: nombre || `Pieza ${proyecto.piezas.length+1}`, formato: formato||"email", canvas:[], tema: { font:"Inter", primary:"#040764", text:"#1a1a1a", bg:"#ffffff", bgPagina:"", ancho:"" } };
   proyecto.piezas.push(p);
   proyecto.activa = p.id;
   return p;
@@ -2197,6 +2203,14 @@ function generarHTMLDePieza(p){
   const meta = `<!--SBB-PIECE:${JSON.stringify({nombre:p.nombre, formato:p.formato, tema:p.tema})}:SBB-PIECE-->`;
   const altoCss = altoFijo ? `height:${altoFijo}px;overflow:hidden;` : "";
   const esBanner = altoFijo !== "";
+  // Fondo de página: lo elige el usuario; si no, usa el del contenido (sin
+  // gris impuesto). Así banner y email se comportan igual y son controlables.
+  const colorPagina = (() => {
+    let v = (p.tema.bgPagina || "").trim();
+    if(!v) return p.tema.bg;
+    if(/^([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/.test(v)) v = "#" + v;
+    return /^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/.test(v) ? v : p.tema.bg;
+  })();
   const fonts = `<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=${encodeURIComponent(p.tema.font)}:wght@300;400;500;600;700&display=swap" rel="stylesheet">`;
   const liveScript = `<script>
@@ -2214,7 +2228,7 @@ function generarHTMLDePieza(p){
 ${fonts}
 <style>
 *{box-sizing:border-box;margin:0;padding:0;}
-body{font-family:"${p.tema.font}",Arial,sans-serif;background:#f5f5f5;color:${p.tema.text};-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale;}
+body{font-family:"${p.tema.font}",Arial,sans-serif;background:${colorPagina};color:${p.tema.text};-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale;}
 .sbb-container{max-width:${ancho}px;margin:0 auto;background:${p.tema.bg};${altoCss}}
 .sbb-page{font-family:inherit;color:inherit;background:inherit;height:100%;display:flex;flex-direction:column;}
 .sbb-page > div{flex:1;}
@@ -2250,7 +2264,7 @@ ${liveScript}
 ${fonts}
 <style>
 html,body{margin:0!important;padding:0!important;width:100%!important;}
-body{font-family:"${p.tema.font}",Arial,sans-serif;background:#f5f5f5;color:${p.tema.text};-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale;}
+body{font-family:"${p.tema.font}",Arial,sans-serif;background:${colorPagina};color:${p.tema.text};-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale;}
 table{border-collapse:collapse;mso-table-lspace:0pt;mso-table-rspace:0pt;}
 img{border:0;outline:none;text-decoration:none;-ms-interpolation-mode:bicubic;max-width:100%;height:auto;}
 a{text-decoration:none;}
@@ -2262,9 +2276,9 @@ ${css}
 }
 </style>
 </head>
-<body style="margin:0;padding:0;background:#f5f5f5;">
+<body style="margin:0;padding:0;background:${colorPagina};">
 ${meta}
-<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="width:100%;background:#f5f5f5;">
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="width:100%;background:${colorPagina};">
 <tr><td align="center" style="padding:0;">
 <!--[if mso]><table role="presentation" width="${ancho}" cellpadding="0" cellspacing="0" border="0" align="center"><tr><td><![endif]-->
 <table role="presentation" class="sbb-container" width="${ancho}" cellpadding="0" cellspacing="0" border="0" style="width:${ancho}px;max-width:${ancho}px;margin:0 auto;background:${p.tema.bg};">
