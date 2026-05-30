@@ -102,6 +102,11 @@ button,input,select,textarea{font-family:inherit;}
 .brand-text .n{font-size:13.5px;font-weight:600;color:var(--navy);letter-spacing:-.01em;}
 .brand-text .s{font-size:10px;color:var(--ink3);font-weight:400;margin-top:2px;}
 
+.sync-status{font-size:11px;font-weight:500;color:var(--ink3);flex-shrink:0;white-space:nowrap;padding:0 6px;transition:color .2s;}
+.sync-status.ok{color:#2e7d32;}
+.sync-status.saving{color:var(--ink2);}
+.sync-status.pend{color:#b26a00;}
+.sync-status.err{color:var(--err,#c0392b);}
 .user-chip{display:flex;align-items:center;gap:6px;padding:4px 6px 4px 12px;border:1px solid var(--bdr);border-radius:999px;font-size:12px;color:var(--ink2);flex-shrink:0;background:var(--white);}
 .user-chip .em{max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:500;}
 .user-chip button{border:none;background:var(--bg);color:var(--ink3);width:24px;height:24px;border-radius:50%;cursor:pointer;font-size:12px;display:flex;align-items:center;justify-content:center;transition:all .14s;}
@@ -624,6 +629,7 @@ button,input,select,textarea{font-family:inherit;}
       <button class="tb-btn" onclick="abrirImportar()" title="Importar HTML">📥 Importar</button>
       <button class="tb-btn primary" onclick="abrirExportar()">📤 Exportar HTML</button>
       <button class="tb-btn danger icon-only" onclick="vaciarCanvas()" title="Vaciar pieza actual">🗑</button>
+      <span class="sync-status" id="sync-status" title="Estado de guardado en la nube">☁ —</span>
       <div class="user-chip" id="user-chip" style="display:none;">
         <span class="em" id="user-email"></span>
         <button onclick="cerrarSesion()" title="Cerrar sesión">↩</button>
@@ -730,15 +736,81 @@ function escAttr(s){ return esc(s).replace(/'/g,"&#39;"); }
 function uid(){ return "b"+Math.random().toString(36).slice(2,9); }
 function clone(o){ return JSON.parse(JSON.stringify(o)); }
 function toast(msg, ms=2200){ const t=document.getElementById("toast"); t.textContent=msg; t.classList.add("show"); clearTimeout(toast._t); toast._t=setTimeout(()=>t.classList.remove("show"),ms); }
-function persistir(){ try{localStorage.setItem(STORAGE_KEY, JSON.stringify(proyecto));}catch(e){} }
+function persistir(){
+  proyecto._ts = Date.now();                       // marca de tiempo para sync
+  try{localStorage.setItem(STORAGE_KEY, JSON.stringify(proyecto));}catch(e){}
+  guardarEnNubeDebounced();
+}
+let _tsAlCargar = 0;  // timestamp real de la copia local al arrancar (para sync)
 function recuperar(){
   try{
     const r=localStorage.getItem(STORAGE_KEY);
     if(!r){ crearPieza("email","Pieza 1"); return; }
     const o=JSON.parse(r);
-    if(o.piezas && o.piezas.length){ proyecto = o; if(!proyecto.activa) proyecto.activa = proyecto.piezas[0].id; }
+    if(o.piezas && o.piezas.length){ proyecto = o; if(!proyecto.activa) proyecto.activa = proyecto.piezas[0].id; _tsAlCargar = o._ts || 0; }
     else crearPieza("email","Pieza 1");
   }catch(e){ crearPieza("email","Pieza 1"); }
+}
+
+/* ── Sincronización con la nube (D1 vía /api/proyectos) ──────────────────
+   localStorage es la caché instantánea/offline; D1 es la copia durable y
+   compartida entre dispositivos. Guardado con debounce; al iniciar se carga
+   lo más reciente (last-write-wins por timestamp). */
+let _saveTimer = null, _guardando = false;
+function setSyncEstado(txt, cls){
+  const el = document.getElementById("sync-status");
+  if(!el) return;
+  el.textContent = txt;
+  el.className = "sync-status" + (cls?(" "+cls):"");
+}
+function guardarEnNubeDebounced(){
+  clearTimeout(_saveTimer);
+  setSyncEstado("● Sin guardar", "pend");
+  _saveTimer = setTimeout(guardarEnNube, 1200);
+}
+async function guardarEnNube(){
+  if(_guardando) { guardarEnNubeDebounced(); return; }
+  _guardando = true;
+  setSyncEstado("☁ Guardando…", "saving");
+  try{
+    const r = await fetch("/api/proyectos", {
+      method:"POST", credentials:"include",
+      headers:{ "Content-Type":"application/json" },
+      body: JSON.stringify({ proyecto })
+    });
+    if(r.ok){ setSyncEstado("☁ Guardado", "ok"); }
+    else { setSyncEstado("⚠ Solo local", "err"); }
+  }catch(e){ setSyncEstado("⚠ Sin conexión", "err"); }
+  finally{ _guardando = false; }
+}
+async function sincronizarConNube(){
+  setSyncEstado("☁ Sincronizando…", "saving");
+  try{
+    const r = await fetch("/api/proyectos", { credentials:"include" });
+    if(!r.ok){ setSyncEstado("⚠ Solo local", "err"); return; }
+    const data = await r.json();
+    const remoto = data && data.proyecto;
+    const tsRemoto = remoto && remoto._ts ? remoto._ts : 0;
+    // Comparamos contra el timestamp REAL de localStorage al cargar (no contra
+    // el que los renders de arranque pudieron regenerar).
+    const tsLocal  = _tsAlCargar;
+    if(remoto && Array.isArray(remoto.piezas) && remoto.piezas.length && tsRemoto > tsLocal){
+      // La nube tiene una versión más nueva → adoptarla.
+      proyecto = remoto;
+      if(!proyecto.activa) proyecto.activa = proyecto.piezas[0].id;
+      try{localStorage.setItem(STORAGE_KEY, JSON.stringify(proyecto));}catch(e){}
+      const p0 = pieza();
+      if(p0){ document.getElementById("fmt").value = p0.formato; cambiarFormato(p0.formato); aplicarTema(); }
+      renderTabsPiezas(); renderCanvas(); renderForm();
+      setSyncEstado("☁ Guardado", "ok");
+      toast("Proyecto sincronizado desde la nube");
+    } else if(tsLocal > tsRemoto){
+      // Lo local es más nuevo (o la nube está vacía) → subirlo.
+      await guardarEnNube();
+    } else {
+      setSyncEstado("☁ Guardado", "ok");
+    }
+  }catch(e){ setSyncEstado("⚠ Sin conexión", "err"); }
 }
 function paddings(d){ const t=d.padTop??"14",r=d.padRight??"24",b=d.padBottom??"14",l=d.padLeft??"24"; return `${t}px ${r}px ${b}px ${l}px`; }
 function justifyH(v){ return v==="left"?"flex-start":v==="right"?"flex-end":"center"; }
@@ -2317,6 +2389,7 @@ renderTabsPiezas();
 renderBiblioteca();
 renderCanvas();
 renderForm();
+sincronizarConNube();   // carga/sube la copia durable en D1 sin bloquear la UI
 
 document.querySelectorAll(".modal-bg").forEach(m => { m.addEventListener("click", (e) => { if(e.target===m) m.classList.remove("show"); }); });
 document.addEventListener("keydown", (e) => { if(e.key==="Escape") document.querySelectorAll(".modal-bg.show").forEach(m => m.classList.remove("show")); });
