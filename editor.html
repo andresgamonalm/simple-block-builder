@@ -177,17 +177,12 @@ button,input,select,textarea{font-family:inherit;}
 .fmt-hint .badge{background:var(--navy);color:var(--white);padding:2px 8px;border-radius:4px;font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.04em;}
 
 .canvas-frame{background:var(--sbb-bg,var(--white));width:100%;transition:max-width .25s ease,height .25s ease;box-shadow:var(--sh2);border-radius:8px;font-family:var(--sbb-font,"Inter","Roboto",Arial,sans-serif);color:var(--sbb-text,var(--ink));position:relative;}
-.canvas-frame[data-formato="email"]{max-width:600px;overflow:visible;}
-.canvas-frame[data-formato="invitacion"]{max-width:920px;overflow:visible;}
-.canvas-frame[data-formato="libre"]{max-width:920px;overflow:visible;}
-.canvas-frame[data-formato="linkedin"]{max-width:1584px;height:396px;overflow:hidden;}
-.canvas-frame[data-formato="display-300x250"]{max-width:300px;height:250px;overflow:hidden;}
-.canvas-frame[data-formato="display-728x90"]{max-width:728px;height:90px;overflow:hidden;}
-.canvas-frame[data-formato="display-300x600"]{max-width:300px;height:600px;overflow:hidden;}
 .canvas-frame.drag-over{outline:2px dashed var(--navy);outline-offset:-4px;}
-.canvas-frame[data-formato^="display-"] #canvas,.canvas-frame[data-formato="linkedin"] #canvas{height:100%;display:flex;flex-direction:column;}
-.canvas-frame[data-formato^="display-"] .sbb-page,.canvas-frame[data-formato="linkedin"] .sbb-page{height:100%;display:flex;flex-direction:column;}
-.canvas-frame[data-formato^="display-"] .bw,.canvas-frame[data-formato="linkedin"] .bw{flex:1;}
+/* El tamaño del lienzo lo fija JS (aplicarTema) desde el registro FORMATOS.
+   Estas reglas solo manejan los formatos de tamaño fijo (banners/posts). */
+.canvas-frame[data-fijo="1"]{overflow:hidden;}
+.canvas-frame[data-fijo="1"] #canvas,.canvas-frame[data-fijo="1"] .sbb-page{height:100%;display:flex;flex-direction:column;}
+.canvas-frame[data-fijo="1"] .bw{flex:1;}
 
 .canvas-empty{padding:80px 24px;text-align:center;}
 .canvas-empty-ico{font-size:42px;opacity:.25;margin-bottom:14px;color:var(--ink3);}
@@ -622,9 +617,6 @@ button,input,select,textarea{font-family:inherit;}
       <div class="spacer"></div>
       <select class="tb-btn plantilla-sel" onchange="if(this.value){cargarPlantilla(this.value);this.value='';}" title="Cargar plantilla">
         <option value="">⚡ Plantilla</option>
-        <option value="newsletter">Newsletter (email)</option>
-        <option value="agenda">Agenda (invitación)</option>
-        <option value="display-set">Display kit · 3 banners</option>
       </select>
       <button class="tb-btn" onclick="abrirImportar()" title="Importar HTML">📥 Importar</button>
       <button class="tb-btn primary" onclick="abrirExportar()">📤 Exportar HTML</button>
@@ -640,15 +632,7 @@ button,input,select,textarea{font-family:inherit;}
       <div class="spacer"></div>
       <div class="tb-group">
         <span class="tb-label">Formato</span>
-        <select id="fmt" onchange="cambiarFormato(this.value)">
-          <option value="email">Email · 600px</option>
-          <option value="invitacion">Invitación · 920px</option>
-          <option value="linkedin">LinkedIn · 1584×396</option>
-          <option value="display-300x250">Display 300×250</option>
-          <option value="display-728x90">Display 728×90</option>
-          <option value="display-300x600">Display 300×600</option>
-          <option value="libre">Libre · 920px</option>
-        </select>
+        <select id="fmt" onchange="cambiarFormato(this.value)"></select>
       </div>
       <div class="tema-wrapper">
         <button class="tb-btn tema-toggle" onclick="toggleTemaPop(event)" title="Personalizar tema de la pieza">🎨 Tema</button>
@@ -1764,17 +1748,48 @@ const BLOQUES = {
 
 // Formatos de tamaño fijo (banners): el Formato manda y el "Ancho canvas"
 // del Tema no debe aplicarse, para que no se pisen entre sí.
-const FORMATOS_FIJOS = new Set(["linkedin","display-300x250","display-728x90","display-300x600"]);
-
-const HINTS = {
-  "email":{badge:"Email",txt:"600px de ancho. Ideal para HubSpot, Gmail, Outlook."},
-  "invitacion":{badge:"Invitación",txt:"920px responsive. Para invitaciones digitales."},
-  "linkedin":{badge:"LinkedIn",txt:"Banner 1584×396 px (alto fijo)."},
-  "display-300x250":{badge:"Display",txt:"300×250 (Medium Rectangle). Banner pequeño."},
-  "display-728x90":{badge:"Display",txt:"728×90 (Leaderboard). Banner ancho horizontal."},
-  "display-300x600":{badge:"Display",txt:"300×600 (Half Page). Banner alto vertical."},
-  "libre":{badge:"Libre",txt:"920px sin alto fijo, scroll libre."}
+// ── Registro único de FORMATOS (fuente de verdad para tamaño/UI/export) ──
+// alto:0 = formato flexible (sin alto fijo). alto>0 = banner/post de tamaño
+// fijo. 'badge' agrupa en los menús. Agregar un formato = añadir una línea.
+const FORMATOS = {
+  // Email / documento
+  "email":           { label:"Email · 600px",            badge:"Email",     ancho:600,  alto:0,    txt:"600px de ancho. Gmail, Outlook, HubSpot." },
+  "invitacion":      { label:"Invitación · 920px",        badge:"Email",     ancho:920,  alto:0,    txt:"920px responsive. Invitaciones digitales." },
+  "libre":           { label:"Libre · 920px",             badge:"Email",     ancho:920,  alto:0,    txt:"920px sin alto fijo, scroll libre." },
+  // LinkedIn (tamaños oficiales)
+  "linkedin":        { label:"Portada perfil · 1584×396", badge:"LinkedIn",  ancho:1584, alto:396,  txt:"Banner/portada de perfil 1584×396." },
+  "linkedin-post":   { label:"Post cuadrado · 1200×1200", badge:"LinkedIn",  ancho:1200, alto:1200, txt:"Post cuadrado del feed 1200×1200." },
+  "linkedin-link":   { label:"Enlace/imagen · 1200×627",  badge:"LinkedIn",  ancho:1200, alto:627,  txt:"Imagen de enlace compartido 1200×627 (1.91:1)." },
+  // Facebook (tamaños oficiales)
+  "fb-post":         { label:"Post / enlace · 1200×630",  badge:"Facebook",  ancho:1200, alto:630,  txt:"Post o enlace del feed 1200×630." },
+  "fb-square":       { label:"Cuadrado · 1080×1080",      badge:"Facebook",  ancho:1080, alto:1080, txt:"Post cuadrado 1080×1080." },
+  "fb-story":        { label:"Story/Reel · 1080×1920",    badge:"Facebook",  ancho:1080, alto:1920, txt:"Story o Reel vertical 1080×1920." },
+  "fb-cover":        { label:"Portada página · 820×312",  badge:"Facebook",  ancho:820,  alto:312,  txt:"Portada de página 820×312." },
+  // Google Display (tamaños IAB)
+  "display-300x250": { label:"300×250 Medium Rectangle",  badge:"Display",   ancho:300,  alto:250,  txt:"Medium Rectangle 300×250." },
+  "display-336x280": { label:"336×280 Large Rectangle",   badge:"Display",   ancho:336,  alto:280,  txt:"Large Rectangle 336×280." },
+  "display-728x90":  { label:"728×90 Leaderboard",        badge:"Display",   ancho:728,  alto:90,   txt:"Leaderboard 728×90." },
+  "display-970x250": { label:"970×250 Billboard",         badge:"Display",   ancho:970,  alto:250,  txt:"Billboard 970×250." },
+  "display-300x600": { label:"300×600 Half Page",         badge:"Display",   ancho:300,  alto:600,  txt:"Half Page 300×600." },
+  "display-160x600": { label:"160×600 Wide Skyscraper",   badge:"Display",   ancho:160,  alto:600,  txt:"Wide Skyscraper 160×600." },
+  "display-320x50":  { label:"320×50 Mobile Banner",      badge:"Display",   ancho:320,  alto:50,   txt:"Mobile Banner 320×50." },
+  "display-320x100": { label:"320×100 Large Mobile",      badge:"Display",   ancho:320,  alto:100,  txt:"Large Mobile Banner 320×100." }
 };
+function esFormatoFijo(f){ const x = FORMATOS[f]; return !!(x && x.alto > 0); }
+// HINTS derivado (compatibilidad con código existente: badge + txt).
+const HINTS = Object.fromEntries(Object.entries(FORMATOS).map(([k,v]) => [k, { badge:v.badge, txt:v.txt }]));
+
+function renderFormatoSelect(){
+  const grupos = {};
+  Object.entries(FORMATOS).forEach(([k,v]) => { (grupos[v.badge] = grupos[v.badge] || []).push([k,v]); });
+  let html = "";
+  Object.entries(grupos).forEach(([badge,arr]) => {
+    html += `<optgroup label="${esc(badge)}">`;
+    arr.forEach(([k,v]) => { html += `<option value="${k}">${esc(v.label)}</option>`; });
+    html += `</optgroup>`;
+  });
+  document.getElementById("fmt").innerHTML = html;
+}
 function cambiarFormato(f){
   const p = pieza(); if(!p) return;
   p.formato = f;
@@ -1792,11 +1807,21 @@ function aplicarTema(){
   f.style.setProperty("--sbb-primary", t.primary);
   f.style.setProperty("--sbb-text", t.text);
   f.style.setProperty("--sbb-bg", t.bg);
-  // El "Ancho canvas" solo aplica a formatos flexibles. En banners de tamaño
-  // fijo se ignora (lo manda el Formato) para que no se pisen entre sí.
-  const formatoFijo = FORMATOS_FIJOS.has(getFormato());
-  if(!formatoFijo && t.ancho && /^\d+$/.test(t.ancho)) f.style.maxWidth = t.ancho+"px";
-  else f.style.maxWidth = "";
+  // Tamaño del lienzo desde el registro FORMATOS. Para formatos fijos manda el
+  // Formato (ancho×alto). Para flexibles, el ancho del Formato salvo que el
+  // usuario fije un "Ancho canvas" propio.
+  const fmtKey = getFormato();
+  const fmt = FORMATOS[fmtKey] || FORMATOS.email;
+  const formatoFijo = fmt.alto > 0;
+  f.dataset.fijo = formatoFijo ? "1" : "";
+  if(formatoFijo){
+    f.style.maxWidth = fmt.ancho + "px";
+    f.style.height = fmt.alto + "px";
+  } else {
+    f.style.height = "";
+    if(t.ancho && /^\d+$/.test(t.ancho)) f.style.maxWidth = t.ancho + "px";
+    else f.style.maxWidth = fmt.ancho + "px";
+  }
   document.getElementById("tema-font").value = t.font;
   document.getElementById("tema-primary").value = t.primary;
   document.getElementById("tema-text").value = t.text;
@@ -1838,11 +1863,10 @@ function eliminarPieza(id){
   activarPieza(proyecto.activa);
 }
 function nuevaPiezaPrompt(){
-  const fmt = prompt("Formato:\n\nemail · invitacion · linkedin · libre\ndisplay-300x250 · display-728x90 · display-300x600", "email");
-  if(!fmt || !HINTS[fmt]){ if(fmt) toast("Formato no válido"); return; }
-  const nombre = prompt("Nombre:", `Pieza ${proyecto.piezas.length+1}`);
+  const nombre = prompt("Nombre de la pieza:", `Pieza ${proyecto.piezas.length+1}`);
   if(nombre === null) return;
-  crearPieza(fmt, nombre || `Pieza ${proyecto.piezas.length+1}`);
+  // Se crea en Email; el formato se elige luego en el selector "Formato".
+  crearPieza("email", nombre || `Pieza ${proyecto.piezas.length+1}`);
   activarPieza(proyecto.activa);
 }
 function renombrarPieza(id, nuevo){ const p = proyecto.piezas.find(x => x.id===id); if(p){ p.nombre = nuevo||"Pieza"; persistir(); renderTabsPiezas(); } }
@@ -2192,9 +2216,9 @@ frameEl.addEventListener("drop", (e) => { e.preventDefault(); frameEl.classList.
 
 /* EXPORT */
 function generarHTMLDePieza(p){
-  const ancho = (p.tema.ancho && /^\d+$/.test(p.tema.ancho)) ? p.tema.ancho :
-    (p.formato==="email"?"600":p.formato==="display-300x250"||p.formato==="display-300x600"?"300":p.formato==="display-728x90"?"728":p.formato==="linkedin"?"1584":"920");
-  const altoFijo = p.formato==="linkedin"?"396":p.formato==="display-300x250"?"250":p.formato==="display-728x90"?"90":p.formato==="display-300x600"?"600":"";
+  const fmt = FORMATOS[p.formato] || FORMATOS.email;
+  const altoFijo = fmt.alto ? String(fmt.alto) : "";
+  const ancho = (!altoFijo && p.tema.ancho && /^\d+$/.test(p.tema.ancho)) ? p.tema.ancho : String(fmt.ancho);
   // CSS de componentes: desde el marcador COMPONENT STYLES hasta el final del
   // <style>. Si el marcador cambiara, incluimos TODO el CSS (nunca vacío), para
   // que el HTML exportado siempre lleve sus estilos (clave para HubSpot).
@@ -2364,47 +2388,90 @@ function ejecutarImportar(){
 }
 function cerrarModal(c){ document.getElementById("modal-"+c).classList.remove("show"); }
 
+// ── Plantillas editables (registro) ─────────────────────────────────────
+// Cada plantilla define un formato + una lista de bloques [tipo, overrides].
+// Los bloques son totalmente editables tras cargarse. Agregar plantilla =
+// añadir una entrada. 'grupo' las agrupa en el menú.
+const PLANTILLAS = {
+  // Email (varios tipos)
+  "email-newsletter": { label:"Newsletter", grupo:"Email", formato:"email", nombre:"Newsletter",
+    bloques:[["header",{}],["imagen",{}],["texto",{}],["cta",{}],["divisor",{}],["imgtext",{}],["social",{}],["footer",{}]] },
+  "email-promo": { label:"Promoción / Oferta", grupo:"Email", formato:"email", nombre:"Promo",
+    bloques:[["header",{titulo:"Oferta especial"}],["hero",{}],["texto",{}],["cta",{texto:"Comprar ahora"}],["pricing",{}],["footer",{}]] },
+  "email-bienvenida": { label:"Bienvenida", grupo:"Email", formato:"email", nombre:"Bienvenida",
+    bloques:[["header",{titulo:"¡Te damos la bienvenida!"}],["texto",{}],["features",{}],["cta",{texto:"Empezar"}],["social",{}],["footer",{}]] },
+  "email-evento": { label:"Invitación a evento", grupo:"Email", formato:"email", nombre:"Evento",
+    bloques:[["header",{}],["hero",{}],["fechaCard",{}],["texto",{}],["mapa",{}],["cta",{texto:"Confirmar asistencia"}],["footer",{}]] },
+  "email-anuncio": { label:"Anuncio / Aviso", grupo:"Email", formato:"email", nombre:"Anuncio",
+    bloques:[["header",{}],["alert",{}],["texto",{}],["cta",{}],["footer",{}]] },
+  "agenda": { label:"Agenda (invitación)", grupo:"Email", formato:"invitacion", nombre:"Agenda",
+    bloques:[["header",{}],["fechaCard",{}],["diadivisor",{}],["evento",{}],["evento",{}],["diadivisor",{}],["evento",{}],["footer",{}]] },
+  // LinkedIn
+  "li-portada": { label:"Portada perfil 1584×396", grupo:"LinkedIn", formato:"linkedin", nombre:"LinkedIn Portada",
+    bloques:[["header",{}]] },
+  "li-post": { label:"Post cuadrado 1200×1200", grupo:"LinkedIn", formato:"linkedin-post", nombre:"LinkedIn Post",
+    bloques:[["hero",{}],["cta",{}]] },
+  "li-link": { label:"Enlace 1200×627", grupo:"LinkedIn", formato:"linkedin-link", nombre:"LinkedIn Enlace",
+    bloques:[["hero",{}],["cta",{}]] },
+  // Facebook
+  "fb-post": { label:"Post 1200×630", grupo:"Facebook", formato:"fb-post", nombre:"Facebook Post",
+    bloques:[["hero",{}],["cta",{}]] },
+  "fb-square": { label:"Cuadrado 1080×1080", grupo:"Facebook", formato:"fb-square", nombre:"Facebook Cuadrado",
+    bloques:[["hero",{}],["texto",{}],["cta",{}]] },
+  "fb-story": { label:"Story 1080×1920", grupo:"Facebook", formato:"fb-story", nombre:"Facebook Story",
+    bloques:[["hero",{}],["texto",{}],["cta",{}]] },
+  "fb-cover": { label:"Portada 820×312", grupo:"Facebook", formato:"fb-cover", nombre:"Facebook Portada",
+    bloques:[["header",{}]] }
+};
+
+function renderPlantillaSelect(){
+  const sel = document.querySelector(".plantilla-sel");
+  if(!sel) return;
+  const grupos = {};
+  Object.entries(PLANTILLAS).forEach(([k,v]) => { (grupos[v.grupo] = grupos[v.grupo] || []).push([k,v]); });
+  let html = `<option value="">⚡ Plantilla</option>`;
+  Object.entries(grupos).forEach(([g,arr]) => {
+    html += `<optgroup label="${esc(g)}">`;
+    arr.forEach(([k,v]) => { html += `<option value="${k}">${esc(v.label)}</option>`; });
+    html += `</optgroup>`;
+  });
+  html += `<optgroup label="Google Display"><option value="display-set">Display kit · 8 banners</option></optgroup>`;
+  sel.innerHTML = html;
+}
+
 function cargarPlantilla(tipo){
-  // Si la pieza actual está vacía, la usamos. Si tiene contenido, creamos pieza nueva (no destructivo).
+  // Si la pieza actual está vacía, la reutilizamos; si tiene contenido, creamos
+  // una pieza nueva (no destructivo).
   function getOrCreate(formato, nombre){
     const actual = pieza();
-    if(actual && (!actual.canvas || actual.canvas.length === 0)){
-      actual.formato = formato;
-      actual.nombre = nombre;
-      return actual;
-    }
+    if(actual && (!actual.canvas || actual.canvas.length === 0)){ actual.formato = formato; actual.nombre = nombre; return actual; }
     return crearPieza(formato, nombre);
   }
-  if(tipo === "newsletter"){
-    const p = getOrCreate("email", "Newsletter");
-    p.canvas = [mk("header",{}), mk("imagen",{}), mk("texto",{}), mk("cta",{}), mk("divisor",{}), mk("imgtext",{}), mk("social",{}), mk("footer",{})];
-    proyecto.activa = p.id;
-    activarPieza(p.id);
-    toast("Plantilla Newsletter cargada en pieza nueva");
-    return;
-  }
-  if(tipo === "agenda"){
-    const p = getOrCreate("invitacion", "Agenda");
-    p.canvas = [mk("header",{}), mk("fechaCard",{}), mk("diadivisor",{}), mk("evento",{}), mk("evento",{}), mk("diadivisor",{}), mk("evento",{}), mk("footer",{})];
-    proyecto.activa = p.id;
-    activarPieza(p.id);
-    toast("Plantilla Agenda cargada en pieza nueva");
-    return;
-  }
+  // Kit de Google Display: varias piezas, una por tamaño IAB.
   if(tipo === "display-set"){
-    const sizes = [{fmt:"display-300x250",nombre:"Display 300×250"},{fmt:"display-728x90",nombre:"Display 728×90"},{fmt:"display-300x600",nombre:"Display 300×600"}];
-    sizes.forEach(s => {
-      const p = crearPieza(s.fmt, s.nombre);
-      p.canvas = [mk("header",{padTop:"12",padBottom:"6",titulo:"Título",bajada:"",tamanoTitulo:"18"}), mk("cta",{padTop:"6",padBottom:"12",texto:"CTA",tamano:"12",padX:"18",padY:"8"})];
+    const sizes = [["display-300x250","Display 300×250"],["display-336x280","Display 336×280"],["display-728x90","Display 728×90"],["display-970x250","Display 970×250"],["display-300x600","Display 300×600"],["display-160x600","Display 160×600"],["display-320x50","Display 320×50"],["display-320x100","Display 320×100"]];
+    sizes.forEach(([fmt,nombre]) => {
+      const p = crearPieza(fmt, nombre);
+      p.canvas = [mk("header",{padTop:"10",padBottom:"4",titulo:"Tu título",bajada:"",tamanoTitulo:"16"}), mk("cta",{padTop:"4",padBottom:"10",texto:"Saber más"})];
     });
-    proyecto.activa = proyecto.piezas[proyecto.piezas.length-3].id;
+    proyecto.activa = proyecto.piezas[proyecto.piezas.length - sizes.length].id;
     activarPieza(proyecto.activa);
-    toast("3 piezas display creadas — usa las pestañas arriba");
+    toast(sizes.length + " piezas Display creadas — usa las pestañas arriba");
     return;
   }
+  // Plantillas de pieza única (data-driven).
+  const def = PLANTILLAS[tipo];
+  if(!def){ toast("Plantilla no encontrada"); return; }
+  const p = getOrCreate(def.formato, def.nombre);
+  p.canvas = def.bloques.filter(([t]) => BLOQUES[t]).map(([t,ov]) => mk(t, ov));
+  proyecto.activa = p.id;
+  activarPieza(p.id);
+  toast("Plantilla cargada: " + def.label);
 }
 function mk(tipo, overrides){ return { id:uid(), tipo:tipo, datos: Object.assign(clone(BLOQUES[tipo].defaults), overrides||{}) }; }
 
+renderFormatoSelect();
+renderPlantillaSelect();
 recuperar();
 const p0 = pieza();
 if(p0){ document.getElementById("fmt").value = p0.formato; cambiarFormato(p0.formato); aplicarTema(); }
