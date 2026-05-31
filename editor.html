@@ -247,6 +247,18 @@ button,input,select,textarea{font-family:inherit;}
 .img-acc button{font-family:var(--f);font-size:11.5px;border:1px solid var(--bdr);background:#fff;border-radius:6px;padding:5px 8px;cursor:pointer;}
 .img-acc button.primary{flex:1;background:var(--primary);color:#fff;border-color:var(--primary);}
 .img-biblio-btn{font-family:var(--f);font-size:11px;border:1px solid var(--primary);background:var(--navy-l,#eef2ff);color:var(--primary);border-radius:6px;padding:4px 8px;cursor:pointer;margin-top:4px;display:inline-flex;align-items:center;gap:4px;}
+/* ── Generar con IA ── */
+.tb-btn.ia-btn{background:linear-gradient(135deg,#6d4bff,#9b5cff);color:#fff;border:none;font-weight:600;}
+.tb-btn.ia-btn:hover{filter:brightness(1.07);}
+.nav-ia{color:#6d4bff;font-weight:600;}
+.ia-label{display:block;font-size:12.5px;font-weight:600;color:var(--ink);margin:6px 0 5px;}
+.ia-que{width:100%;min-height:84px;font-family:var(--f);font-size:13.5px;border:1px solid var(--bdr);border-radius:9px;padding:11px 12px;resize:vertical;line-height:1.45;}
+.ia-row{display:flex;gap:12px;margin-top:12px;flex-wrap:wrap;}
+.ia-col{flex:1;min-width:160px;display:flex;flex-direction:column;gap:5px;font-size:12px;color:var(--ink2,#444);font-weight:500;}
+.ia-col select,.ia-col input{font-family:var(--f);font-size:13px;border:1px solid var(--bdr);border-radius:7px;padding:8px 9px;background:#fff;}
+.ia-estado{margin-top:12px;font-size:12.5px;min-height:18px;}
+.ia-estado.loading{color:#6d4bff;}
+.ia-estado.err{color:#c0392b;}
 .mf-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
 .mf-full{grid-column:1 / -1;}
 .marca-form label{display:flex;flex-direction:column;gap:5px;font-size:11px;font-weight:600;color:var(--ink2);}
@@ -955,6 +967,7 @@ button,input,select,textarea{font-family:inherit;}
       </div>
       <button class="tb-btn" onclick="abrirPreviewActual()" title="Vista previa"><span class="ico" data-ic="ojo"></span> Vista previa</button>
       <button class="tb-btn" onclick="abrirEnvioPrueba()" title="Enviar prueba por correo"><span class="ico" data-ic="enviar"></span> Enviar prueba</button>
+      <button class="tb-btn ia-btn" onclick="abrirIA()" title="Generar con IA">✨ IA</button>
       <button class="tb-btn icon-only" onclick="abrirImagenes()" title="Biblioteca de imágenes"><span class="ico" data-ic="imagen"></span></button>
       <button class="tb-btn icon-only" onclick="abrirImportar()" title="Importar HTML"><span class="ico" data-ic="subir"></span></button>
       <button class="tb-btn danger icon-only" onclick="vaciarCanvas()" title="Vaciar pieza actual"><span class="ico" data-ic="basura"></span></button>
@@ -1075,6 +1088,30 @@ button,input,select,textarea{font-family:inherit;}
     </div>
   </div>
 </div></div>
+<div class="modal-bg" id="modal-ia"><div class="modal">
+  <div class="modal-head"><h3>✨ Generar con IA</h3><button class="modal-close" onclick="cerrarModal('ia')">×</button></div>
+  <div class="modal-body">
+    <p>Dime en una frase qué necesitas. La IA arma la pieza con tus bloques (y tus imágenes de la biblioteca) y la deja en el editor para que la ajustes.</p>
+    <label class="ia-label">¿Qué necesitas?</label>
+    <textarea id="ia-que" class="ia-que" placeholder="Ej: Email de bienvenida al evento de Zurich del 28 de mayo, con la agenda y un botón para inscribirse"></textarea>
+    <div class="ia-row">
+      <label class="ia-col">Formato<select id="ia-formato"></select></label>
+      <label class="ia-col">Tono<select id="ia-tono">
+        <option value="profesional y cercano">Profesional y cercano</option>
+        <option value="formal">Formal</option>
+        <option value="cercano y entusiasta">Cercano / entusiasta</option>
+        <option value="vendedor y directo">Vendedor / directo</option>
+        <option value="elegante y sobrio">Elegante / sobrio</option>
+      </select></label>
+    </div>
+    <div class="ia-row">
+      <label class="ia-col">Objetivo (qué debe hacer la persona)<input type="text" id="ia-objetivo" placeholder="Inscribirse / comprar / reservar / saber más"></label>
+      <label class="ia-col">Marca<select id="ia-marca"></select></label>
+    </div>
+    <div id="ia-estado" class="ia-estado"></div>
+  </div>
+  <div class="modal-foot"><button onclick="cerrarModal('ia')">Cancelar</button><button class="primary" id="ia-btn" onclick="generarConIA()">✨ Generar</button></div>
+</div></div>
 <div class="modal-bg" id="modal-imagenes"><div class="modal modal-lg">
   <div class="modal-head"><h3>Biblioteca de imágenes</h3><button class="modal-close" onclick="cerrarModal('imagenes')">×</button></div>
   <div class="modal-body">
@@ -1104,6 +1141,7 @@ button,input,select,textarea{font-family:inherit;}
       <button class="nav-item activo" onclick="volverAProyectos()"><span class="ico" data-ic="biblioteca"></span> Mis proyectos</button>
       <button class="nav-item" onclick="crearProyecto()"><span class="ico" data-ic="mas"></span> Nuevo proyecto</button>
       <div class="nav-sec">Crear creatividad</div>
+      <button class="nav-item nav-ia" onclick="abrirIA()"><span class="ico" data-ic="estrella"></span> Generar con IA</button>
       <button class="nav-item" onclick="crearDesde('email')"><span class="ico" data-ic="email"></span> Email</button>
       <button class="nav-item" onclick="crearDesde('display-300x250')"><span class="ico" data-ic="grid"></span> Banners</button>
       <button class="nav-item" onclick="crearDesde('linkedin-post')"><span class="ico" data-ic="compartir"></span> Post RRSS</button>
@@ -3704,6 +3742,75 @@ function renderImagenes(){
       <button class="primary" onclick="usarImagen('${im.id}')">${_imgPickCb ? "Usar" : "Copiar URL"}</button>
       <button onclick="eliminarImagen('${im.id}')" title="Quitar">${svgIcon("basura",{size:"13px"})}</button>
     </div></div>`).join("");
+}
+
+// ── Generar con IA (Gemini) ─────────────────────────────────────────────
+// La IA compone una pieza eligiendo entre estos bloques y rellenando sus campos.
+const IA_TIPOS = ["header","hero","texto","imagen","imgtext","cta","divisor","espaciador","features","alert","kpi","ring","rating","product","profileCard","testimonial","article","pricing","fechaCard","evento","social","footer"];
+function catalogoBloquesParaIA(){
+  const styleKeys = new Set(Object.keys(styleDefaults));
+  return IA_TIPOS.map(tipo => {
+    const def = BLOQUES[tipo]; if(!def) return null;
+    const campos = {};
+    Object.entries(def.defaults).forEach(([k,v]) => { if(!styleKeys.has(k)) campos[k] = v; });
+    return { tipo, nombre: def.nombre, sub: def.sub, campos };
+  }).filter(Boolean);
+}
+function abrirIA(){
+  const sel = document.getElementById("ia-formato");
+  const grupos = {};
+  Object.entries(FORMATOS).forEach(([k,v]) => { (grupos[v.badge] = grupos[v.badge] || []).push([k,v]); });
+  sel.innerHTML = Object.entries(grupos).map(([b,arr]) => `<optgroup label="${esc(b)}">` + arr.map(([k,v]) => `<option value="${k}">${esc(v.label)}</option>`).join("") + `</optgroup>`).join("");
+  const fActual = (pieza() && !esSetPieza(pieza())) ? pieza().formato : "email";
+  if([...sel.options].some(o => o.value === fActual)) sel.value = fActual;
+  const ms = document.getElementById("ia-marca");
+  ms.innerHTML = `<option value="">— Sin marca —</option>` + (workspace.marcas||[]).map(m => `<option value="${m.id}">${esc(m.nombre)}</option>`).join("");
+  const est = document.getElementById("ia-estado"); est.textContent = ""; est.className = "ia-estado";
+  document.getElementById("modal-ia").classList.add("show");
+  setTimeout(() => { const q = document.getElementById("ia-que"); if(q) q.focus(); }, 60);
+}
+async function generarConIA(){
+  const que = (document.getElementById("ia-que").value || "").trim();
+  if(!que){ toast("Cuéntame qué necesitas"); return; }
+  const formato = document.getElementById("ia-formato").value;
+  const objetivo = (document.getElementById("ia-objetivo").value || "").trim();
+  const tono = document.getElementById("ia-tono").value;
+  const marca = (workspace.marcas||[]).find(m => m.id === document.getElementById("ia-marca").value) || null;
+  const btn = document.getElementById("ia-btn"); const est = document.getElementById("ia-estado");
+  btn.disabled = true; est.textContent = "Generando con IA… (puede tardar unos segundos)"; est.className = "ia-estado loading";
+  try{
+    const r = await fetch("/api/ia", {
+      method:"POST", credentials:"include", headers:{ "Content-Type":"application/json" },
+      body: JSON.stringify({
+        brief: { que, objetivo, tono }, formato, marca,
+        imagenes: (workspace.imagenes||[]).map(i => ({ url:i.url, nombre:i.nombre })),
+        catalogo: catalogoBloquesParaIA()
+      })
+    });
+    const data = await r.json().catch(() => ({}));
+    if(!r.ok || !data.ok){ est.textContent = data.error || ("Error "+r.status); est.className = "ia-estado err"; btn.disabled = false; return; }
+    insertarPiezaIA(data, formato, marca);
+    cerrarModal("ia");
+    toast("Pieza generada por IA — edítala a tu gusto");
+  }catch(e){ est.textContent = "Sin conexión: " + (e.message||e); est.className = "ia-estado err"; }
+  finally{ btn.disabled = false; }
+}
+function insertarPiezaIA(data, formato, marca){
+  if(!proyecto){
+    const pr = { id:uid(), nombre:"Generado con IA", creado:Date.now(), piezas:[], activa:null };
+    workspace.proyectos.push(pr); proyecto = pr; proyectoVistoId = pr.id;
+  }
+  const tema = marca
+    ? { font:marca.font||"Inter", primary:marca.primary||"#1c73cb", text:marca.text||"#1a1a1a", bg:marca.bg||"#ffffff", bgPagina:marca.bgPagina||"", ancho:"" }
+    : { font:"Inter", primary:"#1c73cb", text:"#1a1a1a", bg:"#ffffff", bgPagina:"", ancho:"" };
+  const canvas = (data.bloques||[])
+    .filter(b => b && BLOQUES[b.tipo])
+    .map(b => ({ id:uid(), tipo:b.tipo, datos:Object.assign(clone(BLOQUES[b.tipo].defaults), b.datos||{}) }));
+  const p = { id:uid(), nombre:(data.nombre||"Generado por IA"), campana:"General", formato, canvas, tema };
+  proyecto.piezas.push(p); proyecto.activa = p.id;
+  document.getElementById("galeria").classList.remove("show");
+  activarPieza(p.id);
+  persistir();
 }
 function renderMarcaSelector(){
   const sel=document.getElementById("dz-marca"); if(!sel) return;
