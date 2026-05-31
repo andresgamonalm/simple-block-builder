@@ -443,6 +443,27 @@ button,input,select,textarea{font-family:inherit;}
 .set-content.fila{flex-direction:row;gap:8px;}
 .set-content.columna > .set-blk{width:100%;}
 .set-content.fila > .set-blk{flex:1 1 0;min-width:0;}
+.set-box .set-bg{z-index:0;}.set-box .set-veil{z-index:1;}.set-box .set-fit{z-index:2;}
+.set-fondo{display:flex;align-items:center;gap:10px;flex-wrap:wrap;background:#f4f6fb;border:1px solid var(--bdr);border-radius:9px;padding:9px 12px;margin:0 0 14px;}
+.set-fondo-tit{font-size:12.5px;font-weight:600;color:#444;}
+.set-fondo-url{flex:1;min-width:200px;font-family:var(--f);font-size:12.5px;border:1px solid var(--bdr);border-radius:6px;padding:6px 9px;}
+.set-fondo-color{width:38px;height:30px;border:1px solid var(--bdr);border-radius:6px;background:#fff;cursor:pointer;}
+.set-fondo-veil{font-size:12px;color:#555;display:inline-flex;align-items:center;gap:6px;}
+.seg2{display:inline-flex;border:1px solid var(--bdr);border-radius:7px;overflow:hidden;}
+.seg2 button{font-family:var(--f);font-size:11.5px;border:none;background:#fff;padding:5px 11px;cursor:pointer;color:#555;}
+.seg2 button.on{background:var(--primary);color:#fff;}
+.ajtag{color:#b8860b;font-weight:600;}
+.set-cell-acc{display:inline-flex;gap:5px;}
+.set-ajuste{margin-top:9px;border-top:1px dashed var(--bdr);padding-top:9px;display:flex;flex-direction:column;gap:9px;}
+.set-aj-row{display:flex;flex-direction:column;gap:5px;}
+.set-aj-row > label{font-size:11px;color:#666;font-weight:600;}
+.set-aj-row input[type=range]{width:100%;}
+.foco-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:3px;max-width:120px;}
+.foco-grid button{font-family:var(--f);font-size:13px;line-height:1;border:1px solid var(--bdr);background:#fff;border-radius:5px;padding:5px 0;cursor:pointer;}
+.foco-grid button.on{background:var(--primary);color:#fff;border-color:var(--primary);}
+.set-aj-blocks{display:flex;flex-direction:column;gap:4px;}
+.set-aj-blocks .chk{font-size:12px;color:#444;display:flex;align-items:center;gap:6px;cursor:pointer;}
+.set-aj-reset{font-family:var(--f);font-size:11.5px;border:1px solid var(--bdr);background:#fff;border-radius:6px;padding:6px 10px;cursor:pointer;color:#c0392b;align-self:flex-start;}
 
 /* ─── FORM (RIGHT PANEL) ─── */
 .form-empty{padding:36px 16px;text-align:center;color:var(--ink3);font-size:12px;line-height:1.65;}
@@ -2987,16 +3008,41 @@ function cssComponentes(){
   const c = cssFull.indexOf("*/", i);
   return c >= 0 ? cssFull.slice(c + 2) : cssFull.slice(i);
 }
-// Contenido del máster maquetado en fila o columna (a un ancho de diseño natural).
-function contenidoSetHTML(p, orient){
+// ── Fondo del set y overrides por tamaño (Fase 2) ───────────────────────
+function fondoSet(p){ if(!p.setFondo) p.setFondo = { tipo:"color", color:"", url:"", veil:0 }; return p.setFondo; }
+function overrideSet(p, fmtKey){ if(!p.setOverrides) p.setOverrides = {}; if(!p.setOverrides[fmtKey]) p.setOverrides[fmtKey] = {}; return p.setOverrides[fmtKey]; }
+function ovDe(p, fmtKey){ return (p.setOverrides && p.setOverrides[fmtKey]) || {}; }
+function orientEfectiva(p, fmtKey){ const ov = ovDe(p, fmtKey); return ov.orient || orientacionSet(FORMATOS[fmtKey]); }
+// Capa de fondo (imagen que cubre + velo opcional). El color de fondo se aplica
+// en la caja; aquí solo la imagen y su oscurecido.
+function capaFondoSetHTML(p, fmtKey){
+  const f = fondoSet(p);
+  if(f.tipo !== "imagen" || !f.url) return "";
+  const ov = ovDe(p, fmtKey);
+  const pos = ov.pos || "center";
+  const veil = f.veil ? `<div class="set-veil" style="position:absolute;inset:0;background:rgba(0,0,0,${(f.veil/100).toFixed(2)});"></div>` : "";
+  return `<div class="set-bg" style="position:absolute;inset:0;background-image:url('${escAttr(f.url)}');background-size:cover;background-position:${esc(pos)};"></div>${veil}`;
+}
+// Contenido del máster (fila/columna) saltando los bloques ocultos en este tamaño.
+function contenidoSetHTML(p, orient, ocultos){
+  ocultos = ocultos || [];
   const w = orient === "fila" ? 600 : 300;
-  const blks = (p.canvas || []).map(item => `<div class="set-blk">${BLOQUES[item.tipo].render(item.datos)}</div>`).join("");
+  const blks = (p.canvas || []).filter(it => !ocultos.includes(it.id))
+    .map(item => `<div class="set-blk">${BLOQUES[item.tipo].render(item.datos)}</div>`).join("");
   return `<div class="set-content ${orient}" style="width:${w}px;${temaVars(p.tema)}">${blks}</div>`;
 }
-// Ajusta (fit) cada banner: escala el contenido para que entre exacto en su caja.
+// Caja de un banner (fondo + contenido) reutilizada por la vista y el export.
+function cajaSetInnerHTML(p, fmtKey){
+  const orient = orientEfectiva(p, fmtKey);
+  const ocultos = ovDe(p, fmtKey).ocultos || [];
+  return `${capaFondoSetHTML(p, fmtKey)}<div class="set-fit">${contenidoSetHTML(p, orient, ocultos)}</div>`;
+}
+function fondoBoxColor(p){ const f = fondoSet(p); return (f.tipo === "color" && f.color) ? f.color : p.tema.bg; }
+// Ajusta (fit) cada banner: escala el contenido para que entre exacto; multiplica
+// por la escala manual del tamaño (data-escala).
 function ajustarBannersSet(root){
   root.querySelectorAll(".set-box").forEach(box => {
-    const W = +box.dataset.w, H = +box.dataset.h;
+    const W = +box.dataset.w, H = +box.dataset.h, mult = +(box.dataset.escala || 1);
     const fit = box.querySelector(".set-fit");
     const content = fit && fit.querySelector(".set-content");
     if(!content) return;
@@ -3004,7 +3050,8 @@ function ajustarBannersSet(root){
     const cw = content.offsetWidth || 1, ch = content.offsetHeight || 1;
     let s = Math.min(W / cw, H / ch);
     if(!isFinite(s) || s <= 0) s = 1;
-    if(s > 2) s = 2;
+    s *= mult;
+    if(s > 3) s = 3;
     fit.style.transform = `translate(-50%,-50%) scale(${s})`;
   });
 }
@@ -3014,6 +3061,7 @@ function abrirSetView(){
   renderSetView();
   document.getElementById("modal-set").classList.add("show");
 }
+let _setAjusteAbierto = null;   // fmtKey cuyo panel de ajustes está expandido
 function renderSetView(){
   const p = pieza();
   const cont = document.getElementById("set-body");
@@ -3021,43 +3069,95 @@ function renderSetView(){
   if(!esSetPieza(p)){ cont.innerHTML = "<p>Esta creatividad no es un set.</p>"; return; }
   const sizes = p.setSizes || SET_DISPLAY_DESKTOP;
   const master = p.master || "display-300x250";
-  let html = `<p class="set-intro">Diseña el máster <b>300×250</b> en el lienzo de la izquierda; aquí ves <b>todos los tamaños adaptados en vivo</b>. <button class="primary" onclick="descargarTodoElSet()">${svgIcon("exportar",{size:"12px"})} Descargar todos</button></p><div class="set-grid">`;
+  const f = fondoSet(p);
+  // Barra de fondo del set
+  const fondoCtrl = `<div class="set-fondo">
+    <span class="set-fondo-tit">Fondo del set</span>
+    <div class="seg2">
+      <button class="${f.tipo!=='imagen'?'on':''}" onclick="setFondoTipo('color')">Color</button>
+      <button class="${f.tipo==='imagen'?'on':''}" onclick="setFondoTipo('imagen')">Imagen</button>
+    </div>
+    ${f.tipo==='imagen'
+      ? `<input type="text" class="set-fondo-url" placeholder="URL de la imagen de fondo (cubre el banner)" value="${escAttr(f.url||'')}" onchange="setFondoUrl(this.value)">
+         <label class="set-fondo-veil">Oscurecer <input type="range" min="0" max="70" step="5" value="${f.veil||0}" onchange="setFondoVeil(+this.value)"></label>`
+      : `<input type="color" class="set-fondo-color" value="${esc(f.color||p.tema.bg)}" onchange="setFondoColor(this.value)" title="Color de fondo">`}
+  </div>`;
+  let html = `<p class="set-intro">Diseña el máster <b>300×250</b> a la izquierda. Aquí ves <b>todos los tamaños en vivo</b>; con <b>Ajustar</b> cambias cada uno (orientación, tamaño, foco de la imagen, ocultar bloques) sin tocar el máster. <button class="primary" onclick="descargarTodoElSet()">${svgIcon("exportar",{size:"12px"})} Descargar todos</button></p>${fondoCtrl}<div class="set-grid">`;
   sizes.forEach(fmtKey => {
     const fmt = FORMATOS[fmtKey]; if(!fmt) return;
     const esMaestro = fmtKey === master;
-    const orient = orientacionSet(fmt);
+    const ov = ovDe(p, fmtKey);
+    const orient = orientEfectiva(p, fmtKey);
+    const escala = ov.escala || 1;
+    const ocultos = ov.ocultos || [];
+    const tocado = !!(ov.orient || ov.escala || ov.pos || (ov.ocultos && ov.ocultos.length));
     const pw = Math.min(300 / fmt.ancho, 250 / fmt.alto, 1);   // escala de la miniatura
+    const abierto = _setAjusteAbierto === fmtKey;
     html += `<div class="set-cell${esMaestro ? ' maestro' : ''}">
-      <div class="set-cell-bar"><span>${fmt.ancho}×${fmt.alto}${esMaestro ? ' <span class="mtag">· máster</span>' : ''}</span><button onclick="descargarBannerSet('${fmtKey}')">${svgIcon("exportar",{size:"11px"})} Descargar</button></div>
+      <div class="set-cell-bar"><span>${fmt.ancho}×${fmt.alto}${esMaestro ? ' <span class="mtag">· máster</span>' : ''}${tocado ? ' <span class="ajtag">· ajustado</span>' : ''}</span><span class="set-cell-acc"><button onclick="toggleAjusteCell('${fmtKey}')">${svgIcon("editar",{size:"11px"})} Ajustar</button><button onclick="descargarBannerSet('${fmtKey}')">${svgIcon("exportar",{size:"11px"})}</button></span></div>
       <div class="set-stage" style="width:${Math.round(fmt.ancho*pw)}px;height:${Math.round(fmt.alto*pw)}px;">
         <div class="set-box-scale" style="transform:scale(${pw});">
-          <div class="set-box" data-w="${fmt.ancho}" data-h="${fmt.alto}" style="width:${fmt.ancho}px;height:${fmt.alto}px;background:${esc(p.tema.bg)};${temaVars(p.tema)}">
-            <div class="set-fit">${contenidoSetHTML(p, orient)}</div>
+          <div class="set-box" data-w="${fmt.ancho}" data-h="${fmt.alto}" data-escala="${escala}" style="width:${fmt.ancho}px;height:${fmt.alto}px;background:${esc(fondoBoxColor(p))};${temaVars(p.tema)}">
+            ${cajaSetInnerHTML(p, fmtKey)}
           </div>
         </div>
       </div>
+      <div class="set-ajuste" id="aj-${fmtKey}" style="display:${abierto?'block':'none'};">${panelAjusteHTML(p, fmtKey, orient, escala, ocultos)}</div>
     </div>`;
   });
   html += `</div>`;
   cont.innerHTML = html;
   requestAnimationFrame(() => ajustarBannersSet(cont));
 }
-// HTML autónomo de un banner del set (con script de auto-ajuste embebido).
+// Panel de ajustes por tamaño.
+function panelAjusteHTML(p, fmtKey, orient, escala, ocultos){
+  const f = fondoSet(p);
+  let h = `<div class="set-aj-row"><label>Orientación</label><div class="seg2">
+      <button class="${orient==='columna'?'on':''}" onclick="setOverrideSet('${fmtKey}','orient','columna')">Columna</button>
+      <button class="${orient==='fila'?'on':''}" onclick="setOverrideSet('${fmtKey}','orient','fila')">Fila</button>
+    </div></div>
+    <div class="set-aj-row"><label>Tamaño del contenido (${escala.toFixed(1)}×)</label><input type="range" min="0.5" max="1.8" step="0.1" value="${escala}" onchange="setOverrideSet('${fmtKey}','escala',+this.value)"></div>`;
+  if(f.tipo === "imagen" && f.url){
+    const pos = ovDe(p, fmtKey).pos || "center";
+    const focos = [["left top","↖"],["center top","↑"],["right top","↗"],["left center","←"],["center","•"],["right center","→"],["left bottom","↙"],["center bottom","↓"],["right bottom","↘"]];
+    h += `<div class="set-aj-row"><label>Foco de la imagen</label><div class="foco-grid">${
+      focos.map(([v,ic]) => `<button class="${pos===v?'on':''}" onclick="setFocoSet('${fmtKey}','${v}')">${ic}</button>`).join("")
+    }</div></div>`;
+  }
+  if((p.canvas||[]).length){
+    h += `<div class="set-aj-row"><label>Bloques visibles</label><div class="set-aj-blocks">${
+      p.canvas.map(b => `<label class="chk"><input type="checkbox" ${ocultos.includes(b.id)?'':'checked'} onchange="toggleOcultoSet('${fmtKey}','${b.id}')"> ${esc(BLOQUES[b.tipo].nombre)}</label>`).join("")
+    }</div></div>`;
+  }
+  h += `<button class="set-aj-reset" onclick="resetOverrideSet('${fmtKey}')">Restablecer este tamaño</button>`;
+  return h;
+}
+// Mutadores del fondo y los overrides.
+function setFondoTipo(tipo){ const p=pieza(); if(!esSetPieza(p))return; fondoSet(p).tipo=tipo; persistir(); renderSetView(); }
+function setFondoUrl(v){ const p=pieza(); if(!esSetPieza(p))return; fondoSet(p).url=v.trim(); persistir(); renderSetView(); }
+function setFondoColor(v){ const p=pieza(); if(!esSetPieza(p))return; fondoSet(p).color=v; persistir(); renderSetView(); }
+function setFondoVeil(v){ const p=pieza(); if(!esSetPieza(p))return; fondoSet(p).veil=v; persistir(); renderSetView(); }
+function setOverrideSet(fmtKey, key, val){ const p=pieza(); if(!esSetPieza(p))return; overrideSet(p,fmtKey)[key]=val; _setAjusteAbierto=fmtKey; persistir(); renderSetView(); }
+function setFocoSet(fmtKey, pos){ setOverrideSet(fmtKey,'pos',pos); }
+function toggleOcultoSet(fmtKey, blockId){ const p=pieza(); if(!esSetPieza(p))return; const ov=overrideSet(p,fmtKey); ov.ocultos=ov.ocultos||[]; const i=ov.ocultos.indexOf(blockId); if(i>=0) ov.ocultos.splice(i,1); else ov.ocultos.push(blockId); _setAjusteAbierto=fmtKey; persistir(); renderSetView(); }
+function resetOverrideSet(fmtKey){ const p=pieza(); if(!esSetPieza(p))return; if(p.setOverrides) delete p.setOverrides[fmtKey]; _setAjusteAbierto=fmtKey; persistir(); renderSetView(); }
+function toggleAjusteCell(fmtKey){ _setAjusteAbierto = (_setAjusteAbierto===fmtKey) ? null : fmtKey; renderSetView(); }
+// HTML autónomo de un banner del set (con fondo, overrides y auto-ajuste embebido).
 function generarHTMLDeBannerSet(p, fmtKey){
   const fmt = FORMATOS[fmtKey] || FORMATOS["display-300x250"];
-  const orient = orientacionSet(fmt);
   const css = cssComponentes();
+  const escala = ovDe(p, fmtKey).escala || 1;
   const fonts = `<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=${encodeURIComponent(p.tema.font)}:wght@300;400;500;600;700&display=swap" rel="stylesheet">`;
-  const content = contenidoSetHTML(p, orient);
   return `<!DOCTYPE html>
 <html lang="es"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>${esc(p.nombre)} · ${fmt.ancho}×${fmt.alto}</title>
 ${fonts}
 <style>
 *{box-sizing:border-box;margin:0;padding:0;}
-body{font-family:"${p.tema.font}",Arial,sans-serif;color:${p.tema.text};background:${p.tema.bg};-webkit-font-smoothing:antialiased;}
-.set-box{position:relative;overflow:hidden;width:${fmt.ancho}px;height:${fmt.alto}px;background:${p.tema.bg};${temaVars(p.tema)}}
-.set-fit{position:absolute;top:50%;left:50%;}
+body{font-family:"${p.tema.font}",Arial,sans-serif;color:${p.tema.text};background:${fondoBoxColor(p)};-webkit-font-smoothing:antialiased;}
+.set-box{position:relative;overflow:hidden;width:${fmt.ancho}px;height:${fmt.alto}px;background:${fondoBoxColor(p)};${temaVars(p.tema)}}
+.set-fit{position:absolute;top:50%;left:50%;z-index:2;}
+.set-bg{z-index:0;}.set-veil{z-index:1;}
 .set-content{display:flex;align-items:center;justify-content:center;box-sizing:border-box;}
 .set-content.columna{flex-direction:column;}
 .set-content.fila{flex-direction:row;gap:8px;}
@@ -3067,8 +3167,8 @@ ${css}
 .set-content img{max-width:100%;height:auto;}
 </style></head><body>
 <!--SBB-SET:${esc(fmtKey)}-->
-<div class="set-box" id="b"><div class="set-fit" id="f">${content}</div></div>
-<script>(function(){var box=document.getElementById('b'),fit=document.getElementById('f'),c=fit.firstElementChild;function fitf(){fit.style.transform='none';var s=Math.min(box.clientWidth/c.offsetWidth,box.clientHeight/c.offsetHeight);if(!isFinite(s)||s<=0)s=1;if(s>2)s=2;fit.style.transform='translate(-50%,-50%) scale('+s+')';}fitf();window.addEventListener('resize',fitf);setTimeout(fitf,200);})();<\/script>
+<div class="set-box" id="b">${cajaSetInnerHTML(p, fmtKey)}</div>
+<script>(function(){var box=document.getElementById('b'),fit=box.querySelector('.set-fit'),c=fit.firstElementChild,mult=${escala};function fitf(){fit.style.transform='none';var s=Math.min(box.clientWidth/c.offsetWidth,box.clientHeight/c.offsetHeight);if(!isFinite(s)||s<=0)s=1;s*=mult;if(s>3)s=3;fit.style.transform='translate(-50%,-50%) scale('+s+')';}fitf();window.addEventListener('resize',fitf);setTimeout(fitf,250);})();<\/script>
 </body></html>`;
 }
 function descargarBannerSet(fmtKey){
@@ -3251,8 +3351,13 @@ function cargarPlantilla(tipo){
     p.esSet = true;
     p.master = "display-300x250";
     p.setSizes = SET_DISPLAY_DESKTOP.slice();
+    // Los banners de display suelen llevar imagen de fondo: el set arranca con una
+    // (editable o cambiable a color en la barra "Fondo del set"), y velo para que
+    // el texto se lea sobre la foto.
+    p.setFondo = { tipo:"imagen", url:"https://placehold.co/1200x628/1c73cb/ffffff?text=Tu+imagen", color:"", veil:25 };
+    p.setOverrides = {};
     p.canvas = [
-      mk("header", { padTop:"14", padBottom:"6", titulo:"Tu título", bajada:"Subtítulo breve", tamanoTitulo:"20" }),
+      mk("header", { padTop:"14", padBottom:"6", titulo:"Tu título", bajada:"Subtítulo breve", tamanoTitulo:"20", colorTitulo:"#ffffff", colorBajada:"#ffffff" }),
       mk("cta", { padTop:"6", padBottom:"14", texto:"Saber más" })
     ];
     proyecto.activa = p.id;
