@@ -231,6 +231,22 @@ button,input,select,textarea{font-family:inherit;}
 .marca-card .macc button:hover{border-color:var(--primary);}
 .marca-form{border-top:1px solid var(--bdr);padding-top:16px;}
 .mf-title{font-weight:600;font-size:13.5px;margin-bottom:12px;color:var(--ink);}
+/* ── Biblioteca de imágenes ── */
+.img-form{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:12px 0 10px;}
+.img-form input[type=text]{flex:1;min-width:180px;font-family:var(--f);font-size:13px;border:1px solid var(--bdr);border-radius:8px;padding:9px 11px;}
+.img-prev{display:flex;align-items:center;gap:10px;margin:0 0 14px;font-size:12px;color:var(--ink3);}
+.img-prev img{width:84px;height:60px;object-fit:cover;border-radius:8px;border:1px solid var(--bdr);background:#f2f3f8;}
+.img-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:12px;}
+.img-vacia{grid-column:1/-1;text-align:center;color:var(--ink3);font-style:italic;padding:24px;font-size:13px;}
+.img-card{border:1px solid var(--bdr);border-radius:10px;overflow:hidden;background:var(--white);display:flex;flex-direction:column;}
+.img-thumb{height:104px;background:repeating-conic-gradient(#eef0f5 0% 25%,#fff 0% 50%) 50%/14px 14px;display:flex;align-items:center;justify-content:center;overflow:hidden;}
+.img-thumb img{width:100%;height:100%;object-fit:cover;}
+.img-thumb img.roto{object-fit:contain;opacity:.35;}
+.img-meta{font-size:11.5px;color:var(--ink2,#444);padding:7px 9px 4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.img-acc{display:flex;gap:6px;padding:0 9px 9px;}
+.img-acc button{font-family:var(--f);font-size:11.5px;border:1px solid var(--bdr);background:#fff;border-radius:6px;padding:5px 8px;cursor:pointer;}
+.img-acc button.primary{flex:1;background:var(--primary);color:#fff;border-color:var(--primary);}
+.img-biblio-btn{font-family:var(--f);font-size:11px;border:1px solid var(--primary);background:var(--navy-l,#eef2ff);color:var(--primary);border-radius:6px;padding:4px 8px;cursor:pointer;margin-top:4px;display:inline-flex;align-items:center;gap:4px;}
 .mf-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
 .mf-full{grid-column:1 / -1;}
 .marca-form label{display:flex;flex-direction:column;gap:5px;font-size:11px;font-weight:600;color:var(--ink2);}
@@ -939,6 +955,7 @@ button,input,select,textarea{font-family:inherit;}
       </div>
       <button class="tb-btn" onclick="abrirPreviewActual()" title="Vista previa"><span class="ico" data-ic="ojo"></span> Vista previa</button>
       <button class="tb-btn" onclick="abrirEnvioPrueba()" title="Enviar prueba por correo"><span class="ico" data-ic="enviar"></span> Enviar prueba</button>
+      <button class="tb-btn icon-only" onclick="abrirImagenes()" title="Biblioteca de imágenes"><span class="ico" data-ic="imagen"></span></button>
       <button class="tb-btn icon-only" onclick="abrirImportar()" title="Importar HTML"><span class="ico" data-ic="subir"></span></button>
       <button class="tb-btn danger icon-only" onclick="vaciarCanvas()" title="Vaciar pieza actual"><span class="ico" data-ic="basura"></span></button>
       <button class="tb-btn primary" onclick="abrirExportar()"><span class="ico" data-ic="exportar"></span> Exportar</button>
@@ -1058,6 +1075,19 @@ button,input,select,textarea{font-family:inherit;}
     </div>
   </div>
 </div></div>
+<div class="modal-bg" id="modal-imagenes"><div class="modal modal-lg">
+  <div class="modal-head"><h3>Biblioteca de imágenes</h3><button class="modal-close" onclick="cerrarModal('imagenes')">×</button></div>
+  <div class="modal-body">
+    <p id="img-intro">Guarda enlaces (URLs) de tus imágenes con una previsualización. Las usas en cualquier bloque y, más adelante, tu IA elegirá de aquí. No se suben archivos: solo links, libre para todos.</p>
+    <div class="img-form">
+      <input type="text" id="img-url" placeholder="Pega la URL de la imagen (https://…)" oninput="previsualizarImagen()">
+      <input type="text" id="img-nombre" placeholder="Nombre / descripción (opcional, ayuda a la IA)">
+      <button class="primary" onclick="agregarImagen()">Agregar</button>
+    </div>
+    <div class="img-prev" id="img-prev" style="display:none"><img id="img-prev-el" alt=""><span>Previsualización</span></div>
+    <div class="img-grid" id="img-grid"></div>
+  </div>
+</div></div>
 <div class="toast" id="toast"></div>
 
 <!-- Pantalla inicial: Dashboard "Mis campañas" (también es la vista en móvil). -->
@@ -1078,7 +1108,7 @@ button,input,select,textarea{font-family:inherit;}
       <button class="nav-item" onclick="crearDesde('display-300x250')"><span class="ico" data-ic="grid"></span> Banners</button>
       <button class="nav-item" onclick="crearDesde('linkedin-post')"><span class="ico" data-ic="compartir"></span> Post RRSS</button>
       <button class="nav-item" onclick="crearDesde('libre')"><span class="ico" data-ic="documento"></span> Formato Libre</button>
-      <button class="nav-item" onclick="toast('Recursos gráficos: próximamente')"><span class="ico" data-ic="imagen"></span> Recursos gráficos</button>
+      <button class="nav-item" onclick="abrirImagenes()"><span class="ico" data-ic="imagen"></span> Biblioteca de imágenes</button>
       <div class="nav-sec">Sistema</div>
       <button class="nav-item" onclick="abrirMarcas()"><span class="ico" data-ic="paleta"></span> Marcas</button>
       <button class="nav-item" onclick="toast('Permisos de usuarios: próximamente')"><span class="ico" data-ic="candado"></span> Permisos usuarios</button>
@@ -1137,7 +1167,7 @@ button,input,select,textarea{font-family:inherit;}
 
 <script>
 const STORAGE_KEY = "sbb-project-v8";
-let workspace = { proyectos: [], marcas: [], banner: {} };  // espacio del usuario
+let workspace = { proyectos: [], marcas: [], banner: {}, imagenes: [] };  // espacio del usuario
 let proyecto = null;          // proyecto activo (referencia dentro de workspace.proyectos)
 let vistaDash = "proyectos";  // "proyectos" | "creatividades"
 let proyectoVistoId = null;   // proyecto cuya lista de creatividades se ve
@@ -1284,13 +1314,13 @@ function rehacer(){
 let _tsAlCargar = 0;  // timestamp real de la copia local al arrancar (para sync)
 // Normaliza cualquier dato cargado al modelo workspace { proyectos:[{piezas:[]}], marcas, banner }.
 function normalizarWorkspace(o){
-  if(!o || typeof o!=="object") return { proyectos:[], marcas:[], banner:{} };
-  if(Array.isArray(o.proyectos)){ o.marcas=o.marcas||[]; o.banner=o.banner||{}; return o; }
+  if(!o || typeof o!=="object") return { proyectos:[], marcas:[], banner:{}, imagenes:[] };
+  if(Array.isArray(o.proyectos)){ o.marcas=o.marcas||[]; o.banner=o.banner||{}; o.imagenes=o.imagenes||[]; return o; }
   if(Array.isArray(o.piezas)){
     return { proyectos: o.piezas.length ? [{ id:uid(), nombre:"General", creado:Date.now(), piezas:o.piezas, activa:o.activa||o.piezas[0].id }] : [],
-             marcas:o.marcas||[], banner:o.banner||{}, _ts:o._ts||0 };
+             marcas:o.marcas||[], banner:o.banner||{}, imagenes:o.imagenes||[], _ts:o._ts||0 };
   }
-  return { proyectos:[], marcas:[], banner:{} };
+  return { proyectos:[], marcas:[], banner:{}, imagenes:[] };
 }
 function recuperar(){
   try{
@@ -1585,7 +1615,7 @@ const BLOQUES = {
     cat:"Contenido", nombre:"Imagen", icono:"", sub:"Imagen ajustable",
     defaults: Object.assign({}, styleDefaults, { url:"https://placehold.co/600x300/e5e7ea/9ca3af?text=Imagen", alt:"", link:"", caption:"", anchoImg:"100", radio:"6", altoImg:"", posicion:"center" }),
     campos: [
-      {key:"url",label:"URL de la imagen",tipo:"text"},
+      {key:"url",label:"URL de la imagen",tipo:"imgurl"},
       {key:"alt",label:"Texto alternativo",tipo:"text"},
       {key:"link",label:"Enlace (opcional)",tipo:"text"},
       {key:"caption",label:"Pie de imagen (opcional)",tipo:"text"},
@@ -2289,7 +2319,7 @@ const BLOQUES = {
     cat:"Estructura", nombre:"Hero con overlay", icono:"", sub:"Imagen full + texto encima",
     defaults: Object.assign({}, styleDefaults, { padTop:"0", padBottom:"0", imagenUrl:"https://placehold.co/1200x500/040764/9ca3af?text=Hero", titulo:"Título del hero", sub:"Subtítulo que acompaña al título", ctaTexto:"Saber más", ctaUrl:"", alturaHero:"320", oscurecer:"50", radioImg:"0", colorVeil:"#000000", posImg:"center", colorTitulo:"#ffffff", colorSub:"#ffffff" }),
     campos: [
-      {key:"imagenUrl",label:"URL imagen de fondo",tipo:"text"},
+      {key:"imagenUrl",label:"URL imagen de fondo",tipo:"imgurl"},
       {key:"titulo",label:"Título",tipo:"text"},
       {key:"sub",label:"Subtítulo",tipo:"textarea"},
       {tipo:"row2", izq:{key:"ctaTexto",label:"Texto CTA",tipo:"text"}, der:{key:"ctaUrl",label:"URL CTA",tipo:"text"}},
@@ -2754,6 +2784,7 @@ function renderCampoSimple(c, datos){
   const val = datos[c.key];
   if(c.tipo === "check") return `<div class="form-row checkbox"><input type="checkbox" id="f-${c.key}" ${val?"checked":""} onchange="actualizarDato('${c.key}',this.checked)"><label for="f-${c.key}">${esc(c.label)}</label></div>`;
   if(c.tipo === "textarea") return `<div class="form-row"><label>${esc(c.label)}</label><textarea oninput="actualizarDato('${c.key}',this.value)">${esc(val||"")}</textarea></div>`;
+  if(c.tipo === "imgurl") return `<div class="form-row"><label>${esc(c.label)}</label><input type="text" value="${esc(val||"")}" placeholder="${esc(c.placeholder||'https://…')}" oninput="actualizarDato('${c.key}',this.value)"><button class="img-biblio-btn" onclick="elegirImagenPara('${c.key}')">${svgIcon("imagen",{size:"12px"})} Elegir de la biblioteca</button></div>`;
   if(c.tipo === "color") return `<div class="form-row"><label>${esc(c.label)}</label><input type="color" value="${esc(val||"#000000")}" oninput="actualizarDato('${c.key}',this.value)"></div>`;
   if(c.tipo === "date") return `<div class="form-row"><label>${esc(c.label)}</label><input type="date" value="${esc(val||"")}" onchange="actualizarDato('${c.key}',this.value)"></div>`;
   if(c.tipo === "time") return `<div class="form-row"><label>${esc(c.label)}</label><input type="time" value="${esc(val||"")}" onchange="actualizarDato('${c.key}',this.value)"></div>`;
@@ -3609,6 +3640,70 @@ function aplicarMarca(id){
   aplicarTema(); renderCanvas(); renderForm(); persistir();
   cerrarModal("marcas");
   toast("Marca aplicada: "+m.nombre);
+}
+
+// ── Biblioteca de imágenes (solo URLs + previsualización; sin subir archivos) ──
+let _imgPickCb = null;   // si se abre en "modo elegir", callback(url) al elegir
+function abrirImagenes(pick){
+  _imgPickCb = (typeof pick === "function") ? pick : null;
+  const intro = document.getElementById("img-intro");
+  if(intro) intro.style.display = _imgPickCb ? "none" : "";
+  const url = document.getElementById("img-url"); if(url) url.value = "";
+  const nom = document.getElementById("img-nombre"); if(nom) nom.value = "";
+  previsualizarImagen();
+  renderImagenes();
+  document.getElementById("modal-imagenes").classList.add("show");
+}
+function previsualizarImagen(){
+  const v = (document.getElementById("img-url")?.value || "").trim();
+  const box = document.getElementById("img-prev");
+  const el = document.getElementById("img-prev-el");
+  if(!box || !el) return;
+  if(v){ el.src = v; box.style.display = ""; } else { box.style.display = "none"; el.removeAttribute("src"); }
+}
+function agregarImagen(){
+  const url = (document.getElementById("img-url").value || "").trim();
+  const nombre = (document.getElementById("img-nombre").value || "").trim();
+  if(!url){ toast("Pega la URL de una imagen"); return; }
+  workspace.imagenes = workspace.imagenes || [];
+  workspace.imagenes.push({ id:"img"+Math.random().toString(36).slice(2,9), url, nombre, creado:Date.now() });
+  persistir();
+  document.getElementById("img-url").value = ""; document.getElementById("img-nombre").value = "";
+  previsualizarImagen(); renderImagenes();
+  toast("Imagen agregada a la biblioteca");
+}
+function eliminarImagen(id){
+  if(!confirm("¿Quitar esta imagen de la biblioteca?")) return;
+  workspace.imagenes = (workspace.imagenes||[]).filter(x => x.id !== id);
+  persistir(); renderImagenes();
+}
+function usarImagen(id){
+  const im = (workspace.imagenes||[]).find(x => x.id === id); if(!im) return;
+  if(_imgPickCb){ _imgPickCb(im.url); cerrarModal("imagenes"); _imgPickCb = null; return; }
+  // Sin modo elegir: copia la URL al portapapeles.
+  if(navigator.clipboard){ navigator.clipboard.writeText(im.url).then(()=>toast("URL copiada")); }
+  else toast(im.url);
+}
+// Abre la biblioteca en modo "elegir" y mete la URL en el campo del bloque actual
+// (sirve también dentro de una columna del grid, vía bloqueCtx).
+function elegirImagenPara(key){
+  abrirImagenes((url) => {
+    const b = bloqueCtx(); if(!b) return;
+    b.datos[key] = url; persistir(); renderBloqueSeleccionado(); renderForm();
+  });
+}
+function renderImagenes(){
+  const cont = document.getElementById("img-grid");
+  if(!cont) return;
+  const ims = workspace.imagenes || [];
+  if(!ims.length){ cont.innerHTML = `<div class="img-vacia">Aún no hay imágenes. Pega una URL arriba y dale Agregar.</div>`; return; }
+  cont.innerHTML = ims.slice().reverse().map(im => `<div class="img-card">
+    <div class="img-thumb"><img src="${escAttr(im.url)}" alt="" loading="lazy" onerror="this.classList.add('roto')"></div>
+    <div class="img-meta" title="${escAttr(im.nombre||im.url)}">${esc(im.nombre || "(sin nombre)")}</div>
+    <div class="img-acc">
+      <button class="primary" onclick="usarImagen('${im.id}')">${_imgPickCb ? "Usar" : "Copiar URL"}</button>
+      <button onclick="eliminarImagen('${im.id}')" title="Quitar">${svgIcon("basura",{size:"13px"})}</button>
+    </div></div>`).join("");
 }
 function renderMarcaSelector(){
   const sel=document.getElementById("dz-marca"); if(!sel) return;
