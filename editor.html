@@ -1184,6 +1184,8 @@ button,input,select,textarea{font-family:inherit;}
           <span class="mf-col"><input type="color" id="marca-text" value="#1a1a1a"><b>Texto</b></span>
           <span class="mf-col"><input type="color" id="marca-bg" value="#ffffff"><b>Fondo</b></span>
           <span class="mf-col"><input type="color" id="marca-bgpagina" value="#f5f5f5"><b>Página</b></span>
+          <span class="mf-col"><input type="color" id="marca-accent1" value="#d9c6b1"><b>Acento 1</b></span>
+          <span class="mf-col"><input type="color" id="marca-accent2" value="#a3bdcb"><b>Acento 2</b></span>
         </div>
 
         <div class="mf-sec mf-full">Tipografía</div>
@@ -1215,6 +1217,7 @@ button,input,select,textarea{font-family:inherit;}
       <input type="hidden" id="marca-edit-id">
       <div class="mf-actions">
         <button id="marca-cancel" onclick="resetMarcaForm()" style="display:none;">Cancelar edición</button>
+        <button onclick="rellenarMarcaRadar()" title="Rellena el formulario con la identidad de RADAR">Plantilla RADAR</button>
         <button onclick="rellenarMarcaZurich()" title="Rellena el formulario con la identidad propuesta de Zúrich">Plantilla Zúrich</button>
         <button class="primary" onclick="guardarMarca()">Guardar marca</button>
       </div>
@@ -3591,9 +3594,9 @@ function miniaturasBiblioteca(path, fmt){
 }
 function coloresMarcaPreset(){
   const cols=[]; const add=c=>{ if(c && !cols.includes(c)) cols.push(c); };
-  (workspace.marcas||[]).forEach(m=>{ add(m.primary); add(m.bg); add(m.text); add(m.cta); });
+  (workspace.marcas||[]).forEach(m=>{ const n=normalizarMarca(m); add(n.primary); add(n.secondary); add(n.cta); add(n.accent1); add(n.accent2); add(n.bg); add(n.text); });
   ["#0e2748","#102a43","#1c1c28","#0b7a4b","#1c73cb","#b3261e","#ffffff","#f5f5f5"].forEach(add);
-  return cols.slice(0,12);
+  return cols.slice(0,14);
 }
 // Swatches de color que escriben en una ruta (global o por tamaño).
 function swatchesColor(path, fmt){
@@ -4329,6 +4332,8 @@ function normalizarMarca(m){
     text: m.text || "#1a1a1a",
     bg: m.bg || "#ffffff",
     bgPagina: m.bgPagina || "#f5f5f5",
+    accent1: m.accent1 || "",
+    accent2: m.accent2 || "",
     fontTitulo: m.fontTitulo || m.font || "Inter",
     fontCuerpo: m.fontCuerpo || m.font || "Inter",
     negocio: m.negocio || "",
@@ -4403,6 +4408,7 @@ function resetMarcaForm(){
   pintarLogoPrev("logo",""); pintarLogoPrev("logoClaro","");
   set("marca-primary","#1c73cb"); set("marca-secondary","#0e2748"); set("marca-cta","#1c73cb");
   set("marca-ctaText","#ffffff"); set("marca-text","#1a1a1a"); set("marca-bg","#ffffff"); set("marca-bgpagina","#f5f5f5");
+  set("marca-accent1","#d9c6b1"); set("marca-accent2","#a3bdcb");
   set("marca-fontTitulo","Inter"); set("marca-fontCuerpo","Inter");
   set("marca-negocio",""); set("marca-tono",""); set("marca-eslogan","");
   set("marca-publico",""); set("marca-productos",""); set("marca-usar",""); set("marca-evitar","");
@@ -4419,6 +4425,7 @@ function editarMarca(id){
   pintarLogoPrev("logo",m.logo); pintarLogoPrev("logoClaro",m.logoClaro);
   set("marca-primary",m.primary); set("marca-secondary",m.secondary); set("marca-cta",m.cta);
   set("marca-ctaText",m.ctaText); set("marca-text",m.text); set("marca-bg",m.bg); set("marca-bgpagina",m.bgPagina);
+  set("marca-accent1",m.accent1||"#d9c6b1"); set("marca-accent2",m.accent2||"#a3bdcb");
   set("marca-fontTitulo",m.fontTitulo); set("marca-fontCuerpo",m.fontCuerpo);
   set("marca-negocio",m.negocio); set("marca-tono",m.tono); set("marca-eslogan",m.eslogan);
   set("marca-publico",m.publico); set("marca-productos",m.productos); set("marca-usar",m.usar); set("marca-evitar",m.evitar);
@@ -4435,6 +4442,7 @@ function guardarMarca(){
     logo:g("marca-logo-data"), logoClaro:g("marca-logoClaro-data"),
     primary:g("marca-primary"), secondary:g("marca-secondary"), cta:g("marca-cta"), ctaText:g("marca-ctaText"),
     text:g("marca-text"), bg:g("marca-bg"), bgPagina:g("marca-bgpagina"),
+    accent1:g("marca-accent1"), accent2:g("marca-accent2"),
     fontTitulo:g("marca-fontTitulo"), fontCuerpo:g("marca-fontCuerpo"),
     negocio:g("marca-negocio").trim(), tono:g("marca-tono").trim(), eslogan:g("marca-eslogan").trim(),
     publico:g("marca-publico").trim(), productos:g("marca-productos").trim(), usar:g("marca-usar").trim(), evitar:g("marca-evitar").trim(),
@@ -4452,6 +4460,7 @@ function rellenarMarcaZurich(){
   set("marca-nombre","Zúrich"); set("marca-empresa","Zurich Chile");
   set("marca-primary","#2167AE"); set("marca-secondary","#23366F"); set("marca-cta","#2167AE");
   set("marca-ctaText","#ffffff"); set("marca-text","#1a1a1a"); set("marca-bg","#ffffff"); set("marca-bgpagina","#f4f6f9");
+  set("marca-accent1","#2167AE"); set("marca-accent2","#23366F");
   set("marca-fontTitulo","Montserrat"); set("marca-fontCuerpo","Inter");
   set("marca-negocio","Aseguradora: seguros de auto, hogar, vida, salud y empresas en Chile.");
   set("marca-tono","Cercano, confiable y claro; transmite respaldo y tranquilidad sin tecnicismos.");
@@ -4468,6 +4477,29 @@ function rellenarMarcaZurich(){
   document.getElementById("marca-form-titulo").textContent="Nueva marca · Zúrich (revisa y sube el logo)";
   const body=document.getElementById("modal-marcas").querySelector(".modal-body"); if(body) body.scrollTop=99999;
   toast("Plantilla Zúrich cargada — sube el logo y ajusta lo que quieras");
+}
+// Logos RADAR incrustados (placeholder del wordmark; el usuario puede re-subir los oficiales).
+const RADAR_LOGO_AZUL="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIzMjAiIGhlaWdodD0iODAiIHZpZXdCb3g9IjAgMCAzMjAgODAiPjx0ZXh0IHg9IjUwJSIgeT0iNTAlIiBkb21pbmFudC1iYXNlbGluZT0iY2VudHJhbCIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZm9udC1mYW1pbHk9IkFyaWFsLEhlbHZldGljYSxzYW5zLXNlcmlmIiBmb250LXdlaWdodD0iODAwIiBmb250LXNpemU9IjU2IiBsZXR0ZXItc3BhY2luZz0iMiIgZmlsbD0iIzIyMkY0NyI+UkFEQVI8L3RleHQ+PC9zdmc+";
+const RADAR_LOGO_BLANCO="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIzMjAiIGhlaWdodD0iODAiIHZpZXdCb3g9IjAgMCAzMjAgODAiPjx0ZXh0IHg9IjUwJSIgeT0iNTAlIiBkb21pbmFudC1iYXNlbGluZT0iY2VudHJhbCIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZm9udC1mYW1pbHk9IkFyaWFsLEhlbHZldGljYSxzYW5zLXNlcmlmIiBmb250LXdlaWdodD0iODAwIiBmb250LXNpemU9IjU2IiBsZXR0ZXItc3BhY2luZz0iMiIgZmlsbD0iI0ZGRkZGRiI+UkFEQVI8L3RleHQ+PC9zdmc+";
+// Rellena el formulario con la identidad de RADAR (logos azul/blanco; paleta sin negro; Roboto).
+function rellenarMarcaRadar(){
+  const set=(i,v)=>{ const e=document.getElementById(i); if(e) e.value=v; };
+  set("marca-nombre","RADAR"); set("marca-empresa","RADAR");
+  // Paleta del manual (omitimos el negro #1D1D1D): navy 534C, beige 4685C, celeste 551C, crema, blanco.
+  set("marca-primary","#222F47"); set("marca-secondary","#222F47"); set("marca-cta","#222F47");
+  set("marca-ctaText","#ffffff"); set("marca-text","#222F47"); set("marca-bg","#ffffff"); set("marca-bgpagina","#F3F3E7");
+  set("marca-accent1","#D9C6B1"); set("marca-accent2","#A3BDCB");
+  set("marca-fontTitulo","Roboto"); set("marca-fontCuerpo","Roboto");
+  // Logos: azul para fondos claros, blanco para fondos oscuros.
+  set("marca-logo-data",RADAR_LOGO_AZUL); pintarLogoPrev("logo",RADAR_LOGO_AZUL);
+  set("marca-logoClaro-data",RADAR_LOGO_BLANCO); pintarLogoPrev("logoClaro",RADAR_LOGO_BLANCO);
+  set("marca-negocio",""); set("marca-tono",""); set("marca-eslogan","");
+  set("marca-publico",""); set("marca-productos",""); set("marca-usar",""); set("marca-evitar","");
+  set("marca-headerTagline",""); set("marca-direccion","");
+  set("marca-copyright","© "+new Date().getFullYear()+" RADAR"); set("marca-unsubTexto","Darme de baja"); set("marca-disclaimer","");
+  document.getElementById("marca-form-titulo").textContent="Nueva marca · RADAR (logos y colores cargados)";
+  const body=document.getElementById("modal-marcas").querySelector(".modal-body"); if(body) body.scrollTop=99999;
+  toast("Plantilla RADAR cargada — logos y colores listos. Completa la voz de marca si quieres");
 }
 function eliminarMarca(id){
   if(!confirm("¿Eliminar esta marca?")) return;
