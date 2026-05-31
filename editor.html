@@ -3749,11 +3749,16 @@ function renderImagenes(){
 const IA_TIPOS = ["header","hero","texto","imagen","imgtext","cta","divisor","espaciador","features","alert","kpi","ring","rating","product","profileCard","testimonial","article","pricing","fechaCard","evento","social","footer"];
 function catalogoBloquesParaIA(){
   const styleKeys = new Set(Object.keys(styleDefaults));
+  const recortar = (v) => {
+    if(typeof v === "string") return v.length > 60 ? v.slice(0,60) : v;
+    if(Array.isArray(v)) return v.slice(0,1);   // un ejemplo de item basta para mostrar la forma
+    return v;
+  };
   return IA_TIPOS.map(tipo => {
     const def = BLOQUES[tipo]; if(!def) return null;
     const campos = {};
-    Object.entries(def.defaults).forEach(([k,v]) => { if(!styleKeys.has(k)) campos[k] = v; });
-    return { tipo, nombre: def.nombre, sub: def.sub, campos };
+    Object.entries(def.defaults).forEach(([k,v]) => { if(!styleKeys.has(k)) campos[k] = recortar(v); });
+    return { tipo, nombre: def.nombre, campos };
   }).filter(Boolean);
 }
 function abrirIA(){

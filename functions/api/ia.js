@@ -85,18 +85,28 @@ async function generar({ request, env }) {
   const model = env.GEMINI_MODEL || 'gemini-2.0-flash';
   const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${encodeURIComponent(env.GEMINI_API_KEY)}`;
 
+  // Timeout propio: si Gemini se cuelga, abortamos y devolvemos un error legible
+  // (en vez de dejar que Cloudflare corte con un 502 mudo).
+  const ctl = new AbortController();
+  const timer = setTimeout(() => ctl.abort(), 22000);
   let res;
   try {
     res = await fetch(url, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
+      signal: ctl.signal,
       body: JSON.stringify({
         contents: [{ role: 'user', parts: [{ text: instruccion }] }],
-        generationConfig: { responseMimeType: 'application/json', temperature: 0.65, maxOutputTokens: 4096 }
+        generationConfig: { responseMimeType: 'application/json', temperature: 0.6, maxOutputTokens: 2048 }
       })
     });
   } catch (e) {
-    return json({ ok: false, error: 'No se pudo contactar a Gemini: ' + (e.message || e) }, 502);
+    const abortado = e && (e.name === 'AbortError');
+    return json({ ok: false, error: abortado
+      ? `Gemini (${model}) tardó demasiado y se canceló. Suele ser el modelo: prueba GEMINI_MODEL=gemini-1.5-flash o gemini-2.5-flash.`
+      : 'No se pudo contactar a Gemini: ' + (e.message || e) }, 502);
+  } finally {
+    clearTimeout(timer);
   }
 
   if (!res.ok) {
