@@ -602,7 +602,7 @@ button,input,select,textarea{font-family:inherit;}
 
 /* ── DATOS / KPI ──────────────────────────────────── */
 .sbb-kpi{padding:18px 20px;border-radius:14px;background:#fff;border:1px solid #ebedf0;font-family:inherit;}
-.sbb-kpi .icon{font-size:20px;display:block;margin-bottom:8px;}
+.sbb-kpi .icon{font-size:20px;display:flex;justify-content:center;margin-bottom:8px;color:var(--sbb-primary,#1c73cb);}
 .sbb-kpi .num{font-size:36px;font-weight:600;line-height:1.05;letter-spacing:-.02em;font-variant-numeric:tabular-nums;color:inherit;}
 .sbb-kpi .lbl{font-size:11px;color:#888;text-transform:uppercase;letter-spacing:.06em;font-weight:600;margin-top:6px;}
 .sbb-kpi .trend{display:inline-flex;align-items:center;gap:4px;margin-top:10px;font-size:12.5px;font-weight:600;}
@@ -745,7 +745,7 @@ button,input,select,textarea{font-family:inherit;}
 .sbb-grid-kpi .num{font-size:26px;font-weight:600;color:inherit;line-height:1;font-variant-numeric:tabular-nums;letter-spacing:-.01em;}
 .sbb-grid-kpi .lbl{font-size:10.5px;color:#888;text-transform:uppercase;letter-spacing:.06em;font-weight:600;margin-top:4px;}
 .sbb-grid-icon{text-align:center;}
-.sbb-grid-icon .ic{font-size:32px;line-height:1;margin-bottom:8px;}
+.sbb-grid-icon .ic{line-height:1;margin-bottom:8px;display:flex;justify-content:center;color:var(--sbb-primary,#1c73cb);}
 .sbb-grid-icon .t{font-size:14px;font-weight:600;color:inherit;line-height:1.3;}
 .sbb-grid-icon .s{font-size:12px;color:#888;margin-top:3px;line-height:1.5;}
 .sbb-grid-cta{display:inline-block;background:var(--sbb-primary,#040764);color:#fff;padding:10px 20px;border-radius:6px;text-decoration:none;font-size:13px;font-weight:600;text-align:center;font-family:inherit;}
@@ -1583,7 +1583,7 @@ const BLOQUES = {
       {key:"modo",label:"Modo",tipo:"select",opciones:[["link","Card con enlace (funciona en email)"],["embed","Embeber con iframe (Typeform, Google Forms — solo web)"]]},
       {key:"url",label:"URL del formulario",tipo:"text"},
       {grupo:"Modo: Card con enlace"},
-      {key:"icono",label:"Ícono",tipo:"text"},
+      {key:"icono",label:"Ícono",tipo:"icono-picker"},
       {key:"titulo",label:"Título",tipo:"text"},
       {key:"descripcion",label:"Descripción",tipo:"textarea"},
       {key:"textoBoton",label:"Texto del botón",tipo:"text"},
@@ -1734,7 +1734,7 @@ const BLOQUES = {
         {valor:"texto",label:"Texto",camposItem:[{k:"titulo",l:"Título"},{k:"texto",l:"Texto"}]},
         {valor:"imagen",label:"Imagen",camposItem:[{k:"url",l:"URL imagen"},{k:"caption",l:"Pie (opcional)"}]},
         {valor:"kpi",label:"KPI (número + label)",camposItem:[{k:"num",l:"Número"},{k:"lbl",l:"Etiqueta"}]},
-        {valor:"icono-texto",label:"Ícono + texto",camposItem:[{k:"icono",l:"Ícono"},{k:"titulo",l:"Título"},{k:"sub",l:"Subtítulo"}]},
+        {valor:"icono-texto",label:"Ícono + texto",camposItem:[{k:"icono",l:"Ícono",tipo:"icono"},{k:"titulo",l:"Título"},{k:"sub",l:"Subtítulo"}]},
         {valor:"cta",label:"Botón CTA",camposItem:[{k:"texto",l:"Texto"},{k:"url",l:"URL"}]},
         {valor:"vacio",label:"Vacío (espacio)",camposItem:[]}
       ]},
@@ -1768,7 +1768,7 @@ const BLOQUES = {
     cat:"Datos", nombre:"Tarjeta KPI", icono:"", sub:"Número grande + tendencia",
     defaults: Object.assign({}, styleDefaults, { icono:"", numero:"1,258", label:"Total clicks", mostrarTrend:true, trendValor:"+12.5%", trendDireccion:"up", color:"#1a1a1a", colorFondo:"#ffffff", radio:"14" }),
     campos: [
-      {key:"icono",label:"Ícono superior (opcional)",tipo:"text"},
+      {key:"icono",label:"Ícono superior (opcional)",tipo:"icono-picker"},
       {key:"numero",label:"Número grande",tipo:"text"},
       {key:"label",label:"Etiqueta",tipo:"text"},
       {key:"mostrarTrend",label:"Mostrar tendencia",tipo:"check"},
@@ -2062,14 +2062,15 @@ const BLOQUES = {
 
   features: {
     cat:"Contenido", nombre:"Lista de features", icono:"", sub:"Items con ícono + título + sub",
-    defaults: Object.assign({}, styleDefaults, { padTop:"6", padBottom:"6", titulo:"", items:[ {ico:"trending",t:"Velocidad",s:"Carga instantánea en cualquier dispositivo."}, {ico:"candado",t:"Seguridad",s:"Cifrado de extremo a extremo."}, {ico:"estrella",t:"Calidad",s:"Diseño premium en cada detalle."} ] }),
+    defaults: Object.assign({}, styleDefaults, { padTop:"6", padBottom:"6", titulo:"", colorIcono:"", items:[ {ico:"trending",t:"Velocidad",s:"Carga instantánea en cualquier dispositivo."}, {ico:"candado",t:"Seguridad",s:"Cifrado de extremo a extremo."}, {ico:"estrella",t:"Calidad",s:"Diseño premium en cada detalle."} ] }),
     campos: [
       {key:"titulo",label:"Título superior (opcional)",tipo:"text"},
-      {key:"items",label:"Features",tipo:"lista",itemTipos:[{valor:"feat",label:"Feature",camposItem:[{k:"ico",l:"Ícono"},{k:"t",l:"Título"},{k:"s",l:"Subtítulo"}]}]},
+      {key:"colorIcono",label:"Color de íconos (vacío = tema)",tipo:"color"},
+      {key:"items",label:"Features",tipo:"lista",itemTipos:[{valor:"feat",label:"Feature",camposItem:[{k:"ico",l:"Ícono",tipo:"icono"},{k:"t",l:"Título"},{k:"s",l:"Subtítulo"}]}]},
       ...styleFields()
     ],
     render: (d) => {
-      const items = (d.items||[]).map(it => `<li><div class="ico">${it.ico?svgIcon(it.ico,{size:"22px"}):""}</div><div class="txt"><div class="t">${esc(it.t||"")}</div>${it.s?`<div class="s">${esc(it.s)}</div>`:""}</div></li>`).join("");
+      const items = (d.items||[]).map(it => `<li><div class="ico"${d.colorIcono?` style="color:${esc(d.colorIcono)}"`:""}>${it.ico?svgIcon(it.ico,{size:"22px"}):""}</div><div class="txt"><div class="t">${esc(it.t||"")}</div>${it.s?`<div class="s">${esc(it.s)}</div>`:""}</div></li>`).join("");
       return wrap(d, `<div class="sbb-features">${d.titulo?`<h3>${esc(d.titulo)}</h3>`:""}<ul>${items}</ul></div>`);
     }
   },
@@ -2488,7 +2489,16 @@ function renderCampoSimple(c, datos){
       const tipoSel = (c.itemTipos||[]).find(t => t.valor === it.tipo) || (c.itemTipos||[])[0];
       const opts = (c.itemTipos||[]).map(t => `<option value="${esc(t.valor)}" ${t.valor===it.tipo?"selected":""}>${esc(t.label)}</option>`).join("");
       h += `<div class="subitem"><div class="subitem-head"><select onchange="actualizarItemLista('${c.key}',${idx},'tipo',this.value)">${opts}</select><button class="si-btn" onclick="moverItemLista('${c.key}',${idx},-1)">↑</button><button class="si-btn" onclick="moverItemLista('${c.key}',${idx},1)">↓</button><button class="si-btn del" onclick="eliminarItemLista('${c.key}',${idx})">×</button></div><div class="subitem-fields">`;
-      (tipoSel?.camposItem||[]).forEach(ci => { h += `<div><label>${esc(ci.l)}</label><input type="text" value="${esc(it[ci.k]||"")}" oninput="actualizarItemLista('${c.key}',${idx},'${ci.k}',this.value)"></div>`; });
+      (tipoSel?.camposItem||[]).forEach(ci => {
+        if(ci.tipo === "icono"){
+          const grid = Object.entries(ICONOS_SVG).map(([k,v]) =>
+            `<button class="ic-pick ${k===it[ci.k]?'on':''}" title="${esc(v.nombre)}" onclick="actualizarItemLista('${c.key}',${idx},'${ci.k}','${k}');renderForm();"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${v.svg}</svg></button>`
+          ).join("");
+          h += `<div><label>${esc(ci.l)} (elige uno)</label><div class="icon-grid">${grid}</div></div>`;
+        } else {
+          h += `<div><label>${esc(ci.l)}</label><input type="text" value="${esc(it[ci.k]||"")}" oninput="actualizarItemLista('${c.key}',${idx},'${ci.k}',this.value)"></div>`;
+        }
+      });
       h += `</div></div>`;
     });
     h += `<button class="add-subitem" onclick="agregarItemLista('${c.key}')">+ Agregar elemento</button></div></div>`;
