@@ -97,14 +97,14 @@ async function generar({ request, env }) {
     try {
       res = await fetch(url, { method:"POST", headers:{ "Content-Type":"application/json" }, signal:ctl.signal,
         body: JSON.stringify({ contents:[{ role:"user", parts:[{ text:instr }] }], generationConfig:{ responseMimeType:"application/json", temperature:0.85, maxOutputTokens:300 } }) });
-    } catch(e) { return json({ ok:false, error:(e && e.name==="AbortError") ? `Gemini (${model}) tardó demasiado. Prueba GEMINI_MODEL=gemini-1.5-flash.` : "No se pudo contactar a Gemini: "+(e.message||e) }, 502); }
+    } catch(e) { return json({ ok:false, error:(e && e.name==="AbortError") ? `Gemini (${model}) tardó demasiado. Prueba GEMINI_MODEL=gemini-1.5-flash.` : "No se pudo contactar a Gemini: "+(e.message||e) }, 500); }
     finally { clearTimeout(t); }
-    if(!res.ok){ const tx = await res.text().catch(()=> ""); return json({ ok:false, error:`Gemini (${model}) respondió ${res.status}. ${tx.slice(0,400)}` }, 502); }
-    let data; try { data = await res.json(); } catch { return json({ ok:false, error:"Respuesta de Gemini no es JSON." }, 502); }
+    if(!res.ok){ const tx = await res.text().catch(()=> ""); return json({ ok:false, error:`Gemini (${model}) respondió ${res.status}. ${tx.slice(0,400)}` }, 500); }
+    let data; try { data = await res.json(); } catch { return json({ ok:false, error:"Respuesta de Gemini no es JSON." }, 500); }
     let texto = ""; const parts = data && data.candidates && data.candidates[0] && data.candidates[0].content && data.candidates[0].content.parts;
     if(Array.isArray(parts)) texto = parts.map(p => (p && p.text) || "").join("");
     let parsed; try { parsed = JSON.parse(texto.trim().replace(/^```(?:json)?\s*/i,"").replace(/\s*```$/i,"")); }
-    catch { return json({ ok:false, error:"No se pudo interpretar la respuesta de la IA." }, 502); }
+    catch { return json({ ok:false, error:"No se pudo interpretar la respuesta de la IA." }, 500); }
     return json({ ok:true, titular:String(parsed.titular||"").slice(0,120), cuerpo:String(parsed.cuerpo||"").slice(0,240), cta:String(parsed.cta||"").slice(0,40) });
   }
 
@@ -174,25 +174,25 @@ async function generar({ request, env }) {
     const abortado = e && (e.name === 'AbortError');
     return json({ ok: false, error: abortado
       ? `Gemini (${model}) tardó demasiado y se canceló. Prueba GEMINI_MODEL=gemini-1.5-flash.`
-      : 'No se pudo contactar a Gemini: ' + (e.message || e) }, 502);
+      : 'No se pudo contactar a Gemini: ' + (e.message || e) }, 500);
   } finally {
     clearTimeout(timer);
   }
 
   if (!res.ok) {
     const t = await res.text().catch(() => '');
-    return json({ ok: false, error: `Gemini (${model}) respondió ${res.status}. ${t.slice(0, 400)}` }, 502);
+    return json({ ok: false, error: `Gemini (${model}) respondió ${res.status}. ${t.slice(0, 400)}` }, 500);
   }
 
   let data;
-  try { data = await res.json(); } catch { return json({ ok: false, error: 'Respuesta de Gemini no es JSON.' }, 502); }
+  try { data = await res.json(); } catch { return json({ ok: false, error: 'Respuesta de Gemini no es JSON.' }, 500); }
 
   let texto = '';
   const parts = data && data.candidates && data.candidates[0] && data.candidates[0].content && data.candidates[0].content.parts;
   if (Array.isArray(parts)) texto = parts.map(p => (p && p.text) || '').join('');
   if (!texto) {
     const motivo = (data && data.candidates && data.candidates[0] && data.candidates[0].finishReason) || (data && data.promptFeedback && data.promptFeedback.blockReason) || 'sin contenido';
-    return json({ ok: false, error: 'Gemini no devolvió contenido (' + motivo + ').' }, 502);
+    return json({ ok: false, error: 'Gemini no devolvió contenido (' + motivo + ').' }, 500);
   }
 
   let parsed;
@@ -200,7 +200,7 @@ async function generar({ request, env }) {
     const limpio = texto.trim().replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/i, '');
     parsed = JSON.parse(limpio);
   } catch {
-    return json({ ok: false, error: 'No se pudo interpretar la respuesta de la IA como JSON.' }, 502);
+    return json({ ok: false, error: 'No se pudo interpretar la respuesta de la IA como JSON.' }, 500);
   }
 
   let bloques = Array.isArray(parsed && parsed.bloques) ? parsed.bloques : [];
@@ -210,7 +210,7 @@ async function generar({ request, env }) {
     .map(b => ({ tipo: b.tipo, datos: (b.datos && typeof b.datos === 'object') ? b.datos : {} }));
 
   if (!bloques.length) {
-    return json({ ok: false, error: 'La IA no produjo bloques válidos. Reformula el brief.' }, 502);
+    return json({ ok: false, error: 'La IA no produjo bloques válidos. Reformula el brief.' }, 500);
   }
 
   return json({ ok: true, nombre: String((parsed && parsed.nombre) || brief.que).slice(0, 120), bloques });
