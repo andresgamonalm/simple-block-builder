@@ -534,6 +534,10 @@ button,input,select,textarea{font-family:inherit;}
 .cmp-ed .cmp-alin button{border:none;background:#fff;padding:5px 9px;cursor:pointer;color:#666;display:flex;}
 .cmp-ed .cmp-alin button.on{background:var(--primary);color:#fff;}
 .cmp-ed .cmp-alin svg{width:15px;height:15px;}
+.cmp-ed .cmp-sw-row{display:flex;flex-wrap:wrap;gap:4px;flex:1;}
+.cmp-ed .cmp-sw{width:18px;height:18px;border-radius:4px;border:1px solid rgba(0,0,0,.15);cursor:pointer;padding:0;}
+.cmp-ed .ia-sugerir{width:100%;margin:2px 0 6px;border:none;border-radius:8px;padding:9px;cursor:pointer;font-family:var(--f);font-size:12.5px;font-weight:700;color:#fff;background:linear-gradient(135deg,#6d4bff,#9b5cff);}
+.cmp-ed .ia-sugerir:hover{filter:brightness(1.07);}
 
 /* ─── FORM (RIGHT PANEL) ─── */
 .form-empty{padding:36px 16px;text-align:center;color:var(--ink3);font-size:12px;line-height:1.65;}
@@ -3380,6 +3384,30 @@ function renderTableroComposicion(p, c){
 function setComp(capa, key, val){ const p=pieza(); if(!esComposicion(p))return; (p.composicion[capa]=p.composicion[capa]||{})[key]=val; persistir(); renderTablero(); }
 function toggleCompVis(capa){ const p=pieza(); if(!esComposicion(p))return; const l=p.composicion[capa]; l.visible=(l.visible===false); persistir(); renderTablero(); renderComposicionEditor(); }
 function elegirImagenComp(capa){ abrirImagenes(url=>{ setComp(capa,'url',url); renderComposicionEditor(); }); }
+// 🪄 Colores rápidos del fondo (de tus marcas + presets).
+function swatchesFondo(){
+  const cols=[]; const add=c=>{ if(c && !cols.includes(c)) cols.push(c); };
+  (workspace.marcas||[]).forEach(m=>{ add(m.primary); add(m.bg); add(m.text); add(m.cta); });
+  ["#0e2748","#102a43","#1c1c28","#0b7a4b","#1c73cb","#b3261e","#ffffff","#f5f5f5"].forEach(add);
+  return cols.slice(0,12).map(c=>`<button class="cmp-sw" style="background:${esc(c)}" title="${esc(c)}" onclick="setComp('fondoColor','color','${esc(c)}');renderComposicionEditor();"></button>`).join('');
+}
+// ✨ Sugerir titular + cuerpo + CTA con IA (Gemini) para la composición global.
+async function sugerirTextosIA(){
+  const p=pieza(); if(!esComposicion(p)) return;
+  const que = prompt("¿De qué es la pieza? (una frase) — la IA escribe titular, cuerpo y CTA:", (p.composicion.titular&&p.composicion.titular.texto)||"");
+  if(que===null) return;
+  toast("✨ Pensando textos…", 8000);
+  try{
+    const r=await fetch('/api/ia',{method:'POST',credentials:'include',headers:{'Content-Type':'application/json'},body:JSON.stringify({modo:'textos',brief:{que,tono:'profesional y cercano'}})});
+    const raw=await r.text(); let d={}; try{ d=JSON.parse(raw); }catch(_){}
+    if(!r.ok||!d.ok){ toast(d.error||raw.slice(0,140)||('Error '+r.status),5000); return; }
+    if(d.titular) setComp('titular','texto',d.titular);
+    if(d.cuerpo) setComp('cuerpo','texto',d.cuerpo);
+    if(d.cta) setComp('cta','texto',d.cta);
+    renderComposicionEditor();
+    toast("Textos sugeridos por IA ✨");
+  }catch(e){ toast("Sin conexión: "+(e.message||e),4000); }
+}
 // Editor del Diseño global (las 6 capas con controles por elemento).
 function renderComposicionEditor(){
   const cont=document.getElementById("comp-editor"), tema=document.getElementById("diseno-tema");
@@ -3393,13 +3421,13 @@ function renderComposicionEditor(){
   const alin=(capa)=>`<div class="cmp-alin">${['left','center','right'].map(a=>`<button class="${(C[capa].alinH||'left')===a?'on':''}" onclick="setComp('${capa}','alinH','${a}');renderComposicionEditor();" title="${a}">${ICONS[a==='left'?'alignLeft':a==='center'?'alignCenter':'alignRight']}</button>`).join('')}</div>`;
   const rng=(capa,key,mn,mx,base)=>`<input type="range" min="${mn}" max="${mx}" value="${parseInt(C[capa][key])||base}" oninput="setComp('${capa}','${key}',this.value)">`;
   let h="";
-  h+=head("fondoColor","Fondo de color")+`<div class="cmp-row"><input type="color" value="${esc(C.fondoColor.color||'#0e2748')}" oninput="setComp('fondoColor','color',this.value)"></div>`;
+  h+=head("fondoColor","Fondo de color")+`<div class="cmp-row"><input type="color" value="${esc(C.fondoColor.color||'#0e2748')}" oninput="setComp('fondoColor','color',this.value)"><div class="cmp-sw-row" title="Colores rápidos (de tus marcas)">${swatchesFondo()}</div></div>`;
   h+=head("imagen","Imagen de fondo")+`<div class="cmp-row"><input type="text" placeholder="URL imagen" value="${escAttr(C.imagen.url||'')}" onchange="setComp('imagen','url',this.value)"><button class="cmp-bib" onclick="elegirImagenComp('imagen')">${svgIcon("imagen",{size:"12px"})}</button></div><div class="cmp-row"><label>Foco</label><select onchange="setComp('imagen','foco',this.value)">${['center','top','bottom','left','right'].map(v=>`<option value="${v}" ${(C.imagen.foco||'center')===v?'selected':''}>${v}</option>`).join('')}</select></div><div class="cmp-row"><label>Oscurecer</label>${rng('imagen','oscurecer',0,80,40)}</div>`;
   h+=head("logo","Logo")+`<div class="cmp-row"><input type="text" placeholder="URL logo (PNG/SVG)" value="${escAttr(C.logo.url||'')}" onchange="setComp('logo','url',this.value)"><button class="cmp-bib" onclick="elegirImagenComp('logo')">${svgIcon("imagen",{size:"12px"})}</button></div><div class="cmp-row"><label>Alineación</label>${alin('logo')}</div><div class="cmp-row"><label>Tamaño</label>${rng('logo','tamano',24,140,56)}</div>`;
   h+=head("titular","Titular")+`<div class="cmp-row"><input type="text" value="${escAttr(C.titular.texto||'')}" oninput="setComp('titular','texto',this.value)"></div><div class="cmp-row"><label>Tamaño</label>${rng('titular','tamano',12,52,26)}</div><div class="cmp-row"><label>Alineación</label>${alin('titular')}<input type="color" value="${esc(C.titular.color||'#ffffff')}" oninput="setComp('titular','color',this.value)"></div>`;
   h+=head("cuerpo","Cuerpo")+`<div class="cmp-row"><textarea oninput="setComp('cuerpo','texto',this.value)">${esc(C.cuerpo.texto||'')}</textarea></div><div class="cmp-row"><label>Tamaño</label>${rng('cuerpo','tamano',9,28,13)}</div><div class="cmp-row"><label>Alineación</label>${alin('cuerpo')}<input type="color" value="${esc(C.cuerpo.color||'#ffffff')}" oninput="setComp('cuerpo','color',this.value)"></div>`;
   h+=head("cta","CTA con link")+`<div class="cmp-row"><input type="text" placeholder="Texto" value="${escAttr(C.cta.texto||'')}" oninput="setComp('cta','texto',this.value)"></div><div class="cmp-row"><input type="text" placeholder="Link (https://…)" value="${escAttr(C.cta.url||'')}" onchange="setComp('cta','url',this.value)"></div><div class="cmp-row"><label>Alineación</label>${alin('cta')}<input type="color" value="${esc(C.cta.colorFondo||'#2f80ed')}" title="Color botón" oninput="setComp('cta','colorFondo',this.value)"><input type="color" value="${esc(C.cta.colorTexto||'#ffffff')}" title="Color texto" oninput="setComp('cta','colorTexto',this.value)"></div>`;
-  cont.innerHTML=`<div class="cmp-ed"><div class="dz-sec">Diseño global (capas)</div>${h}</div>`;
+  cont.innerHTML=`<div class="cmp-ed"><div class="dz-sec">Diseño global (capas)</div><button class="ia-sugerir" onclick="sugerirTextosIA()">✨ Sugerir textos con IA</button>${h}</div>`;
 }
 // Panel "Ajustar este tamaño" (overrides sobre el global) en la pestaña Editar.
 function renderFormTamaño(f){

@@ -34,7 +34,8 @@ Backend: funciones en **`functions/api/`** (auth por magic link + JWT, persisten
 - **Grid (Grid 2/3/4 columnas):** cada columna puede contener **cualquier bloque** (anidado). Editar con `editandoCelda` + `bloqueCtx()`; selector por columna `tiposCeldaOptions()`.
 - **Biblioteca de imágenes por URL** (`workspace.imagenes`, sin subir archivos = sin consumir storage). Modal desde dashboard "Biblioteca de imágenes" y botón en barra. Campo `imgurl` con "Elegir de la biblioteca" en bloques Imagen/Hero (`elegirImagenPara`).
 - **Motor de IA** — `functions/api/ia.js`: `POST /api/ia` recibe `{brief, formato, marca, imagenes, catalogo}`, llama a **Gemini** y devuelve `{nombre, bloques}`. La IA elige bloques (no escribe HTML). Cliente: botón **✨ IA** (barra) y "Generar con IA" (dashboard) → modal con brief simple. `catalogoBloquesParaIA()` arma el catálogo desde los bloques reales. Diagnóstico: `GET /api/ia` (instantáneo) y `GET /api/ia?gemini=1` (ping a Gemini).
-  - **ESTADO/PENDIENTE IA:** la API key del usuario da **HTTP 429 quota 0** en `gemini-2.0-flash` (free tier en 0). Falta: cambiar modelo con la variable `GEMINI_MODEL` (p.ej. `gemini-1.5-flash`) o activar billing en Google AI Studio. La función ya tiene timeout (AbortController) y errores legibles.
+  - Modo extra: `POST /api/ia { modo:'textos', brief }` → `{ titular, cuerpo, cta }` (usado por la Fase 3 de composición).
+  - **ESTADO/PENDIENTE IA:** la API key del usuario da **HTTP 429 quota 0** en `gemini-2.0-flash` (free tier en 0). Falta: cambiar modelo con la variable `GEMINI_MODEL` (p.ej. `gemini-1.5-flash`) o activar billing en Google AI Studio. La función ya tiene timeout (AbortController) y errores legibles. **Mientras esté el 429, "✨ Generar con IA" y "✨ Sugerir textos con IA" mostrarán el error de cuota.**
 
 ### Colecciones por capas (Composición) — el modelo central pedido por el usuario
 Idea (de su PPT): una creatividad es una **composición de 6 capas apiladas** (no bloques en flujo). Adapta a cualquier tamaño anclando + escalando, sin reflujo.
@@ -46,16 +47,23 @@ Idea (de su PPT): una creatividad es una **composición de 6 capas apiladas** (n
 - Entradas: **Formato → Colecciones → "Google Display · Desktop"** (`convertirEnColeccion`, usa el contenido actual como base) y **Plantillas → Google Display → "Set Desktop"** (`crearSetDesktop`). En colecciones se **bloquea Plantillas** y hay botón "Salir de colección".
 - Export: `generarHTMLDeComposicion(p, fmt)` (usa `composicionEfectiva`). `exportarArtboard` / `exportarTodoElSet`.
 - `SET_DISPLAY_DESKTOP` = los 9 tamaños desktop.
+- **Fase 3 (el 🪄):** en el editor global — `swatchesFondo()` (colores rápidos de marcas+presets en la capa Fondo), botones **biblioteca** en imagen/logo (`elegirImagenComp`), y **✨ "Sugerir textos con IA"** (`sugerirTextosIA`) que llama `POST /api/ia { modo:'textos', brief }` y rellena titular/cuerpo/cta del global. (Mismo bloqueo de cuota de Gemini que el motor IA.)
 
 ## Secrets y config (Cloudflare Pages → Settings → Variables and Secrets)
 - Secrets: `JWT_SECRET`, `RESEND_KEY`, `GEMINI_API_KEY` (ya cargada). Opcional `GEMINI_MODEL`.
 - `wrangler.toml [vars]`: `SITE_URL`, `SUPER_ADMIN_EMAIL`, `RESEND_FROM`, `ALLOWED_EMAILS`. D1 binding `DB`. **No hay R2** (por eso la biblioteca de imágenes es por URL).
 
 ## Roadmap / pendientes
-1. **IA**: resolver la cuota de Gemini (modelo `GEMINI_MODEL` o billing) y luego **conectar el brief para que genere directamente la Composición global** (no solo bloques de email).
-2. **Fase 3 del 🪄**: elegir imagen de biblioteca / sugerencia con IA por capa.
-3. Llevar el modelo de **capas a Social e Invitaciones**; agregar sets **Mobile** y "Todos".
+1. **IA**: resolver la cuota de Gemini (variable `GEMINI_MODEL` o billing). Luego **conectar el brief para que genere directamente la Composición global completa** (imagen de biblioteca + las 6 capas), no solo los textos.
+2. ~~Fase 3 del 🪄~~ ✅ **hecha** (swatches de fondo, biblioteca en imagen/logo, "✨ Sugerir textos con IA").
+3. Llevar el modelo de **capas a Social e Invitaciones**; agregar colecciones **Mobile** y "Todos".
 4. Nota de diseño: el **email** sigue siendo flujo de bloques (documento vertical); las **capas** son para creatividades de tamaño fijo (Display/Social/Invitaciones).
+
+## Historial de fases de Colecciones por capas
+- Fase 1: Composición global (6 capas) + tablero + editor en Diseño. ✅
+- Fase 2: Custom por tamaño (overrides + herencia + reset). ✅
+- Fase 3: el 🪄 (swatches fondo, biblioteca imagen/logo, sugerir textos con IA). ✅
+- Tablero agrupado por familia (cuadrados/verticales/franjas). ✅
 
 ## Cómo verificar (plantilla Playwright)
 Levantar server local sirviendo el repo + mocks `/api/*`; abrir `/editor.html`; usar `page.evaluate` con las funciones globales (`crearProyecto`, `crearDesde`, `cambiarFormato('__coleccion:display-desktop')`, `setComp`, etc.); servir un SVG local para imágenes; capturar `page.screenshot`. Revisar `console`/`pageerror` (ignorar `ERR_CERT`).

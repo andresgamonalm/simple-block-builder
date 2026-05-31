@@ -80,6 +80,34 @@ async function generar({ request, env }) {
   catch { return json({ ok: false, error: 'JSON inválido' }, 400); }
 
   const brief = body.brief || {};
+
+  // Modo "textos": sugiere copy para una Composición (titular + cuerpo + CTA).
+  if (body.modo === "textos") {
+    const instr = [
+      "Eres redactor publicitario experto. Devuelve EXCLUSIVAMENTE un JSON:",
+      '{ "titular": "...", "cuerpo": "...", "cta": "..." }',
+      "Reglas: titular ≤ 6 palabras; cuerpo ≤ 14 palabras; cta ≤ 3 palabras. En español, persuasivo y claro.",
+      `Tono: ${brief.tono || "profesional y cercano"}.`,
+      `Tema/brief: ${brief.que || "(general)"}.`
+    ].join("\n");
+    const model = env.GEMINI_MODEL || "gemini-2.0-flash";
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${encodeURIComponent(env.GEMINI_API_KEY)}`;
+    const ctl = new AbortController(); const t = setTimeout(() => ctl.abort(), 20000);
+    let res;
+    try {
+      res = await fetch(url, { method:"POST", headers:{ "Content-Type":"application/json" }, signal:ctl.signal,
+        body: JSON.stringify({ contents:[{ role:"user", parts:[{ text:instr }] }], generationConfig:{ responseMimeType:"application/json", temperature:0.85, maxOutputTokens:300 } }) });
+    } catch(e) { return json({ ok:false, error:(e && e.name==="AbortError") ? `Gemini (${model}) tardó demasiado. Prueba GEMINI_MODEL=gemini-1.5-flash.` : "No se pudo contactar a Gemini: "+(e.message||e) }, 502); }
+    finally { clearTimeout(t); }
+    if(!res.ok){ const tx = await res.text().catch(()=> ""); return json({ ok:false, error:`Gemini (${model}) respondió ${res.status}. ${tx.slice(0,400)}` }, 502); }
+    let data; try { data = await res.json(); } catch { return json({ ok:false, error:"Respuesta de Gemini no es JSON." }, 502); }
+    let texto = ""; const parts = data && data.candidates && data.candidates[0] && data.candidates[0].content && data.candidates[0].content.parts;
+    if(Array.isArray(parts)) texto = parts.map(p => (p && p.text) || "").join("");
+    let parsed; try { parsed = JSON.parse(texto.trim().replace(/^```(?:json)?\s*/i,"").replace(/\s*```$/i,"")); }
+    catch { return json({ ok:false, error:"No se pudo interpretar la respuesta de la IA." }, 502); }
+    return json({ ok:true, titular:String(parsed.titular||"").slice(0,120), cuerpo:String(parsed.cuerpo||"").slice(0,240), cta:String(parsed.cta||"").slice(0,40) });
+  }
+
   if (!brief.que || !String(brief.que).trim()) {
     return json({ ok: false, error: 'Dime qué necesitas (el brief está vacío).' }, 400);
   }
