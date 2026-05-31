@@ -35,18 +35,20 @@ export async function onRequestPost({ request, env }) {
   try { body = await request.json(); }
   catch { return json({ ok: false, error: 'JSON inválido' }, 400); }
 
-  const proyecto = body && body.proyecto;
-  if (!proyecto || !Array.isArray(proyecto.piezas)) {
-    return json({ ok: false, error: 'Falta un proyecto válido (con piezas).' }, 400);
+  // Acepta el espacio nuevo (body.workspace con proyectos[]) y, por
+  // compatibilidad, el formato viejo (body.proyecto con piezas[]).
+  const data = body && (body.workspace || body.proyecto);
+  if (!data || (!Array.isArray(data.proyectos) && !Array.isArray(data.piezas))) {
+    return json({ ok: false, error: 'Falta un espacio válido (con proyectos).' }, 400);
   }
 
-  const piezasJson = JSON.stringify(proyecto);
+  const piezasJson = JSON.stringify(data);
   // Límite defensivo: D1 admite valores grandes, pero evitamos abusos.
   if (piezasJson.length > 4_000_000) {
-    return json({ ok: false, error: 'El proyecto es demasiado grande.' }, 413);
+    return json({ ok: false, error: 'El espacio es demasiado grande.' }, 413);
   }
 
-  const nombre = (proyecto.nombre || 'Mi proyecto').slice(0, 200);
+  const nombre = (data.nombre || 'Mi espacio').slice(0, 200);
   const ahora = nowIso();
 
   // Upsert: si existe la fila del usuario, actualiza; si no, la crea.

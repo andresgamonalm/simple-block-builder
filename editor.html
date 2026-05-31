@@ -1189,7 +1189,7 @@ async function guardarEnNube(){
     const r = await fetch("/api/proyectos", {
       method:"POST", credentials:"include",
       headers:{ "Content-Type":"application/json" },
-      body: JSON.stringify({ proyecto })
+      body: JSON.stringify({ workspace })   // se sube el espacio completo (proyectos + marcas + banner)
     });
     if(r.ok){ setSyncEstado("Guardado", "ok"); }
     else { setSyncEstado("Solo local", "err"); }
@@ -1202,22 +1202,31 @@ async function sincronizarConNube(){
     const r = await fetch("/api/proyectos", { credentials:"include" });
     if(!r.ok){ setSyncEstado("Solo local", "err"); return; }
     const data = await r.json();
+    // El servidor devuelve el blob durable bajo `proyecto` (nombre histórico de la
+    // columna); puede ser el espacio nuevo {proyectos:[]} o el formato viejo {piezas:[]}.
     const remoto = data && data.proyecto;
     const tsRemoto = remoto && remoto._ts ? remoto._ts : 0;
     // Comparamos contra el timestamp REAL de localStorage al cargar (no contra
     // el que los renders de arranque pudieron regenerar).
     const tsLocal  = _tsAlCargar;
-    if(remoto && Array.isArray(remoto.piezas) && remoto.piezas.length && tsRemoto > tsLocal){
-      // La nube tiene una versión más nueva → adoptarla.
-      proyecto = remoto;
-      if(!proyecto.activa) proyecto.activa = proyecto.piezas[0].id;
-      try{localStorage.setItem(STORAGE_KEY, JSON.stringify(proyecto));}catch(e){}
-      const p0 = pieza();
-      if(p0){ document.getElementById("fmt").value = p0.formato; cambiarFormato(p0.formato); aplicarTema(); }
-      renderTabsPiezas(); renderCanvas(); renderForm();
-      if(document.getElementById("galeria").classList.contains("show")) renderGaleria();
+    if(remoto && (Array.isArray(remoto.proyectos) || Array.isArray(remoto.piezas)) && tsRemoto > tsLocal){
+      // La nube tiene una versión más nueva → adoptarla (migrando el formato si hace falta).
+      workspace = normalizarWorkspace(remoto);
+      _tsAlCargar = workspace._ts || 0;
+      try{localStorage.setItem(STORAGE_KEY, JSON.stringify(workspace));}catch(e){}
+      // Reanclar el proyecto activo a la nueva referencia (o soltarlo si ya no existe).
+      proyecto = proyecto ? proyectoPorId(proyecto.id) : null;
+      const editando = !document.getElementById("galeria").classList.contains("show");
+      if(editando && proyecto){
+        const p0 = pieza();
+        if(p0){ document.getElementById("fmt").value = p0.formato; cambiarFormato(p0.formato); aplicarTema(); }
+        renderTabsPiezas(); renderCanvas(); renderForm();
+      } else {
+        renderMarcaSelector();
+        renderGaleria();
+      }
       setSyncEstado("Guardado", "ok");
-      toast("Proyecto sincronizado desde la nube");
+      toast("Espacio sincronizado desde la nube");
     } else if(tsLocal > tsRemoto){
       // Lo local es más nuevo (o la nube está vacía) → subirlo.
       await guardarEnNube();
