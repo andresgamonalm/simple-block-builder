@@ -11,6 +11,46 @@ import { json, corsPreflight, getUserEmail } from './_shared.js';
 
 export const onRequestOptions = () => corsPreflight();
 
+// Diagnóstico (GET): visita /api/ia en el navegador (logueado) para ver, en JSON,
+// qué pasa con Gemini SIN el modal. Hace una llamada mínima y nunca devuelve 502.
+export async function onRequestGet({ request, env }) {
+  const out = { paso: 'inicio' };
+  try {
+    const email = await getUserEmail(request, env);
+    out.autenticado = !!email;
+    if (!email) return json({ ...out, error: 'No autenticado: entra primero a la app en este navegador y recarga esta URL.' }, 200);
+    out.tieneKey = !!env.GEMINI_API_KEY;
+    out.largoKey = (env.GEMINI_API_KEY || '').length;
+    out.modelo = env.GEMINI_MODEL || 'gemini-2.0-flash';
+    if (!env.GEMINI_API_KEY) return json({ ...out, error: 'Falta GEMINI_API_KEY.' }, 200);
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/${out.modelo}:generateContent?key=${encodeURIComponent(env.GEMINI_API_KEY)}`;
+    const ctl = new AbortController();
+    const t = setTimeout(() => ctl.abort(), 8000);
+    let raw = '';
+    try {
+      out.paso = 'llamando-gemini';
+      const res = await fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        signal: ctl.signal,
+        body: JSON.stringify({ contents: [{ role: 'user', parts: [{ text: 'Responde solo con la palabra: ok' }] }], generationConfig: { maxOutputTokens: 10 } })
+      });
+      out.httpStatus = res.status;
+      raw = await res.text();
+      out.respuesta = raw.slice(0, 600);
+      out.paso = 'ok';
+    } catch (e) {
+      out.paso = 'fallo-fetch';
+      out.errorFetch = (e && e.name === 'AbortError') ? 'timeout 8s (Gemini no respondió)' : (e && e.message ? e.message : String(e));
+    } finally {
+      clearTimeout(t);
+    }
+    return json(out, 200);
+  } catch (e) {
+    return json({ ...out, paso: 'excepcion', error: (e && e.message ? e.message : String(e)) }, 200);
+  }
+}
+
 // Envoltura: cualquier excepción se convierte en un JSON legible (nunca un 502 mudo).
 export async function onRequestPost(ctx) {
   try {
