@@ -11,37 +11,44 @@ import { json, corsPreflight, getUserEmail } from './_shared.js';
 
 export const onRequestOptions = () => corsPreflight();
 
-// Diagnóstico (GET): visita /api/ia en el navegador (logueado) para ver, en JSON,
-// qué pasa con Gemini SIN el modal. Hace una llamada mínima y nunca devuelve 502.
+// Diagnóstico (GET). Dos modos:
+//   /api/ia            → instantáneo, NO llama a Gemini (confirma deploy + key + sesión)
+//   /api/ia?gemini=1   → además hace una llamada mínima a Gemini y muestra su respuesta
+// Siempre responde JSON 200 (nunca 502), para poder ver qué pasa.
 export async function onRequestGet({ request, env }) {
-  const out = { paso: 'inicio' };
+  const out = { version: 'diag-3' };
   try {
+    const u = new URL(request.url);
     const email = await getUserEmail(request, env);
     out.autenticado = !!email;
-    if (!email) return json({ ...out, error: 'No autenticado: entra primero a la app en este navegador y recarga esta URL.' }, 200);
     out.tieneKey = !!env.GEMINI_API_KEY;
     out.largoKey = (env.GEMINI_API_KEY || '').length;
     out.modelo = env.GEMINI_MODEL || 'gemini-2.0-flash';
+
+    if (u.searchParams.get('gemini') !== '1') {
+      out.nota = 'Función viva y deploy actualizado. Para probar Gemini abre /api/ia?gemini=1';
+      return json(out, 200);
+    }
+    if (!email) return json({ ...out, error: 'No autenticado: entra a la app en este navegador y recarga.' }, 200);
     if (!env.GEMINI_API_KEY) return json({ ...out, error: 'Falta GEMINI_API_KEY.' }, 200);
+
     const url = `https://generativelanguage.googleapis.com/v1beta/models/${out.modelo}:generateContent?key=${encodeURIComponent(env.GEMINI_API_KEY)}`;
     const ctl = new AbortController();
     const t = setTimeout(() => ctl.abort(), 8000);
-    let raw = '';
     try {
       out.paso = 'llamando-gemini';
       const res = await fetch(url, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         signal: ctl.signal,
-        body: JSON.stringify({ contents: [{ role: 'user', parts: [{ text: 'Responde solo con la palabra: ok' }] }], generationConfig: { maxOutputTokens: 10 } })
+        body: JSON.stringify({ contents: [{ role: 'user', parts: [{ text: 'Responde solo: ok' }] }], generationConfig: { maxOutputTokens: 10 } })
       });
       out.httpStatus = res.status;
-      raw = await res.text();
-      out.respuesta = raw.slice(0, 600);
+      out.respuesta = (await res.text()).slice(0, 600);
       out.paso = 'ok';
     } catch (e) {
       out.paso = 'fallo-fetch';
-      out.errorFetch = (e && e.name === 'AbortError') ? 'timeout 8s (Gemini no respondió)' : (e && e.message ? e.message : String(e));
+      out.errorFetch = (e && e.name === 'AbortError') ? 'timeout 8s (Gemini no respondió a tiempo)' : (e && e.message ? e.message : String(e));
     } finally {
       clearTimeout(t);
     }
