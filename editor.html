@@ -519,21 +519,21 @@ button,input,select,textarea{font-family:inherit;}
 .ab:not(.activo) .ab-frame{pointer-events:none;}
 .ab-empty{display:flex;align-items:center;justify-content:center;height:100%;color:#bbb;font-size:13px;text-align:center;padding:8px;}
 /* Editor de Diseño global (capas) */
-#comp-editor .cmp-sec{display:flex;align-items:center;justify-content:space-between;font-size:12px;font-weight:700;color:var(--ink2,#3a3a4a);margin:14px 0 6px;padding-bottom:5px;border-bottom:1px solid var(--bdr);}
-#comp-editor .cmp-eye{border:1px solid var(--bdr);background:#fff;border-radius:6px;padding:3px 7px;cursor:pointer;color:var(--primary);}
-#comp-editor .cmp-eye.off{opacity:.4;color:#888;}
-#comp-editor .cmp-row{display:flex;align-items:center;gap:6px;margin-bottom:7px;}
-#comp-editor .cmp-row > label{font-size:11px;color:#777;min-width:54px;}
-#comp-editor .cmp-row input[type=text]{flex:1;min-width:0;font-family:var(--f);font-size:12.5px;border:1px solid var(--bdr);border-radius:6px;padding:6px 8px;}
-#comp-editor .cmp-row textarea{flex:1;min-height:46px;font-family:var(--f);font-size:12.5px;border:1px solid var(--bdr);border-radius:6px;padding:6px 8px;resize:vertical;}
-#comp-editor .cmp-row select{flex:1;font-family:var(--f);font-size:12.5px;border:1px solid var(--bdr);border-radius:6px;padding:5px;}
-#comp-editor .cmp-row input[type=range]{flex:1;}
-#comp-editor .cmp-row input[type=color]{width:34px;height:28px;border:1px solid var(--bdr);border-radius:6px;background:#fff;cursor:pointer;padding:0;}
-#comp-editor .cmp-bib{border:1px solid var(--primary);background:var(--navy-l,#eef2ff);color:var(--primary);border-radius:6px;padding:5px 8px;cursor:pointer;}
-#comp-editor .cmp-alin{display:inline-flex;border:1px solid var(--bdr);border-radius:7px;overflow:hidden;}
-#comp-editor .cmp-alin button{border:none;background:#fff;padding:5px 9px;cursor:pointer;color:#666;display:flex;}
-#comp-editor .cmp-alin button.on{background:var(--primary);color:#fff;}
-#comp-editor .cmp-alin svg{width:15px;height:15px;}
+.cmp-ed .cmp-sec{display:flex;align-items:center;justify-content:space-between;font-size:12px;font-weight:700;color:var(--ink2,#3a3a4a);margin:14px 0 6px;padding-bottom:5px;border-bottom:1px solid var(--bdr);}
+.cmp-ed .cmp-eye{border:1px solid var(--bdr);background:#fff;border-radius:6px;padding:3px 7px;cursor:pointer;color:var(--primary);}
+.cmp-ed .cmp-eye.off{opacity:.4;color:#888;}
+.cmp-ed .cmp-row{display:flex;align-items:center;gap:6px;margin-bottom:7px;}
+.cmp-ed .cmp-row > label{font-size:11px;color:#777;min-width:54px;}
+.cmp-ed .cmp-row input[type=text]{flex:1;min-width:0;font-family:var(--f);font-size:12.5px;border:1px solid var(--bdr);border-radius:6px;padding:6px 8px;}
+.cmp-ed .cmp-row textarea{flex:1;min-height:46px;font-family:var(--f);font-size:12.5px;border:1px solid var(--bdr);border-radius:6px;padding:6px 8px;resize:vertical;}
+.cmp-ed .cmp-row select{flex:1;font-family:var(--f);font-size:12.5px;border:1px solid var(--bdr);border-radius:6px;padding:5px;}
+.cmp-ed .cmp-row input[type=range]{flex:1;}
+.cmp-ed .cmp-row input[type=color]{width:34px;height:28px;border:1px solid var(--bdr);border-radius:6px;background:#fff;cursor:pointer;padding:0;}
+.cmp-ed .cmp-bib{border:1px solid var(--primary);background:var(--navy-l,#eef2ff);color:var(--primary);border-radius:6px;padding:5px 8px;cursor:pointer;}
+.cmp-ed .cmp-alin{display:inline-flex;border:1px solid var(--bdr);border-radius:7px;overflow:hidden;}
+.cmp-ed .cmp-alin button{border:none;background:#fff;padding:5px 9px;cursor:pointer;color:#666;display:flex;}
+.cmp-ed .cmp-alin button.on{background:var(--primary);color:#fff;}
+.cmp-ed .cmp-alin svg{width:15px;height:15px;}
 
 /* ─── FORM (RIGHT PANEL) ─── */
 .form-empty{padding:36px 16px;text-align:center;color:var(--ink3);font-size:12px;line-height:1.65;}
@@ -2791,6 +2791,7 @@ function limpiarDropLines(){ document.querySelectorAll(".drop-line").forEach(el 
 
 function renderForm(){
   const f = document.getElementById("form");
+  if(esComposicion(pieza())){ return renderFormTamaño(f); }   // colección por capas: ajustar el tamaño activo
   if(editandoCelda){ return renderFormCelda(f); }   // editando el bloque de una columna del grid
   if(!seleccionado){ f.innerHTML = `<div class="form-empty"><div class="form-empty-ico">${svgIcon("editar",{size:"32px"})}</div>Selecciona un bloque del canvas<br>para editar su contenido</div>`; return; }
   const item = getCanvas().find(x => x.id===seleccionado);
@@ -3338,6 +3339,19 @@ function renderComposicion(comp, fmt){
     : `<div class="cmp-content col" style="padding:${pad}px;">${logoEl}${tiEl}${cuEl}${ctaEl}</div>`;
   return `<div class="cmp" style="width:${W}px;height:${H}px;background:${esc(bg)};">${capaImg}${content}</div>`;
 }
+// ── Custom por tamaño (overrides sobre el Diseño global) ──
+const CAPAS_COMP = ["fondoColor","imagen","logo","titular","cuerpo","cta"];
+function ovDeFmt(p, fmt){ const ab=(p.artboards||[]).find(a=>a.fmt===fmt); if(!ab) return {}; ab.ov=ab.ov||{}; return ab.ov; }
+function composicionEfectiva(p, fmt){
+  const g = p.composicion||{}; const ab=(p.artboards||[]).find(a=>a.fmt===fmt); const ov=(ab&&ab.ov)||{};
+  const m={}; CAPAS_COMP.forEach(k => { m[k]=Object.assign({}, g[k]||{}, ov[k]||{}); });
+  return m;
+}
+function tieneOverride(p, fmt){ const ab=(p.artboards||[]).find(a=>a.fmt===fmt); return !!(ab&&ab.ov&&CAPAS_COMP.some(k=>ab.ov[k]&&Object.keys(ab.ov[k]).length)); }
+function setCompOv(fmt, capa, key, val){ const p=pieza(); if(!esComposicion(p))return; const ov=ovDeFmt(p,fmt); (ov[capa]=ov[capa]||{})[key]=val; persistir(); renderTablero(); }
+function toggleCompVisOv(fmt, capa){ const p=pieza(); if(!esComposicion(p))return; const ef=composicionEfectiva(p,fmt); setCompOv(fmt,capa,'visible',!(ef[capa].visible!==false)); renderForm(); }
+function resetTamaño(fmt){ const p=pieza(); const ab=(p.artboards||[]).find(a=>a.fmt===fmt); if(ab) ab.ov={}; persistir(); renderTablero(); renderForm(); toast("Tamaño restablecido al Diseño global"); }
+function resetCapaTamaño(fmt, capa){ const p=pieza(); const ab=(p.artboards||[]).find(a=>a.fmt===fmt); if(ab&&ab.ov){ delete ab.ov[capa]; } persistir(); renderTablero(); renderForm(); }
 function familiaDeFormato(fmt){ const f=FORMATOS[fmt]; if(!f) return "cuadrado"; const r=f.ancho/f.alto; return r>=2.2?"franja":(r<=0.6?"vertical":"cuadrado"); }
 function renderTableroComposicion(p, c){
   const sizes = (p.artboards && p.artboards.length) ? p.artboards.map(a=>a.fmt) : SET_DISPLAY_DESKTOP;
@@ -3347,18 +3361,19 @@ function renderTableroComposicion(p, c){
   const zoom = 0.7;
   const celda = (fmt) => {
     const f=FORMATOS[fmt]; const master = fmt===(p.masterFmt||"display-300x250");
-    return `<div class="ab" data-fmt="${fmt}">
-      <div class="ab-bar"><span class="ab-tit">${f.ancho}×${f.alto}${master?' <span class="mtag">máster</span>':''}</span><button class="ab-dl" onclick="exportarArtboard('${fmt}');event.stopPropagation();" title="Descargar este banner">${svgIcon("exportar",{size:"12px"})}</button></div>
-      <div class="ab-stage" style="width:${Math.round(f.ancho*zoom)}px;height:${Math.round(f.alto*zoom)}px;"><div class="ab-scale" style="transform:scale(${zoom});">${renderComposicion(p.composicion, fmt)}</div></div>
+    const activo = fmt===p.activaFmt; const ajustado = tieneOverride(p, fmt);
+    return `<div class="ab${activo?' activo':''}" data-fmt="${fmt}">
+      <div class="ab-bar"><span class="ab-tit">${f.ancho}×${f.alto}${master?' <span class="mtag">máster</span>':''}${ajustado?' <span class="ajtag">· ajustado</span>':''}</span><button class="ab-dl" onclick="exportarArtboard('${fmt}');event.stopPropagation();" title="Descargar este banner">${svgIcon("exportar",{size:"12px"})}</button></div>
+      <div class="ab-stage" style="width:${Math.round(f.ancho*zoom)}px;height:${Math.round(f.alto*zoom)}px;"><div class="ab-scale" style="transform:scale(${zoom});">${renderComposicion(composicionEfectiva(p, fmt), fmt)}</div></div>
     </div>`;
   };
-  let html = `<div class="tablero-hint">Edita el <b>Diseño global</b> en la pestaña <b>Diseño</b> (izquierda): logo, fondo, imagen, titular, cuerpo y CTA → se aplican a todos los tamaños. <i>(Ajustar cada tamaño por separado llega en la próxima fase.)</i></div>`;
+  let html = `<div class="tablero-hint"><b>Diseño global</b> (pestaña Diseño) = base de todos. <b>Clic en un banner</b> → ajustas SOLO ese tamaño (hereda lo que no toques).</div>`;
   ["cuadrado","vertical","franja"].forEach(g => {
     if(!grupos[g].length) return;
     html += `<div class="tab-grupo"><div class="tab-grupo-tit">${titulos[g]}</div><div class="tablero grupo-${g}">${grupos[g].map(celda).join("")}</div></div>`;
   });
   c.innerHTML = html;
-  c.querySelectorAll(".ab").forEach(el=>el.addEventListener("click",()=>cambiarPanelTab("diseno")));
+  c.querySelectorAll(".ab").forEach(el=>el.addEventListener("click",()=>{ p.activaFmt=el.dataset.fmt; renderTablero(); renderForm(); cambiarPanelTab("editar"); }));
   iniciarLivePreview();
 }
 // Mutadores de la composición global.
@@ -3384,7 +3399,27 @@ function renderComposicionEditor(){
   h+=head("titular","Titular")+`<div class="cmp-row"><input type="text" value="${escAttr(C.titular.texto||'')}" oninput="setComp('titular','texto',this.value)"></div><div class="cmp-row"><label>Tamaño</label>${rng('titular','tamano',12,52,26)}</div><div class="cmp-row"><label>Alineación</label>${alin('titular')}<input type="color" value="${esc(C.titular.color||'#ffffff')}" oninput="setComp('titular','color',this.value)"></div>`;
   h+=head("cuerpo","Cuerpo")+`<div class="cmp-row"><textarea oninput="setComp('cuerpo','texto',this.value)">${esc(C.cuerpo.texto||'')}</textarea></div><div class="cmp-row"><label>Tamaño</label>${rng('cuerpo','tamano',9,28,13)}</div><div class="cmp-row"><label>Alineación</label>${alin('cuerpo')}<input type="color" value="${esc(C.cuerpo.color||'#ffffff')}" oninput="setComp('cuerpo','color',this.value)"></div>`;
   h+=head("cta","CTA con link")+`<div class="cmp-row"><input type="text" placeholder="Texto" value="${escAttr(C.cta.texto||'')}" oninput="setComp('cta','texto',this.value)"></div><div class="cmp-row"><input type="text" placeholder="Link (https://…)" value="${escAttr(C.cta.url||'')}" onchange="setComp('cta','url',this.value)"></div><div class="cmp-row"><label>Alineación</label>${alin('cta')}<input type="color" value="${esc(C.cta.colorFondo||'#2f80ed')}" title="Color botón" oninput="setComp('cta','colorFondo',this.value)"><input type="color" value="${esc(C.cta.colorTexto||'#ffffff')}" title="Color texto" oninput="setComp('cta','colorTexto',this.value)"></div>`;
-  cont.innerHTML=`<div class="dz-sec">Diseño global (capas)</div>${h}`;
+  cont.innerHTML=`<div class="cmp-ed"><div class="dz-sec">Diseño global (capas)</div>${h}</div>`;
+}
+// Panel "Ajustar este tamaño" (overrides sobre el global) en la pestaña Editar.
+function renderFormTamaño(f){
+  const p=pieza(); const fmt=p.activaFmt; const F=FORMATOS[fmt];
+  if(!fmt||!F){ f.innerHTML=`<div class="form-empty"><div class="form-empty-ico">${svgIcon("editar",{size:"32px"})}</div>Haz clic en un banner del tablero<br>para ajustar ese tamaño</div>`; return; }
+  const E=composicionEfectiva(p,fmt), ov=ovDeFmt(p,fmt), fam=familiaDeFormato(fmt);
+  const eye=(capa)=>`<button class="cmp-eye${E[capa].visible===false?' off':''}" onclick="toggleCompVisOv('${fmt}','${capa}')" title="Mostrar/ocultar aquí">${svgIcon("ojo",{size:"13px"})}</button>`;
+  const rst=(capa)=>`<button class="cmp-eye" onclick="resetCapaTamaño('${fmt}','${capa}')" title="Volver al global">↺</button>`;
+  const head=(capa,nom)=>`<div class="cmp-sec"><span>${esc(nom)}</span><span style="display:inline-flex;gap:4px">${eye(capa)}${rst(capa)}</span></div>`;
+  const alin=(capa)=>`<div class="cmp-alin">${['left','center','right'].map(a=>`<button class="${(E[capa].alinH||'left')===a?'on':''}" onclick="setCompOv('${fmt}','${capa}','alinH','${a}');renderForm();">${ICONS[a==='left'?'alignLeft':a==='center'?'alignCenter':'alignRight']}</button>`).join('')}</div>`;
+  const rng=(capa,key,mn,mx,base)=>`<input type="range" min="${mn}" max="${mx}" value="${parseInt(E[capa][key])||base}" oninput="setCompOv('${fmt}','${capa}','${key}',this.value)">`;
+  let h=`<button class="volver-celda" onclick="cambiarPanelTab('diseno')">${svgIcon("paleta",{size:"12px"})} Ir al Diseño global</button><div class="cmp-ed">`;
+  h+=`<div class="dz-sec">Ajustar ${F.ancho}×${F.alto} <span style="font-weight:400;color:#8890a8">· ${fam} · hereda del global</span></div>`;
+  h+=head("imagen","Imagen de fondo")+`<div class="cmp-row"><input type="text" placeholder="URL imagen (solo este tamaño)" value="${escAttr(E.imagen.url||'')}" onchange="setCompOv('${fmt}','imagen','url',this.value)"><button class="cmp-bib" onclick="abrirImagenes(u=>{setCompOv('${fmt}','imagen','url',u);renderForm();})">${svgIcon("imagen",{size:"12px"})}</button></div><div class="cmp-row"><label>Foco</label><select onchange="setCompOv('${fmt}','imagen','foco',this.value)">${['center','top','bottom','left','right'].map(v=>`<option value="${v}" ${(E.imagen.foco||'center')===v?'selected':''}>${v}</option>`).join('')}</select></div><div class="cmp-row"><label>Oscurecer</label>${rng('imagen','oscurecer',0,80,40)}</div>`;
+  h+=head("logo","Logo")+`<div class="cmp-row"><label>Alineación</label>${alin('logo')}</div><div class="cmp-row"><label>Tamaño</label>${rng('logo','tamano',24,140,56)}</div>`;
+  h+=head("titular","Titular")+`<div class="cmp-row"><input type="text" value="${escAttr(E.titular.texto||'')}" oninput="setCompOv('${fmt}','titular','texto',this.value)"></div><div class="cmp-row"><label>Tamaño</label>${rng('titular','tamano',12,52,26)}</div><div class="cmp-row"><label>Alineación</label>${alin('titular')}</div>`;
+  h+=head("cuerpo","Cuerpo")+`<div class="cmp-row"><textarea oninput="setCompOv('${fmt}','cuerpo','texto',this.value)">${esc(E.cuerpo.texto||'')}</textarea></div><div class="cmp-row"><label>Tamaño</label>${rng('cuerpo','tamano',9,28,13)}</div><div class="cmp-row"><label>Alineación</label>${alin('cuerpo')}</div>`;
+  h+=head("cta","CTA con link")+`<div class="cmp-row"><input type="text" placeholder="Texto" value="${escAttr(E.cta.texto||'')}" oninput="setCompOv('${fmt}','cta','texto',this.value)"></div><div class="cmp-row"><input type="text" placeholder="Link" value="${escAttr(E.cta.url||'')}" onchange="setCompOv('${fmt}','cta','url',this.value)"></div><div class="cmp-row"><label>Alineación</label>${alin('cta')}</div>`;
+  h+=`<button class="set-aj-reset" onclick="resetTamaño('${fmt}')">Restablecer este tamaño al global</button></div>`;
+  f.innerHTML=h;
 }
 function cssComponentes(){
   const cssFull = (document.querySelector("style") && document.querySelector("style").textContent) || "";
@@ -3399,7 +3434,7 @@ function generarHTMLDeComposicion(p, fmt){
   const fonts=`<link rel="preconnect" href="https://fonts.googleapis.com"><link href="https://fonts.googleapis.com/css2?family=${encodeURIComponent(p.tema.font)}:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">`;
   return `<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8"><title>${esc(p.nombre)} · ${f.ancho}×${f.alto}</title>${fonts}
 <style>*{box-sizing:border-box;margin:0;padding:0;}body{font-family:"${p.tema.font}",Arial,sans-serif;}${css}</style></head>
-<body><!--SBB-CMP:${esc(fmt)}-->${renderComposicion(p.composicion, fmt)}</body></html>`;
+<body><!--SBB-CMP:${esc(fmt)}-->${renderComposicion(composicionEfectiva(p, fmt), fmt)}</body></html>`;
 }
 
 function renderTablero(){
