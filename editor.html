@@ -1423,7 +1423,9 @@ function styleFields(opts={}){
   if(opts.h !== false || opts.v !== false){
     f.push({tipo:"row2", izq:{key:"alinH", label:"Alineación H", tipo:"alignH"}, der:{key:"alinV", label:"Alineación V", tipo:"alignV"}});
   }
-  f.push({tipo:"row2", izq:{key:"ancho", label:"Ancho", tipo:"text", placeholder:"auto"}, der:{key:"alto", label:"Alto", tipo:"text", placeholder:"auto"}});
+  // (Se quitó el Ancho/Alto genérico del bloque: confundía y casi no se usaba.
+  //  El bloque ocupa el ancho disponible; el tamaño fino vive en cada bloque
+  //  que lo necesita, p. ej. el ancho/alto del botón CTA.)
   f.push({grupo:"Espaciado interior (padding)"});
   f.push({tipo:"row2", izq:{key:"padTop", label:"Arriba", tipo:"range", min:0, max:120, step:2}, der:{key:"padBottom", label:"Abajo", tipo:"range", min:0, max:120, step:2}});
   f.push({tipo:"row2", izq:{key:"padLeft", label:"Izquierda", tipo:"range", min:0, max:120, step:2}, der:{key:"padRight", label:"Derecha", tipo:"range", min:0, max:120, step:2}});
@@ -2296,10 +2298,11 @@ const BLOQUES = {
 // alto:0 = formato flexible (sin alto fijo). alto>0 = banner/post de tamaño
 // fijo. 'badge' agrupa en los menús. Agregar un formato = añadir una línea.
 const FORMATOS = {
+  // Formato Universal: ancho a elección (Diseño › Ancho del lienzo), alto siempre libre.
+  "libre":           { label:"Estilo Libre",              badge:"Formato Universal", ancho:600, alto:0, txt:"Ancho a tu elección (edítalo en Diseño › Ancho del lienzo). El alto es libre: crece con el contenido." },
   // Email / documento
   "email":           { label:"Email · 600px",            badge:"Email",     ancho:600,  alto:0,    txt:"600px de ancho. Gmail, Outlook, HubSpot." },
   "invitacion":      { label:"Invitación · 920px",        badge:"Email",     ancho:920,  alto:0,    txt:"920px responsive. Invitaciones digitales." },
-  "libre":           { label:"Libre · 920px",             badge:"Email",     ancho:920,  alto:0,    txt:"920px sin alto fijo, scroll libre." },
   // LinkedIn (tamaños oficiales)
   "linkedin":        { label:"Portada perfil · 1584×396", badge:"LinkedIn",  ancho:1584, alto:396,  txt:"Banner/portada de perfil 1584×396." },
   "linkedin-post":   { label:"Post cuadrado · 1200×1200", badge:"LinkedIn",  ancho:1200, alto:1200, txt:"Post cuadrado del feed 1200×1200." },
@@ -2359,6 +2362,7 @@ function cambiarFormato(f){
   aplicarTema();   // reconcilia el ancho inline según el nuevo formato
   renderCanvas();  // banners de alto fijo distribuyen los bloques con flex
   renderTabsPiezas();
+  renderPlantillasTab();  // las plantillas del panel concuerdan con el formato actual
   persistir();
 }
 
@@ -2510,50 +2514,9 @@ function renderCanvas(){
       try{e.dataTransfer.setData("text/plain",bw.dataset.id);}catch(_){}
     });
     bw.addEventListener("dragend", () => { bw.classList.remove("drag-source"); limpiarDropLines(); dragBlockId=null; });
-    bw.addEventListener("dragover", (e) => {
-      // Reorder dentro del canvas
-      if(dragBlockId && dragBlockId!==bw.dataset.id){
-        e.preventDefault(); e.dataTransfer.dropEffect="move";
-        mostrarDropLine(bw, e.clientY);
-        return;
-      }
-      // Drop desde la biblioteca: permitir posicionar entre bloques
-      if(dragInfo && dragInfo.fuente==="biblioteca"){
-        e.preventDefault(); e.dataTransfer.dropEffect="copy";
-        mostrarDropLine(bw, e.clientY);
-      }
-    });
-    bw.addEventListener("drop", (e) => {
-      const rect = bw.getBoundingClientRect();
-      const above = e.clientY < (rect.top + rect.height/2);
-      const arr = getCanvas();
-
-      // Reorder dentro del canvas
-      if(dragBlockId && dragBlockId!==bw.dataset.id){
-        e.preventDefault(); e.stopPropagation();
-        const fromIdx = arr.findIndex(x => x.id===dragBlockId);
-        if(fromIdx<0){ limpiarDropLines(); return; }
-        const [moved] = arr.splice(fromIdx, 1);
-        let insertAt = arr.findIndex(x => x.id===bw.dataset.id);
-        if(insertAt<0) insertAt = arr.length;
-        if(!above) insertAt += 1;
-        arr.splice(insertAt, 0, moved);
-        limpiarDropLines(); dragBlockId=null;
-        persistir(); renderCanvas();
-        return;
-      }
-      // Drop desde la biblioteca en una posición específica
-      if(dragInfo && dragInfo.fuente==="biblioteca"){
-        e.preventDefault(); e.stopPropagation();
-        const targetIdx = arr.findIndex(x => x.id===bw.dataset.id);
-        let insertAt = above ? targetIdx : targetIdx + 1;
-        agregarBloque(dragInfo.tipo, undefined, insertAt);
-        limpiarDropLines(); dragInfo=null;
-        document.getElementById("canvas-frame").classList.remove("drag-over");
-        return;
-      }
-      limpiarDropLines();
-    });
+    // El posicionamiento (dragover/drop) se maneja a nivel del lienzo completo
+    // — ver dropZone más abajo — para poder soltar en cualquier punto, no solo
+    // justo sobre otro bloque.
   });
   iniciarLivePreview();
 }
@@ -2620,13 +2583,26 @@ function iniciarLivePreview(){
   ejecutarScriptsCodigo();
 }
 
-function mostrarDropLine(bw, y){
+// Calcula en qué posición (índice del array canvas) caería un drop según la Y
+// del cursor, recorriendo todos los bloques del lienzo. Permite soltar en
+// cualquier punto: entre bloques, antes del primero o después del último.
+function calcularDropIndex(y){
+  const bws = [...document.querySelectorAll("#canvas .bw")];
+  for(let i=0;i<bws.length;i++){
+    const r = bws[i].getBoundingClientRect();
+    if(y < r.top + r.height/2) return i;
+  }
+  return bws.length;
+}
+// Dibuja la línea-guía en la posición de inserción calculada.
+function mostrarDropLineEn(idx){
   limpiarDropLines();
-  const rect = bw.getBoundingClientRect();
-  const above = y < (rect.top + rect.height/2);
+  const page = document.querySelector("#canvas .sbb-page");
+  if(!page) return;
+  const bws = page.querySelectorAll(".bw");
   const line = document.createElement("div"); line.className = "drop-line";
-  if(above) bw.parentElement.insertBefore(line, bw);
-  else bw.parentElement.insertBefore(line, bw.nextSibling);
+  if(idx >= bws.length) page.appendChild(line);
+  else page.insertBefore(line, bws[idx]);
 }
 function limpiarDropLines(){ document.querySelectorAll(".drop-line").forEach(el => el.remove()); }
 
@@ -2803,9 +2779,39 @@ function vaciarCanvas(){
 }
 
 const frameEl = document.getElementById("canvas-frame");
-frameEl.addEventListener("dragover", (e) => { if(dragInfo){ e.preventDefault(); e.dataTransfer.dropEffect="copy"; frameEl.classList.add("drag-over"); }});
-frameEl.addEventListener("dragleave", (e) => { if(!frameEl.contains(e.relatedTarget)) frameEl.classList.remove("drag-over"); });
-frameEl.addEventListener("drop", (e) => { e.preventDefault(); frameEl.classList.remove("drag-over"); if(dragInfo && dragInfo.fuente==="biblioteca") agregarBloque(dragInfo.tipo); dragInfo=null; });
+// Todo el lienzo es zona de drop: ya sea soltar un bloque nuevo de la biblioteca
+// o reordenar uno existente, la posición se calcula por la Y del cursor.
+frameEl.addEventListener("dragover", (e) => {
+  if(!dragInfo && !dragBlockId) return;
+  e.preventDefault();
+  e.dataTransfer.dropEffect = dragBlockId ? "move" : "copy";
+  frameEl.classList.add("drag-over");
+  mostrarDropLineEn(calcularDropIndex(e.clientY));
+});
+frameEl.addEventListener("dragleave", (e) => { if(!frameEl.contains(e.relatedTarget)){ frameEl.classList.remove("drag-over"); limpiarDropLines(); } });
+frameEl.addEventListener("drop", (e) => {
+  if(!dragInfo && !dragBlockId) return;
+  e.preventDefault();
+  frameEl.classList.remove("drag-over");
+  const idx = calcularDropIndex(e.clientY);
+  if(dragBlockId){
+    // Reordenar un bloque existente
+    const arr = getCanvas();
+    const from = arr.findIndex(x => x.id===dragBlockId);
+    if(from >= 0){
+      const [moved] = arr.splice(from, 1);
+      let to = idx; if(from < to) to--;          // el índice se corre al sacar el bloque
+      arr.splice(Math.max(0, Math.min(to, arr.length)), 0, moved);
+      persistir(); renderCanvas();
+    }
+    dragBlockId = null;
+  } else if(dragInfo && dragInfo.fuente==="biblioteca"){
+    // Insertar un bloque nuevo de la biblioteca en la posición calculada
+    agregarBloque(dragInfo.tipo, undefined, idx);
+    dragInfo = null;
+  }
+  limpiarDropLines();
+});
 
 /* EXPORT */
 function generarHTMLDePieza(p){
@@ -2926,13 +2932,25 @@ ${liveScript}
 }
 
 function abrirExportar(){
-  if(proyecto.piezas.length === 0) return;
+  if(!proyecto || proyecto.piezas.length === 0) return;
+  const actual = pieza();
   const body = document.getElementById("export-body");
-  let html = `<p>Selecciona qué piezas exportar. Cada pieza se descarga como HTML independiente.</p><div class="export-list" id="export-list">`;
-  proyecto.piezas.forEach(p => {
+  // Solo se ofrecen creatividades CON contenido. Abre con la actual marcada;
+  // las demás del proyecto quedan disponibles para marcar si quieres.
+  const conContenido = proyecto.piezas.filter(p => (p.canvas && p.canvas.length > 0));
+  if(!conContenido.length){
+    body.innerHTML = `<p>Esta creatividad aún no tiene bloques. Agrega contenido antes de exportar.</p><div class="modal-foot" style="margin-top:18px;border-top:1px solid #e5e7ea;padding-top:14px;"><button onclick="cerrarModal('export')">Cerrar</button></div>`;
+    document.getElementById("modal-export").classList.add("show");
+    return;
+  }
+  // La actual primero, luego el resto.
+  conContenido.sort((a,b) => (actual && a.id===actual.id ? -1 : actual && b.id===actual.id ? 1 : 0));
+  let html = `<p>Se exportará la <b>creatividad actual</b> (marcada). Puedes marcar otras del proyecto si las necesitas. Cada una se descarga como HTML independiente.</p><div class="export-list" id="export-list">`;
+  conContenido.forEach(p => {
+    const esActual = actual && p.id===actual.id;
     const fmtBadge = HINTS[p.formato]?.badge || p.formato;
-    const empty = p.canvas.length>0 ? "" : ` <span style="color:#c0392b;">(vacía)</span>`;
-    html += `<div class="export-row"><label><input type="checkbox" data-id="${p.id}" ${p.canvas.length>0?"checked":""}><div><div class="pn">${esc(p.nombre)}${empty}</div><div class="pf">${esc(fmtBadge)} · ${p.canvas.length} bloque${p.canvas.length!==1?"s":""}</div></div></label><button class="download" onclick="descargarPieza('${p.id}')">${svgIcon("exportar",{size:"13px"})} Descargar</button></div>`;
+    const tag = esActual ? ` <span style="color:#1c73cb;font-weight:600;">· actual</span>` : "";
+    html += `<div class="export-row"><label><input type="checkbox" data-id="${p.id}" ${esActual?"checked":""}><div><div class="pn">${esc(p.nombre)}${tag}</div><div class="pf">${esc(fmtBadge)} · ${p.canvas.length} bloque${p.canvas.length!==1?"s":""}</div></div></label><button class="download" onclick="descargarPieza('${p.id}')">${svgIcon("exportar",{size:"13px"})} Descargar</button></div>`;
   });
   html += `</div><div class="modal-foot" style="margin-top:18px;border-top:1px solid #e5e7ea;padding-top:14px;"><button onclick="cerrarModal('export')">Cerrar</button><button onclick="copiarPiezaActual()">${svgIcon("copiar",{size:"14px"})} Copiar HTML actual</button><button class="primary" onclick="descargarSeleccionadas()">${svgIcon("exportar",{size:"13px"})} Descargar seleccionadas</button></div>`;
   body.innerHTML = html;
@@ -3021,21 +3039,33 @@ const PLANTILLAS = {
     bloques:[["header",{}]] }
 };
 
+// Qué grupos de plantillas corresponden a cada categoría de formato. El
+// Formato Universal (libre) muestra todas. Así las plantillas SIEMPRE concuerdan
+// con el formato elegido arriba (Email→Email, Banner→Display, Post→LinkedIn/Facebook).
+const GRUPOS_PLANTILLA_POR_CAT = {
+  "Email":          ["Email"],
+  "Banners":        ["Google Display"],
+  "Post":           ["LinkedIn", "Facebook"],
+  "Formato Libre":  ["Email", "LinkedIn", "Facebook", "Google Display"]
+};
 function renderPlantillasTab(){
   const cont = document.getElementById("plantillas-cont");
   if(!cont) return;
+  const cat = categoriaDe(getFormato());
+  const permitidos = GRUPOS_PLANTILLA_POR_CAT[cat] || ["Email","LinkedIn","Facebook","Google Display"];
   const grupos = {};
   Object.entries(PLANTILLAS).forEach(([k,v]) => { (grupos[v.grupo] = grupos[v.grupo] || []).push([k,v]); });
   grupos["Google Display"] = [["display-set", { label:"Display kit · 8 banners", grupo:"Google Display" }]];
   let html = "";
   Object.entries(grupos).forEach(([g,arr]) => {
+    if(!permitidos.includes(g)) return;   // solo plantillas que concuerdan con el formato
     html += `<div class="cat-title">${esc(g)}</div><div class="pl-grid">`;
     arr.forEach(([k,v]) => {
       html += `<div class="pl-tile" onclick="cargarPlantilla('${k}')"><div class="pl-ico">${svgIcon("plantilla",{size:"18px"})}</div><div class="pl-nm">${esc(v.label)}</div></div>`;
     });
     html += `</div>`;
   });
-  cont.innerHTML = html;
+  cont.innerHTML = html || `<div style="padding:14px;color:#888;font-size:13px;">No hay plantillas para este formato. Cambia el formato arriba o usa los bloques.</div>`;
 }
 
 function cargarPlantilla(tipo){
