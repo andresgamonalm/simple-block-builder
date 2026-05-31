@@ -241,7 +241,7 @@ button,input,select,textarea{font-family:inherit;}
 .dash-top h1{font-size:17px;font-weight:600;color:var(--ink);}
 .dash-top-user{font-size:12.5px;color:var(--ink3);}
 .dash-scroll{flex:1;overflow-y:auto;padding:24px 28px 60px;}
-.dash-banner{position:relative;background:linear-gradient(135deg,var(--navy),var(--primary));border-radius:16px;padding:40px 32px;color:#fff;text-align:center;box-shadow:var(--sh2);}
+.dash-banner{position:relative;background:var(--primary);border-radius:16px;padding:40px 32px;color:#fff;text-align:center;box-shadow:var(--sh2);}
 .banner-edit{position:absolute;top:14px;right:14px;display:inline-flex;align-items:center;gap:6px;border:1px solid rgba(255,255,255,.4);background:rgba(255,255,255,.12);color:#fff;border-radius:8px;padding:6px 11px;font-size:12px;font-family:var(--f);cursor:pointer;}
 .banner-edit:hover{background:rgba(255,255,255,.22);}
 .banner-eyebrow{display:inline-block;background:rgba(255,255,255,.15);border-radius:6px;padding:4px 12px;font-size:11.5px;font-weight:500;margin-bottom:14px;}
@@ -2129,13 +2129,30 @@ function esFormatoFijo(f){ const x = FORMATOS[f]; return !!(x && x.alto > 0); }
 // HINTS derivado (compatibilidad con código existente: badge + txt).
 const HINTS = Object.fromEntries(Object.entries(FORMATOS).map(([k,v]) => [k, { badge:v.badge, txt:v.txt }]));
 
+// Modo de edición: limita qué formatos se pueden elegir según el punto de
+// entrada. "todos" (Formato Libre) habilita todo; el resto solo su categoría
+// + Formato Libre. Evita, p.ej., convertir un email en banner por error.
+let modoFormato = "todos";
+const CATS_PERMITIDAS = {
+  email:   ["Email", "Formato Libre"],
+  banners: ["Banners", "Formato Libre"],
+  post:    ["Post", "Formato Libre"],
+  todos:   null   // sin restricción
+};
+function modoDeCategoria(cat){
+  return cat==="Email" ? "email" : cat==="Banners" ? "banners" : cat==="Post" ? "post" : "todos";
+}
 function renderFormatoSelect(){
+  const permit = CATS_PERMITIDAS[modoFormato]; // null = todas permitidas
   const grupos = {};
   Object.entries(FORMATOS).forEach(([k,v]) => { (grupos[v.badge] = grupos[v.badge] || []).push([k,v]); });
   let html = "";
   Object.entries(grupos).forEach(([badge,arr]) => {
     html += `<optgroup label="${esc(badge)}">`;
-    arr.forEach(([k,v]) => { html += `<option value="${k}">${esc(v.label)}</option>`; });
+    arr.forEach(([k,v]) => {
+      const dis = (permit && !permit.includes(categoriaDe(k))) ? " disabled" : "";
+      html += `<option value="${k}"${dis}>${esc(v.label)}</option>`;
+    });
     html += `</optgroup>`;
   });
   document.getElementById("fmt").innerHTML = html;
@@ -2143,6 +2160,9 @@ function renderFormatoSelect(){
 function cambiarFormato(f){
   const p = pieza(); if(!p) return;
   p.formato = f;
+  // Cambiar de formato muestra su tamaño REAL: se sale de la vista de dispositivo.
+  dispositivo = "desktop";
+  document.querySelectorAll("#dev-seg button").forEach(b => b.classList.toggle("on", b.dataset.dev === "desktop"));
   document.getElementById("canvas-frame").dataset.formato = f;
   aplicarTema();   // reconcilia el ancho inline según el nuevo formato
   renderCanvas();  // banners de alto fijo distribuyen los bloques con flex
@@ -2206,6 +2226,8 @@ function crearPieza(formato, nombre){
 function activarPieza(id){
   proyecto.activa = id; seleccionado = null;
   const p = pieza(); if(!p) return;
+  modoFormato = modoDeCategoria(categoriaDe(p.formato));   // limita formatos según el tipo
+  renderFormatoSelect();
   document.getElementById("fmt").value = p.formato;
   cambiarFormato(p.formato);
   aplicarTema(); renderCanvas(); renderForm(); renderTabsPiezas();
