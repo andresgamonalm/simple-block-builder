@@ -44,7 +44,8 @@ Idea (de su PPT): una creatividad es una **composición de 6 capas apiladas** (n
 - `renderComposicion(comp, fmt)` (clase `.cmp`): capas ancladas + **escala automática por proporción**. Reflujo: `ratio>=2.2`→**fila** (leaderboard: logo/texto izq, CTA der); resto→**columna** (tarjeta). Mismo render en editor y export. ⚠️ la var de escala se llama `escF` (no `esc`).
 - **Diseño global** = pestaña **Diseño** (`#comp-editor`, `renderComposicionEditor`, mutador `setComp`). **Custom por tamaño** = pestaña **Editar** (`renderFormTamaño`) al hacer **clic en un banner**; `composicionEfectiva(p,fmt)=merge(global,override)`; mutadores `setCompOv`, `toggleCompVisOv`, `resetTamaño`, `resetCapaTamaño`. CSS común `.cmp-ed`.
 - **Tablero agrupado por familia** (`familiaDeFormato`): Cuadrados/Rectángulos · Verticales · Franjas. Marca el activo y muestra "· ajustado".
-- Entradas: **Formato → Colecciones → "Google Display · Desktop"** (`convertirEnColeccion`, usa el contenido actual como base) y **Plantillas → Google Display → "Set Desktop"** (`crearSetDesktop`). En colecciones se **bloquea Plantillas** y hay botón "Salir de colección".
+- **Creación unificada** (`crearComposicion(tipoCol, comp?)` + registro `COLECCIONES` = `display-desktop` (SET_DISPLAY_DESKTOP, máster 300x250) y `social` (SET_SOCIAL, máster linkedin-post)). `crearSetDesktop`/`crearSetSocial` son atajos.
+- Entradas: **Formato → Colecciones → "Google Display · Desktop" / "Social"** (`convertirEnColeccion(tipo)`, convierte la pieza actual en place usando su contenido como base) · **dashboard "Banners"→display-desktop, "Post RRSS"→social** (vía `crearDesde`, que enruta por categoría) · **Plantillas → Google Display → "Set Desktop"**. En colecciones se bloquean **Bloques y Plantillas** y hay botón "Salir de colección".
 - Export: `generarHTMLDeComposicion(p, fmt)` (usa `composicionEfectiva`). `exportarArtboard` / `exportarTodoElSet`.
 - `SET_DISPLAY_DESKTOP` = los 9 tamaños desktop.
 - **Fase 3 (el 🪄):** en el editor global — `swatchesFondo()` (colores rápidos de marcas+presets en la capa Fondo), botones **biblioteca** en imagen/logo (`elegirImagenComp`), y **✨ "Sugerir textos con IA"** (`sugerirTextosIA`) que llama `POST /api/ia { modo:'textos', brief }` y rellena titular/cuerpo/cta del global. (Mismo bloqueo de cuota de Gemini que el motor IA.)
@@ -58,9 +59,15 @@ Idea (de su PPT): una creatividad es una **composición de 6 capas apiladas** (n
 - **Biblioteca filtrada por formato**: `BLOQUES_SOLO_DOC` (footer, diadivisor, fechaCard,
   evento, formulario, tabla) se **ocultan en banners de tamaño fijo** (display/social).
   `renderBiblioteca()` se re-renderiza en `cambiarFormato`.
-- PENDIENTE de coherencia (no urgente): los **banners sueltos** (Formato → Display, sin
-  colección) siguen usando el editor de bloques en flujo (flex:1, no auto-adaptan como las
-  colecciones). Camino futuro: que TODO formato de tamaño fijo use el modelo de capas.
+- **UNIFICACIÓN hecha:** el selector de Formato (`renderFormatoSelect`) solo ofrece
+  **documentos** (Email, Invitación, Formato Universal/libre) + el grupo **Colecciones**
+  (Display, Social). Ya **no se crean banners Display/Social sueltos** (block-stack): los
+  formatos visuales fijos son **siempre composiciones por capas**. Documentos = editor de
+  bloques (con biblioteca filtrada); Colecciones = editor de capas. (Piezas viejas con
+  formato Display suelto siguen renderizando por compatibilidad, pero no se crean nuevas.)
+- **Export coherente:** `abrirExportar()` detecta `esComposicion` → lista los tamaños del
+  set (cada uno `exportarArtboard`→`generarHTMLDeComposicion`) + "Descargar todos". Para
+  documentos sigue `generarHTMLDePieza` / `descargarPieza`.
 
 ## Secrets y config (Cloudflare Pages → Settings → Variables and Secrets)
 - Secrets: `JWT_SECRET`, `RESEND_KEY`, `GEMINI_API_KEY` (ya cargada). Opcional `GEMINI_MODEL`.
@@ -69,7 +76,7 @@ Idea (de su PPT): una creatividad es una **composición de 6 capas apiladas** (n
 ## Roadmap / pendientes
 1. **IA**: resolver la cuota de Gemini (variable `GEMINI_MODEL` o billing). Luego **conectar el brief para que genere directamente la Composición global completa** (imagen de biblioteca + las 6 capas), no solo los textos.
 2. ~~Fase 3 del 🪄~~ ✅ **hecha** (swatches de fondo, biblioteca en imagen/logo, "✨ Sugerir textos con IA").
-3. Llevar el modelo de **capas a Social e Invitaciones**; agregar colecciones **Mobile** y "Todos".
+3. ✅ Social ya usa capas (colección `social`). Pendiente: colecciones **Mobile** y "Todos", e Invitaciones como composición si se quiere.
 4. Nota de diseño: el **email** sigue siendo flujo de bloques (documento vertical); las **capas** son para creatividades de tamaño fijo (Display/Social/Invitaciones).
 
 ## Historial de fases de Colecciones por capas

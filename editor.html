@@ -2528,18 +2528,20 @@ function modoDeCategoria(cat){
   return cat==="Email" ? "email" : cat==="Banners" ? "banners" : cat==="Post" ? "post" : "todos";
 }
 function renderFormatoSelect(){
-  // Muestra TODOS los formatos (sin bloquear). El punto de entrada del
-  // dashboard solo pre-selecciona el formato; el usuario puede cambiarlo.
+  // El selector es para DOCUMENTOS (email/invitación/libre). Los formatos visuales
+  // de tamaño fijo (Display/Social) NO son piezas sueltas: se crean como Colecciones
+  // (modelo de capas). Así no se mezclan plantillas/bloques con banners.
+  const DOC = ["libre","email","invitacion"];
   const grupos = {};
-  Object.entries(FORMATOS).forEach(([k,v]) => { (grupos[v.badge] = grupos[v.badge] || []).push([k,v]); });
+  DOC.forEach(k => { const v=FORMATOS[k]; if(v){ (grupos[v.badge]=grupos[v.badge]||[]).push([k,v]); } });
   let html = "";
   Object.entries(grupos).forEach(([badge,arr]) => {
     html += `<optgroup label="${esc(badge)}">`;
     arr.forEach(([k,v]) => { html += `<option value="${k}">${esc(v.label)}</option>`; });
     html += `</optgroup>`;
   });
-  // Colecciones: convierten la creatividad en un tablero de varios banners a la vez.
-  html += `<optgroup label="Colecciones"><option value="__coleccion:display-desktop">Google Display · Desktop</option></optgroup>`;
+  // Colecciones: crean/convierten en un tablero por capas (varios tamaños a la vez).
+  html += `<optgroup label="Colecciones"><option value="__coleccion:display-desktop">Google Display · Desktop</option><option value="__coleccion:social">Social (LinkedIn / Facebook)</option></optgroup>`;
   document.getElementById("fmt").innerHTML = html;
 }
 function cambiarFormato(f){
@@ -3190,6 +3192,11 @@ ${liveScript}
    que nada se desborde. Se exporta uno o todos.
    ═══════════════════════════════════════════════════════════════ */
 const SET_DISPLAY_DESKTOP = ["display-300x250","display-336x280","display-728x90","display-970x90","display-300x600","display-160x600","display-250x250","display-200x200","display-468x60"];
+const SET_SOCIAL = ["linkedin-post","fb-square","linkedin-link","fb-post","fb-story","linkedin"];
+const COLECCIONES = {
+  "display-desktop": { fmts: SET_DISPLAY_DESKTOP, master: "display-300x250", nombre: "Display Desktop" },
+  "social":          { fmts: SET_SOCIAL,          master: "linkedin-post",   nombre: "Social" }
+};
 function esSetPieza(p){ return !!(p && p.esSet && Array.isArray(p.artboards)); }
 function temaVars(t){ return `--sbb-font:"${t.font}", "Inter", Arial, sans-serif;--sbb-primary:${t.primary};--sbb-text:${t.text};--sbb-bg:${t.bg};`; }
 function artboardActivo(){ const p = pieza(); if(!esSetPieza(p)) return null; return p.artboards.find(a => a.fmt === p.activaFmt) || p.artboards[0] || null; }
@@ -3250,37 +3257,40 @@ function composicionDesdeCanvas(canvas, tema){
   if(tema&&tema.primary) comp.cta.colorFondo=tema.primary;
   return comp;
 }
-function crearSetDesktop(){
+// Crea una colección por capas (composición) para un set de tamaños.
+function crearComposicion(tipoCol, comp){
+  const cfg = COLECCIONES[tipoCol] || COLECCIONES["display-desktop"];
   const actual = pieza();
-  const p = (actual && (!actual.canvas || actual.canvas.length===0) && !actual.esSet) ? actual : crearPieza("display-300x250","Display Desktop");
-  p.nombre = "Display Desktop";
+  const p = (actual && (!actual.canvas || actual.canvas.length===0) && !actual.esSet) ? actual : crearPieza(cfg.master, cfg.nombre);
+  p.nombre = cfg.nombre;
   p.esSet = true;
-  p.setTipo = "display-desktop";
-  p.masterFmt = "display-300x250";
-  p.activaFmt = "display-300x250";
-  p.formato = "display-300x250";
+  p.setTipo = tipoCol;
+  p.masterFmt = cfg.master;
+  p.activaFmt = cfg.master;
+  p.formato = cfg.master;
   p.canvas = [];
-  p.composicion = composicionDefault(p.tema);   // diseño global por capas
-  p.artboards = SET_DISPLAY_DESKTOP.map(fmt => ({ fmt }));
+  p.composicion = comp || p.composicion || composicionDefault(p.tema);
+  p.artboards = cfg.fmts.map(fmt => ({ fmt }));
   proyecto.activa = p.id;
+  document.getElementById("galeria").classList.remove("show");
   activarPieza(p.id);
   cambiarPanelTab("diseno");
-  toast("Colección por capas creada — edita el Diseño global (izquierda) y se aplica a todos los tamaños");
+  toast("Colección por capas — edita el Diseño global (izquierda) y se aplica a todos los tamaños");
 }
+function crearSetDesktop(){ crearComposicion("display-desktop"); }
+function crearSetSocial(){ crearComposicion("social"); }
 // Convierte la creatividad ACTUAL en una colección (tablero), usando su contenido
 // actual como máster. Se llega desde el selector de Formato → "Colecciones".
 function convertirEnColeccion(tipo){
   const p = pieza();
   if(!p){ toast("Abre o crea una creatividad primero"); return; }
   if(esSetPieza(p)){ return; }
-  p.composicion = composicionDesdeCanvas(p.canvas, p.tema);   // diseño global por capas desde lo actual
-  p.esSet = true;
-  p.setTipo = "display-desktop";
-  p.masterFmt = "display-300x250";
-  p.activaFmt = "display-300x250";
-  p.formato = "display-300x250";
-  p.canvas = [];
-  p.artboards = SET_DISPLAY_DESKTOP.map(fmt => ({ fmt }));
+  const t = COLECCIONES[tipo] ? tipo : "display-desktop";
+  const cfg = COLECCIONES[t];
+  p.composicion = composicionDesdeCanvas(p.canvas, p.tema);   // base del diseño global desde lo actual
+  p.esSet = true; p.setTipo = t;
+  p.masterFmt = cfg.master; p.activaFmt = cfg.master; p.formato = cfg.master;
+  p.canvas = []; p.artboards = cfg.fmts.map(fmt => ({ fmt }));
   seleccionado = null;
   activarPieza(p.id);
   cambiarPanelTab("diseno");
@@ -3578,6 +3588,18 @@ function abrirExportar(){
   if(!proyecto || proyecto.piezas.length === 0) return;
   const actual = pieza();
   const body = document.getElementById("export-body");
+  // Colección por capas: exportar cada tamaño del set (no bloques).
+  if(esComposicion(actual)){
+    const sizes = (actual.artboards||[]).map(a=>a.fmt);
+    let h = `<p>Exporta los banners de la colección. Cada tamaño se descarga como HTML independiente. <button class="primary" onclick="exportarTodoElSet()">${svgIcon("exportar",{size:"13px"})} Descargar todos</button></p><div class="export-list" id="export-list">`;
+    sizes.forEach(fmt => { const f=FORMATOS[fmt]; if(!f) return;
+      h += `<div class="export-row"><label><div><div class="pn">${f.ancho}×${f.alto}${fmt===actual.masterFmt?' <span style="color:#1c73cb;font-weight:600;">· máster</span>':''}${tieneOverride(actual,fmt)?' <span class="ajtag">· ajustado</span>':''}</div><div class="pf">${esc(HINTS[fmt]?.badge||'Display')}</div></div></label><button class="download" onclick="exportarArtboard('${fmt}')">${svgIcon("exportar",{size:"13px"})} Descargar</button></div>`;
+    });
+    h += `</div><div class="modal-foot" style="margin-top:18px;border-top:1px solid #e5e7ea;padding-top:14px;"><button onclick="cerrarModal('export')">Cerrar</button></div>`;
+    body.innerHTML = h;
+    document.getElementById("modal-export").classList.add("show");
+    return;
+  }
   // Solo se ofrecen creatividades CON contenido. Abre con la actual marcada;
   // las demás del proyecto quedan disponibles para marcar si quieres.
   const conContenido = proyecto.piezas.filter(p => (p.canvas && p.canvas.length > 0));
@@ -3909,6 +3931,9 @@ function crearDesde(formato){
   }
   proyecto = pr;
   const cat = categoriaDe(formato);
+  // Formatos visuales de tamaño fijo → modelo de capas (colección). Documentos → bloques.
+  if(cat === "Banners"){ crearComposicion("display-desktop"); return; }
+  if(cat === "Post"){ crearComposicion("social"); return; }
   crearPieza(formato, `${cat} ${pr.piezas.length+1}`);
   document.getElementById("galeria").classList.remove("show");
   activarPieza(proyecto.activa);
