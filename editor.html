@@ -534,6 +534,15 @@ button,input,select,textarea{font-family:inherit;}
 .ab:not(.activo) .ab-frame{pointer-events:none;}
 .ab-empty{display:flex;align-items:center;justify-content:center;height:100%;color:#bbb;font-size:13px;text-align:center;padding:8px;}
 /* Editor de Diseño global (capas) */
+.cmp-ed .cmp-zona-sec{margin:16px 0 4px;padding:7px 9px;background:var(--bg2,#f3f4f8);border:1px solid var(--bdr);border-radius:7px;display:flex;align-items:center;justify-content:space-between;font-size:12px;font-weight:700;color:var(--ink,#222);}
+.cmp-ed .cmp-zona-sec .zlbl{display:flex;align-items:center;gap:6px;}
+.cmp-ed .cmp-bibmini{display:flex;flex-wrap:wrap;gap:4px;margin:-2px 0 7px;}
+.cmp-ed .cmp-bibmini .bibmini{width:34px;height:28px;padding:0;border:1px solid var(--bdr);border-radius:5px;overflow:hidden;cursor:pointer;background:var(--bg2,#f3f4f8);}
+.cmp-ed .cmp-bibmini .bibmini img{width:100%;height:100%;object-fit:cover;display:block;}
+.cmp-ed .cmp-prop{display:flex;gap:8px;margin-bottom:7px;}
+.cmp-ed .cmp-prop .pcol{flex:1;text-align:center;}
+.cmp-ed .cmp-prop .pcol span{font-size:10px;color:var(--ink3,#888);display:block;}
+.cmp-ed .cmp-prop .pcol input{width:100%;}
 .cmp-ed .cmp-sec{display:flex;align-items:center;justify-content:space-between;font-size:12px;font-weight:700;color:var(--ink2,#3a3a4a);margin:14px 0 6px;padding-bottom:5px;border-bottom:1px solid var(--bdr);}
 .cmp-ed .cmp-eye{border:1px solid var(--bdr);background:#fff;border-radius:6px;padding:3px 7px;cursor:pointer;color:var(--primary);}
 .cmp-ed .cmp-eye.off{opacity:.4;color:#888;}
@@ -668,18 +677,21 @@ button,input,select,textarea{font-family:inherit;}
    ═══════════════════════════════════════════════════════════════ */
 .sbb-page{font-family:inherit;color:inherit;background:inherit;}
 
-/* ── Composición en capas (colecciones) ── */
+/* ── Composición por ZONAS (colecciones): fondo continuo + 3 zonas ── */
 .cmp{position:relative;overflow:hidden;font-family:inherit;box-sizing:border-box;}
-.cmp .cmp-bg{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;}
-.cmp .cmp-veil{position:absolute;inset:0;}
-.cmp .cmp-content{position:absolute;inset:0;display:flex;box-sizing:border-box;}
-.cmp .cmp-content.col{flex-direction:column;justify-content:space-between;}
-.cmp .cmp-content.row{flex-direction:row;justify-content:space-between;align-items:center;}
-.cmp .cmp-grp{display:flex;flex-direction:column;gap:4px;min-width:0;}
-.cmp .cmp-logo{display:block;object-fit:contain;max-width:60%;}
-.cmp .cmp-tit{font-weight:800;line-height:1.1;letter-spacing:-.01em;}
-.cmp .cmp-cue{line-height:1.3;opacity:.95;}
-.cmp .cmp-cta{display:inline-block;font-weight:700;text-decoration:none;white-space:nowrap;border-radius:7px;}
+.cmp .cmp-bg{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:0;}
+.cmp .cmp-veil{position:absolute;inset:0;z-index:0;}
+.cmp .cmp-zonas{position:absolute;inset:0;display:flex;z-index:1;}
+.cmp .cmp-zonas.col{flex-direction:column;}
+.cmp .cmp-zonas.row{flex-direction:row;}
+.cmp .cmp-zona{position:relative;display:flex;flex-direction:column;box-sizing:border-box;min-width:0;min-height:0;overflow:hidden;}
+.cmp .cmp-zona .cmp-zbg{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:0;}
+.cmp .cmp-zona .cmp-zveil{position:absolute;inset:0;z-index:0;}
+.cmp .cmp-zin{position:relative;z-index:1;display:flex;flex-direction:column;gap:4px;min-width:0;max-width:100%;}
+.cmp .cmp-logo{display:block;object-fit:contain;}
+.cmp .cmp-tit{font-weight:800;line-height:1.12;letter-spacing:-.01em;word-break:break-word;}
+.cmp .cmp-cue{line-height:1.3;opacity:.95;word-break:break-word;}
+.cmp .cmp-cta{display:inline-block;font-weight:700;text-decoration:none;white-space:nowrap;}
 .sbb-header h1{font-weight:600;line-height:1.18;margin:0;font-family:inherit;}
 .sbb-header p{line-height:1.5;margin:6px 0 0;font-family:inherit;color:inherit;opacity:.78;}
 .sbb-header .eyebrow{font-size:11px;text-transform:uppercase;letter-spacing:.1em;font-weight:600;color:var(--sbb-primary,#040764);margin:0 0 8px;}
@@ -3272,19 +3284,19 @@ function adaptarCanvasATamaño(masterCanvas, fmt){
 // Crea un set Desktop: un TABLERO de artboards independientes (uno por tamaño),
 // todos visibles en el lienzo. El máster (300×250) arranca con un hero (imagen +
 // texto + CTA) y el resto copia su contenido; luego cada banner se edita aparte.
-// Deriva la composición global (6 capas) a partir del contenido de una creatividad.
+// Deriva la composición (3 zonas) a partir del contenido de una creatividad.
 function composicionDesdeCanvas(canvas, tema){
   const comp = composicionDefault(tema);
   (canvas||[]).forEach(b => {
     const d = b.datos || {};
-    if(b.tipo==="hero"){ if(d.imagenUrl) comp.imagen.url=d.imagenUrl; if(d.oscurecer) comp.imagen.oscurecer=parseInt(d.oscurecer)||40; if(d.titulo) comp.titular.texto=d.titulo; if(d.sub) comp.cuerpo.texto=d.sub; if(d.ctaTexto) comp.cta.texto=d.ctaTexto; if(d.ctaUrl) comp.cta.url=d.ctaUrl; }
-    else if(b.tipo==="header"){ if(d.logoUrl) comp.logo.url=d.logoUrl; if(d.titulo) comp.titular.texto=d.titulo; if(d.bajada) comp.cuerpo.texto=d.bajada; }
-    else if(b.tipo==="texto"){ if(d.contenido) comp.cuerpo.texto=d.contenido; }
-    else if(b.tipo==="cta"){ if(d.texto) comp.cta.texto=d.texto; if(d.url) comp.cta.url=d.url; }
-    else if(b.tipo==="imagen"){ if(d.url && !comp.imagen.url) comp.imagen.url=d.url; }
+    if(b.tipo==="hero"){ if(d.imagenUrl){ comp.fondo.tipo="imagen"; comp.fondo.imagen.url=d.imagenUrl; } if(d.oscurecer) comp.fondo.imagen.oscurecer=parseInt(d.oscurecer)||40; if(d.titulo) comp.zonas.texto.titular.texto=d.titulo; if(d.sub) comp.zonas.texto.cuerpo.texto=d.sub; if(d.ctaTexto) comp.zonas.cta.texto=d.ctaTexto; if(d.ctaUrl) comp.zonas.cta.url=d.ctaUrl; }
+    else if(b.tipo==="header"){ if(d.logoUrl) comp.zonas.logo.url=d.logoUrl; if(d.titulo) comp.zonas.texto.titular.texto=d.titulo; if(d.bajada) comp.zonas.texto.cuerpo.texto=d.bajada; }
+    else if(b.tipo==="texto"){ if(d.contenido) comp.zonas.texto.cuerpo.texto=d.contenido; }
+    else if(b.tipo==="cta"){ if(d.texto) comp.zonas.cta.texto=d.texto; if(d.url) comp.zonas.cta.url=d.url; }
+    else if(b.tipo==="imagen"){ if(d.url && !comp.fondo.imagen.url){ comp.fondo.tipo="imagen"; comp.fondo.imagen.url=d.url; } }
   });
-  if(tema&&tema.bg) comp.fondoColor.color=tema.bg;
-  if(tema&&tema.primary) comp.cta.colorFondo=tema.primary;
+  if(tema&&tema.bg) comp.fondo.color=tema.bg;
+  if(tema&&tema.primary) comp.zonas.cta.colorFondo=tema.primary;
   return comp;
 }
 // Crea una colección por capas (composición) para un set de tamaños.
@@ -3360,58 +3372,122 @@ function ajustarFrameParaSet(es){
 // demás son vista previa (clic para activarlos).
 // ═══ Composición en capas (Diseño global de una colección) ═══════════════
 function esComposicion(p){ return !!(p && p.esSet && p.composicion); }
+// ── Modelo de 3 ZONAS (logo · texto · cta) con fondo de banner continuo ──
+function imgDefComp(){ return { url:"", foco:"center", fit:"cover", zoom:100, oscurecer:40 }; }
 function composicionDefault(tema){
+  const bg=(tema&&tema.bg)||"#0e2748", pri=(tema&&tema.primary)||"#2f80ed";
+  const zona=(extra)=>Object.assign({ bg:"hereda", color:"", imagen:imgDefComp(), alinH:"left", alinV:"center", visible:true }, extra);
   return {
-    fondoColor:{ visible:true, color:(tema&&tema.bg)||"#0e2748" },
-    imagen:{ visible:true, url:"", foco:"center", oscurecer:40, fit:"cover", zoom:100 },
-    logo:{ visible:true, url:"", alinH:"left", tamano:"56", maxw:60 },
-    titular:{ visible:true, texto:"", tamano:"26", alinH:"left", color:"#ffffff" },
-    cuerpo:{ visible:true, texto:"", tamano:"13", alinH:"left", color:"#ffffff" },
-    cta:{ visible:true, texto:"Saber más", url:"", alinH:"left", colorFondo:(tema&&tema.primary)||"#2f80ed", colorTexto:"#ffffff" }
+    fondo:{ tipo:"color", color:bg, imagen:imgDefComp() },
+    prop:[25,50,25],
+    zonas:{
+      logo:  zona({ url:"", alto:48, maxw:70 }),
+      texto: zona({ titular:{texto:"",tamano:26,color:"#ffffff"}, cuerpo:{texto:"",tamano:13,color:"#ffffff"} }),
+      cta:   zona({ texto:"Saber más", url:"", colorFondo:pri, colorTexto:"#ffffff", radio:8, tamano:13 })
+    }
   };
 }
+// Migración del modelo viejo (6 capas) → 3 zonas. Se aplica perezosamente.
+function migrarComposicion(c, tema){
+  if(c && c.zonas) return c;
+  const n = composicionDefault(tema);
+  if(!c) return n;
+  if(c.imagen && c.imagen.url){ n.fondo.tipo="imagen"; Object.assign(n.fondo.imagen, c.imagen); }
+  if(c.fondoColor && c.fondoColor.color) n.fondo.color=c.fondoColor.color;
+  if(c.logo){ Object.assign(n.zonas.logo, { url:c.logo.url||"", alto:c.logo.tamano||48, maxw:c.logo.maxw||70, alinH:c.logo.alinH||"left", visible:c.logo.visible!==false }); }
+  if(c.titular){ Object.assign(n.zonas.texto.titular, { texto:c.titular.texto||"", tamano:c.titular.tamano||26, color:c.titular.color||"#ffffff" }); n.zonas.texto.alinH=c.titular.alinH||"left"; }
+  if(c.cuerpo){ Object.assign(n.zonas.texto.cuerpo, { texto:c.cuerpo.texto||"", tamano:c.cuerpo.tamano||13, color:c.cuerpo.color||"#ffffff" }); }
+  if(c.cta){ Object.assign(n.zonas.cta, { texto:c.cta.texto||"Saber más", url:c.cta.url||"", colorFondo:c.cta.colorFondo||"#2f80ed", colorTexto:c.cta.colorTexto||"#ffffff", alinH:c.cta.alinH||"left" }); }
+  return n;
+}
+function asegurarComposicionNueva(p){
+  if(p && p.esSet && p.composicion && !p.composicion.zonas){
+    p.composicion = migrarComposicion(p.composicion, p.tema);
+    (p.artboards||[]).forEach(a=>{ if(a.ov) a.ov={}; });   // overrides viejos no son compatibles
+  }
+}
+// Acceso por ruta ("zonas.texto.titular.texto").
+function getPath(obj, path){ return String(path).split('.').reduce((o,k)=> (o==null?undefined:o[k]), obj); }
+function setPath(obj, path, val){ const ks=String(path).split('.'); let o=obj; for(let i=0;i<ks.length-1;i++){ if(o[ks[i]]==null||typeof o[ks[i]]!=="object") o[ks[i]]={}; o=o[ks[i]]; } o[ks[ks.length-1]]=val; }
+function delPath(obj, path){ const ks=String(path).split('.'); let o=obj; for(let i=0;i<ks.length-1;i++){ if(o==null) return; o=o[ks[i]]; } if(o) delete o[ks[ks.length-1]]; }
 function alinSelf(a){ return a==="center"?"center":a==="right"?"flex-end":"flex-start"; }
-// Renderiza la composición a un tamaño concreto: capas ancladas + escala automática.
+function alinFlex(a){ return (a==="center")?"center":(a==="right"||a==="bottom")?"flex-end":"flex-start"; }
+function alinText(a){ return a==="center"?"center":a==="right"?"right":"left"; }
+function capaImagenHTML(im, cls){
+  if(!im || !im.url) return "";
+  const foco=im.foco||"center";
+  const zoom=Math.max(50,Math.min(300,parseInt(im.zoom)||100))/100;
+  const fit=(im.fit==="contain")?"contain":"cover";
+  const veil=cls==="cmp-bg"?"cmp-veil":"cmp-zveil";
+  return `<img class="${cls}" src="${esc(im.url)}" style="object-fit:${fit};object-position:${esc(foco)};transform:scale(${zoom});transform-origin:${esc(foco)};"><div class="${veil}" style="background:rgba(8,14,28,${((parseInt(im.oscurecer)||0)/100).toFixed(2)});"></div>`;
+}
+// Render del contenido propio de cada zona.
+function zonaContenido(zk, z, px){
+  if(zk==="logo"){
+    if(!z.url) return "";
+    const maxw=Math.max(15,Math.min(100,parseInt(z.maxw)||70));
+    return `<img class="cmp-logo" src="${esc(z.url)}" style="height:${px(z.alto,48)}px;max-width:${maxw}%;">`;
+  }
+  if(zk==="texto"){
+    const ti=z.titular||{}, cu=z.cuerpo||{};
+    const tiEl = ti.texto ? `<div class="cmp-tit" style="font-size:${px(ti.tamano,26)}px;color:${esc(ti.color||'#fff')};text-align:${alinText(z.alinH)};">${esc(ti.texto)}</div>` : "";
+    const cuEl = cu.texto ? `<div class="cmp-cue" style="font-size:${px(cu.tamano,13)}px;color:${esc(cu.color||'#fff')};text-align:${alinText(z.alinH)};">${escMultiline(cu.texto)}</div>` : "";
+    return tiEl+cuEl;
+  }
+  if(zk==="cta"){
+    if(!z.texto) return "";
+    return `<a class="cmp-cta" href="${esc(z.url||'#')}" target="_blank" rel="noopener" style="font-size:${px(z.tamano,13)}px;background:${esc(z.colorFondo||'#2f80ed')};color:${esc(z.colorTexto||'#fff')};border-radius:${px(z.radio,8)}px;padding:${px('7',7)}px ${px('16',16)}px;">${esc(z.texto)}</a>`;
+  }
+  return "";
+}
+// Renderiza la composición (3 zonas) a un tamaño concreto.
 function renderComposicion(comp, fmt){
   const f = FORMATOS[fmt] || FORMATOS["display-300x250"];
-  const W=f.ancho, H=f.alto, fila=(W/H)>=2.2;
+  const W=f.ancho, H=f.alto, fila=(familiaDeFormato(fmt)==="franja");
   const escF = fila ? Math.max(0.5, Math.min(1.05, H/110)) : Math.max(0.5, Math.min(1.3, W/300));
-  const c=comp||{}, fc=c.fondoColor||{}, im=c.imagen||{}, lg=c.logo||{}, ti=c.titular||{}, cu=c.cuerpo||{}, ct=c.cta||{};
   const px=(v,base)=>Math.round((parseFloat(v)||base)*escF);
-  const bg = (fc.visible!==false) ? (fc.color||"#0e2748") : "transparent";
-  const foco = im.foco||'center';
-  const zoom = Math.max(50, Math.min(300, parseInt(im.zoom)||100))/100;
-  const fit = (im.fit==='contain')?'contain':'cover';
-  const capaImg = (im.visible!==false && im.url)
-    ? `<img class="cmp-bg" src="${esc(im.url)}" style="object-fit:${fit};object-position:${esc(foco)};transform:scale(${zoom});transform-origin:${esc(foco)};"><div class="cmp-veil" style="background:rgba(8,14,28,${((parseInt(im.oscurecer)||0)/100).toFixed(2)});"></div>` : "";
-  const logoMaxw = Math.max(15, Math.min(100, parseInt(lg.maxw)||60));
-  const logoEl = (lg.visible!==false && lg.url) ? `<img class="cmp-logo" src="${esc(lg.url)}" style="height:${px(lg.tamano,56)}px;max-width:${logoMaxw}%;align-self:${alinSelf(lg.alinH)};">` : "";
-  const tiEl = (ti.visible!==false && ti.texto) ? `<div class="cmp-tit" style="font-size:${px(ti.tamano,26)}px;color:${esc(ti.color||'#fff')};text-align:${esc(ti.alinH||'left')};align-self:${alinSelf(ti.alinH)};">${esc(ti.texto)}</div>` : "";
-  const verCue = (cu.visible!==false && cu.texto && !(fila && H<120));
-  const cuEl = verCue ? `<div class="cmp-cue" style="font-size:${px(cu.tamano,13)}px;color:${esc(cu.color||'#fff')};text-align:${esc(cu.alinH||'left')};align-self:${alinSelf(cu.alinH)};">${escMultiline(cu.texto)}</div>` : "";
-  const ctaEl = (ct.visible!==false && ct.texto) ? `<a class="cmp-cta" href="${esc(ct.url||'#')}" target="_blank" rel="noopener" style="font-size:${px(ct.tamano,13)}px;background:${esc(ct.colorFondo||'#2f80ed')};color:${esc(ct.colorTexto||'#fff')};align-self:${alinSelf(ct.alinH)};padding:${px('7',7)}px ${px('16',16)}px;">${esc(ct.texto)}</a>` : "";
-  const pad=px("15",15);
-  const content = fila
-    ? `<div class="cmp-content row" style="padding:${pad}px;"><div class="cmp-grp">${logoEl}${tiEl}${cuEl}</div>${ctaEl}</div>`
-    : `<div class="cmp-content col" style="padding:${pad}px;">${logoEl}${tiEl}${cuEl}${ctaEl}</div>`;
-  return `<div class="cmp" style="width:${W}px;height:${H}px;background:${esc(bg)};">${capaImg}${content}</div>`;
+  const c=comp||{}; const fondo=c.fondo||{}; const prop=(c.prop&&c.prop.length===3)?c.prop:[25,50,25]; const Z=c.zonas||{};
+  const bgColor = fondo.color || "#0e2748";
+  const fondoLayer = (fondo.tipo==="imagen") ? capaImagenHTML(fondo.imagen, "cmp-bg") : "";
+  const pad=px("12",12);
+  const zonaHTML=(zk,i)=>{
+    const z=Object.assign({bg:"hereda",alinH:"left",alinV:"center",visible:true}, Z[zk]||{});
+    const grow = (z.visible===false) ? 0 : Math.max(0,parseFloat(prop[i])||0);
+    const bg = (z.bg==="color" && z.color) ? `<div class="cmp-zbg" style="background:${esc(z.color)};"></div>`
+             : (z.bg==="imagen") ? capaImagenHTML(z.imagen, "cmp-zbg") : "";
+    const inner = (z.visible===false) ? "" : zonaContenido(zk, z, px);
+    return `<div class="cmp-zona" style="flex:${grow} 1 0;justify-content:${alinFlex(z.alinV)};align-items:${alinFlex(z.alinH)};padding:${pad}px;">${bg}<div class="cmp-zin" style="align-items:${alinFlex(z.alinH)};text-align:${alinText(z.alinH)};">${inner}</div></div>`;
+  };
+  const zonas = ["logo","texto","cta"].map((zk,i)=>zonaHTML(zk,i)).join("");
+  return `<div class="cmp" style="width:${W}px;height:${H}px;background:${esc(bgColor)};">${fondoLayer}<div class="cmp-zonas ${fila?'row':'col'}">${zonas}</div></div>`;
 }
 // ── Custom por tamaño (overrides sobre el Diseño global) ──
-const CAPAS_COMP = ["fondoColor","imagen","logo","titular","cuerpo","cta"];
 function ovDeFmt(p, fmt){ const ab=(p.artboards||[]).find(a=>a.fmt===fmt); if(!ab) return {}; ab.ov=ab.ov||{}; return ab.ov; }
-function composicionEfectiva(p, fmt){
-  const g = p.composicion||{}; const ab=(p.artboards||[]).find(a=>a.fmt===fmt); const ov=(ab&&ab.ov)||{};
-  // Un override con string vacío significa "no tocar" (hereda del global). Para
-  // ocultar algo en un tamaño se usa el ojo (visible:false), no vaciar el campo.
-  const limpio = (o)=>{ const r={}; Object.keys(o||{}).forEach(k=>{ if(o[k]!=="") r[k]=o[k]; }); return r; };
-  const m={}; CAPAS_COMP.forEach(k => { m[k]=Object.assign({}, g[k]||{}, limpio(ov[k])); });
-  return m;
+// Merge profundo global+override. Un valor "" (string vacío) en el override
+// significa "no tocar" → hereda del global. Para quitar algo en un tamaño se
+// usa el ojo (visible:false), no vaciar el campo.
+function deepMergeOv(base, ov){
+  const out = Array.isArray(base) ? base.slice() : Object.assign({}, base);
+  for(const k in (ov||{})){
+    const v=ov[k];
+    if(v==="" || v===undefined) continue;
+    if(Array.isArray(v)){ out[k]=v.slice(); }
+    else if(v && typeof v==="object"){ out[k]=deepMergeOv((base&&typeof base[k]==="object")?base[k]:{}, v); }
+    else out[k]=v;
+  }
+  return out;
 }
-function tieneOverride(p, fmt){ const ab=(p.artboards||[]).find(a=>a.fmt===fmt); return !!(ab&&ab.ov&&CAPAS_COMP.some(k=>ab.ov[k]&&Object.keys(ab.ov[k]).some(kk=>ab.ov[k][kk]!==""))); }
-function setCompOv(fmt, capa, key, val){ const p=pieza(); if(!esComposicion(p))return; const ov=ovDeFmt(p,fmt); (ov[capa]=ov[capa]||{})[key]=val; persistir(); renderTablero(); }
-function toggleCompVisOv(fmt, capa){ const p=pieza(); if(!esComposicion(p))return; const ef=composicionEfectiva(p,fmt); setCompOv(fmt,capa,'visible',!(ef[capa].visible!==false)); renderForm(); }
+function composicionEfectiva(p, fmt){
+  asegurarComposicionNueva(p);
+  const g = p.composicion||{}; const ab=(p.artboards||[]).find(a=>a.fmt===fmt); const ov=(ab&&ab.ov)||{};
+  return deepMergeOv(g, ov);
+}
+function ovTieneValor(o){ if(o==null||o==="") return false; if(typeof o==="object"){ return Object.keys(o).some(k=>ovTieneValor(o[k])); } return true; }
+function tieneOverride(p, fmt){ const ab=(p.artboards||[]).find(a=>a.fmt===fmt); return !!(ab&&ab.ov&&ovTieneValor(ab.ov)); }
+function setCompOv(fmt, path, val){ const p=pieza(); if(!esComposicion(p))return; setPath(ovDeFmt(p,fmt), path, val); persistir(); renderTablero(); }
+function toggleCompVisOv(fmt, path){ const p=pieza(); if(!esComposicion(p))return; const ef=composicionEfectiva(p,fmt); const cur=getPath(ef,path); setCompOv(fmt,path,!(cur!==false)); renderForm(); }
 function resetTamaño(fmt){ const p=pieza(); const ab=(p.artboards||[]).find(a=>a.fmt===fmt); if(ab) ab.ov={}; persistir(); renderTablero(); renderForm(); toast("Tamaño restablecido al Diseño global"); }
-function resetCapaTamaño(fmt, capa){ const p=pieza(); const ab=(p.artboards||[]).find(a=>a.fmt===fmt); if(ab&&ab.ov){ delete ab.ov[capa]; } persistir(); renderTablero(); renderForm(); }
+function resetCapaTamaño(fmt, path){ const p=pieza(); const ab=(p.artboards||[]).find(a=>a.fmt===fmt); if(ab&&ab.ov){ delPath(ab.ov, path); } persistir(); renderTablero(); renderForm(); }
 function familiaDeFormato(fmt){ const f=FORMATOS[fmt]; if(!f) return "cuadrado"; const r=f.ancho/f.alto; return r>=2.2?"franja":(r<=0.6?"vertical":"cuadrado"); }
 function renderTableroComposicion(p, c){
   const sizes = (p.artboards && p.artboards.length) ? p.artboards.map(a=>a.fmt) : SET_DISPLAY_DESKTOP;
@@ -3436,16 +3512,19 @@ function renderTableroComposicion(p, c){
   c.querySelectorAll(".ab").forEach(el=>el.addEventListener("click",()=>{ p.activaFmt=el.dataset.fmt; renderTablero(); renderForm(); cambiarPanelTab("editar"); }));
   iniciarLivePreview();
 }
-// Mutadores de la composición global.
-function setComp(capa, key, val){ const p=pieza(); if(!esComposicion(p))return; (p.composicion[capa]=p.composicion[capa]||{})[key]=val; persistir(); renderTablero(); }
-function toggleCompVis(capa){ const p=pieza(); if(!esComposicion(p))return; const l=p.composicion[capa]; l.visible=(l.visible===false); persistir(); renderTablero(); renderComposicionEditor(); }
-function elegirImagenComp(capa){ abrirImagenes(url=>{ setComp(capa,'url',url); renderComposicionEditor(); }); }
-// 🪄 Colores rápidos del fondo (de tus marcas + presets).
-function swatchesFondo(){
-  const cols=[]; const add=c=>{ if(c && !cols.includes(c)) cols.push(c); };
-  (workspace.marcas||[]).forEach(m=>{ add(m.primary); add(m.bg); add(m.text); add(m.cta); });
-  ["#0e2748","#102a43","#1c1c28","#0b7a4b","#1c73cb","#b3261e","#ffffff","#f5f5f5"].forEach(add);
-  return cols.slice(0,12).map(c=>`<button class="cmp-sw" style="background:${esc(c)}" title="${esc(c)}" onclick="setComp('fondoColor','color','${esc(c)}');renderComposicionEditor();"></button>`).join('');
+// Mutadores de la composición global (por ruta, ej. "zonas.texto.titular.texto").
+function setComp(path, val){ const p=pieza(); if(!esComposicion(p))return; setPath(p.composicion, path, val); persistir(); renderTablero(); }
+function toggleCompVis(path){ const p=pieza(); if(!esComposicion(p))return; const cur=getPath(p.composicion,path); setComp(path, !(cur!==false)); renderComposicionEditor(); }
+// Biblioteca: elegir imagen/logo y aplicarla a una ruta (global o por tamaño).
+function elegirImagenPath(path, fmt){ abrirImagenes(url=>{ if(fmt){ setCompOv(fmt,path,url); renderForm(); } else { setComp(path,url); renderComposicionEditor(); } }); }
+function elegirImagenComp(path){ elegirImagenPath(path, null); }
+// 🪄 Miniaturas de la biblioteca, clic = aplicar (regla 5: sin copiar URL).
+function jsAttr(s){ return String(s).replace(/\\/g,"\\\\").replace(/'/g,"\\'"); }
+function miniaturasBiblioteca(path, fmt){
+  const imgs=(workspace.imagenes||[]).slice(0,8);
+  if(!imgs.length) return "";
+  const call=(u)=> fmt ? `setCompOv('${fmt}','${path}','${jsAttr(u)}');renderForm()` : `setComp('${path}','${jsAttr(u)}');renderComposicionEditor()`;
+  return `<div class="cmp-bibmini">${imgs.map(im=>`<button class="bibmini" title="${escAttr(im.nombre||im.url)}" onclick="${call(im.url)}"><img src="${esc(im.url)}" alt=""></button>`).join("")}</div>`;
 }
 function coloresMarcaPreset(){
   const cols=[]; const add=c=>{ if(c && !cols.includes(c)) cols.push(c); };
@@ -3453,73 +3532,106 @@ function coloresMarcaPreset(){
   ["#0e2748","#102a43","#1c1c28","#0b7a4b","#1c73cb","#b3261e","#ffffff","#f5f5f5"].forEach(add);
   return cols.slice(0,12);
 }
-// Swatches de fondo para un tamaño concreto (escribe override).
-function swatchesFondoOv(fmt){
-  return coloresMarcaPreset().map(c=>`<button class="cmp-sw" style="background:${esc(c)}" title="${esc(c)}" onclick="setCompOv('${fmt}','fondoColor','color','${esc(c)}');renderForm();"></button>`).join('');
+// Swatches de color que escriben en una ruta (global o por tamaño).
+function swatchesColor(path, fmt){
+  const re = fmt ? "renderForm()" : "renderComposicionEditor()";
+  const set = (c)=> fmt ? `setCompOv('${fmt}','${path}','${c}')` : `setComp('${path}','${c}')`;
+  return coloresMarcaPreset().map(c=>`<button class="cmp-sw" style="background:${esc(c)}" title="${esc(c)}" onclick="${set(c)};${re}"></button>`).join("");
 }
 // ✨ Sugerir titular + cuerpo + CTA con IA (Gemini) para la composición global.
 async function sugerirTextosIA(){
   const p=pieza(); if(!esComposicion(p)) return;
-  const que = prompt("¿De qué es la pieza? (una frase) — la IA escribe titular, cuerpo y CTA:", (p.composicion.titular&&p.composicion.titular.texto)||"");
+  const que = prompt("¿De qué es la pieza? (una frase) — la IA escribe titular, cuerpo y CTA:", getPath(p.composicion,'zonas.texto.titular.texto')||"");
   if(que===null) return;
   toast("✨ Pensando textos…", 8000);
   try{
     const r=await fetch('/api/ia',{method:'POST',credentials:'include',headers:{'Content-Type':'application/json'},body:JSON.stringify({modo:'textos',brief:{que,tono:'profesional y cercano'}})});
     const raw=await r.text(); let d={}; try{ d=JSON.parse(raw); }catch(_){}
     if(!r.ok||!d.ok){ toast(d.error||raw.slice(0,140)||('Error '+r.status),5000); return; }
-    if(d.titular) setComp('titular','texto',d.titular);
-    if(d.cuerpo) setComp('cuerpo','texto',d.cuerpo);
-    if(d.cta) setComp('cta','texto',d.cta);
+    if(d.titular) setComp('zonas.texto.titular.texto',d.titular);
+    if(d.cuerpo) setComp('zonas.texto.cuerpo.texto',d.cuerpo);
+    if(d.cta) setComp('zonas.cta.texto',d.cta);
     renderComposicionEditor();
     toast("Textos sugeridos por IA ✨");
   }catch(e){ toast("Sin conexión: "+(e.message||e),4000); }
 }
-// Editor del Diseño global (las 6 capas con controles por elemento).
+// Editor de composición (3 zonas). fmt=null → Diseño global; fmt → ajuste por tamaño.
+function compEditorHTML(p, fmt){
+  const isOv=!!fmt;
+  const C = isOv ? composicionEfectiva(p,fmt) : (p.composicion||composicionDefault(p.tema));
+  const ov = isOv ? ovDeFmt(p,fmt) : null;
+  const RE = isOv ? "renderForm()" : "renderComposicionEditor()";
+  const S = (path,expr)=> isOv ? `setCompOv('${fmt}','${path}',${expr})` : `setComp('${path}',${expr})`;
+  const SV = (path,val)=> isOv ? `setCompOv('${fmt}','${path}','${val}')` : `setComp('${path}','${val}')`;
+  const rng=(path,mn,mx,base)=>`<input type="range" min="${mn}" max="${mx}" value="${parseInt(getPath(C,path))||base}" oninput="${S(path,'this.value')}">`;
+  const colorInp=(path,def)=>`<input type="color" value="${esc(getPath(C,path)||def)}" oninput="${S(path,'this.value')}">`;
+  const selFit=(base)=>`<select onchange="${S(base+'.fit','this.value')}">${[['cover','Cubrir'],['contain','Contener']].map(([v,l])=>`<option value="${v}" ${(getPath(C,base+'.fit')||'cover')===v?'selected':''}>${l}</option>`).join('')}</select>`;
+  const selFoco=(base)=>`<select onchange="${S(base+'.foco','this.value')}">${['center','top','bottom','left','right'].map(v=>`<option value="${v}" ${(getPath(C,base+'.foco')||'center')===v?'selected':''}>${v}</option>`).join('')}</select>`;
+  const alinH=(path)=>`<div class="cmp-alin">${['left','center','right'].map(a=>`<button class="${(getPath(C,path)||'left')===a?'on':''}" onclick="${SV(path,a)};${RE}" title="${a}">${ICONS[a==='left'?'alignLeft':a==='center'?'alignCenter':'alignRight']}</button>`).join('')}</div>`;
+  const alinV=(path)=>`<div class="cmp-alin">${[['top','chevup'],['center','-'],['bottom','chevdown']].map(([a,ic])=>`<button class="${(getPath(C,path)||'center')===a?'on':''}" onclick="${SV(path,a)};${RE}" title="${a}">${ic==='-'?'─':svgIcon(ic,{size:'13px'})}</button>`).join('')}</div>`;
+  const imgBlock=(base)=>{
+    const urlVal = isOv ? (getPath(ov,base+'.url')||"") : (getPath(C,base+'.url')||"");
+    const ph = isOv ? "Hereda del global" : "URL imagen";
+    let s=`<div class="cmp-row"><input type="text" placeholder="${ph}" value="${escAttr(urlVal)}" onchange="${S(base+'.url','this.value')}"><button class="cmp-bib" onclick="elegirImagenPath('${base}.url',${isOv?`'${fmt}'`:'null'})">${svgIcon("imagen",{size:"12px"})}</button></div>`;
+    s+=miniaturasBiblioteca(base+'.url', isOv?fmt:null);
+    s+=`<div class="cmp-row"><label>Ajuste</label>${selFit(base)}</div><div class="cmp-row"><label>Zoom</label>${rng(base+'.zoom',50,300,100)}</div><div class="cmp-row"><label>Foco</label>${selFoco(base)}</div><div class="cmp-row"><label>Oscurecer</label>${rng(base+'.oscurecer',0,80,40)}</div>`;
+    return s;
+  };
+  const zonaBg=(zk)=>{
+    const mode=getPath(C,'zonas.'+zk+'.bg')||'hereda';
+    let s=`<div class="cmp-row"><label>Fondo</label><select onchange="${S('zonas.'+zk+'.bg','this.value')};${RE}">${[['hereda','Hereda del banner'],['color','Color propio'],['imagen','Imagen propia']].map(([v,l])=>`<option value="${v}" ${mode===v?'selected':''}>${l}</option>`).join('')}</select></div>`;
+    if(mode==='color') s+=`<div class="cmp-row">${colorInp('zonas.'+zk+'.color','#102a43')}<div class="cmp-sw-row">${swatchesColor('zonas.'+zk+'.color',isOv?fmt:null)}</div></div>`;
+    else if(mode==='imagen') s+=imgBlock('zonas.'+zk+'.imagen');
+    return s;
+  };
+  const alinRow=(zk)=>`<div class="cmp-row"><label>Posición</label>${alinH('zonas.'+zk+'.alinH')}${alinV('zonas.'+zk+'.alinV')}</div>`;
+  const zonaSec=(zk,nom,icon)=>{
+    const vpath='zonas.'+zk+'.visible'; const off=getPath(C,vpath)===false;
+    const eyeBtn=`<button class="cmp-eye${off?' off':''}" onclick="${isOv?`toggleCompVisOv('${fmt}','${vpath}')`:`toggleCompVis('${vpath}')`}" title="Mostrar/ocultar zona">${svgIcon("ojo",{size:"13px"})}</button>`;
+    const rstBtn= isOv?`<button class="cmp-eye" onclick="resetCapaTamaño('${fmt}','zonas.${zk}')" title="Volver al global">↺</button>`:'';
+    return `<div class="cmp-zona-sec"><span class="zlbl">${svgIcon(icon,{size:"14px"})} ${esc(nom)}</span><span style="display:inline-flex;gap:4px">${eyeBtn}${rstBtn}</span></div>`;
+  };
+  let h="";
+  const fondoTipo=getPath(C,'fondo.tipo')||'color';
+  h+=`<div class="dz-sec">Fondo del banner (continúa en las 3 zonas)</div>`;
+  h+=`<div class="cmp-row"><label>Tipo</label><select onchange="${S('fondo.tipo','this.value')};${RE}">${[['color','Color'],['imagen','Imagen']].map(([v,l])=>`<option value="${v}" ${fondoTipo===v?'selected':''}>${l}</option>`).join('')}</select></div>`;
+  if(fondoTipo==='color') h+=`<div class="cmp-row">${colorInp('fondo.color','#0e2748')}<div class="cmp-sw-row" title="Colores de tus marcas">${swatchesColor('fondo.color',isOv?fmt:null)}</div></div>`;
+  else h+=imgBlock('fondo.imagen');
+  const prop=getPath(C,'prop')||[25,50,25];
+  h+=`<div class="dz-sec">Proporciones · Logo / Texto / CTA</div><div class="cmp-prop">`+['Logo','Texto','CTA'].map((l,i)=>`<div class="pcol"><span>${l}</span><input type="range" min="0" max="100" value="${parseInt(prop[i])||0}" oninput="${S('prop.'+i,'this.value')}"></div>`).join('')+`</div>`;
+  h+=zonaSec('logo','Logo','imagen')+alinRow('logo')+zonaBg('logo');
+  const logoUrl = isOv ? (getPath(ov,'zonas.logo.url')||"") : (getPath(C,'zonas.logo.url')||"");
+  h+=`<div class="cmp-row"><input type="text" placeholder="${isOv?'Hereda del global':'URL logo (PNG/SVG)'}" value="${escAttr(logoUrl)}" onchange="${S('zonas.logo.url','this.value')}"><button class="cmp-bib" onclick="elegirImagenPath('zonas.logo.url',${isOv?`'${fmt}'`:'null'})">${svgIcon("imagen",{size:"12px"})}</button></div>`;
+  h+=miniaturasBiblioteca('zonas.logo.url', isOv?fmt:null);
+  h+=`<div class="cmp-row"><label>Alto</label>${rng('zonas.logo.alto',16,160,48)}</div><div class="cmp-row"><label>Ancho máx</label>${rng('zonas.logo.maxw',15,100,70)}</div>`;
+  h+=zonaSec('texto','Texto','documento')+alinRow('texto')+zonaBg('texto');
+  h+=`<div class="cmp-row"><input type="text" placeholder="Tu titular aquí" value="${escAttr(getPath(C,'zonas.texto.titular.texto')||'')}" oninput="${S('zonas.texto.titular.texto','this.value')}"></div>`;
+  h+=`<div class="cmp-row"><label>Tít. tam.</label>${rng('zonas.texto.titular.tamano',12,60,26)}${colorInp('zonas.texto.titular.color','#ffffff')}</div>`;
+  h+=`<div class="cmp-row"><textarea placeholder="Texto de apoyo breve" oninput="${S('zonas.texto.cuerpo.texto','this.value')}">${esc(getPath(C,'zonas.texto.cuerpo.texto')||'')}</textarea></div>`;
+  h+=`<div class="cmp-row"><label>Cuerpo tam.</label>${rng('zonas.texto.cuerpo.tamano',9,32,13)}${colorInp('zonas.texto.cuerpo.color','#ffffff')}</div>`;
+  h+=zonaSec('cta','Call to action','compartir')+alinRow('cta')+zonaBg('cta');
+  h+=`<div class="cmp-row"><input type="text" placeholder="Texto del botón" value="${escAttr(getPath(C,'zonas.cta.texto')||'')}" oninput="${S('zonas.cta.texto','this.value')}"></div>`;
+  h+=`<div class="cmp-row"><input type="text" placeholder="Link (https://…)" value="${escAttr(getPath(C,'zonas.cta.url')||'')}" onchange="${S('zonas.cta.url','this.value')}"></div>`;
+  h+=`<div class="cmp-row"><label>Colores</label>${colorInp('zonas.cta.colorFondo','#2f80ed')}${colorInp('zonas.cta.colorTexto','#ffffff')}</div>`;
+  h+=`<div class="cmp-row"><label>Radio</label>${rng('zonas.cta.radio',0,30,8)}</div>`;
+  return h;
+}
+// Editor del Diseño global (3 zonas con controles por zona).
 function renderComposicionEditor(){
   const cont=document.getElementById("comp-editor"), tema=document.getElementById("diseno-tema");
   const p=pieza();
   if(!cont) return;
   if(!esComposicion(p)){ cont.style.display="none"; cont.innerHTML=""; if(tema) tema.style.display=""; return; }
+  asegurarComposicionNueva(p);
   cont.style.display=""; if(tema) tema.style.display="none";
-  const C=p.composicion;
-  const eye=(capa)=>`<button class="cmp-eye${C[capa].visible===false?' off':''}" onclick="toggleCompVis('${capa}')" title="Mostrar/ocultar">${svgIcon("ojo",{size:"13px"})}</button>`;
-  const head=(capa,nom)=>`<div class="cmp-sec"><span>${esc(nom)}</span>${eye(capa)}</div>`;
-  const alin=(capa)=>`<div class="cmp-alin">${['left','center','right'].map(a=>`<button class="${(C[capa].alinH||'left')===a?'on':''}" onclick="setComp('${capa}','alinH','${a}');renderComposicionEditor();" title="${a}">${ICONS[a==='left'?'alignLeft':a==='center'?'alignCenter':'alignRight']}</button>`).join('')}</div>`;
-  const rng=(capa,key,mn,mx,base)=>`<input type="range" min="${mn}" max="${mx}" value="${parseInt(C[capa][key])||base}" oninput="setComp('${capa}','${key}',this.value)">`;
-  let h="";
-  h+=head("fondoColor","Fondo de color")+`<div class="cmp-row"><input type="color" value="${esc(C.fondoColor.color||'#0e2748')}" oninput="setComp('fondoColor','color',this.value)"><div class="cmp-sw-row" title="Colores rápidos (de tus marcas)">${swatchesFondo()}</div></div>`;
-  const selFoco=(capa,setter)=>`<select onchange="${setter}">${['center','top','bottom','left','right'].map(v=>`<option value="${v}" ${(C[capa].foco||'center')===v?'selected':''}>${v}</option>`).join('')}</select>`;
-  const selFit=(capa,setter)=>`<select onchange="${setter}">${[['cover','Cubrir'],['contain','Contener']].map(([v,l])=>`<option value="${v}" ${(C[capa].fit||'cover')===v?'selected':''}>${l}</option>`).join('')}</select>`;
-  h+=head("imagen","Imagen de fondo")+`<div class="cmp-row"><input type="text" placeholder="URL imagen" value="${escAttr(C.imagen.url||'')}" onchange="setComp('imagen','url',this.value)"><button class="cmp-bib" onclick="elegirImagenComp('imagen')">${svgIcon("imagen",{size:"12px"})}</button></div><div class="cmp-row"><label>Ajuste</label>${selFit('imagen',"setComp('imagen','fit',this.value)")}</div><div class="cmp-row"><label>Zoom</label>${rng('imagen','zoom',50,300,100)}</div><div class="cmp-row"><label>Foco</label>${selFoco('imagen',"setComp('imagen','foco',this.value)")}</div><div class="cmp-row"><label>Oscurecer</label>${rng('imagen','oscurecer',0,80,40)}</div>`;
-  h+=head("logo","Logo")+`<div class="cmp-row"><input type="text" placeholder="URL logo (PNG/SVG)" value="${escAttr(C.logo.url||'')}" onchange="setComp('logo','url',this.value)"><button class="cmp-bib" onclick="elegirImagenComp('logo')">${svgIcon("imagen",{size:"12px"})}</button></div><div class="cmp-row"><label>Alineación</label>${alin('logo')}</div><div class="cmp-row"><label>Alto</label>${rng('logo','tamano',24,140,56)}</div><div class="cmp-row"><label>Ancho máx</label>${rng('logo','maxw',15,100,60)}</div>`;
-  h+=head("titular","Titular")+`<div class="cmp-row"><input type="text" placeholder="Tu titular aquí" value="${escAttr(C.titular.texto||'')}" oninput="setComp('titular','texto',this.value)"></div><div class="cmp-row"><label>Tamaño</label>${rng('titular','tamano',12,52,26)}</div><div class="cmp-row"><label>Alineación</label>${alin('titular')}<input type="color" value="${esc(C.titular.color||'#ffffff')}" oninput="setComp('titular','color',this.value)"></div>`;
-  h+=head("cuerpo","Cuerpo")+`<div class="cmp-row"><textarea placeholder="Texto de apoyo breve" oninput="setComp('cuerpo','texto',this.value)">${esc(C.cuerpo.texto||'')}</textarea></div><div class="cmp-row"><label>Tamaño</label>${rng('cuerpo','tamano',9,28,13)}</div><div class="cmp-row"><label>Alineación</label>${alin('cuerpo')}<input type="color" value="${esc(C.cuerpo.color||'#ffffff')}" oninput="setComp('cuerpo','color',this.value)"></div>`;
-  h+=head("cta","CTA con link")+`<div class="cmp-row"><input type="text" placeholder="Texto" value="${escAttr(C.cta.texto||'')}" oninput="setComp('cta','texto',this.value)"></div><div class="cmp-row"><input type="text" placeholder="Link (https://…)" value="${escAttr(C.cta.url||'')}" onchange="setComp('cta','url',this.value)"></div><div class="cmp-row"><label>Alineación</label>${alin('cta')}<input type="color" value="${esc(C.cta.colorFondo||'#2f80ed')}" title="Color botón" oninput="setComp('cta','colorFondo',this.value)"><input type="color" value="${esc(C.cta.colorTexto||'#ffffff')}" title="Color texto" oninput="setComp('cta','colorTexto',this.value)"></div>`;
-  cont.innerHTML=`<div class="cmp-ed"><div class="dz-sec">Diseño global (capas)</div><button class="ia-sugerir" onclick="sugerirTextosIA()">✨ Sugerir textos con IA</button>${h}</div>`;
+  cont.innerHTML=`<div class="cmp-ed"><div class="dz-sec">Diseño global · 3 zonas</div><button class="ia-sugerir" onclick="sugerirTextosIA()">✨ Sugerir textos con IA</button>${compEditorHTML(p,null)}</div>`;
 }
 // Panel "Ajustar este tamaño" (overrides sobre el global) en la pestaña Editar.
 function renderFormTamaño(f){
-  const p=pieza(); const fmt=p.activaFmt; const F=FORMATOS[fmt];
+  const p=pieza(); asegurarComposicionNueva(p); const fmt=p.activaFmt; const F=FORMATOS[fmt];
   if(!fmt||!F){ f.innerHTML=`<div class="form-empty"><div class="form-empty-ico">${svgIcon("editar",{size:"32px"})}</div>Haz clic en un banner del tablero<br>para ajustar ese tamaño</div>`; return; }
-  const E=composicionEfectiva(p,fmt), ov=ovDeFmt(p,fmt), fam=familiaDeFormato(fmt);
-  const eye=(capa)=>`<button class="cmp-eye${E[capa].visible===false?' off':''}" onclick="toggleCompVisOv('${fmt}','${capa}')" title="Mostrar/ocultar aquí">${svgIcon("ojo",{size:"13px"})}</button>`;
-  const rst=(capa)=>`<button class="cmp-eye" onclick="resetCapaTamaño('${fmt}','${capa}')" title="Volver al global">↺</button>`;
-  const head=(capa,nom)=>`<div class="cmp-sec"><span>${esc(nom)}</span><span style="display:inline-flex;gap:4px">${eye(capa)}${rst(capa)}</span></div>`;
-  const alin=(capa)=>`<div class="cmp-alin">${['left','center','right'].map(a=>`<button class="${(E[capa].alinH||'left')===a?'on':''}" onclick="setCompOv('${fmt}','${capa}','alinH','${a}');renderForm();">${ICONS[a==='left'?'alignLeft':a==='center'?'alignCenter':'alignRight']}</button>`).join('')}</div>`;
-  const rng=(capa,key,mn,mx,base)=>`<input type="range" min="${mn}" max="${mx}" value="${parseInt(E[capa][key])||base}" oninput="setCompOv('${fmt}','${capa}','${key}',this.value)">`;
-  const selFoco=`<select onchange="setCompOv('${fmt}','imagen','foco',this.value)">${['center','top','bottom','left','right'].map(v=>`<option value="${v}" ${(E.imagen.foco||'center')===v?'selected':''}>${v}</option>`).join('')}</select>`;
-  const selFit=`<select onchange="setCompOv('${fmt}','imagen','fit',this.value)">${[['cover','Cubrir'],['contain','Contener']].map(([v,l])=>`<option value="${v}" ${(E.imagen.fit||'cover')===v?'selected':''}>${l}</option>`).join('')}</select>`;
-  const urlOv = (ov.imagen&&ov.imagen.url)||'';
-  let h=`<button class="volver-celda" onclick="cambiarPanelTab('diseno')">${svgIcon("paleta",{size:"12px"})} Ir al Diseño global</button><div class="cmp-ed">`;
-  h+=`<div class="dz-sec">Ajustar ${F.ancho}×${F.alto} <span style="font-weight:400;color:#8890a8">· ${fam} · hereda del global</span></div>`;
-  h+=head("fondoColor","Fondo de color")+`<div class="cmp-row"><input type="color" value="${esc(E.fondoColor.color||'#0e2748')}" oninput="setCompOv('${fmt}','fondoColor','color',this.value)"><div class="cmp-sw-row" title="Colores rápidos (de tus marcas)">${swatchesFondoOv(fmt)}</div></div>`;
-  h+=head("imagen","Imagen de fondo")+`<div class="cmp-row"><input type="text" placeholder="Hereda del global — escribe para cambiar solo aquí" value="${escAttr(urlOv)}" onchange="setCompOv('${fmt}','imagen','url',this.value)"><button class="cmp-bib" onclick="abrirImagenes(u=>{setCompOv('${fmt}','imagen','url',u);renderForm();})">${svgIcon("imagen",{size:"12px"})}</button></div><div class="cmp-row"><label>Ajuste</label>${selFit}</div><div class="cmp-row"><label>Zoom</label>${rng('imagen','zoom',50,300,100)}</div><div class="cmp-row"><label>Foco</label>${selFoco}</div><div class="cmp-row"><label>Oscurecer</label>${rng('imagen','oscurecer',0,80,40)}</div>`;
-  h+=head("logo","Logo")+`<div class="cmp-row"><label>Alineación</label>${alin('logo')}</div><div class="cmp-row"><label>Alto</label>${rng('logo','tamano',24,140,56)}</div><div class="cmp-row"><label>Ancho máx</label>${rng('logo','maxw',15,100,60)}</div>`;
-  h+=head("titular","Titular")+`<div class="cmp-row"><input type="text" placeholder="Tu titular aquí" value="${escAttr(E.titular.texto||'')}" oninput="setCompOv('${fmt}','titular','texto',this.value)"></div><div class="cmp-row"><label>Tamaño</label>${rng('titular','tamano',12,52,26)}</div><div class="cmp-row"><label>Alineación</label>${alin('titular')}</div>`;
-  h+=head("cuerpo","Cuerpo")+`<div class="cmp-row"><textarea placeholder="Texto de apoyo breve" oninput="setCompOv('${fmt}','cuerpo','texto',this.value)">${esc(E.cuerpo.texto||'')}</textarea></div><div class="cmp-row"><label>Tamaño</label>${rng('cuerpo','tamano',9,28,13)}</div><div class="cmp-row"><label>Alineación</label>${alin('cuerpo')}</div>`;
-  h+=head("cta","CTA con link")+`<div class="cmp-row"><input type="text" placeholder="Texto" value="${escAttr(E.cta.texto||'')}" oninput="setCompOv('${fmt}','cta','texto',this.value)"></div><div class="cmp-row"><input type="text" placeholder="Link" value="${escAttr(E.cta.url||'')}" onchange="setCompOv('${fmt}','cta','url',this.value)"></div><div class="cmp-row"><label>Alineación</label>${alin('cta')}</div>`;
-  h+=`<button class="set-aj-reset" onclick="resetTamaño('${fmt}')">Restablecer este tamaño al global</button></div>`;
-  f.innerHTML=h;
+  const fam=familiaDeFormato(fmt);
+  f.innerHTML=`<button class="volver-celda" onclick="cambiarPanelTab('diseno')">${svgIcon("paleta",{size:"12px"})} Ir al Diseño global</button><div class="cmp-ed"><div class="dz-sec">Ajustar ${F.ancho}×${F.alto} <span style="font-weight:400;color:#8890a8">· ${fam} · hereda del global</span></div>${compEditorHTML(p,fmt)}<button class="set-aj-reset" onclick="resetTamaño('${fmt}')">Restablecer este tamaño al global</button></div>`;
 }
 function cssComponentes(){
   const cssFull = (document.querySelector("style") && document.querySelector("style").textContent) || "";
@@ -3539,6 +3651,7 @@ function generarHTMLDeComposicion(p, fmt){
 
 function renderTablero(){
   const p = pieza(); if(!esSetPieza(p)) return;
+  asegurarComposicionNueva(p);
   const c = document.getElementById("canvas");
   ajustarFrameParaSet(true);
   if(esComposicion(p)){ renderTableroComposicion(p, c); return; }
@@ -3631,8 +3744,11 @@ async function urlADataURL(url){
 }
 async function compConImagenesInline(comp){
   const c=JSON.parse(JSON.stringify(comp));
-  if(c.imagen&&c.imagen.url) c.imagen.url=await urlADataURL(c.imagen.url);
-  if(c.logo&&c.logo.url) c.logo.url=await urlADataURL(c.logo.url);
+  if(c.fondo&&c.fondo.imagen&&c.fondo.imagen.url) c.fondo.imagen.url=await urlADataURL(c.fondo.imagen.url);
+  if(c.zonas){ for(const zk of ["logo","texto","cta"]){ const z=c.zonas[zk]; if(!z) continue;
+    if(z.imagen&&z.imagen.url) z.imagen.url=await urlADataURL(z.imagen.url);
+    if(z.url) z.url=await urlADataURL(z.url);
+  } }
   return c;
 }
 async function rasterizarComposicion(p, fmt, tipo){
