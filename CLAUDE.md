@@ -49,6 +49,19 @@ Idea (de su PPT): una creatividad es una **composición de 6 capas apiladas** (n
 - `SET_DISPLAY_DESKTOP` = los 9 tamaños desktop.
 - **Fase 3 (el 🪄):** en el editor global — `swatchesFondo()` (colores rápidos de marcas+presets en la capa Fondo), botones **biblioteca** en imagen/logo (`elegirImagenComp`), y **✨ "Sugerir textos con IA"** (`sugerirTextosIA`) que llama `POST /api/ia { modo:'textos', brief }` y rellena titular/cuerpo/cta del global. (Mismo bloqueo de cuota de Gemini que el motor IA.)
 
+## Consistencia de UI por modo (revisión quirúrgica)
+- `actualizarUISet()` bloquea pestañas según el modo: en **colección por capas** se
+  deshabilitan **Bloques** (id `ptab-bloques`) y **Plantillas** (id `ptab-plantillas`);
+  el selector de Formato y dev-seg se ocultan; aparecen los botones del set; se muestra
+  el editor de capas y se oculta `#diseno-tema`. Al salir de la colección todo se reactiva.
+- `agregarBloque` hace **no-op** si `esComposicion()` (no se meten bloques sueltos a una colección).
+- **Biblioteca filtrada por formato**: `BLOQUES_SOLO_DOC` (footer, diadivisor, fechaCard,
+  evento, formulario, tabla) se **ocultan en banners de tamaño fijo** (display/social).
+  `renderBiblioteca()` se re-renderiza en `cambiarFormato`.
+- PENDIENTE de coherencia (no urgente): los **banners sueltos** (Formato → Display, sin
+  colección) siguen usando el editor de bloques en flujo (flex:1, no auto-adaptan como las
+  colecciones). Camino futuro: que TODO formato de tamaño fijo use el modelo de capas.
+
 ## Secrets y config (Cloudflare Pages → Settings → Variables and Secrets)
 - Secrets: `JWT_SECRET`, `RESEND_KEY`, `GEMINI_API_KEY` (ya cargada). Opcional `GEMINI_MODEL`.
 - `wrangler.toml [vars]`: `SITE_URL`, `SUPER_ADMIN_EMAIL`, `RESEND_FROM`, `ALLOWED_EMAILS`. D1 binding `DB`. **No hay R2** (por eso la biblioteca de imágenes es por URL).

@@ -1016,7 +1016,7 @@ button,input,select,textarea{font-family:inherit;}
   <div class="layout">
     <aside class="panel-izq">
       <div class="panel-tabs">
-        <button class="ptab on" data-tab="bloques" onclick="cambiarPanelTab('bloques')"><span class="ico" data-ic="grid"></span><span>Bloques</span></button>
+        <button class="ptab on" id="ptab-bloques" data-tab="bloques" onclick="cambiarPanelTab('bloques')"><span class="ico" data-ic="grid"></span><span>Bloques</span></button>
         <button class="ptab" data-tab="diseno" onclick="cambiarPanelTab('diseno')"><span class="ico" data-ic="paleta"></span><span>Diseño</span></button>
         <button class="ptab" data-tab="editar" onclick="cambiarPanelTab('editar')"><span class="ico" data-ic="editar"></span><span>Editar bloque</span></button>
         <button class="ptab" id="ptab-plantillas" data-tab="plantillas" onclick="cambiarPanelTab('plantillas')"><span class="ico" data-ic="plantilla"></span><span>Plantillas</span></button>
@@ -2554,6 +2554,7 @@ function cambiarFormato(f){
   renderCanvas();  // banners de alto fijo distribuyen los bloques con flex
   renderTabsPiezas();
   renderPlantillasTab();  // las plantillas del panel concuerdan con el formato actual
+  renderBiblioteca();     // la biblioteca oculta bloques que no aplican al formato
   persistir();
 }
 
@@ -2667,14 +2668,21 @@ const BLOQUE_ICONO = {
   testimonial:"chat", article:"documento", pricing:"tag", hero:"imagen", alert:"alerta",
   features:"checklist", audio:"audioico", footer:"footerico"
 };
+// Bloques de documento/agenda que no tienen sentido en un banner de tamaño fijo
+// (display/social): se ocultan de la biblioteca cuando el formato es un banner.
+const BLOQUES_SOLO_DOC = new Set(["footer","diadivisor","fechaCard","evento","formulario","tabla"]);
 function renderBiblioteca(){
   const cont = document.getElementById("biblioteca");
+  if(!cont) return;
+  const fmt = FORMATOS[getFormato()] || {};
+  const esBannerFijo = fmt.alto > 0;   // display/social fijos → sin bloques de email/agenda
+  const permitido = (tipo) => !(esBannerFijo && BLOQUES_SOLO_DOC.has(tipo));
   const cats = {};
-  Object.entries(BLOQUES).forEach(([tipo,b]) => { const c=b.cat||"Otros"; if(!cats[c])cats[c]=[]; cats[c].push([tipo,b]); });
+  Object.entries(BLOQUES).forEach(([tipo,b]) => { if(!permitido(tipo)) return; const c=b.cat||"Otros"; if(!cats[c])cats[c]=[]; cats[c].push([tipo,b]); });
   const orden = ["Estructura","Contenido","Acción","Agenda","Datos","Cards","Multimedia","Widgets","Decoración","Avanzado"];
   let html = "";
   orden.concat(Object.keys(cats).filter(c=>!orden.includes(c))).forEach(cat => {
-    if(!cats[cat]) return;
+    if(!cats[cat] || !cats[cat].length) return;
     html += `<div class="cat-title">${cat}</div>`;
     cats[cat].forEach(([tipo,b]) => {
       html += `<div class="tile" draggable="true" data-tipo="${tipo}" title="${esc(b.sub)}"><div class="tile-ico">${svgIcon(BLOQUE_ICONO[tipo]||"estrella",{size:"18px"})}</div><div><div class="tile-name">${b.nombre}</div><div class="tile-sub">${b.sub}</div></div></div>`;
@@ -2974,6 +2982,7 @@ function renderBloqueSeleccionado(){
 
 function agregarBloque(tipo, datos, insertAt){
   if(!BLOQUES[tipo]) return;
+  if(esComposicion(pieza())){ toast("En colecciones se editan las CAPAS (Diseño / Ajustar tamaño), no bloques sueltos"); return; }
   const item = { id:uid(), tipo:tipo, datos: datos || clone(BLOQUES[tipo].defaults) };
   const arr = getCanvas();
   if(typeof insertAt === "number" && insertAt >= 0 && insertAt <= arr.length) arr.splice(insertAt, 0, item);
@@ -3550,17 +3559,17 @@ function exportarTodoElSet(){
 // Muestra/oculta los controles del set en la barra superior según la creatividad.
 function actualizarUISet(){
   const es = esSetPieza(pieza());
+  const esCap = esComposicion(pieza());
   const tools = document.getElementById("set-tools"); if(tools) tools.style.display = es ? "" : "none";
   const fmt = document.getElementById("tb-formato"); if(fmt) fmt.style.display = es ? "none" : "";
   const dev = document.getElementById("dev-seg"); if(dev) dev.style.display = es ? "none" : "";
   if(typeof renderComposicionEditor === "function") renderComposicionEditor();
-  // En una colección, las plantillas no aplican (cada banner se edita aparte): se bloquean.
-  const pl = document.getElementById("ptab-plantillas");
-  if(pl){
-    pl.disabled = es;
-    pl.classList.toggle("disabled", es);
-    pl.title = es ? "No aplica en colecciones (edita cada banner del tablero)" : "";
-  }
+  // Bloqueos coherentes: en colecciones no se editan bloques sueltos ni plantillas.
+  const setTab = (id, bloq, titulo) => { const t=document.getElementById(id); if(t){ t.disabled=bloq; t.classList.toggle("disabled",bloq); t.title=bloq?titulo:""; } };
+  setTab("ptab-plantillas", es, "No aplica en colecciones (edita cada banner del tablero)");
+  setTab("ptab-bloques", esCap, "En colecciones edita las CAPAS (Diseño global / Ajustar tamaño)");
+  // Si la pestaña activa quedó bloqueada, mover a una válida.
+  if(esCap && (panelTab==="bloques" || panelTab==="plantillas")) cambiarPanelTab("diseno");
 }
 // (compat) el set ya no usa ventana; el tablero vive en el lienzo.
 function refrescarSetSiAbierto(){}
