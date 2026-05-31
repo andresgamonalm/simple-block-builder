@@ -129,6 +129,11 @@ async function generar({ request, env }) {
         marca.negocio ? `A qué se dedica: ${marca.negocio}.` : '',
         marca.eslogan ? `Eslogan: "${marca.eslogan}".` : '',
         marca.tono ? `Tono de voz de la marca: ${marca.tono}.` : '',
+        marca.publico ? `Público objetivo: ${marca.publico}.` : '',
+        marca.productos ? `Productos/líneas: ${marca.productos}.` : '',
+        marca.usar ? `Palabras a USAR: ${marca.usar}.` : '',
+        marca.evitar ? `Palabras PROHIBIDAS (no las uses): ${marca.evitar}.` : '',
+        marca.disclaimer ? `Si la pieza incluye footer, añade este disclaimer legal: "${marca.disclaimer}".` : '',
         `Colores: principal=${marca.primary||'-'}, secundario=${marca.secondary||'-'}, texto=${marca.text||'-'}, fondo=${marca.bg||'-'}, CTA=${marca.cta||marca.primary||'-'}, texto del CTA=${marca.ctaText||'-'}.`,
         `Tipografía: títulos=${marca.fontTitulo||marca.font||'Inter'}, cuerpo=${marca.fontCuerpo||marca.font||'Inter'}.`,
         `Logo (URL): ${marca.logoUrl||'(ninguno)'}.`

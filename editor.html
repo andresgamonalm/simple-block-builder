@@ -281,6 +281,7 @@ button,input,select,textarea{font-family:inherit;}
 .marca-form .mf-logo-x:hover{color:var(--err);}
 .marca-form label{display:flex;flex-direction:column;gap:5px;font-size:11px;font-weight:600;color:var(--ink2);}
 .marca-form input[type=text],.marca-form select{height:38px;border:1px solid var(--bdr);border-radius:9px;padding:0 11px;font-family:var(--f);font-size:13px;color:var(--ink);background:var(--white);font-weight:400;}
+.marca-form textarea{border:1px solid var(--bdr);border-radius:9px;padding:9px 11px;font-family:var(--f);font-size:13px;color:var(--ink);background:var(--white);font-weight:400;resize:vertical;min-height:46px;}
 .mf-colores{display:flex;gap:14px;flex-wrap:wrap;}
 .mf-col{display:flex;flex-direction:column;align-items:center;gap:5px;font-size:10.5px;color:var(--ink3);}
 .mf-col input[type=color]{width:42px;height:34px;border:1px solid var(--bdr);border-radius:7px;padding:2px;cursor:pointer;background:none;}
@@ -1197,12 +1198,24 @@ button,input,select,textarea{font-family:inherit;}
         <label class="mf-full">¿A qué se dedica? <input type="text" id="marca-negocio" placeholder="Ej: Seguros de auto 100% digitales para Chile"></label>
         <label>Tono de voz<input type="text" id="marca-tono" placeholder="Cercano, claro, confiable"></label>
         <label>Eslogan<input type="text" id="marca-eslogan" placeholder="Conduce tranquilo"></label>
+        <label class="mf-full">Público objetivo<input type="text" id="marca-publico" placeholder="Ej: conductores jóvenes, familias, pymes"></label>
+        <label class="mf-full">Productos / líneas<input type="text" id="marca-productos" placeholder="Auto, Hogar, Vida, Salud, Empresas (separa con comas)"></label>
+        <label>Palabras a usar<input type="text" id="marca-usar" placeholder="respaldo, tranquilidad, cobertura"></label>
+        <label>Palabras a evitar<input type="text" id="marca-evitar" placeholder="barato, gratis"></label>
+
+        <div class="mf-sec mf-full">Email: encabezado y pie <small>(base de cada email; se puede ajustar luego)</small></div>
+        <label class="mf-full">Bajada del encabezado <small>(junto al logo)</small><input type="text" id="marca-headerTagline" placeholder="Ej: Seguros que te respaldan"></label>
+        <label class="mf-full">Dirección (pie)<input type="text" id="marca-direccion" placeholder="Av. Ejemplo 123, Santiago, Chile"></label>
+        <label>Copyright (pie)<input type="text" id="marca-copyright" placeholder="© 2026 Zurich Chile"></label>
+        <label>Texto link de baja<input type="text" id="marca-unsubTexto" placeholder="Darme de baja"></label>
+        <label class="mf-full">Disclaimer legal <small>(va al pie de las piezas)</small><textarea id="marca-disclaimer" rows="2" placeholder="Texto legal/regulatorio que debe aparecer en las piezas"></textarea></label>
       </div>
       <input type="hidden" id="marca-logo-data">
       <input type="hidden" id="marca-logoClaro-data">
       <input type="hidden" id="marca-edit-id">
       <div class="mf-actions">
         <button id="marca-cancel" onclick="resetMarcaForm()" style="display:none;">Cancelar edición</button>
+        <button onclick="rellenarMarcaZurich()" title="Rellena el formulario con la identidad propuesta de Zúrich">Plantilla Zúrich</button>
         <button class="primary" onclick="guardarMarca()">Guardar marca</button>
       </div>
     </div>
@@ -4320,7 +4333,16 @@ function normalizarMarca(m){
     fontCuerpo: m.fontCuerpo || m.font || "Inter",
     negocio: m.negocio || "",
     tono: m.tono || "",
-    eslogan: m.eslogan || ""
+    eslogan: m.eslogan || "",
+    publico: m.publico || "",
+    productos: m.productos || "",
+    usar: m.usar || "",
+    evitar: m.evitar || "",
+    headerTagline: m.headerTagline || "",
+    direccion: m.direccion || "",
+    copyright: m.copyright || "",
+    unsubTexto: m.unsubTexto || "",
+    disclaimer: m.disclaimer || ""
   };
 }
 // Logo "vigente" según el fondo: claro si el fondo es oscuro y hay logo claro.
@@ -4383,6 +4405,8 @@ function resetMarcaForm(){
   set("marca-ctaText","#ffffff"); set("marca-text","#1a1a1a"); set("marca-bg","#ffffff"); set("marca-bgpagina","#f5f5f5");
   set("marca-fontTitulo","Inter"); set("marca-fontCuerpo","Inter");
   set("marca-negocio",""); set("marca-tono",""); set("marca-eslogan","");
+  set("marca-publico",""); set("marca-productos",""); set("marca-usar",""); set("marca-evitar","");
+  set("marca-headerTagline",""); set("marca-direccion",""); set("marca-copyright",""); set("marca-unsubTexto",""); set("marca-disclaimer","");
   document.getElementById("marca-form-titulo").textContent="Nueva marca";
   document.getElementById("marca-cancel").style.display="none";
 }
@@ -4397,6 +4421,8 @@ function editarMarca(id){
   set("marca-ctaText",m.ctaText); set("marca-text",m.text); set("marca-bg",m.bg); set("marca-bgpagina",m.bgPagina);
   set("marca-fontTitulo",m.fontTitulo); set("marca-fontCuerpo",m.fontCuerpo);
   set("marca-negocio",m.negocio); set("marca-tono",m.tono); set("marca-eslogan",m.eslogan);
+  set("marca-publico",m.publico); set("marca-productos",m.productos); set("marca-usar",m.usar); set("marca-evitar",m.evitar);
+  set("marca-headerTagline",m.headerTagline); set("marca-direccion",m.direccion); set("marca-copyright",m.copyright); set("marca-unsubTexto",m.unsubTexto); set("marca-disclaimer",m.disclaimer);
   document.getElementById("marca-form-titulo").textContent="Editar marca";
   document.getElementById("marca-cancel").style.display="";
   document.getElementById("modal-marcas").querySelector(".modal-body").scrollTop = 99999;
@@ -4410,13 +4436,38 @@ function guardarMarca(){
     primary:g("marca-primary"), secondary:g("marca-secondary"), cta:g("marca-cta"), ctaText:g("marca-ctaText"),
     text:g("marca-text"), bg:g("marca-bg"), bgPagina:g("marca-bgpagina"),
     fontTitulo:g("marca-fontTitulo"), fontCuerpo:g("marca-fontCuerpo"),
-    negocio:g("marca-negocio").trim(), tono:g("marca-tono").trim(), eslogan:g("marca-eslogan").trim() };
+    negocio:g("marca-negocio").trim(), tono:g("marca-tono").trim(), eslogan:g("marca-eslogan").trim(),
+    publico:g("marca-publico").trim(), productos:g("marca-productos").trim(), usar:g("marca-usar").trim(), evitar:g("marca-evitar").trim(),
+    headerTagline:g("marca-headerTagline").trim(), direccion:g("marca-direccion").trim(), copyright:g("marca-copyright").trim(), unsubTexto:g("marca-unsubTexto").trim(), disclaimer:g("marca-disclaimer").trim() };
   workspace.marcas = workspace.marcas || [];
   const id=g("marca-edit-id");
   if(id){ const m=workspace.marcas.find(x=>x.id===id); if(m){ Object.keys(m).forEach(k=>{ if(!(k in datos) && k!=="id") delete m[k]; }); Object.assign(m,datos); } }
   else { datos.id="m"+Math.random().toString(36).slice(2,9); workspace.marcas.push(datos); }
   persistir(); resetMarcaForm(); renderMarcas(); renderMarcaSelector();
   toast("Marca guardada");
+}
+// Rellena el formulario con la identidad propuesta de Zúrich (punto de partida; el logo lo sube el usuario).
+function rellenarMarcaZurich(){
+  const set=(i,v)=>{ const e=document.getElementById(i); if(e) e.value=v; };
+  set("marca-nombre","Zúrich"); set("marca-empresa","Zurich Chile");
+  set("marca-primary","#2167AE"); set("marca-secondary","#23366F"); set("marca-cta","#2167AE");
+  set("marca-ctaText","#ffffff"); set("marca-text","#1a1a1a"); set("marca-bg","#ffffff"); set("marca-bgpagina","#f4f6f9");
+  set("marca-fontTitulo","Montserrat"); set("marca-fontCuerpo","Inter");
+  set("marca-negocio","Aseguradora: seguros de auto, hogar, vida, salud y empresas en Chile.");
+  set("marca-tono","Cercano, confiable y claro; transmite respaldo y tranquilidad sin tecnicismos.");
+  set("marca-eslogan","");
+  set("marca-publico","Personas y familias en Chile; también pymes y empresas.");
+  set("marca-productos","Auto, Hogar, Vida, Salud, Empresas");
+  set("marca-usar","respaldo, tranquilidad, cobertura, protección, confianza");
+  set("marca-evitar","barato, gratis, regalo");
+  set("marca-headerTagline","Seguros que te respaldan");
+  set("marca-direccion","");
+  set("marca-copyright","© "+new Date().getFullYear()+" Zurich Chile");
+  set("marca-unsubTexto","Darme de baja");
+  set("marca-disclaimer","Infórmate sobre las condiciones y coberturas en zurich.cl. Producto sujeto a evaluación y condiciones de la póliza.");
+  document.getElementById("marca-form-titulo").textContent="Nueva marca · Zúrich (revisa y sube el logo)";
+  const body=document.getElementById("modal-marcas").querySelector(".modal-body"); if(body) body.scrollTop=99999;
+  toast("Plantilla Zúrich cargada — sube el logo y ajusta lo que quieras");
 }
 function eliminarMarca(id){
   if(!confirm("¿Eliminar esta marca?")) return;
@@ -4445,11 +4496,27 @@ function aplicarMarca(id){
     if(m.eslogan && !getPath(C,"zonas.texto.titular.texto")) setPath(C,"zonas.texto.titular.texto", m.eslogan);
     renderTablero(); renderComposicionEditor();
   } else {
+    let tieneHeader=false, tieneFooter=false;
     (p.canvas||[]).forEach(b=>{
       if(b.tipo==="cta" && m.cta){ b.datos.colorFondo=m.cta; if(m.ctaText) b.datos.colorTexto=m.ctaText; }
-      if(b.tipo==="header" && m.logo) b.datos.logoUrl=m.logo;
-      if(b.tipo==="footer" && m.empresa) b.datos.empresa=m.empresa;
+      if(b.tipo==="header"){ tieneHeader=true; if(m.logo) b.datos.logoUrl=m.logo; if(m.headerTagline && !b.datos.bajada) b.datos.bajada=m.headerTagline; }
+      if(b.tipo==="footer"){ tieneFooter=true; if(m.empresa) b.datos.empresa=m.empresa; if(m.direccion) b.datos.direccion=m.direccion; if(m.copyright) b.datos.copyright=m.copyright; if(m.unsubTexto){ b.datos.mostrarUnsub=true; b.datos.unsubTexto=m.unsubTexto; } }
     });
+    // En email/documento: si no hay header/footer, los creamos desde la marca.
+    const esDoc = ["email","invitacion","libre"].includes(p.formato);
+    if(esDoc){
+      if(!tieneHeader && (m.logo || m.headerTagline)){
+        p.canvas = p.canvas || [];
+        p.canvas.unshift(mk("header", { logoUrl:m.logo||"", bajada:m.headerTagline||"" }));
+      }
+      if(!tieneFooter && (m.empresa || m.direccion || m.copyright || m.disclaimer)){
+        const fd = { empresa:m.empresa||"", direccion:m.direccion||"", copyright:m.copyright||"" };
+        if(m.unsubTexto){ fd.mostrarUnsub=true; fd.unsubTexto=m.unsubTexto; }
+        if(m.disclaimer){ fd.direccion = (fd.direccion ? fd.direccion+"\n" : "") + m.disclaimer; }
+        p.canvas = p.canvas || [];
+        p.canvas.push(mk("footer", fd));
+      }
+    }
     aplicarTema(); renderCanvas(); renderForm();
   }
   persistir();
