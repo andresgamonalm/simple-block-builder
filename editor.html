@@ -1327,9 +1327,11 @@ function styleFields(opts={}){
   f.push({grupo:"Espaciado interior (padding)"});
   f.push({tipo:"row2", izq:{key:"padTop", label:"Arriba", tipo:"range", min:0, max:120, step:2}, der:{key:"padBottom", label:"Abajo", tipo:"range", min:0, max:120, step:2}});
   f.push({tipo:"row2", izq:{key:"padLeft", label:"Izquierda", tipo:"range", min:0, max:120, step:2}, der:{key:"padRight", label:"Derecha", tipo:"range", min:0, max:120, step:2}});
+  f.push({grupo:"Bordes"});
+  f.push({key:"radioBloque", label:"Radio del bloque (px · vacío = natural, 0 = cuadrado)", tipo:"text", placeholder:"vacío / 0 / 16…"});
   return f;
 }
-const styleDefaults = { alinH:"center", alinV:"center", ancho:"", alto:"", padTop:"14", padRight:"24", padBottom:"14", padLeft:"24" };
+const styleDefaults = { alinH:"center", alinV:"center", ancho:"", alto:"", padTop:"14", padRight:"24", padBottom:"14", padLeft:"24", radioBloque:"" };
 
 function wrap(d, inner){
   const w = d.ancho ? `width:${esc(d.ancho)};` : "width:100%;";
@@ -1337,8 +1339,9 @@ function wrap(d, inner){
   const pad = `padding:${paddings(d)};`;
   const jH = justifyH(d.alinH);
   const jV = justifyV(d.alinV);
+  const rb = (d.radioBloque!==undefined && d.radioBloque!=="" && /^\d+$/.test(String(d.radioBloque))) ? `border-radius:${d.radioBloque}px;overflow:hidden;` : "";
   return `<div style="${pad}display:flex;flex-direction:column;justify-content:${jV};align-items:${jH};box-sizing:border-box;width:100%;height:100%;">
-    <div style="${w}${h}max-width:100%;box-sizing:border-box;">${inner}</div>
+    <div style="${w}${h}max-width:100%;box-sizing:border-box;${rb}">${inner}</div>
   </div>`;
 }
 
@@ -3179,9 +3182,10 @@ renderCanvas();
 renderForm();
 cambiarPanelTab("bloques");   // pestaña inicial del panel
 pintarIconos();               // pinta los íconos SVG de la interfaz
-abrirGaleria();               // la pantalla inicial es el Dashboard "Mis campañas"
+// Al entrar se arranca DIRECTO en el editor, listo para crear. El Dashboard
+// ("Mis campañas") se abre con el botón Biblioteca. En móvil sí parte ahí.
 sincronizarConNube();   // carga/sube la copia durable en D1 sin bloquear la UI
-aplicarModoDispositivo();  // ajusta el modo móvil
+aplicarModoDispositivo();  // en móvil abre la Biblioteca; en escritorio se queda en el editor
 window.matchMedia("(max-width:820px)").addEventListener("change", aplicarModoDispositivo);
 
 document.querySelectorAll(".modal-bg").forEach(m => { m.addEventListener("click", (e) => { if(e.target===m) m.classList.remove("show"); }); });
