@@ -312,6 +312,11 @@ button,input,select,textarea{font-family:inherit;}
 .stat-lbl{font-size:12.5px;color:var(--ink3);margin-top:6px;font-weight:500;}
 .dash-nuevo{margin-left:auto;display:inline-flex;align-items:center;gap:7px;border:none;background:var(--primary);color:#fff;border-radius:9px;padding:9px 15px;font-family:var(--f);font-size:13px;font-weight:600;cursor:pointer;}
 .dash-nuevo:hover{background:var(--primary-d);}
+.dash-borrartodo{margin-left:auto;display:inline-flex;align-items:center;gap:7px;border:1px solid var(--bdr);background:var(--bg);color:var(--ink3);border-radius:9px;padding:9px 13px;font-family:var(--f);font-size:13px;font-weight:600;cursor:pointer;}
+.dash-borrartodo:hover{border-color:var(--err);color:var(--err);}
+.dash-borrartodo+.dash-nuevo{margin-left:0;}
+.nav-badge{display:none;min-width:17px;height:17px;line-height:17px;text-align:center;font-size:10px;font-weight:700;border-radius:9px;background:var(--ink4);color:#fff;padding:0 4px;margin-left:auto;}
+.nav-badge.on{display:inline-block;}
 .proj-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:16px;}
 .proj-card{position:relative;background:var(--white);border:1px solid var(--bdr);border-radius:14px;padding:20px 18px;box-shadow:var(--sh);cursor:pointer;transition:box-shadow .15s,transform .15s;}
 .proj-card:hover{box-shadow:var(--sh2);transform:translateY(-2px);}
@@ -350,6 +355,16 @@ button,input,select,textarea{font-family:inherit;}
 .w-acc button:hover{border-color:var(--primary);color:var(--primary);}
 .w-acc button.danger:hover{border-color:var(--err);color:var(--err);}
 .works-empty{padding:40px;text-align:center;color:var(--ink3);font-size:13px;}
+.pap-toolbar{display:flex;justify-content:flex-end;margin-bottom:12px;}
+.pap-list{display:flex;flex-direction:column;gap:8px;}
+.pap-empty{padding:40px;text-align:center;color:var(--ink3);font-size:13px;}
+.pap-row{display:flex;align-items:center;gap:12px;padding:11px 13px;border:1px solid var(--bdr);border-radius:10px;background:var(--bg2);}
+.pap-row .pap-nom{font-weight:600;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.pap-row .pap-meta{font-size:12px;color:var(--ink3);flex-shrink:0;}
+.pap-row .pap-acc{display:flex;gap:6px;flex-shrink:0;}
+.pap-row .pap-acc button{display:inline-flex;align-items:center;gap:5px;font-size:12px;padding:6px 10px;border:1px solid var(--bdr);border-radius:7px;background:var(--bg);cursor:pointer;color:var(--ink2);}
+.pap-row .pap-acc button:hover{border-color:var(--primary);color:var(--primary);}
+.pap-row .pap-acc button.danger:hover{border-color:var(--err);color:var(--err);}
 @media(max-width:820px){
   .dash{flex-direction:column;}
   .dash-side{width:100%;flex-direction:row;align-items:center;border-right:none;border-bottom:1px solid var(--bdr);overflow-x:auto;padding:0 8px;}
@@ -1165,6 +1180,16 @@ button,input,select,textarea{font-family:inherit;}
     <div class="img-grid" id="img-grid"></div>
   </div>
 </div></div>
+<div class="modal-bg" id="modal-papelera"><div class="modal modal-lg">
+  <div class="modal-head"><h3>Papelera</h3><button class="modal-close" onclick="cerrarModal('papelera')">×</button></div>
+  <div class="modal-body">
+    <p id="pap-intro">Los proyectos que borras quedan aquí. Puedes restaurarlos o eliminarlos definitivamente. Esto no consume almacenamiento extra de tus imágenes (la biblioteca es por enlaces).</p>
+    <div class="pap-toolbar" id="pap-toolbar" style="display:none">
+      <button class="danger" onclick="vaciarPapelera()"><span class="ico" data-ic="basura"></span> Vaciar papelera</button>
+    </div>
+    <div class="pap-list" id="pap-list"></div>
+  </div>
+</div></div>
 <div class="toast" id="toast"></div>
 
 <!-- Pantalla inicial: Dashboard "Mis campañas" (también es la vista en móvil). -->
@@ -1189,6 +1214,7 @@ button,input,select,textarea{font-family:inherit;}
       <button class="nav-item" onclick="abrirImagenes()"><span class="ico" data-ic="imagen"></span> Biblioteca de imágenes</button>
       <div class="nav-sec">Sistema</div>
       <button class="nav-item" onclick="abrirMarcas()"><span class="ico" data-ic="paleta"></span> Marcas</button>
+      <button class="nav-item" onclick="abrirPapelera()"><span class="ico" data-ic="basura"></span> Papelera <span class="nav-badge" id="nav-pap-badge"></span></button>
       <button class="nav-item" onclick="toast('Permisos de usuarios: próximamente')"><span class="ico" data-ic="candado"></span> Permisos usuarios</button>
       <button class="nav-item" onclick="toast('Configuración: próximamente')"><span class="ico" data-ic="ajustes"></span> Configuración</button>
     </nav>
@@ -1211,6 +1237,7 @@ button,input,select,textarea{font-family:inherit;}
         <div class="dash-stats" id="dash-stats"></div>
         <div class="dash-works-head">
           <h3>Mis proyectos</h3><span class="dash-count" id="dash-proj-count"></span>
+          <button class="dash-borrartodo" id="dash-borrartodo" onclick="borrarTodosProyectos()" style="display:none"><span class="ico" data-ic="basura"></span> Borrar todo</button>
           <button class="dash-nuevo" onclick="crearProyecto()"><span class="ico" data-ic="mas"></span> Nuevo proyecto</button>
         </div>
         <div class="proj-grid" id="proj-grid"></div>
@@ -1245,7 +1272,7 @@ button,input,select,textarea{font-family:inherit;}
 
 <script>
 const STORAGE_KEY = "sbb-project-v8";
-let workspace = { proyectos: [], marcas: [], banner: {}, imagenes: [] };  // espacio del usuario
+let workspace = { proyectos: [], marcas: [], banner: {}, imagenes: [], papelera: [] };  // espacio del usuario
 let proyecto = null;          // proyecto activo (referencia dentro de workspace.proyectos)
 let vistaDash = "proyectos";  // "proyectos" | "creatividades"
 let proyectoVistoId = null;   // proyecto cuya lista de creatividades se ve
@@ -1393,13 +1420,13 @@ function rehacer(){
 let _tsAlCargar = 0;  // timestamp real de la copia local al arrancar (para sync)
 // Normaliza cualquier dato cargado al modelo workspace { proyectos:[{piezas:[]}], marcas, banner }.
 function normalizarWorkspace(o){
-  if(!o || typeof o!=="object") return { proyectos:[], marcas:[], banner:{}, imagenes:[] };
-  if(Array.isArray(o.proyectos)){ o.marcas=o.marcas||[]; o.banner=o.banner||{}; o.imagenes=o.imagenes||[]; return o; }
+  if(!o || typeof o!=="object") return { proyectos:[], marcas:[], banner:{}, imagenes:[], papelera:[] };
+  if(Array.isArray(o.proyectos)){ o.marcas=o.marcas||[]; o.banner=o.banner||{}; o.imagenes=o.imagenes||[]; o.papelera=o.papelera||[]; return o; }
   if(Array.isArray(o.piezas)){
     return { proyectos: o.piezas.length ? [{ id:uid(), nombre:"General", creado:Date.now(), piezas:o.piezas, activa:o.activa||o.piezas[0].id }] : [],
-             marcas:o.marcas||[], banner:o.banner||{}, imagenes:o.imagenes||[], _ts:o._ts||0 };
+             marcas:o.marcas||[], banner:o.banner||{}, imagenes:o.imagenes||[], papelera:o.papelera||[], _ts:o._ts||0 };
   }
-  return { proyectos:[], marcas:[], banner:{}, imagenes:[] };
+  return { proyectos:[], marcas:[], banner:{}, imagenes:[], papelera:[] };
 }
 function recuperar(){
   try{
@@ -3838,6 +3865,11 @@ function renderProyectos(){
     `<div class="stat-card"><div class="stat-ico">${svgIcon(ico,{size:"19px"})}</div><div class="stat-num">${cats[lbl]||0}</div><div class="stat-lbl">${lbl}</div></div>`).join("");
   const cnt = document.getElementById("dash-proj-count");
   if(cnt) cnt.textContent = workspace.proyectos.length + (workspace.proyectos.length===1 ? " proyecto" : " proyectos");
+  const btnBT = document.getElementById("dash-borrartodo");
+  if(btnBT) btnBT.style.display = workspace.proyectos.length ? "inline-flex" : "none";
+  const nPap = (workspace.papelera||[]).length;
+  const badge = document.getElementById("nav-pap-badge");
+  if(badge){ badge.textContent = nPap || ""; badge.classList.toggle("on", nPap>0); }
   const grid = document.getElementById("proj-grid");
   if(!grid) return;
   if(!workspace.proyectos.length){ grid.innerHTML = `<div class="works-empty">Aún no tienes proyectos. Crea el primero con <b>Nuevo proyecto</b>.</div>`; return; }
@@ -3909,11 +3941,71 @@ function renombrarProyecto(id){
 function renombrarProyectoActual(){ if(proyectoVistoId) renombrarProyecto(proyectoVistoId); }
 function eliminarProyecto(id){
   const pr = proyectoPorId(id); if(!pr) return;
-  if(!confirm(`¿Eliminar el proyecto "${pr.nombre}" y sus ${(pr.piezas||[]).length} creatividad(es)?`)) return;
-  workspace.proyectos = workspace.proyectos.filter(x => x.id !== id);
+  if(!confirm(`¿Enviar el proyecto "${pr.nombre}" (${(pr.piezas||[]).length} creatividad${(pr.piezas||[]).length!==1?"es":""}) a la Papelera?\n\nPodrás restaurarlo desde la Papelera.`)) return;
+  moverAPapelera(id);
   if(proyectoVistoId === id){ proyectoVistoId = null; vistaDash = "proyectos"; }
   if(proyecto && proyecto.id === id) proyecto = null;
   persistir(); renderGaleria();
+  toast("Proyecto enviado a la Papelera");
+}
+/* ── Papelera (soft-delete) ───────────────────────────────────────────────
+   Borrar un proyecto NO lo destruye: lo mueve a workspace.papelera con un
+   sello borradoTs. Desde la Papelera se puede Restaurar o Eliminar definitivo.
+   Sincroniza con D1 como parte del workspace (last-write-wins). */
+function moverAPapelera(id){
+  const i = workspace.proyectos.findIndex(x => x.id === id); if(i<0) return;
+  const pr = workspace.proyectos.splice(i,1)[0];
+  pr.borradoTs = Date.now();
+  (workspace.papelera = workspace.papelera || []).push(pr);
+}
+function borrarTodosProyectos(){
+  const n = workspace.proyectos.length; if(!n){ toast("No hay proyectos que borrar"); return; }
+  if(!confirm(`¿Enviar TODOS los proyectos (${n}) a la Papelera?\n\nPodrás restaurarlos desde la Papelera mientras no la vacíes.`)) return;
+  workspace.proyectos.slice().forEach(pr => moverAPapelera(pr.id));
+  proyectoVistoId = null; vistaDash = "proyectos"; proyecto = null;
+  persistir(); renderGaleria();
+  toast(`${n} proyecto${n!==1?"s":""} en la Papelera`);
+}
+function abrirPapelera(){ renderPapelera(); document.getElementById("modal-papelera").classList.add("show"); }
+function renderPapelera(){
+  const pap = workspace.papelera || [];
+  const list = document.getElementById("pap-list"); if(!list) return;
+  const tb = document.getElementById("pap-toolbar"); if(tb) tb.style.display = pap.length ? "flex" : "none";
+  if(!pap.length){ list.innerHTML = `<div class="pap-empty">La papelera está vacía.</div>`; return; }
+  list.innerHTML = pap.slice().reverse().map(pr => {
+    const nP = (pr.piezas||[]).length;
+    const f = pr.borradoTs ? new Date(pr.borradoTs).toLocaleDateString("es-CL",{day:"2-digit",month:"short"}) : "";
+    return `<div class="pap-row">
+      <span class="pap-nom">${esc(pr.nombre)}</span>
+      <span class="pap-meta">${nP} creatividad${nP!==1?"es":""}${f?" · borrado "+f:""}</span>
+      <div class="pap-acc">
+        <button onclick="restaurarProyecto('${pr.id}')">${svgIcon("chevleft",{size:"13px"})} Restaurar</button>
+        <button class="danger" onclick="eliminarDefinitivo('${pr.id}')">${svgIcon("basura",{size:"13px"})} Eliminar</button>
+      </div>
+    </div>`;
+  }).join("");
+}
+function restaurarProyecto(id){
+  const i = (workspace.papelera||[]).findIndex(x => x.id === id); if(i<0) return;
+  const pr = workspace.papelera.splice(i,1)[0];
+  delete pr.borradoTs;
+  workspace.proyectos.push(pr);
+  persistir(); renderPapelera(); renderGaleria();
+  toast(`"${pr.nombre}" restaurado`);
+}
+function eliminarDefinitivo(id){
+  const pr = (workspace.papelera||[]).find(x => x.id === id); if(!pr) return;
+  if(!confirm(`¿Eliminar definitivamente "${pr.nombre}"?\n\nEsta acción NO se puede deshacer.`)) return;
+  workspace.papelera = workspace.papelera.filter(x => x.id !== id);
+  persistir(); renderPapelera(); renderGaleria();
+  toast("Eliminado definitivamente");
+}
+function vaciarPapelera(){
+  const n = (workspace.papelera||[]).length; if(!n){ toast("La papelera ya está vacía"); return; }
+  if(!confirm(`¿Vaciar la Papelera? Se eliminarán definitivamente ${n} proyecto${n!==1?"s":""}.\n\nEsta acción NO se puede deshacer.`)) return;
+  workspace.papelera = [];
+  persistir(); renderPapelera(); renderGaleria();
+  toast("Papelera vaciada");
 }
 function duplicarCreatividad(id){
   const pr = proyectoPorId(proyectoVistoId); if(!pr) return;
