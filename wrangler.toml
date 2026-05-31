@@ -20,6 +20,6 @@ ALLOWED_EMAILS    = "hola@andresgamonal.com"
 #   - JWT_SECRET      (firma la cookie de sesión)
 #   - RESEND_KEY      (API key de Resend para enviar correos)
 #   - GEMINI_API_KEY  (API key de Google AI Studio para "Generar con IA")
-# Opcional (variable normal): GEMINI_MODEL (por defecto: gemini-2.0-flash)
+# Opcional (variable normal): GEMINI_MODEL (por defecto: gemini-2.5-flash)
 #
 # Para desarrollo local, defínelas en .dev.vars (ver .dev.vars.example).

@@ -23,7 +23,7 @@ export async function onRequestGet({ request, env }) {
     out.autenticado = !!email;
     out.tieneKey = !!env.GEMINI_API_KEY;
     out.largoKey = (env.GEMINI_API_KEY || '').length;
-    out.modelo = env.GEMINI_MODEL || 'gemini-2.0-flash';
+    out.modelo = env.GEMINI_MODEL || 'gemini-2.5-flash';
 
     if (u.searchParams.get('gemini') !== '1') {
       out.nota = 'Función viva y deploy actualizado. Para probar Gemini abre /api/ia?gemini=1';
@@ -90,14 +90,14 @@ async function generar({ request, env }) {
       `Tono: ${brief.tono || "profesional y cercano"}.`,
       `Tema/brief: ${brief.que || "(general)"}.`
     ].join("\n");
-    const model = env.GEMINI_MODEL || "gemini-2.0-flash";
+    const model = env.GEMINI_MODEL || "gemini-2.5-flash";
     const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${encodeURIComponent(env.GEMINI_API_KEY)}`;
     const ctl = new AbortController(); const t = setTimeout(() => ctl.abort(), 20000);
     let res;
     try {
       res = await fetch(url, { method:"POST", headers:{ "Content-Type":"application/json" }, signal:ctl.signal,
         body: JSON.stringify({ contents:[{ role:"user", parts:[{ text:instr }] }], generationConfig:{ responseMimeType:"application/json", temperature:0.85, maxOutputTokens:300 } }) });
-    } catch(e) { return json({ ok:false, error:(e && e.name==="AbortError") ? `Gemini (${model}) tardó demasiado. Prueba GEMINI_MODEL=gemini-1.5-flash.` : "No se pudo contactar a Gemini: "+(e.message||e) }, 500); }
+    } catch(e) { return json({ ok:false, error:(e && e.name==="AbortError") ? `Gemini (${model}) tardó demasiado. Prueba GEMINI_MODEL=gemini-2.5-flash (o gemini-flash-latest).` : "No se pudo contactar a Gemini: "+(e.message||e) }, 500); }
     finally { clearTimeout(t); }
     if(!res.ok){ const tx = await res.text().catch(()=> ""); return json({ ok:false, error:`Gemini (${model}) respondió ${res.status}. ${tx.slice(0,400)}` }, 500); }
     let data; try { data = await res.json(); } catch { return json({ ok:false, error:"Respuesta de Gemini no es JSON." }, 500); }
@@ -154,7 +154,7 @@ async function generar({ request, env }) {
     `- Tono: ${brief.tono || 'profesional y cercano'}`,
   ].join('\n');
 
-  const model = env.GEMINI_MODEL || 'gemini-2.0-flash';
+  const model = env.GEMINI_MODEL || 'gemini-2.5-flash';
   const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${encodeURIComponent(env.GEMINI_API_KEY)}`;
 
   const ctl = new AbortController();
@@ -173,7 +173,7 @@ async function generar({ request, env }) {
   } catch (e) {
     const abortado = e && (e.name === 'AbortError');
     return json({ ok: false, error: abortado
-      ? `Gemini (${model}) tardó demasiado y se canceló. Prueba GEMINI_MODEL=gemini-1.5-flash.`
+      ? `Gemini (${model}) tardó demasiado y se canceló. Prueba GEMINI_MODEL=gemini-2.5-flash (o gemini-flash-latest).`
       : 'No se pudo contactar a Gemini: ' + (e.message || e) }, 500);
   } finally {
     clearTimeout(timer);
