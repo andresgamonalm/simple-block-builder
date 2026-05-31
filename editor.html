@@ -281,7 +281,26 @@ button,input,select,textarea{font-family:inherit;}
 .stat-ico{width:38px;height:38px;border-radius:10px;background:var(--primary-l);color:var(--primary);display:flex;align-items:center;justify-content:center;margin-bottom:14px;}
 .stat-num{font-size:30px;font-weight:700;color:var(--navy);line-height:1;}
 .stat-lbl{font-size:12.5px;color:var(--ink3);margin-top:6px;font-weight:500;}
-.dash-works-head{display:flex;align-items:baseline;gap:10px;margin:30px 0 12px;}
+.dash-nuevo{margin-left:auto;display:inline-flex;align-items:center;gap:7px;border:none;background:var(--primary);color:#fff;border-radius:9px;padding:9px 15px;font-family:var(--f);font-size:13px;font-weight:600;cursor:pointer;}
+.dash-nuevo:hover{background:var(--primary-d);}
+.proj-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:16px;}
+.proj-card{position:relative;background:var(--white);border:1px solid var(--bdr);border-radius:14px;padding:20px 18px;box-shadow:var(--sh);cursor:pointer;transition:box-shadow .15s,transform .15s;}
+.proj-card:hover{box-shadow:var(--sh2);transform:translateY(-2px);}
+.proj-ico{width:42px;height:42px;border-radius:11px;background:var(--primary-l);color:var(--primary);display:flex;align-items:center;justify-content:center;margin-bottom:14px;}
+.proj-nombre{font-size:15px;font-weight:600;color:var(--ink);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.proj-meta{font-size:12px;color:var(--ink3);margin-top:5px;}
+.proj-acc{display:flex;gap:6px;margin-top:14px;}
+.proj-acc button{border:1px solid var(--bdr);background:var(--white);color:var(--ink3);width:30px;height:30px;border-radius:7px;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;}
+.proj-acc button:hover{border-color:var(--primary);color:var(--primary);}
+.proj-acc button.danger:hover{border-color:var(--err);color:var(--err);}
+.crea-head{display:flex;align-items:center;gap:12px;margin-bottom:18px;}
+.crea-head h2{font-size:18px;font-weight:600;color:var(--ink);}
+.dash-back{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--bdr);background:var(--white);color:var(--ink2);border-radius:8px;padding:8px 13px;font-family:var(--f);font-size:12.5px;font-weight:500;cursor:pointer;}
+.dash-back:hover{border-color:var(--primary);color:var(--primary);}
+.dash-mini{border:1px solid var(--bdr);background:var(--white);color:var(--ink3);width:32px;height:32px;border-radius:8px;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;}
+.dash-mini:hover{border-color:var(--primary);color:var(--primary);}
+.dash-spacer{flex:1;}
+.dash-works-head{display:flex;align-items:center;gap:10px;margin:30px 0 12px;}
 .dash-works-head h3{font-size:15px;font-weight:600;color:var(--ink);}
 .dash-count{font-size:12px;color:var(--ink3);}
 .dash-works{background:var(--white);border:1px solid var(--bdr);border-radius:14px;overflow:hidden;box-shadow:var(--sh);}
@@ -821,13 +840,13 @@ button,input,select,textarea{font-family:inherit;}
       </div>
     </div>
     <div class="topbar-row secondary">
-      <button class="tb-btn" onclick="abrirGaleria()" title="Volver a la Biblioteca"><span class="ico" data-ic="chevleft"></span> Biblioteca</button>
+      <button class="tb-btn" onclick="abrirGaleria()" title="Volver al proyecto"><span class="ico" data-ic="chevleft"></span> Proyecto</button>
       <div class="crumb">
-        <span class="crumb-camp">Mis creaciones</span>
+        <span class="crumb-camp" id="crumb-proyecto">Proyecto</span>
         <span class="ico crumb-sep" data-ic="chevright" data-icsize="13px"></span>
-        <span class="crumb-pieza" id="crumb-pieza" ondblclick="renombrarPiezaActual()" title="Doble clic para renombrar">Pieza</span>
+        <span class="crumb-pieza" id="crumb-pieza" ondblclick="renombrarPiezaActual()" title="Doble clic para renombrar">Creatividad</span>
       </div>
-      <button class="tb-btn icon-only" onclick="nuevaPiezaPrompt()" title="Nueva pieza"><span class="ico" data-ic="mas"></span></button>
+      <button class="tb-btn icon-only" onclick="nuevaPiezaPrompt()" title="Nueva creatividad en este proyecto"><span class="ico" data-ic="mas"></span></button>
       <div class="spacer"></div>
       <div class="tb-group">
         <span class="tb-label">Formato</span>
@@ -972,13 +991,13 @@ button,input,select,textarea{font-family:inherit;}
     </div>
     <nav class="dash-nav">
       <div class="nav-sec">Principal</div>
-      <button class="nav-item activo"><span class="ico" data-ic="biblioteca"></span> Mis campañas</button>
-      <div class="nav-sec">Crear</div>
+      <button class="nav-item activo" onclick="volverAProyectos()"><span class="ico" data-ic="biblioteca"></span> Mis proyectos</button>
+      <button class="nav-item" onclick="crearProyecto()"><span class="ico" data-ic="mas"></span> Nuevo proyecto</button>
+      <div class="nav-sec">Crear creatividad</div>
       <button class="nav-item" onclick="crearDesde('email')"><span class="ico" data-ic="email"></span> Email</button>
       <button class="nav-item" onclick="crearDesde('display-300x250')"><span class="ico" data-ic="grid"></span> Banners</button>
       <button class="nav-item" onclick="crearDesde('linkedin-post')"><span class="ico" data-ic="compartir"></span> Post RRSS</button>
       <button class="nav-item" onclick="crearDesde('libre')"><span class="ico" data-ic="documento"></span> Formato Libre</button>
-      <button class="nav-item" onclick="irAPlantillas()"><span class="ico" data-ic="plantilla"></span> Plantillas</button>
       <button class="nav-item" onclick="toast('Recursos gráficos: próximamente')"><span class="ico" data-ic="imagen"></span> Recursos gráficos</button>
       <div class="nav-sec">Sistema</div>
       <button class="nav-item" onclick="abrirMarcas()"><span class="ico" data-ic="paleta"></span> Marcas</button>
@@ -992,17 +1011,32 @@ button,input,select,textarea{font-family:inherit;}
     </div>
   </aside>
   <main class="dash-main">
-    <div class="dash-top"><h1>Mis campañas</h1><div class="dash-top-user" id="dash-top-user"></div></div>
+    <div class="dash-top"><h1 id="dash-h1">Mis proyectos</h1><div class="dash-top-user" id="dash-top-user"></div></div>
     <div class="dash-scroll">
-      <div class="dash-banner" id="dash-banner">
-        <button class="banner-edit" onclick="editarBanner()"><span class="ico" data-ic="editar"></span> Editar banner</button>
-        <div class="banner-eyebrow">Simple Block Builder</div>
-        <h2 id="banner-titulo">Bienvenido</h2>
-        <p id="banner-sub">Crea emails, banners y posts para tus campañas. Empieza desde el menú <b>Crear</b> o abre una creación existente.</p>
+      <div id="dash-proyectos">
+        <div class="dash-banner" id="dash-banner">
+          <button class="banner-edit" onclick="editarBanner()"><span class="ico" data-ic="editar"></span> Editar banner</button>
+          <div class="banner-eyebrow">Simple Block Builder</div>
+          <h2 id="banner-titulo">Bienvenido</h2>
+          <p id="banner-sub">Organiza tu trabajo en proyectos. Cada proyecto agrupa varias creatividades (email, banners, posts), y cada una es un archivo independiente.</p>
+        </div>
+        <div class="dash-stats" id="dash-stats"></div>
+        <div class="dash-works-head">
+          <h3>Mis proyectos</h3><span class="dash-count" id="dash-proj-count"></span>
+          <button class="dash-nuevo" onclick="crearProyecto()"><span class="ico" data-ic="mas"></span> Nuevo proyecto</button>
+        </div>
+        <div class="proj-grid" id="proj-grid"></div>
       </div>
-      <div class="dash-stats" id="dash-stats"></div>
-      <div class="dash-works-head"><h3>Últimos trabajos</h3><span class="dash-count" id="dash-works-count"></span></div>
-      <div class="dash-works" id="dash-works"></div>
+      <div id="dash-creatividades" style="display:none;">
+        <div class="crea-head">
+          <button class="dash-back" onclick="volverAProyectos()"><span class="ico" data-ic="chevleft"></span> Mis proyectos</button>
+          <h2 id="crea-proj-nombre">Proyecto</h2>
+          <button class="dash-mini" onclick="renombrarProyectoActual()" title="Renombrar proyecto"><span class="ico" data-ic="editar"></span></button>
+          <div class="dash-spacer"></div>
+          <button class="dash-nuevo" onclick="nuevaCreatividadPrompt()"><span class="ico" data-ic="mas"></span> Nueva creatividad</button>
+        </div>
+        <div class="dash-works"><div id="crea-tabla"></div></div>
+      </div>
     </div>
   </main>
 </div>
@@ -1023,7 +1057,10 @@ button,input,select,textarea{font-family:inherit;}
 
 <script>
 const STORAGE_KEY = "sbb-project-v8";
-let proyecto = { piezas: [], activa: null };
+let workspace = { proyectos: [], marcas: [], banner: {} };  // espacio del usuario
+let proyecto = null;          // proyecto activo (referencia dentro de workspace.proyectos)
+let vistaDash = "proyectos";  // "proyectos" | "creatividades"
+let proyectoVistoId = null;   // proyecto cuya lista de creatividades se ve
 let seleccionado = null;
 let dragInfo = null;
 let dragBlockId = null;
@@ -1051,13 +1088,13 @@ function renombrarPiezaActual(){
   const p = pieza(); if(!p || !span) return;
   span.contentEditable = "true"; span.focus();
   document.execCommand("selectAll", false, null);
-  const fin = () => { span.contentEditable = "false"; const v = span.textContent.trim(); p.nombre = v || "Pieza"; span.textContent = p.nombre; persistir(); };
+  const fin = () => { span.contentEditable = "false"; const v = span.textContent.trim(); p.nombre = v || "Creatividad"; span.textContent = p.nombre; persistir(); };
   span.addEventListener("blur", fin, { once:true });
   span.addEventListener("keydown", e => { if(e.key === "Enter"){ e.preventDefault(); span.blur(); } }, { once:true });
 }
 
 // Abre la vista previa de la pieza actual (modal con toggle de dispositivo).
-function abrirPreviewActual(){ if(proyecto.activa) abrirPreview(proyecto.activa); }
+function abrirPreviewActual(){ if(proyecto && proyecto.activa) abrirPreview(proyecto.activa); }
 
 // ── Enviar prueba por correo (vía Resend) ──
 function abrirEnvioPrueba(){
@@ -1086,7 +1123,7 @@ async function enviarPrueba(){
   finally{ btn.disabled = false; btn.textContent = "Enviar prueba"; }
 }
 
-function pieza(){ return proyecto.piezas.find(p => p.id === proyecto.activa); }
+function pieza(){ return proyecto && proyecto.piezas.find(p => p.id === proyecto.activa); }
 function getCanvas(){ return pieza()?.canvas || []; }
 function getFormato(){ return pieza()?.formato || "email"; }
 function getTema(){ return pieza()?.tema || { font:"Inter", primary:"#1c73cb", text:"#1a1a1a", bg:"#ffffff", bgPagina:"", ancho:"" }; }
@@ -1104,19 +1141,27 @@ function uid(){ return "b"+Math.random().toString(36).slice(2,9); }
 function clone(o){ return JSON.parse(JSON.stringify(o)); }
 function toast(msg, ms=2200){ const t=document.getElementById("toast"); t.textContent=msg; t.classList.add("show"); clearTimeout(toast._t); toast._t=setTimeout(()=>t.classList.remove("show"),ms); }
 function persistir(){
-  proyecto._ts = Date.now();                       // marca de tiempo para sync
-  try{localStorage.setItem(STORAGE_KEY, JSON.stringify(proyecto));}catch(e){}
+  workspace._ts = Date.now();                      // marca de tiempo para sync
+  try{localStorage.setItem(STORAGE_KEY, JSON.stringify(workspace));}catch(e){}
   guardarEnNubeDebounced();
 }
 let _tsAlCargar = 0;  // timestamp real de la copia local al arrancar (para sync)
+// Normaliza cualquier dato cargado al modelo workspace { proyectos:[{piezas:[]}], marcas, banner }.
+function normalizarWorkspace(o){
+  if(!o || typeof o!=="object") return { proyectos:[], marcas:[], banner:{} };
+  if(Array.isArray(o.proyectos)){ o.marcas=o.marcas||[]; o.banner=o.banner||{}; return o; }
+  if(Array.isArray(o.piezas)){
+    return { proyectos: o.piezas.length ? [{ id:uid(), nombre:"General", creado:Date.now(), piezas:o.piezas, activa:o.activa||o.piezas[0].id }] : [],
+             marcas:o.marcas||[], banner:o.banner||{}, _ts:o._ts||0 };
+  }
+  return { proyectos:[], marcas:[], banner:{} };
+}
 function recuperar(){
   try{
     const r=localStorage.getItem(STORAGE_KEY);
-    if(!r){ crearPieza("email","Pieza 1"); return; }
-    const o=JSON.parse(r);
-    if(o.piezas && o.piezas.length){ proyecto = o; if(!proyecto.activa) proyecto.activa = proyecto.piezas[0].id; _tsAlCargar = o._ts || 0; }
-    else crearPieza("email","Pieza 1");
-  }catch(e){ crearPieza("email","Pieza 1"); }
+    workspace = normalizarWorkspace(r ? JSON.parse(r) : null);
+    _tsAlCargar = workspace._ts || 0;
+  }catch(e){ workspace = { proyectos:[], marcas:[], banner:{} }; }
 }
 
 /* ── Sincronización con la nube (D1 vía /api/proyectos) ──────────────────
@@ -2335,19 +2380,19 @@ function eliminarPieza(id){
   activarPieza(proyecto.activa);
 }
 function nuevaPiezaPrompt(){
-  const nombre = prompt("Nombre de la pieza:", `Pieza ${proyecto.piezas.length+1}`);
+  if(!proyecto) return;
+  const nombre = prompt("Nombre de la creatividad:", `Creatividad ${proyecto.piezas.length+1}`);
   if(nombre === null) return;
-  // Se crea en Email; el formato se elige luego en el selector "Formato".
-  crearPieza("email", nombre || `Pieza ${proyecto.piezas.length+1}`);
+  crearPieza("email", nombre || `Creatividad ${proyecto.piezas.length+1}`);
   activarPieza(proyecto.activa);
 }
-function renombrarPieza(id, nuevo){ const p = proyecto.piezas.find(x => x.id===id); if(p){ p.nombre = nuevo||"Pieza"; persistir(); renderTabsPiezas(); } }
+function renombrarPieza(id, nuevo){ const p = proyecto.piezas.find(x => x.id===id); if(p){ p.nombre = nuevo||"Creatividad"; persistir(); renderTabsPiezas(); } }
 function renderTabsPiezas(){
-  // El breadcrumb muestra la pieza actual; el cambio entre piezas se hace
-  // desde la Biblioteca (galería).
   const span = document.getElementById("crumb-pieza");
   const p = pieza();
   if(span && p) span.textContent = p.nombre;
+  const sp = document.getElementById("crumb-proyecto");
+  if(sp && proyecto) sp.textContent = proyecto.nombre || "Proyecto";
 }
 function editarNombre(span, id){
   span.contentEditable = "true"; span.focus();
@@ -2998,30 +3043,62 @@ function categoriaDe(formato){
 }
 
 // renderGaleria = render del Dashboard "Mis campañas" (pantalla inicial).
+function proyectoPorId(id){ return workspace.proyectos.find(p => p.id === id); }
+
 function renderGaleria(){
   const email = (window.SBB_USER && window.SBB_USER.email) || "";
   const av = document.getElementById("dash-av"); if(av) av.textContent = email ? email[0] : "·";
   const dem = document.getElementById("dash-email"); if(dem) dem.textContent = email || "—";
   const dtu = document.getElementById("dash-top-user"); if(dtu) dtu.textContent = email;
-  // Banner editable
-  const b = proyecto.banner || {};
+  const vProy = document.getElementById("dash-proyectos");
+  const vCrea = document.getElementById("dash-creatividades");
+  if(vistaDash === "creatividades" && proyectoPorId(proyectoVistoId)){
+    if(vProy) vProy.style.display = "none";
+    if(vCrea) vCrea.style.display = "";
+    renderCreatividades();
+  } else {
+    vistaDash = "proyectos";
+    if(vProy) vProy.style.display = "";
+    if(vCrea) vCrea.style.display = "none";
+    renderProyectos();
+  }
+}
+
+function renderProyectos(){
+  const b = workspace.banner || {};
   const bt = document.getElementById("banner-titulo"); if(bt) bt.textContent = b.titulo || "Bienvenido";
-  const bs = document.getElementById("banner-sub");
-  if(bs) bs.textContent = b.subtitulo || "Crea emails, banners y posts para tus campañas. Empieza desde el menú Crear o abre una creación existente.";
-  // Stats por tipo
+  const bs = document.getElementById("banner-sub"); if(bs && b.subtitulo) bs.textContent = b.subtitulo;
   const cats = { "Email":0, "Banners":0, "Post":0, "Formato Libre":0 };
-  proyecto.piezas.forEach(p => { const c = categoriaDe(p.formato); if(cats[c]!==undefined) cats[c]++; });
+  workspace.proyectos.forEach(pr => (pr.piezas||[]).forEach(p => { const c = categoriaDe(p.formato); if(cats[c]!==undefined) cats[c]++; }));
   const statsDef = [["Email","email"],["Banners","grid"],["Post","compartir"],["Formato Libre","documento"]];
   const sc = document.getElementById("dash-stats");
   if(sc) sc.innerHTML = statsDef.map(([lbl,ico]) =>
     `<div class="stat-card"><div class="stat-ico">${svgIcon(ico,{size:"19px"})}</div><div class="stat-num">${cats[lbl]||0}</div><div class="stat-lbl">${lbl}</div></div>`).join("");
-  // Tabla de últimos trabajos
-  const cont = document.getElementById("dash-works");
-  const cnt = document.getElementById("dash-works-count");
-  if(cnt) cnt.textContent = proyecto.piezas.length + (proyecto.piezas.length===1 ? " creación" : " creaciones");
-  if(!cont) return;
-  if(!proyecto.piezas.length){ cont.innerHTML = `<div class="works-empty">Aún no tienes creaciones. Crea una desde el menú <b>Crear</b>.</div>`; return; }
-  const rows = proyecto.piezas.slice().reverse().map(p => {
+  const cnt = document.getElementById("dash-proj-count");
+  if(cnt) cnt.textContent = workspace.proyectos.length + (workspace.proyectos.length===1 ? " proyecto" : " proyectos");
+  const grid = document.getElementById("proj-grid");
+  if(!grid) return;
+  if(!workspace.proyectos.length){ grid.innerHTML = `<div class="works-empty">Aún no tienes proyectos. Crea el primero con <b>Nuevo proyecto</b>.</div>`; return; }
+  grid.innerHTML = workspace.proyectos.slice().reverse().map(pr => {
+    const n = (pr.piezas||[]).length;
+    return `<div class="proj-card" onclick="abrirProyecto('${pr.id}')">
+      <div class="proj-ico">${svgIcon("biblioteca",{size:"22px"})}</div>
+      <div class="proj-nombre">${esc(pr.nombre)}</div>
+      <div class="proj-meta">${n} creatividad${n!==1?"es":""}</div>
+      <div class="proj-acc">
+        <button onclick="event.stopPropagation();renombrarProyecto('${pr.id}')" title="Renombrar">${svgIcon("editar",{size:"13px"})}</button>
+        <button class="danger" onclick="event.stopPropagation();eliminarProyecto('${pr.id}')" title="Eliminar">${svgIcon("basura",{size:"13px"})}</button>
+      </div>
+    </div>`;
+  }).join("");
+}
+
+function renderCreatividades(){
+  const pr = proyectoPorId(proyectoVistoId); if(!pr){ volverAProyectos(); return; }
+  const nm = document.getElementById("crea-proj-nombre"); if(nm) nm.textContent = pr.nombre;
+  const cont = document.getElementById("crea-tabla"); if(!cont) return;
+  if(!(pr.piezas||[]).length){ cont.innerHTML = `<div class="works-empty">Este proyecto no tiene creatividades. Crea una con <b>Nueva creatividad</b>.</div>`; return; }
+  const rows = pr.piezas.slice().reverse().map(p => {
     const cat = categoriaDe(p.formato);
     const n = (p.canvas||[]).length;
     const estado = n>0
@@ -3030,37 +3107,90 @@ function renderGaleria(){
     return `<tr>
       <td><span class="w-tipo">${esc(cat)}</span></td>
       <td><span class="w-nombre" onclick="abrirCreacion('${p.id}')" title="Editar">${esc(p.nombre)}</span></td>
-      <td>${esc(p.campana||"General")}</td>
       <td>${estado}</td>
       <td><div class="w-acc">
         <button onclick="abrirCreacion('${p.id}')" title="Editar">${svgIcon("editar",{size:"14px"})}</button>
         <button onclick="abrirPreview('${p.id}')" title="Ver">${svgIcon("ojo",{size:"14px"})}</button>
+        <button onclick="duplicarCreatividad('${p.id}')" title="Duplicar">${svgIcon("copiar",{size:"14px"})}</button>
         <button class="danger" onclick="eliminarCreacion('${p.id}')" title="Eliminar">${svgIcon("basura",{size:"14px"})}</button>
       </div></td>
     </tr>`;
   }).join("");
-  cont.innerHTML = `<table class="works-table"><thead><tr><th>Tipo</th><th>Nombre</th><th>Campaña</th><th>Estado</th><th style="text-align:right;">Acciones</th></tr></thead><tbody>${rows}</tbody></table>`;
+  cont.innerHTML = `<table class="works-table"><thead><tr><th>Tipo</th><th>Nombre</th><th>Estado</th><th style="text-align:right;">Acciones</th></tr></thead><tbody>${rows}</tbody></table>`;
 }
 
-// Crear una pieza nueva desde el dashboard, en el formato elegido, y abrir el editor.
+function crearProyecto(){
+  const nombre = prompt("Nombre del nuevo proyecto:", "Proyecto " + (workspace.proyectos.length+1));
+  if(nombre === null) return;
+  const pr = { id:uid(), nombre: (nombre.trim() || ("Proyecto " + (workspace.proyectos.length+1))), creado: Date.now(), piezas: [], activa: null };
+  workspace.proyectos.push(pr);
+  persistir();
+  abrirProyecto(pr.id);
+}
+function abrirProyecto(id){
+  if(!proyectoPorId(id)) return;
+  proyectoVistoId = id; vistaDash = "creatividades";
+  renderGaleria();
+}
+function volverAProyectos(){
+  vistaDash = "proyectos"; proyectoVistoId = null;
+  document.getElementById("galeria").classList.add("show");
+  renderGaleria();
+}
+function renombrarProyecto(id){
+  const pr = proyectoPorId(id); if(!pr) return;
+  const n = prompt("Nuevo nombre del proyecto:", pr.nombre);
+  if(n === null) return;
+  pr.nombre = n.trim() || pr.nombre; persistir(); renderGaleria();
+  if(proyecto && proyecto.id === id) renderTabsPiezas();
+}
+function renombrarProyectoActual(){ if(proyectoVistoId) renombrarProyecto(proyectoVistoId); }
+function eliminarProyecto(id){
+  const pr = proyectoPorId(id); if(!pr) return;
+  if(!confirm(`¿Eliminar el proyecto "${pr.nombre}" y sus ${(pr.piezas||[]).length} creatividad(es)?`)) return;
+  workspace.proyectos = workspace.proyectos.filter(x => x.id !== id);
+  if(proyectoVistoId === id){ proyectoVistoId = null; vistaDash = "proyectos"; }
+  if(proyecto && proyecto.id === id) proyecto = null;
+  persistir(); renderGaleria();
+}
+function duplicarCreatividad(id){
+  const pr = proyectoPorId(proyectoVistoId); if(!pr) return;
+  const orig = pr.piezas.find(x => x.id === id); if(!orig) return;
+  const copia = clone(orig); copia.id = uid(); copia.nombre = orig.nombre + " (copia)";
+  pr.piezas.push(copia); persistir(); renderCreatividades();
+}
+
+// Crear una creatividad en el proyecto abierto (o crea/pide uno antes) y abrir el editor.
 function crearDesde(formato){
+  let pr = proyectoPorId(proyectoVistoId);
+  if(!pr){
+    if(!workspace.proyectos.length){ crearProyecto(); pr = proyectoPorId(proyectoVistoId); if(!pr) return; }
+    else { toast("Abre un proyecto primero, o crea uno nuevo"); return; }
+  }
+  proyecto = pr;
   const cat = categoriaDe(formato);
-  crearPieza(formato, `${cat} ${proyecto.piezas.length+1}`);
+  crearPieza(formato, `${cat} ${pr.piezas.length+1}`);
   document.getElementById("galeria").classList.remove("show");
   activarPieza(proyecto.activa);
+}
+function nuevaCreatividadPrompt(){
+  const pr = proyectoPorId(proyectoVistoId); if(!pr){ toast("Abre un proyecto primero"); return; }
+  const opt = prompt("Tipo de creatividad:\n\nemail · banner · post · libre", "email");
+  if(opt === null) return;
+  const map = { email:"email", banner:"display-300x250", post:"linkedin-post", libre:"libre" };
+  crearDesde(map[(opt||"").trim().toLowerCase()] || "email");
 }
 function irAPlantillas(){
-  document.getElementById("galeria").classList.remove("show");
-  activarPieza(proyecto.activa);
-  cambiarPanelTab("plantillas");
+  if(proyecto){ document.getElementById("galeria").classList.remove("show"); activarPieza(proyecto.activa); cambiarPanelTab("plantillas"); }
+  else toast("Abre o crea una creatividad primero");
 }
 function editarBanner(){
-  proyecto.banner = proyecto.banner || {};
-  const t = prompt("Título del banner:", proyecto.banner.titulo || "Bienvenido");
+  workspace.banner = workspace.banner || {};
+  const t = prompt("Título del banner:", workspace.banner.titulo || "Bienvenido");
   if(t === null) return;
-  const s = prompt("Subtítulo del banner:", proyecto.banner.subtitulo || "");
-  proyecto.banner.titulo = t || "Bienvenido";
-  if(s !== null) proyecto.banner.subtitulo = s;
+  const s = prompt("Subtítulo del banner:", workspace.banner.subtitulo || "");
+  workspace.banner.titulo = t || "Bienvenido";
+  if(s !== null) workspace.banner.subtitulo = s;
   persistir(); renderGaleria();
 }
 
@@ -3068,7 +3198,7 @@ function editarBanner(){
 function abrirMarcas(){ resetMarcaForm(); renderMarcas(); document.getElementById("modal-marcas").classList.add("show"); }
 function renderMarcas(){
   const cont = document.getElementById("marca-list");
-  const ms = proyecto.marcas || [];
+  const ms = workspace.marcas || [];
   if(!ms.length){ cont.innerHTML = `<div class="marca-vacia">Aún no hay marcas. Crea una abajo.</div>`; return; }
   cont.innerHTML = ms.map(m => `<div class="marca-card">
     ${m.logoUrl ? `<img class="mlogo" src="${escAttr(m.logoUrl)}" alt="">` : `<span class="mlogo"></span>`}
@@ -3089,7 +3219,7 @@ function resetMarcaForm(){
   document.getElementById("marca-cancel").style.display="none";
 }
 function editarMarca(id){
-  const m=(proyecto.marcas||[]).find(x=>x.id===id); if(!m) return;
+  const m=(workspace.marcas||[]).find(x=>x.id===id); if(!m) return;
   const set=(i,v)=>{ const e=document.getElementById(i); if(e) e.value=v; };
   set("marca-edit-id",m.id); set("marca-nombre",m.nombre||""); set("marca-logo",m.logoUrl||"");
   set("marca-empresa",m.empresa||""); set("marca-font",m.font||"Inter"); set("marca-primary",m.primary||"#1c73cb");
@@ -3104,20 +3234,20 @@ function guardarMarca(){
   if(!nombre){ toast("Ponle un nombre a la marca"); return; }
   const datos={ nombre, logoUrl:g("marca-logo").trim(), empresa:g("marca-empresa").trim(), font:g("marca-font"),
     primary:g("marca-primary"), cta:g("marca-cta"), text:g("marca-text"), bg:g("marca-bg"), bgPagina:g("marca-bgpagina") };
-  proyecto.marcas = proyecto.marcas || [];
+  workspace.marcas = workspace.marcas || [];
   const id=g("marca-edit-id");
-  if(id){ const m=proyecto.marcas.find(x=>x.id===id); if(m) Object.assign(m,datos); }
-  else { datos.id="m"+Math.random().toString(36).slice(2,9); proyecto.marcas.push(datos); }
+  if(id){ const m=workspace.marcas.find(x=>x.id===id); if(m) Object.assign(m,datos); }
+  else { datos.id="m"+Math.random().toString(36).slice(2,9); workspace.marcas.push(datos); }
   persistir(); resetMarcaForm(); renderMarcas(); renderMarcaSelector();
   toast("Marca guardada");
 }
 function eliminarMarca(id){
   if(!confirm("¿Eliminar esta marca?")) return;
-  proyecto.marcas=(proyecto.marcas||[]).filter(x=>x.id!==id);
+  workspace.marcas=(workspace.marcas||[]).filter(x=>x.id!==id);
   persistir(); renderMarcas(); renderMarcaSelector();
 }
 function aplicarMarca(id){
-  const m=(proyecto.marcas||[]).find(x=>x.id===id); if(!m) return;
+  const m=(workspace.marcas||[]).find(x=>x.id===id); if(!m) return;
   const p=pieza(); if(!p) return;
   p.tema.font=m.font||p.tema.font; p.tema.primary=m.primary||p.tema.primary;
   p.tema.text=m.text||p.tema.text; p.tema.bg=m.bg||p.tema.bg; p.tema.bgPagina=m.bgPagina||"";
@@ -3132,24 +3262,34 @@ function aplicarMarca(id){
 }
 function renderMarcaSelector(){
   const sel=document.getElementById("dz-marca"); if(!sel) return;
-  const ms=proyecto.marcas||[];
+  const ms=workspace.marcas||[];
   sel.innerHTML = `<option value="">${ms.length ? "— Elegir marca —" : "— Sin marcas (crea una) —"}</option>` +
     ms.map(m=>`<option value="${m.id}">${esc(m.nombre)}</option>`).join("");
 }
 
-function abrirGaleria(){ renderGaleria(); document.getElementById("galeria").classList.add("show"); }
+function abrirGaleria(){
+  if(proyecto){ proyectoVistoId = proyecto.id; vistaDash = "creatividades"; }
+  renderGaleria(); document.getElementById("galeria").classList.add("show");
+}
 function cerrarGaleria(){ if(esMovil()) return; document.getElementById("galeria").classList.remove("show"); }
-function abrirCreacion(id){ document.getElementById("galeria").classList.remove("show"); activarPieza(id); }
+function abrirCreacion(id){
+  const pr = proyectoPorId(proyectoVistoId); if(!pr) return;
+  proyecto = pr;
+  document.getElementById("galeria").classList.remove("show");
+  activarPieza(id);
+}
 function eliminarCreacion(id){
-  if(proyecto.piezas.length <= 1){ toast("Debe quedar al menos una creación"); return; }
-  if(!confirm("¿Eliminar esta creación?")) return;
-  proyecto.piezas = proyecto.piezas.filter(p => p.id !== id);
-  if(proyecto.activa === id) proyecto.activa = proyecto.piezas[0].id;
-  persistir(); renderGaleria(); renderTabsPiezas();
+  const pr = proyectoPorId(proyectoVistoId) || proyecto; if(!pr) return;
+  if(!confirm("¿Eliminar esta creatividad?")) return;
+  pr.piezas = pr.piezas.filter(p => p.id !== id);
+  if(pr.activa === id) pr.activa = pr.piezas[0] ? pr.piezas[0].id : null;
+  persistir(); renderGaleria();
 }
 
 function abrirPreview(id){
-  const p = proyecto.piezas.find(x => x.id === id); if(!p) return;
+  let p = proyecto && proyecto.piezas.find(x => x.id === id);
+  if(!p){ for(const pr of workspace.proyectos){ const f=pr.piezas.find(x=>x.id===id); if(f){ p=f; break; } } }
+  if(!p) return;
   document.getElementById("pv-title").textContent = p.nombre;
   document.getElementById("pv-frame").srcdoc = generarHTMLDePieza(p);
   setPreviewWidth(esMovil() ? "movil" : "full");
@@ -3165,27 +3305,23 @@ function setPreviewWidth(w){
 }
 
 function aplicarModoDispositivo(){
-  if(esMovil()){ document.body.classList.add("movil"); abrirGaleria(); }
-  else { document.body.classList.remove("movil"); }
+  document.body.classList.toggle("movil", esMovil());
 }
 
 renderFormatoSelect();
 renderPlantillasTab();
 recuperar();
-if(!proyecto.marcas) proyecto.marcas = [];   // kits de marca
+if(!workspace.marcas) workspace.marcas = [];   // kits de marca
 renderMarcaSelector();
-const p0 = pieza();
-if(p0){ document.getElementById("fmt").value = p0.formato; cambiarFormato(p0.formato); aplicarTema(); }
-renderTabsPiezas();
 renderBiblioteca();
-renderCanvas();
 renderForm();
 cambiarPanelTab("bloques");   // pestaña inicial del panel
 pintarIconos();               // pinta los íconos SVG de la interfaz
-// Al entrar se arranca DIRECTO en el editor, listo para crear. El Dashboard
-// ("Mis campañas") se abre con el botón Biblioteca. En móvil sí parte ahí.
+// La app arranca en el Dashboard (lista de proyectos).
+vistaDash = "proyectos"; proyectoVistoId = null;
+abrirGaleria();
+aplicarModoDispositivo();
 sincronizarConNube();   // carga/sube la copia durable en D1 sin bloquear la UI
-aplicarModoDispositivo();  // en móvil abre la Biblioteca; en escritorio se queda en el editor
 window.matchMedia("(max-width:820px)").addEventListener("change", aplicarModoDispositivo);
 
 document.querySelectorAll(".modal-bg").forEach(m => { m.addEventListener("click", (e) => { if(e.target===m) m.classList.remove("show"); }); });
