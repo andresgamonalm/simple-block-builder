@@ -303,7 +303,11 @@ button,input,select,textarea{font-family:inherit;}
    Estas reglas solo manejan los formatos de tamaño fijo (banners/posts). */
 .canvas-frame[data-fijo="1"]{overflow:hidden;}
 .canvas-frame[data-fijo="1"] #canvas,.canvas-frame[data-fijo="1"] .sbb-page{height:100%;display:flex;flex-direction:column;}
-.canvas-frame[data-fijo="1"] .bw{flex:1;}
+.canvas-frame[data-fijo="1"] .bw{flex:1;min-height:0;}
+/* En banners de tamaño fijo, las imágenes se ajustan al espacio (no se desbordan). */
+.canvas-frame[data-fijo="1"] img{max-width:100%!important;max-height:100%!important;width:auto!important;height:auto!important;object-fit:contain;}
+.canvas-frame[data-fijo="1"] .sbb-hero{height:100%!important;}
+.canvas-frame[data-fijo="1"] .sbb-hero img.bg{width:100%!important;height:100%!important;object-fit:cover;}
 
 /* ── Biblioteca de creaciones (galería) ── */
 .galeria{position:fixed;inset:0;background:#eef0f5;z-index:300;display:none;flex-direction:column;}
@@ -1348,11 +1352,12 @@ const BLOQUES = {
   },
   imgtext: {
     cat:"Contenido", nombre:"Imagen + Texto", icono:"", sub:"Dos columnas",
-    defaults: Object.assign({}, styleDefaults, { imagenUrl:"https://placehold.co/300x300/e5e7ea/9ca3af?text=Imagen", lado:"left", titulo:"Título", texto:"Texto", linkTexto:"", linkUrl:"", proporcionImg:"40", gapCol:"18", altoImg:"auto", alineacionTexto:"left", alineacionVertCol:"center" }),
+    defaults: Object.assign({}, styleDefaults, { imagenUrl:"https://placehold.co/300x300/e5e7ea/9ca3af?text=Imagen", lado:"left", titulo:"Título", texto:"Texto", linkTexto:"", linkUrl:"", proporcionImg:"40", gapCol:"18", altoImg:"auto", radioImg:"6", alineacionTexto:"left", alineacionVertCol:"center" }),
     campos: [
       {key:"imagenUrl",label:"URL de la imagen",tipo:"text"},
       {tipo:"row2", izq:{key:"lado",label:"Posición imagen",tipo:"select",opciones:[["left","Izquierda"],["right","Derecha"]]}, der:{key:"proporcionImg",label:"Ancho col img (%)",tipo:"range",min:20,max:60,step:5}},
       {tipo:"row2", izq:{key:"altoImg",label:"Alto imagen",tipo:"text",placeholder:"auto"}, der:{key:"gapCol",label:"Espacio (px)",tipo:"range",min:0,max:60,step:2}},
+      {key:"radioImg",label:"Radio de la imagen (px)",tipo:"range",min:0,max:40,step:1},
       {grupo:"Contenido"},
       {key:"titulo",label:"Título",tipo:"text"},
       {key:"texto",label:"Texto",tipo:"textarea"},
@@ -1365,7 +1370,7 @@ const BLOQUES = {
     render: (d) => {
       const altoImg = d.altoImg && d.altoImg !== "auto" ? `height:${esc(d.altoImg)};object-fit:cover;` : "";
       const gap = d.gapCol ? `gap:${esc(d.gapCol)}px;` : "";
-      return wrap(d, `<div class="sbb-img-text${d.lado==="right"?" right":""}" style="align-items:${justifyV(d.alineacionVertCol||d.alinV)};${gap}"><div class="col-img" style="flex:0 0 ${esc(d.proporcionImg)}%;"><img src="${esc(d.imagenUrl)}" alt="" style="${altoImg}"></div><div class="col-text" style="text-align:${esc(d.alineacionTexto||"left")};">${d.titulo?`<h3>${esc(d.titulo)}</h3>`:""}${d.texto?`<p>${escMultiline(d.texto)}</p>`:""}${d.linkTexto && d.linkUrl?`<a href="${esc(d.linkUrl)}" target="_blank" rel="noopener">${esc(d.linkTexto)}</a>`:""}</div></div>`);
+      return wrap(d, `<div class="sbb-img-text${d.lado==="right"?" right":""}" style="align-items:${justifyV(d.alineacionVertCol||d.alinV)};${gap}"><div class="col-img" style="flex:0 0 ${esc(d.proporcionImg)}%;"><img src="${esc(d.imagenUrl)}" alt="" style="${altoImg}border-radius:${esc(d.radioImg)}px;"></div><div class="col-text" style="text-align:${esc(d.alineacionTexto||"left")};">${d.titulo?`<h3>${esc(d.titulo)}</h3>`:""}${d.texto?`<p>${escMultiline(d.texto)}</p>`:""}${d.linkTexto && d.linkUrl?`<a href="${esc(d.linkUrl)}" target="_blank" rel="noopener">${esc(d.linkTexto)}</a>`:""}</div></div>`);
     }
   },
   divisor: {
@@ -1870,7 +1875,7 @@ const BLOQUES = {
     cat:"Cards", nombre:"Tarjeta de producto", icono:"", sub:"Imagen + nombre + precio + CTA",
     defaults: Object.assign({}, styleDefaults, {
       padTop:"6", padBottom:"6",
-      imagenUrl:"https://placehold.co/600x400/e5e7ea/9ca3af?text=Producto",
+      imagenUrl:"https://placehold.co/600x400/e5e7ea/9ca3af?text=Producto", radioImg:"10",
       nombre:"Producto", descripcion:"Descripción corta", precio:"$0.00",
       ctaTexto:"Comprar", ctaUrl:"",
       alineacionTexto:"left", tamanoNombre:"15", tamanoPrecio:"15",
@@ -1885,13 +1890,14 @@ const BLOQUES = {
       {grupo:"Estilo"},
       {key:"alineacionTexto",label:"Alineación texto",tipo:"alignH"},
       {tipo:"row2", izq:{key:"tamanoNombre",label:"Tamaño nombre (px)",tipo:"range",min:12,max:24,step:1}, der:{key:"tamanoPrecio",label:"Tamaño precio (px)",tipo:"range",min:12,max:30,step:1}},
+      {key:"radioImg",label:"Radio de la imagen (px)",tipo:"range",min:0,max:40,step:1},
       {tipo:"row2", izq:{key:"colorFondo",label:"Fondo",tipo:"color"}, der:{key:"colorTexto",label:"Texto",tipo:"color"}},
       {key:"colorPrecio",label:"Color del precio (vacío=tema)",tipo:"color"},
       ...styleFields()
     ],
     render: (d) => {
       const colorPrecio = d.colorPrecio || getTema().primary;
-      return wrap(d, `<div class="sbb-product" style="background:${esc(d.colorFondo)};color:${esc(d.colorTexto||"inherit")};text-align:${esc(d.alineacionTexto)};"><img src="${esc(d.imagenUrl)}" alt=""><div class="body"><div class="head" style="justify-content:${d.alineacionTexto==="center"?"center":d.alineacionTexto==="right"?"flex-end":"space-between"};"><div class="name" style="font-size:${esc(d.tamanoNombre)}px;">${esc(d.nombre)}</div><div class="price" style="font-size:${esc(d.tamanoPrecio)}px;color:${esc(colorPrecio)};">${esc(d.precio)}</div></div>${d.descripcion?`<div class="desc">${esc(d.descripcion)}</div>`:""}${d.ctaTexto&&d.ctaUrl?`<a class="cta" href="${esc(d.ctaUrl)}" target="_blank" rel="noopener">${esc(d.ctaTexto)}</a>`:""}</div></div>`);
+      return wrap(d, `<div class="sbb-product" style="background:${esc(d.colorFondo)};color:${esc(d.colorTexto||"inherit")};text-align:${esc(d.alineacionTexto)};"><img src="${esc(d.imagenUrl)}" alt="" style="border-radius:${esc(d.radioImg)}px;"><div class="body"><div class="head" style="justify-content:${d.alineacionTexto==="center"?"center":d.alineacionTexto==="right"?"flex-end":"space-between"};"><div class="name" style="font-size:${esc(d.tamanoNombre)}px;">${esc(d.nombre)}</div><div class="price" style="font-size:${esc(d.tamanoPrecio)}px;color:${esc(colorPrecio)};">${esc(d.precio)}</div></div>${d.descripcion?`<div class="desc">${esc(d.descripcion)}</div>`:""}${d.ctaTexto&&d.ctaUrl?`<a class="cta" href="${esc(d.ctaUrl)}" target="_blank" rel="noopener">${esc(d.ctaTexto)}</a>`:""}</div></div>`);
     }
   },
 
@@ -1947,7 +1953,7 @@ const BLOQUES = {
     cat:"Cards", nombre:"Artículo / Post", icono:"", sub:"Imagen + título + lead + link",
     defaults: Object.assign({}, styleDefaults, {
       padTop:"6", padBottom:"6",
-      imagenUrl:"https://placehold.co/600x320/e5e7ea/9ca3af?text=Imagen",
+      imagenUrl:"https://placehold.co/600x320/e5e7ea/9ca3af?text=Imagen", radioImg:"10",
       categoria:"Categoría", titulo:"Título del artículo",
       lead:"Lead del artículo en una o dos líneas para generar interés.",
       linkTexto:"Leer más", linkUrl:"",
@@ -1963,6 +1969,7 @@ const BLOQUES = {
       {grupo:"Estilo"},
       {key:"alineacionTexto",label:"Alineación",tipo:"alignH"},
       {tipo:"row2", izq:{key:"tamanoTitulo",label:"Tamaño título (px)",tipo:"range",min:14,max:36,step:1}, der:{key:"tamanoLead",label:"Tamaño lead (px)",tipo:"range",min:11,max:18,step:1}},
+      {key:"radioImg",label:"Radio de la imagen (px)",tipo:"range",min:0,max:40,step:1},
       {tipo:"row2", izq:{key:"colorFondo",label:"Fondo",tipo:"color"}, der:{key:"colorTexto",label:"Texto",tipo:"color"}},
       {tipo:"row2", izq:{key:"colorCategoria",label:"Categoría (vacío=tema)",tipo:"color"}, der:{key:"colorEnlace",label:"Enlace (vacío=tema)",tipo:"color"}},
       ...styleFields()
@@ -1970,7 +1977,7 @@ const BLOQUES = {
     render: (d) => {
       const colorCat = d.colorCategoria || getTema().primary;
       const colorLink = d.colorEnlace || getTema().primary;
-      return wrap(d, `<div class="sbb-article" style="background:${esc(d.colorFondo)};color:${esc(d.colorTexto||"inherit")};text-align:${esc(d.alineacionTexto)};"><img src="${esc(d.imagenUrl)}" alt=""><div class="body">${d.categoria?`<div class="cat" style="color:${esc(colorCat)};">${esc(d.categoria)}</div>`:""}<h3 class="title" style="font-size:${esc(d.tamanoTitulo)}px;">${esc(d.titulo)}</h3>${d.lead?`<div class="lead" style="font-size:${esc(d.tamanoLead)}px;">${escMultiline(d.lead)}</div>`:""}${d.linkTexto&&d.linkUrl?`<a class="more" href="${esc(d.linkUrl)}" target="_blank" rel="noopener" style="color:${esc(colorLink)};">${esc(d.linkTexto)}</a>`:""}</div></div>`);
+      return wrap(d, `<div class="sbb-article" style="background:${esc(d.colorFondo)};color:${esc(d.colorTexto||"inherit")};text-align:${esc(d.alineacionTexto)};"><img src="${esc(d.imagenUrl)}" alt="" style="border-radius:${esc(d.radioImg)}px;"><div class="body">${d.categoria?`<div class="cat" style="color:${esc(colorCat)};">${esc(d.categoria)}</div>`:""}<h3 class="title" style="font-size:${esc(d.tamanoTitulo)}px;">${esc(d.titulo)}</h3>${d.lead?`<div class="lead" style="font-size:${esc(d.tamanoLead)}px;">${escMultiline(d.lead)}</div>`:""}${d.linkTexto&&d.linkUrl?`<a class="more" href="${esc(d.linkUrl)}" target="_blank" rel="noopener" style="color:${esc(colorLink)};">${esc(d.linkTexto)}</a>`:""}</div></div>`);
     }
   },
 
@@ -2025,18 +2032,19 @@ const BLOQUES = {
 
   hero: {
     cat:"Estructura", nombre:"Hero con overlay", icono:"", sub:"Imagen full + texto encima",
-    defaults: Object.assign({}, styleDefaults, { padTop:"0", padBottom:"0", imagenUrl:"https://placehold.co/1200x500/040764/9ca3af?text=Hero", titulo:"Título del hero", sub:"Subtítulo que acompaña al título", ctaTexto:"Saber más", ctaUrl:"", alturaHero:"320", oscurecer:"50" }),
+    defaults: Object.assign({}, styleDefaults, { padTop:"0", padBottom:"0", imagenUrl:"https://placehold.co/1200x500/040764/9ca3af?text=Hero", titulo:"Título del hero", sub:"Subtítulo que acompaña al título", ctaTexto:"Saber más", ctaUrl:"", alturaHero:"320", oscurecer:"50", radioImg:"0" }),
     campos: [
       {key:"imagenUrl",label:"URL imagen de fondo",tipo:"text"},
       {key:"titulo",label:"Título",tipo:"text"},
       {key:"sub",label:"Subtítulo",tipo:"textarea"},
       {tipo:"row2", izq:{key:"ctaTexto",label:"Texto CTA",tipo:"text"}, der:{key:"ctaUrl",label:"URL CTA",tipo:"text"}},
       {tipo:"row2", izq:{key:"alturaHero",label:"Alto (px)",tipo:"range",min:140,max:600,step:10}, der:{key:"oscurecer",label:"Oscurecer (%)",tipo:"range",min:0,max:80,step:5}},
+      {key:"radioImg",label:"Radio (px)",tipo:"range",min:0,max:40,step:1},
       ...styleFields()
     ],
     render: (d) => {
       const veil = `background:linear-gradient(180deg,rgba(0,0,0,0) 0%,rgba(0,0,0,${(parseInt(d.oscurecer)||50)/100}) 100%);`;
-      return wrap(d, `<div class="sbb-hero" style="height:${esc(d.alturaHero)}px;"><img class="bg" src="${esc(d.imagenUrl)}" alt=""><div class="veil" style="${veil}"></div><div class="content" style="height:${esc(d.alturaHero)}px;"><h2>${esc(d.titulo)}</h2>${d.sub?`<p>${escMultiline(d.sub)}</p>`:""}${d.ctaTexto&&d.ctaUrl?`<a href="${esc(d.ctaUrl)}" target="_blank" rel="noopener">${esc(d.ctaTexto)}</a>`:""}</div></div>`);
+      return wrap(d, `<div class="sbb-hero" style="height:${esc(d.alturaHero)}px;border-radius:${esc(d.radioImg)}px;overflow:hidden;"><img class="bg" src="${esc(d.imagenUrl)}" alt=""><div class="veil" style="${veil}"></div><div class="content" style="height:${esc(d.alturaHero)}px;"><h2>${esc(d.titulo)}</h2>${d.sub?`<p>${escMultiline(d.sub)}</p>`:""}${d.ctaTexto&&d.ctaUrl?`<a href="${esc(d.ctaUrl)}" target="_blank" rel="noopener">${esc(d.ctaTexto)}</a>`:""}</div></div>`);
     }
   },
 
@@ -2143,16 +2151,14 @@ function modoDeCategoria(cat){
   return cat==="Email" ? "email" : cat==="Banners" ? "banners" : cat==="Post" ? "post" : "todos";
 }
 function renderFormatoSelect(){
-  const permit = CATS_PERMITIDAS[modoFormato]; // null = todas permitidas
+  // Muestra TODOS los formatos (sin bloquear). El punto de entrada del
+  // dashboard solo pre-selecciona el formato; el usuario puede cambiarlo.
   const grupos = {};
   Object.entries(FORMATOS).forEach(([k,v]) => { (grupos[v.badge] = grupos[v.badge] || []).push([k,v]); });
   let html = "";
   Object.entries(grupos).forEach(([badge,arr]) => {
     html += `<optgroup label="${esc(badge)}">`;
-    arr.forEach(([k,v]) => {
-      const dis = (permit && !permit.includes(categoriaDe(k))) ? " disabled" : "";
-      html += `<option value="${k}"${dis}>${esc(v.label)}</option>`;
-    });
+    arr.forEach(([k,v]) => { html += `<option value="${k}">${esc(v.label)}</option>`; });
     html += `</optgroup>`;
   });
   document.getElementById("fmt").innerHTML = html;
@@ -2208,7 +2214,8 @@ function aplicarTema(){
   anchoInput.value = t.ancho || "";
   // Deshabilita el campo cuando el formato fija el tamaño, para que quede claro.
   anchoInput.disabled = formatoFijo;
-  anchoInput.title = formatoFijo ? "El tamaño lo define el formato del banner" : "";
+  anchoInput.placeholder = formatoFijo ? "—" : ("p. ej. " + fmt.ancho + " · editable");
+  anchoInput.title = formatoFijo ? "El tamaño lo define el formato del banner" : "Escribe el ancho que quieras en px. En Formato Libre es totalmente libre.";
   // refresca los hex visibles
   const setHex = (id, v) => { const el = document.getElementById(id); if(el) el.textContent = (v||"").toUpperCase(); };
   setHex("hex-primary", t.primary);
@@ -2651,8 +2658,12 @@ ${fonts}
 body{font-family:"${p.tema.font}",Arial,sans-serif;background:${colorPagina};color:${p.tema.text};-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale;}
 .sbb-container{max-width:${ancho}px;margin:0 auto;background:${p.tema.bg};${altoCss}}
 .sbb-page{font-family:inherit;color:inherit;background:inherit;height:100%;display:flex;flex-direction:column;}
-.sbb-page > div{flex:1;}
+.sbb-page > div{flex:1;min-height:0;}
 ${css}
+/* Banner de tamaño fijo: las imágenes se ajustan al espacio (no se desbordan). */
+.sbb-page img{max-width:100%;max-height:100%;width:auto;height:auto;object-fit:contain;}
+.sbb-hero{height:100%;}
+.sbb-hero img.bg{width:100%!important;height:100%!important;object-fit:cover;}
 </style></head><body>
 ${meta}
 <div class="sbb-container"><div class="sbb-page">
