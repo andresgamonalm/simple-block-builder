@@ -29,7 +29,7 @@ export async function onRequestGet({ request, env }) {
       out.nota = 'Función viva y deploy actualizado. Para probar Gemini abre /api/ia?gemini=1';
       return json(out, 200);
     }
-    if (!email) return json({ ...out, error: 'No autenticado: entra a la app en este navegador y recarga.' }, 200);
+    // (El ping a Gemini no exige sesión: es solo diagnóstico y no expone la key.)
     if (!env.GEMINI_API_KEY) return json({ ...out, error: 'Falta GEMINI_API_KEY.' }, 200);
 
     const url = `https://generativelanguage.googleapis.com/v1beta/models/${out.modelo}:generateContent?key=${encodeURIComponent(env.GEMINI_API_KEY)}`;
