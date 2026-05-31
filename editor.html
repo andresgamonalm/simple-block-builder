@@ -515,6 +515,22 @@ button,input,select,textarea{font-family:inherit;}
 .ab-frame .sbb-hero img.bg{width:100%!important;height:100%!important;object-fit:cover;}
 .ab:not(.activo) .ab-frame{pointer-events:none;}
 .ab-empty{display:flex;align-items:center;justify-content:center;height:100%;color:#bbb;font-size:13px;text-align:center;padding:8px;}
+/* Editor de Diseño global (capas) */
+#comp-editor .cmp-sec{display:flex;align-items:center;justify-content:space-between;font-size:12px;font-weight:700;color:var(--ink2,#3a3a4a);margin:14px 0 6px;padding-bottom:5px;border-bottom:1px solid var(--bdr);}
+#comp-editor .cmp-eye{border:1px solid var(--bdr);background:#fff;border-radius:6px;padding:3px 7px;cursor:pointer;color:var(--primary);}
+#comp-editor .cmp-eye.off{opacity:.4;color:#888;}
+#comp-editor .cmp-row{display:flex;align-items:center;gap:6px;margin-bottom:7px;}
+#comp-editor .cmp-row > label{font-size:11px;color:#777;min-width:54px;}
+#comp-editor .cmp-row input[type=text]{flex:1;min-width:0;font-family:var(--f);font-size:12.5px;border:1px solid var(--bdr);border-radius:6px;padding:6px 8px;}
+#comp-editor .cmp-row textarea{flex:1;min-height:46px;font-family:var(--f);font-size:12.5px;border:1px solid var(--bdr);border-radius:6px;padding:6px 8px;resize:vertical;}
+#comp-editor .cmp-row select{flex:1;font-family:var(--f);font-size:12.5px;border:1px solid var(--bdr);border-radius:6px;padding:5px;}
+#comp-editor .cmp-row input[type=range]{flex:1;}
+#comp-editor .cmp-row input[type=color]{width:34px;height:28px;border:1px solid var(--bdr);border-radius:6px;background:#fff;cursor:pointer;padding:0;}
+#comp-editor .cmp-bib{border:1px solid var(--primary);background:var(--navy-l,#eef2ff);color:var(--primary);border-radius:6px;padding:5px 8px;cursor:pointer;}
+#comp-editor .cmp-alin{display:inline-flex;border:1px solid var(--bdr);border-radius:7px;overflow:hidden;}
+#comp-editor .cmp-alin button{border:none;background:#fff;padding:5px 9px;cursor:pointer;color:#666;display:flex;}
+#comp-editor .cmp-alin button.on{background:var(--primary);color:#fff;}
+#comp-editor .cmp-alin svg{width:15px;height:15px;}
 
 /* ─── FORM (RIGHT PANEL) ─── */
 .form-empty{padding:36px 16px;text-align:center;color:var(--ink3);font-size:12px;line-height:1.65;}
@@ -627,7 +643,18 @@ button,input,select,textarea{font-family:inherit;}
    ═══════════════════════════════════════════════════════════════ */
 .sbb-page{font-family:inherit;color:inherit;background:inherit;}
 
-.sbb-header img{height:auto;display:block;}
+/* ── Composición en capas (colecciones) ── */
+.cmp{position:relative;overflow:hidden;font-family:inherit;box-sizing:border-box;}
+.cmp .cmp-bg{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;}
+.cmp .cmp-veil{position:absolute;inset:0;}
+.cmp .cmp-content{position:absolute;inset:0;display:flex;box-sizing:border-box;}
+.cmp .cmp-content.col{flex-direction:column;justify-content:space-between;}
+.cmp .cmp-content.row{flex-direction:row;justify-content:space-between;align-items:center;}
+.cmp .cmp-grp{display:flex;flex-direction:column;gap:4px;min-width:0;}
+.cmp .cmp-logo{display:block;object-fit:contain;max-width:60%;}
+.cmp .cmp-tit{font-weight:800;line-height:1.1;letter-spacing:-.01em;}
+.cmp .cmp-cue{line-height:1.3;opacity:.95;}
+.cmp .cmp-cta{display:inline-block;font-weight:700;text-decoration:none;white-space:nowrap;border-radius:7px;}
 .sbb-header h1{font-weight:600;line-height:1.18;margin:0;font-family:inherit;}
 .sbb-header p{line-height:1.5;margin:6px 0 0;font-family:inherit;color:inherit;opacity:.78;}
 .sbb-header .eyebrow{font-size:11px;text-transform:uppercase;letter-spacing:.1em;font-weight:600;color:var(--sbb-primary,#040764);margin:0 0 8px;}
@@ -993,6 +1020,8 @@ button,input,select,textarea{font-family:inherit;}
       </div>
 
       <div class="panel-body ptab-pane" id="pane-diseno" style="display:none;">
+        <div id="comp-editor" style="display:none;"></div>
+        <div id="diseno-tema">
         <div class="dz-sec">Marca</div>
         <div class="dz-field">
           <label>Aplicar marca</label>
@@ -1015,6 +1044,7 @@ button,input,select,textarea{font-family:inherit;}
         </div>
         <div class="dz-sec">Dimensiones</div>
         <div class="dz-field"><label>Ancho del lienzo</label><input type="text" id="tema-ancho" class="dz-inp" onchange="cambiarTema('ancho',this.value)" placeholder="auto, 600px"></div>
+        </div>
       </div>
 
       <div class="panel-body ptab-pane" id="pane-editar" style="display:none;">
@@ -1235,6 +1265,7 @@ function cambiarPanelTab(tab){
   panelTab = tab;
   document.querySelectorAll(".panel-tabs .ptab").forEach(b => b.classList.toggle("on", b.dataset.tab === tab));
   document.querySelectorAll(".ptab-pane").forEach(p => { p.style.display = (p.id === "pane-" + tab) ? "" : "none"; });
+  if(tab === "diseno" && typeof renderComposicionEditor === "function") renderComposicionEditor();
 }
 
 // Vista de dispositivo: previsualiza el ancho del lienzo (escritorio/tablet/móvil).
@@ -3187,22 +3218,37 @@ function adaptarCanvasATamaño(masterCanvas, fmt){
 // Crea un set Desktop: un TABLERO de artboards independientes (uno por tamaño),
 // todos visibles en el lienzo. El máster (300×250) arranca con un hero (imagen +
 // texto + CTA) y el resto copia su contenido; luego cada banner se edita aparte.
+// Deriva la composición global (6 capas) a partir del contenido de una creatividad.
+function composicionDesdeCanvas(canvas, tema){
+  const comp = composicionDefault(tema);
+  (canvas||[]).forEach(b => {
+    const d = b.datos || {};
+    if(b.tipo==="hero"){ if(d.imagenUrl) comp.imagen.url=d.imagenUrl; if(d.oscurecer) comp.imagen.oscurecer=parseInt(d.oscurecer)||40; if(d.titulo) comp.titular.texto=d.titulo; if(d.sub) comp.cuerpo.texto=d.sub; if(d.ctaTexto) comp.cta.texto=d.ctaTexto; if(d.ctaUrl) comp.cta.url=d.ctaUrl; }
+    else if(b.tipo==="header"){ if(d.logoUrl) comp.logo.url=d.logoUrl; if(d.titulo) comp.titular.texto=d.titulo; if(d.bajada) comp.cuerpo.texto=d.bajada; }
+    else if(b.tipo==="texto"){ if(d.contenido) comp.cuerpo.texto=d.contenido; }
+    else if(b.tipo==="cta"){ if(d.texto) comp.cta.texto=d.texto; if(d.url) comp.cta.url=d.url; }
+    else if(b.tipo==="imagen"){ if(d.url && !comp.imagen.url) comp.imagen.url=d.url; }
+  });
+  if(tema&&tema.bg) comp.fondoColor.color=tema.bg;
+  if(tema&&tema.primary) comp.cta.colorFondo=tema.primary;
+  return comp;
+}
 function crearSetDesktop(){
   const actual = pieza();
   const p = (actual && (!actual.canvas || actual.canvas.length===0) && !actual.esSet) ? actual : crearPieza("display-300x250","Display Desktop");
-  const semilla = () => [ mk("hero", { titulo:"Tu título", sub:"Subtítulo breve", ctaTexto:"Saber más", alturaHero:"250", oscurecer:"45" }) ];
   p.nombre = "Display Desktop";
   p.esSet = true;
   p.setTipo = "display-desktop";
   p.masterFmt = "display-300x250";
   p.activaFmt = "display-300x250";
   p.formato = "display-300x250";
-  p.canvas = p.canvas || [];
-  const sem = semilla();
-  p.artboards = SET_DISPLAY_DESKTOP.map(fmt => { const a = adaptarCanvasATamaño(sem, fmt); return { fmt, canvas: a.canvas, orient: a.orient }; });
+  p.canvas = [];
+  p.composicion = composicionDefault(p.tema);   // diseño global por capas
+  p.artboards = SET_DISPLAY_DESKTOP.map(fmt => ({ fmt }));
   proyecto.activa = p.id;
   activarPieza(p.id);
-  toast("Set Desktop creado — edita cada banner; el máster (300×250) puedes aplicarlo a todos");
+  cambiarPanelTab("diseno");
+  toast("Colección por capas creada — edita el Diseño global (izquierda) y se aplica a todos los tamaños");
 }
 // Convierte la creatividad ACTUAL en una colección (tablero), usando su contenido
 // actual como máster. Se llega desde el selector de Formato → "Colecciones".
@@ -3210,19 +3256,18 @@ function convertirEnColeccion(tipo){
   const p = pieza();
   if(!p){ toast("Abre o crea una creatividad primero"); return; }
   if(esSetPieza(p)){ return; }
-  const master = (p.canvas && p.canvas.length)
-    ? clone(p.canvas)
-    : [ mk("hero", { titulo:"Tu título", sub:"Subtítulo breve", ctaTexto:"Saber más", alturaHero:"250", oscurecer:"45" }) ];
+  p.composicion = composicionDesdeCanvas(p.canvas, p.tema);   // diseño global por capas desde lo actual
   p.esSet = true;
   p.setTipo = "display-desktop";
   p.masterFmt = "display-300x250";
   p.activaFmt = "display-300x250";
   p.formato = "display-300x250";
-  p.artboards = SET_DISPLAY_DESKTOP.map(fmt => { const a = adaptarCanvasATamaño(master, fmt); return { fmt, canvas: a.canvas, orient: a.orient }; });
+  p.canvas = [];
+  p.artboards = SET_DISPLAY_DESKTOP.map(fmt => ({ fmt }));
   seleccionado = null;
-  if(panelTab === "plantillas") cambiarPanelTab("bloques");
   activarPieza(p.id);
-  toast("Colección Google Display · Desktop — tu diseño es el máster en todos los tamaños");
+  cambiarPanelTab("diseno");
+  toast("Colección por capas — edita el Diseño global (izquierda) y se aplica a todos los tamaños");
 }
 function salirDeColeccion(){
   const p = pieza();
@@ -3256,10 +3301,103 @@ function ajustarFrameParaSet(es){
 }
 // Tablero: TODOS los banners del set en el lienzo. El activo es editable; los
 // demás son vista previa (clic para activarlos).
+// ═══ Composición en capas (Diseño global de una colección) ═══════════════
+function esComposicion(p){ return !!(p && p.esSet && p.composicion); }
+function composicionDefault(tema){
+  return {
+    fondoColor:{ visible:true, color:(tema&&tema.bg)||"#0e2748" },
+    imagen:{ visible:true, url:"", foco:"center", oscurecer:40 },
+    logo:{ visible:true, url:"", alinH:"left", tamano:"56" },
+    titular:{ visible:true, texto:"Tu titular aquí", tamano:"26", alinH:"left", color:"#ffffff" },
+    cuerpo:{ visible:true, texto:"Texto de apoyo breve", tamano:"13", alinH:"left", color:"#ffffff" },
+    cta:{ visible:true, texto:"Saber más", url:"", alinH:"left", colorFondo:(tema&&tema.primary)||"#2f80ed", colorTexto:"#ffffff" }
+  };
+}
+function alinSelf(a){ return a==="center"?"center":a==="right"?"flex-end":"flex-start"; }
+// Renderiza la composición a un tamaño concreto: capas ancladas + escala automática.
+function renderComposicion(comp, fmt){
+  const f = FORMATOS[fmt] || FORMATOS["display-300x250"];
+  const W=f.ancho, H=f.alto, fila=(W/H)>=2.2;
+  const escF = fila ? Math.max(0.5, Math.min(1.05, H/110)) : Math.max(0.5, Math.min(1.3, W/300));
+  const c=comp||{}, fc=c.fondoColor||{}, im=c.imagen||{}, lg=c.logo||{}, ti=c.titular||{}, cu=c.cuerpo||{}, ct=c.cta||{};
+  const px=(v,base)=>Math.round((parseFloat(v)||base)*escF);
+  const bg = (fc.visible!==false) ? (fc.color||"#0e2748") : "transparent";
+  const capaImg = (im.visible!==false && im.url)
+    ? `<img class="cmp-bg" src="${esc(im.url)}" style="object-position:${esc(im.foco||'center')};"><div class="cmp-veil" style="background:rgba(8,14,28,${((parseInt(im.oscurecer)||0)/100).toFixed(2)});"></div>` : "";
+  const logoEl = (lg.visible!==false && lg.url) ? `<img class="cmp-logo" src="${esc(lg.url)}" style="height:${px(lg.tamano,56)}px;align-self:${alinSelf(lg.alinH)};">` : "";
+  const tiEl = (ti.visible!==false && ti.texto) ? `<div class="cmp-tit" style="font-size:${px(ti.tamano,26)}px;color:${esc(ti.color||'#fff')};text-align:${esc(ti.alinH||'left')};align-self:${alinSelf(ti.alinH)};">${esc(ti.texto)}</div>` : "";
+  const verCue = (cu.visible!==false && cu.texto && !(fila && H<120));
+  const cuEl = verCue ? `<div class="cmp-cue" style="font-size:${px(cu.tamano,13)}px;color:${esc(cu.color||'#fff')};text-align:${esc(cu.alinH||'left')};align-self:${alinSelf(cu.alinH)};">${escMultiline(cu.texto)}</div>` : "";
+  const ctaEl = (ct.visible!==false && ct.texto) ? `<a class="cmp-cta" href="${esc(ct.url||'#')}" target="_blank" rel="noopener" style="font-size:${px(ct.tamano,13)}px;background:${esc(ct.colorFondo||'#2f80ed')};color:${esc(ct.colorTexto||'#fff')};align-self:${alinSelf(ct.alinH)};padding:${px('7',7)}px ${px('16',16)}px;">${esc(ct.texto)}</a>` : "";
+  const pad=px("15",15);
+  const content = fila
+    ? `<div class="cmp-content row" style="padding:${pad}px;"><div class="cmp-grp">${logoEl}${tiEl}${cuEl}</div>${ctaEl}</div>`
+    : `<div class="cmp-content col" style="padding:${pad}px;">${logoEl}${tiEl}${cuEl}${ctaEl}</div>`;
+  return `<div class="cmp" style="width:${W}px;height:${H}px;background:${esc(bg)};">${capaImg}${content}</div>`;
+}
+function renderTableroComposicion(p, c){
+  const sizes = (p.artboards && p.artboards.length) ? p.artboards.map(a=>a.fmt) : SET_DISPLAY_DESKTOP;
+  let html = `<div class="tablero-hint">Edita el <b>Diseño global</b> en la pestaña <b>Diseño</b> (izquierda): logo, fondo, imagen, titular, cuerpo y CTA → se aplican a todos los tamaños. <i>(Ajustar cada tamaño por separado llega en la próxima fase.)</i></div><div class="tablero">`;
+  sizes.forEach(fmt=>{
+    const f=FORMATOS[fmt]; if(!f) return;
+    const master = fmt===(p.masterFmt||"display-300x250");
+    const zoom=0.7;
+    html += `<div class="ab" data-fmt="${fmt}">
+      <div class="ab-bar"><span class="ab-tit">${f.ancho}×${f.alto}${master?' <span class="mtag">máster</span>':''}</span><button class="ab-dl" onclick="exportarArtboard('${fmt}');event.stopPropagation();" title="Descargar este banner">${svgIcon("exportar",{size:"12px"})}</button></div>
+      <div class="ab-stage" style="width:${Math.round(f.ancho*zoom)}px;height:${Math.round(f.alto*zoom)}px;"><div class="ab-scale" style="transform:scale(${zoom});">${renderComposicion(p.composicion, fmt)}</div></div>
+    </div>`;
+  });
+  html += `</div>`;
+  c.innerHTML = html;
+  c.querySelectorAll(".ab").forEach(el=>el.addEventListener("click",()=>cambiarPanelTab("diseno")));
+  iniciarLivePreview();
+}
+// Mutadores de la composición global.
+function setComp(capa, key, val){ const p=pieza(); if(!esComposicion(p))return; (p.composicion[capa]=p.composicion[capa]||{})[key]=val; persistir(); renderTablero(); }
+function toggleCompVis(capa){ const p=pieza(); if(!esComposicion(p))return; const l=p.composicion[capa]; l.visible=(l.visible===false); persistir(); renderTablero(); renderComposicionEditor(); }
+function elegirImagenComp(capa){ abrirImagenes(url=>{ setComp(capa,'url',url); renderComposicionEditor(); }); }
+// Editor del Diseño global (las 6 capas con controles por elemento).
+function renderComposicionEditor(){
+  const cont=document.getElementById("comp-editor"), tema=document.getElementById("diseno-tema");
+  const p=pieza();
+  if(!cont) return;
+  if(!esComposicion(p)){ cont.style.display="none"; cont.innerHTML=""; if(tema) tema.style.display=""; return; }
+  cont.style.display=""; if(tema) tema.style.display="none";
+  const C=p.composicion;
+  const eye=(capa)=>`<button class="cmp-eye${C[capa].visible===false?' off':''}" onclick="toggleCompVis('${capa}')" title="Mostrar/ocultar">${svgIcon("ojo",{size:"13px"})}</button>`;
+  const head=(capa,nom)=>`<div class="cmp-sec"><span>${esc(nom)}</span>${eye(capa)}</div>`;
+  const alin=(capa)=>`<div class="cmp-alin">${['left','center','right'].map(a=>`<button class="${(C[capa].alinH||'left')===a?'on':''}" onclick="setComp('${capa}','alinH','${a}');renderComposicionEditor();" title="${a}">${ICONS[a==='left'?'alignLeft':a==='center'?'alignCenter':'alignRight']}</button>`).join('')}</div>`;
+  const rng=(capa,key,mn,mx,base)=>`<input type="range" min="${mn}" max="${mx}" value="${parseInt(C[capa][key])||base}" oninput="setComp('${capa}','${key}',this.value)">`;
+  let h="";
+  h+=head("fondoColor","Fondo de color")+`<div class="cmp-row"><input type="color" value="${esc(C.fondoColor.color||'#0e2748')}" oninput="setComp('fondoColor','color',this.value)"></div>`;
+  h+=head("imagen","Imagen de fondo")+`<div class="cmp-row"><input type="text" placeholder="URL imagen" value="${escAttr(C.imagen.url||'')}" onchange="setComp('imagen','url',this.value)"><button class="cmp-bib" onclick="elegirImagenComp('imagen')">${svgIcon("imagen",{size:"12px"})}</button></div><div class="cmp-row"><label>Foco</label><select onchange="setComp('imagen','foco',this.value)">${['center','top','bottom','left','right'].map(v=>`<option value="${v}" ${(C.imagen.foco||'center')===v?'selected':''}>${v}</option>`).join('')}</select></div><div class="cmp-row"><label>Oscurecer</label>${rng('imagen','oscurecer',0,80,40)}</div>`;
+  h+=head("logo","Logo")+`<div class="cmp-row"><input type="text" placeholder="URL logo (PNG/SVG)" value="${escAttr(C.logo.url||'')}" onchange="setComp('logo','url',this.value)"><button class="cmp-bib" onclick="elegirImagenComp('logo')">${svgIcon("imagen",{size:"12px"})}</button></div><div class="cmp-row"><label>Alineación</label>${alin('logo')}</div><div class="cmp-row"><label>Tamaño</label>${rng('logo','tamano',24,140,56)}</div>`;
+  h+=head("titular","Titular")+`<div class="cmp-row"><input type="text" value="${escAttr(C.titular.texto||'')}" oninput="setComp('titular','texto',this.value)"></div><div class="cmp-row"><label>Tamaño</label>${rng('titular','tamano',12,52,26)}</div><div class="cmp-row"><label>Alineación</label>${alin('titular')}<input type="color" value="${esc(C.titular.color||'#ffffff')}" oninput="setComp('titular','color',this.value)"></div>`;
+  h+=head("cuerpo","Cuerpo")+`<div class="cmp-row"><textarea oninput="setComp('cuerpo','texto',this.value)">${esc(C.cuerpo.texto||'')}</textarea></div><div class="cmp-row"><label>Tamaño</label>${rng('cuerpo','tamano',9,28,13)}</div><div class="cmp-row"><label>Alineación</label>${alin('cuerpo')}<input type="color" value="${esc(C.cuerpo.color||'#ffffff')}" oninput="setComp('cuerpo','color',this.value)"></div>`;
+  h+=head("cta","CTA con link")+`<div class="cmp-row"><input type="text" placeholder="Texto" value="${escAttr(C.cta.texto||'')}" oninput="setComp('cta','texto',this.value)"></div><div class="cmp-row"><input type="text" placeholder="Link (https://…)" value="${escAttr(C.cta.url||'')}" onchange="setComp('cta','url',this.value)"></div><div class="cmp-row"><label>Alineación</label>${alin('cta')}<input type="color" value="${esc(C.cta.colorFondo||'#2f80ed')}" title="Color botón" oninput="setComp('cta','colorFondo',this.value)"><input type="color" value="${esc(C.cta.colorTexto||'#ffffff')}" title="Color texto" oninput="setComp('cta','colorTexto',this.value)"></div>`;
+  cont.innerHTML=`<div class="dz-sec">Diseño global (capas)</div>${h}`;
+}
+function cssComponentes(){
+  const cssFull = (document.querySelector("style") && document.querySelector("style").textContent) || "";
+  const i = cssFull.indexOf("COMPONENT STYLES");
+  if(i < 0) return cssFull;
+  const cierre = cssFull.indexOf("*/", i);
+  return cierre >= 0 ? cssFull.slice(cierre + 2) : cssFull.slice(i);
+}
+function generarHTMLDeComposicion(p, fmt){
+  const f=FORMATOS[fmt]||FORMATOS["display-300x250"];
+  const css=cssComponentes();
+  const fonts=`<link rel="preconnect" href="https://fonts.googleapis.com"><link href="https://fonts.googleapis.com/css2?family=${encodeURIComponent(p.tema.font)}:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">`;
+  return `<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8"><title>${esc(p.nombre)} · ${f.ancho}×${f.alto}</title>${fonts}
+<style>*{box-sizing:border-box;margin:0;padding:0;}body{font-family:"${p.tema.font}",Arial,sans-serif;}${css}</style></head>
+<body><!--SBB-CMP:${esc(fmt)}-->${renderComposicion(p.composicion, fmt)}</body></html>`;
+}
+
 function renderTablero(){
   const p = pieza(); if(!esSetPieza(p)) return;
   const c = document.getElementById("canvas");
   ajustarFrameParaSet(true);
+  if(esComposicion(p)){ renderTableroComposicion(p, c); return; }
   const zoom = 0.7;
   let html = `<div class="tablero-hint">Clic en un banner para editarlo. Edita cada uno por separado (texto, imagen o sin imagen). El <b>máster</b> puedes aplicarlo a todos con el botón de arriba.</div><div class="tablero">`;
   p.artboards.forEach(ab => {
@@ -3293,6 +3431,7 @@ function activarArtboard(fmt){
 }
 function aplicarMasterATodos(){
   const p = pieza(); if(!esSetPieza(p)) return;
+  if(esComposicion(p)){ toast("En colecciones por capas el Diseño global ya se aplica a todos los tamaños"); cambiarPanelTab("diseno"); return; }
   const master = artboardMaster(p); if(!master) return;
   if(!confirm("¿Aplicar el contenido del máster (300×250) a TODOS los tamaños? Reemplaza lo que tengas en los demás.")) return;
   p.artboards.forEach(ab => {
@@ -3310,9 +3449,14 @@ function piezaDeArtboard(p, ab){
 }
 function exportarArtboard(fmt){
   const p = pieza(); if(!esSetPieza(p)) return;
-  const ab = p.artboards.find(a => a.fmt === fmt); if(!ab) return;
-  if(!(ab.canvas && ab.canvas.length)){ toast("Banner vacío"); return; }
-  const html = generarHTMLDePieza(piezaDeArtboard(p, ab));
+  let html;
+  if(esComposicion(p)){
+    html = generarHTMLDeComposicion(p, fmt);
+  } else {
+    const ab = p.artboards.find(a => a.fmt === fmt); if(!ab) return;
+    if(!(ab.canvas && ab.canvas.length)){ toast("Banner vacío"); return; }
+    html = generarHTMLDePieza(piezaDeArtboard(p, ab));
+  }
   const blob = new Blob([html], {type:"text/html"});
   const url = URL.createObjectURL(blob);
   const a = document.createElement("a");
@@ -3324,7 +3468,10 @@ function exportarArtboard(fmt){
 function exportarTodoElSet(){
   const p = pieza(); if(!esSetPieza(p)) return;
   let i = 0;
-  p.artboards.forEach(ab => { if(ab.canvas && ab.canvas.length){ setTimeout(() => exportarArtboard(ab.fmt), i*350); i++; } });
+  p.artboards.forEach(ab => {
+    const tiene = esComposicion(p) || (ab.canvas && ab.canvas.length);
+    if(tiene){ setTimeout(() => exportarArtboard(ab.fmt), i*350); i++; }
+  });
   if(i===0){ toast("No hay banners con contenido"); return; }
   setTimeout(() => toast(`${i} banner${i>1?"s":""} descargado${i>1?"s":""}`), i*350 + 200);
 }
@@ -3334,6 +3481,7 @@ function actualizarUISet(){
   const tools = document.getElementById("set-tools"); if(tools) tools.style.display = es ? "" : "none";
   const fmt = document.getElementById("tb-formato"); if(fmt) fmt.style.display = es ? "none" : "";
   const dev = document.getElementById("dev-seg"); if(dev) dev.style.display = es ? "none" : "";
+  if(typeof renderComposicionEditor === "function") renderComposicionEditor();
   // En una colección, las plantillas no aplican (cada banner se edita aparte): se bloquean.
   const pl = document.getElementById("ptab-plantillas");
   if(pl){
