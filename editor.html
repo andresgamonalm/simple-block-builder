@@ -545,6 +545,18 @@ button,input,select,textarea{font-family:inherit;}
 .subitem-fields label{font-size:9.5px;color:var(--ink4);text-transform:uppercase;letter-spacing:.05em;font-weight:600;margin-bottom:2px;display:block;}
 .add-subitem{width:100%;padding:9px;border:1.5px dashed var(--bdr2);background:transparent;border-radius:7px;cursor:pointer;font-size:12px;color:var(--ink3);font-weight:500;transition:all .14s;font-family:var(--f);display:flex;align-items:center;justify-content:center;gap:5px;}
 .add-subitem:hover{border-color:var(--primary);color:var(--primary);background:var(--navy-l);border-style:solid;}
+/* Editor de columnas del grid (bloques anidados) */
+.gcells{border:1px dashed var(--bdr);border-radius:8px;padding:8px;background:var(--bg);margin-bottom:10px;display:flex;flex-direction:column;gap:8px;}
+.gcell{background:var(--white);border:1px solid var(--bdr);border-radius:7px;padding:9px;display:flex;flex-direction:column;gap:7px;}
+.gcell-top{display:flex;align-items:center;justify-content:space-between;}
+.gcell-n{font-size:11.5px;font-weight:600;color:var(--ink2,#444);}
+.gcell-acc{display:inline-flex;gap:4px;}
+.gcell-sel{width:100%;font-family:var(--f);font-size:12.5px;border:1px solid var(--bdr);border-radius:6px;padding:7px 8px;background:#fff;}
+.gcell-edit{width:100%;font-family:var(--f);font-size:12px;border:1px solid var(--primary);background:var(--navy-l,#eef2ff);color:var(--primary);border-radius:6px;padding:7px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:5px;font-weight:500;}
+.gcell-edit:hover{background:var(--primary);color:#fff;}
+.volver-celda{width:100%;font-family:var(--f);font-size:12.5px;border:1px solid var(--bdr);background:#fff;border-radius:7px;padding:8px;cursor:pointer;color:var(--primary);font-weight:600;display:flex;align-items:center;justify-content:center;gap:5px;margin-bottom:12px;}
+.volver-celda:hover{background:var(--navy-l,#eef2ff);}
+.celda-col{font-weight:400;color:var(--ink3);font-size:12px;}
 
 /* ─── MODAL ─── */
 .modal-bg{position:fixed;inset:0;background:rgba(4,7,100,.45);z-index:500;display:none;align-items:center;justify-content:center;padding:24px;}
@@ -1130,6 +1142,17 @@ let proyecto = null;          // proyecto activo (referencia dentro de workspace
 let vistaDash = "proyectos";  // "proyectos" | "creatividades"
 let proyectoVistoId = null;   // proyecto cuya lista de creatividades se ve
 let seleccionado = null;
+let editandoCelda = null;   // { gridId, idx } cuando se edita el bloque de una columna del grid
+// Devuelve el bloque que se está editando: el seleccionado, o el bloque de una
+// celda del grid si estás dentro de una columna. Así los mutadores sirven para ambos.
+function bloqueCtx(){
+  if(editandoCelda){
+    const grid = getCanvas().find(x => x.id === editandoCelda.gridId);
+    const cell = grid && grid.datos.celdas && grid.datos.celdas[editandoCelda.idx];
+    return (cell && cell.tipo && cell.datos) ? cell : null;
+  }
+  return getCanvas().find(x => x.id === seleccionado) || null;
+}
 let dragInfo = null;
 let dragBlockId = null;
 let livePreviewIntervals = [];
@@ -1969,23 +1992,16 @@ const BLOQUES = {
   },
 
   grid: {
-    cat:"Estructura", nombre:"Grid 2/3/4 columnas", icono:"", sub:"Contenedor multi-columna",
+    cat:"Estructura", nombre:"Grid 2/3/4 columnas", icono:"", sub:"Columnas: mete cualquier bloque",
     defaults: Object.assign({}, styleDefaults, {
       padTop:"6", padBottom:"6",
       columnas:"3", gap:"16", apilarMobile:true, alinearVert:"top",
-      celdas:[]   // arranca vacío: el usuario añade y elige el contenido de cada celda
+      celdas:[]   // arranca vacío: el usuario elige qué bloque va en cada columna
     }),
     campos: [
       {tipo:"row2", izq:{key:"columnas",label:"Columnas",tipo:"select",opciones:[["2","2 columnas"],["3","3 columnas"],["4","4 columnas"]]}, der:{key:"gap",label:"Gap (px)",tipo:"range",min:0,max:60,step:2}},
       {tipo:"row2", izq:{key:"alinearVert",label:"Alineación vertical",tipo:"select",opciones:[["top","Arriba"],["center","Centro"],["bottom","Abajo"]]}, der:{key:"apilarMobile",label:"Apilar en móvil",tipo:"check"}},
-      {key:"celdas",label:"Contenido de las columnas (añade y elige el tipo de cada una)",tipo:"lista",itemTipos:[
-        {valor:"texto",label:"Texto",camposItem:[{k:"titulo",l:"Título"},{k:"texto",l:"Texto"}]},
-        {valor:"imagen",label:"Imagen",camposItem:[{k:"url",l:"URL imagen"},{k:"caption",l:"Pie (opcional)"}]},
-        {valor:"kpi",label:"KPI (número + label)",camposItem:[{k:"num",l:"Número"},{k:"lbl",l:"Etiqueta"}]},
-        {valor:"icono-texto",label:"Ícono + texto",camposItem:[{k:"icono",l:"Ícono",tipo:"icono"},{k:"titulo",l:"Título"},{k:"sub",l:"Subtítulo"}]},
-        {valor:"cta",label:"Botón CTA",camposItem:[{k:"texto",l:"Texto"},{k:"url",l:"URL"}]},
-        {valor:"vacio",label:"Vacío (espacio)",camposItem:[]}
-      ]},
+      {tipo:"gridCeldas"},
       ...styleFields()
     ],
     render: (d) => {
@@ -1993,19 +2009,10 @@ const BLOQUES = {
       const gap = parseInt(d.gap) || 16;
       const arr = d.celdas || [];
       const align = d.alinearVert==="center"?"center":d.alinearVert==="bottom"?"end":"start";
+      const n = Math.max(cols, arr.length);   // muestra columnas vacías y deja crecer si hay más celdas
       let html = "";
-      for (let i = 0; i < cols; i++) {
-        const c = arr[i];
-        let inner = "";
-        if (c) {
-          if (c.tipo === "texto") inner = `<div class="sbb-grid-text">${c.titulo?`<h3>${esc(c.titulo)}</h3>`:""}${c.texto?`<p>${escMultiline(c.texto)}</p>`:""}</div>`;
-          else if (c.tipo === "imagen") inner = `<div class="sbb-grid-img"><img src="${esc(c.url||'https://placehold.co/300x200/e5e7ea/9ca3af?text=Imagen')}" alt="">${c.caption?`<div class="cap">${esc(c.caption)}</div>`:""}</div>`;
-          else if (c.tipo === "kpi") inner = `<div class="sbb-grid-kpi"><div class="num">${esc(c.num||'')}</div><div class="lbl">${esc(c.lbl||'')}</div></div>`;
-          else if (c.tipo === "icono-texto") inner = `<div class="sbb-grid-icon"><div class="ic">${c.icono?svgIcon(c.icono,{size:"30px"}):''}</div>${c.titulo?`<div class="t">${esc(c.titulo)}</div>`:""}${c.sub?`<div class="s">${esc(c.sub)}</div>`:""}</div>`;
-          else if (c.tipo === "cta") inner = `<a class="sbb-grid-cta" href="${esc(c.url||'#')}" target="_blank" rel="noopener">${esc(c.texto||'CTA')}</a>`;
-          else if (c.tipo === "vacio") inner = `<div></div>`;
-        }
-        html += `<div class="sbb-grid-cell" style="display:flex;flex-direction:column;justify-content:${align};">${inner}</div>`;
+      for (let i = 0; i < n; i++) {
+        html += `<div class="sbb-grid-cell" style="display:flex;flex-direction:column;justify-content:${align};">${renderCeldaContenido(arr[i])}</div>`;
       }
       const stackCls = d.apilarMobile ? "stack-mobile" : "";
       return wrap(d, `<div class="sbb-grid ${stackCls}" style="grid-template-columns:repeat(${cols},minmax(0,1fr));gap:${gap}px;">${html}</div>`);
@@ -2671,6 +2678,7 @@ function limpiarDropLines(){ document.querySelectorAll(".drop-line").forEach(el 
 
 function renderForm(){
   const f = document.getElementById("form");
+  if(editandoCelda){ return renderFormCelda(f); }   // editando el bloque de una columna del grid
   if(!seleccionado){ f.innerHTML = `<div class="form-empty"><div class="form-empty-ico">${svgIcon("editar",{size:"32px"})}</div>Selecciona un bloque del canvas<br>para editar su contenido</div>`; return; }
   const item = getCanvas().find(x => x.id===seleccionado);
   if(!item){ seleccionado=null; renderForm(); return; }
@@ -2680,11 +2688,68 @@ function renderForm(){
   html += `</div>`;
   f.innerHTML = html;
 }
+// Formulario para el bloque de una columna del grid (con vuelta a la grilla).
+function renderFormCelda(f){
+  const grid = getCanvas().find(x => x.id === editandoCelda.gridId);
+  const cell = grid && grid.datos.celdas && grid.datos.celdas[editandoCelda.idx];
+  if(!cell || !cell.tipo || !BLOQUES[cell.tipo]){ editandoCelda = null; return renderForm(); }
+  const def = BLOQUES[cell.tipo];
+  let html = `<button class="volver-celda" onclick="cerrarEdicionCelda()">${svgIcon("chevup",{size:"12px"})} Volver a la grilla</button>`;
+  html += `<div class="form-section"><h3>${def.icono||""} ${esc(def.nombre)} <span class="celda-col">· columna ${editandoCelda.idx+1}</span></h3>`;
+  def.campos.forEach(c => { html += renderCampo(c, cell.datos); });
+  html += `</div>`;
+  f.innerHTML = html;
+}
+function cerrarEdicionCelda(){ editandoCelda = null; renderForm(); }
 function renderCampo(c, datos){
   if(c.grupo) return `<div class="form-group-title">${esc(c.grupo)}</div>`;
   if(c.tipo === "row2") return `<div class="form-row-2col">${renderCampoSimple(c.izq, datos)}${renderCampoSimple(c.der, datos)}</div>`;
+  if(c.tipo === "gridCeldas") return renderGridCeldasCampo(datos);
   return renderCampoSimple(c, datos);
 }
+// Editor de las columnas del grid: por cada columna, eliges qué BLOQUE va dentro
+// (cualquiera de la biblioteca) y lo editas con sus propios campos.
+function renderGridCeldasCampo(datos){
+  const cells = Array.isArray(datos.celdas) ? datos.celdas : [];
+  let h = `<div class="form-row"><label>Columnas — elige el bloque de cada una</label><div class="gcells">`;
+  if(cells.length === 0) h += `<div class="sublist-empty">Sin columnas todavía. Agrega una y elige qué bloque va dentro.</div>`;
+  cells.forEach((cell, idx) => {
+    const tipo = (cell && cell.tipo) || "";
+    h += `<div class="gcell"><div class="gcell-top"><span class="gcell-n">Columna ${idx+1}</span><span class="gcell-acc"><button class="si-btn" onclick="moverCelda(${idx},-1)" title="Subir">↑</button><button class="si-btn" onclick="moverCelda(${idx},1)" title="Bajar">↓</button><button class="si-btn del" onclick="eliminarCelda(${idx})" title="Quitar">×</button></span></div>
+      <select class="gcell-sel" onchange="cambiarTipoCelda(${idx},this.value)">${tiposCeldaOptions(tipo)}</select>
+      ${tipo && BLOQUES[tipo] ? `<button class="gcell-edit" onclick="editarCelda(${idx})">${svgIcon("editar",{size:"12px"})} Editar contenido</button>` : ``}</div>`;
+  });
+  h += `<button class="add-subitem" onclick="agregarCelda()">+ Agregar columna</button></div></div>`;
+  return h;
+}
+function tiposCeldaOptions(sel){
+  const excl = new Set(["grid","columnas"]);   // no anidamos contenedores
+  const grupos = {};
+  Object.entries(BLOQUES).forEach(([k,b]) => { if(excl.has(k)) return; (grupos[b.cat||"Otros"] = grupos[b.cat||"Otros"] || []).push([k, b.nombre]); });
+  let h = `<option value="">— vacío —</option>`;
+  Object.entries(grupos).forEach(([cat,arr]) => { h += `<optgroup label="${esc(cat)}">` + arr.map(([v,l]) => `<option value="${v}" ${sel===v?"selected":""}>${esc(l)}</option>`).join("") + `</optgroup>`; });
+  return h;
+}
+function renderCeldaContenido(c){
+  if(!c || !c.tipo) return "";
+  if(c.datos && BLOQUES[c.tipo]) return BLOQUES[c.tipo].render(c.datos);
+  return renderCeldaLegacy(c);   // compatibilidad con celdas del formato antiguo (plano)
+}
+function renderCeldaLegacy(c){
+  if(!c || !c.tipo) return "";
+  if(c.tipo==="texto") return `<div class="sbb-grid-text">${c.titulo?`<h3>${esc(c.titulo)}</h3>`:""}${c.texto?`<p>${escMultiline(c.texto)}</p>`:""}</div>`;
+  if(c.tipo==="imagen") return `<div class="sbb-grid-img"><img src="${esc(c.url||'https://placehold.co/300x200/e5e7ea/9ca3af?text=Imagen')}" alt="">${c.caption?`<div class="cap">${esc(c.caption)}</div>`:""}</div>`;
+  if(c.tipo==="kpi") return `<div class="sbb-grid-kpi"><div class="num">${esc(c.num||'')}</div><div class="lbl">${esc(c.lbl||'')}</div></div>`;
+  if(c.tipo==="icono-texto") return `<div class="sbb-grid-icon"><div class="ic">${c.icono?svgIcon(c.icono,{size:"30px"}):''}</div>${c.titulo?`<div class="t">${esc(c.titulo)}</div>`:""}${c.sub?`<div class="s">${esc(c.sub)}</div>`:""}</div>`;
+  if(c.tipo==="cta") return `<a class="sbb-grid-cta" href="${esc(c.url||'#')}" target="_blank" rel="noopener">${esc(c.texto||'CTA')}</a>`;
+  return "";
+}
+function gridSel(){ return getCanvas().find(x => x.id === seleccionado); }
+function agregarCelda(){ const g=gridSel(); if(!g) return; if(!Array.isArray(g.datos.celdas)) g.datos.celdas=[]; g.datos.celdas.push({}); persistir(); renderBloqueSeleccionado(); renderForm(); }
+function eliminarCelda(idx){ const g=gridSel(); if(!g||!Array.isArray(g.datos.celdas)) return; g.datos.celdas.splice(idx,1); if(editandoCelda && editandoCelda.idx===idx) editandoCelda=null; persistir(); renderBloqueSeleccionado(); renderForm(); }
+function moverCelda(idx,delta){ const g=gridSel(); if(!g||!Array.isArray(g.datos.celdas)) return; const arr=g.datos.celdas; const j=idx+delta; if(j<0||j>=arr.length) return; [arr[idx],arr[j]]=[arr[j],arr[idx]]; persistir(); renderBloqueSeleccionado(); renderForm(); }
+function cambiarTipoCelda(idx,tipo){ const g=gridSel(); if(!g) return; if(!Array.isArray(g.datos.celdas)) g.datos.celdas=[]; while(g.datos.celdas.length<=idx) g.datos.celdas.push({}); g.datos.celdas[idx] = (tipo && BLOQUES[tipo]) ? { tipo, datos: clone(BLOQUES[tipo].defaults) } : {}; persistir(); renderBloqueSeleccionado(); renderForm(); }
+function editarCelda(idx){ const g=gridSel(); if(!g) return; const cell=(g.datos.celdas||[])[idx]; if(!cell||!cell.tipo||!BLOQUES[cell.tipo]){ toast("Elige un bloque para esta columna primero"); return; } editandoCelda={gridId:g.id, idx}; renderForm(); cambiarPanelTab("editar"); }
 function renderCampoSimple(c, datos){
   const val = datos[c.key];
   if(c.tipo === "check") return `<div class="form-row checkbox"><input type="checkbox" id="f-${c.key}" ${val?"checked":""} onchange="actualizarDato('${c.key}',this.checked)"><label for="f-${c.key}">${esc(c.label)}</label></div>`;
@@ -2736,8 +2801,7 @@ function renderCampoSimple(c, datos){
 }
 
 function agregarItemLista(key){
-  if(!seleccionado) return;
-  const item = getCanvas().find(x => x.id===seleccionado);
+  const item = bloqueCtx(); if(!item) return;
   const def = BLOQUES[item.tipo];
   const todosCampos = def.campos.flatMap(c => c.tipo==="row2"?[c.izq,c.der]:[c]);
   const campo = todosCampos.find(c => c.key===key);
@@ -2750,23 +2814,20 @@ function agregarItemLista(key){
   persistir(); renderForm(); renderBloqueSeleccionado();
 }
 function actualizarItemLista(key, idx, prop, valor){
-  if(!seleccionado) return;
-  const item = getCanvas().find(x => x.id===seleccionado);
+  const item = bloqueCtx(); if(!item) return;
   if(!item.datos[key] || !item.datos[key][idx]) return;
   item.datos[key][idx][prop] = valor;
   persistir(); renderBloqueSeleccionado();
   if(prop==="tipo") renderForm();
 }
 function eliminarItemLista(key, idx){
-  if(!seleccionado) return;
-  const item = getCanvas().find(x => x.id===seleccionado);
+  const item = bloqueCtx(); if(!item) return;
   if(!item.datos[key]) return;
   item.datos[key].splice(idx, 1);
   persistir(); renderForm(); renderBloqueSeleccionado();
 }
 function moverItemLista(key, idx, delta){
-  if(!seleccionado) return;
-  const item = getCanvas().find(x => x.id===seleccionado);
+  const item = bloqueCtx(); if(!item) return;
   const arr = item.datos[key];
   if(!arr) return;
   const j = idx + delta;
@@ -2820,15 +2881,14 @@ function moverBloque(id, delta){
   persistir(); renderCanvas();
 }
 function seleccionarBloque(id){
+  editandoCelda = null;
   seleccionado = id;
   document.querySelectorAll(".bw").forEach(b => b.classList.toggle("selected", b.dataset.id===id));
   renderForm();
   cambiarPanelTab("editar");   // al seleccionar, abre la pestaña de edición
 }
 function actualizarDato(key, valor){
-  if(!seleccionado) return;
-  const item = getCanvas().find(x => x.id===seleccionado);
-  if(!item) return;
+  const item = bloqueCtx(); if(!item) return;
   item.datos[key] = valor;
   persistir(); renderBloqueSeleccionado();
 }
@@ -3642,7 +3702,7 @@ document.addEventListener("keydown", (e) => {
 });
 document.getElementById("canvas-area").addEventListener("click", (e) => {
   if(e.target.id==="canvas-area" || e.target.id==="canvas-frame" || e.target.id==="canvas"){
-    seleccionado = null;
+    seleccionado = null; editandoCelda = null;
     document.querySelectorAll(".bw.selected").forEach(b => b.classList.remove("selected"));
     renderForm();
   }
