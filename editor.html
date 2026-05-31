@@ -1137,19 +1137,56 @@ button,input,select,textarea{font-family:inherit;}
       <div class="mf-title" id="marca-form-titulo">Nueva marca</div>
       <div class="mf-grid">
         <label class="mf-full">Nombre<input type="text" id="marca-nombre" placeholder="Mi marca"></label>
-        <label class="mf-full">Logo (URL)<input type="text" id="marca-logo" placeholder="https://…/logo.png"></label>
-        <label>Tipografía
-          <select id="marca-font"><option value="Inter">Inter</option><option value="Roboto">Roboto</option><option value="Open Sans">Open Sans</option><option value="Lato">Lato</option><option value="Montserrat">Montserrat</option><option value="Poppins">Poppins</option><option value="Playfair Display">Playfair</option><option value="Merriweather">Merriweather</option><option value="Arial">Arial</option><option value="Georgia">Georgia</option></select>
-        </label>
         <label class="mf-full">Empresa (para el footer)<input type="text" id="marca-empresa" placeholder="Mi Empresa S.A."></label>
+
+        <div class="mf-sec mf-full">Logos</div>
+        <div class="mf-logos mf-full">
+          <div class="mf-logo">
+            <div class="mf-logo-prev" id="marca-logo-prev"><span>Sin logo</span></div>
+            <div class="mf-logo-cap">Logo principal</div>
+            <input type="file" id="marca-logo-file" accept="image/*" class="mf-file" onchange="subirLogoMarca('logo', this)">
+            <div class="mf-logo-btns">
+              <button type="button" onclick="document.getElementById('marca-logo-file').click()">Subir…</button>
+              <button type="button" onclick="quitarLogoMarca('logo')">Quitar</button>
+            </div>
+          </div>
+          <div class="mf-logo">
+            <div class="mf-logo-prev dark" id="marca-logoClaro-prev"><span>Sin logo</span></div>
+            <div class="mf-logo-cap">Logo claro <small>(fondos oscuros)</small></div>
+            <input type="file" id="marca-logoClaro-file" accept="image/*" class="mf-file" onchange="subirLogoMarca('logoClaro', this)">
+            <div class="mf-logo-btns">
+              <button type="button" onclick="document.getElementById('marca-logoClaro-file').click()">Subir…</button>
+              <button type="button" onclick="quitarLogoMarca('logoClaro')">Quitar</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="mf-sec mf-full">Colores</div>
         <div class="mf-colores mf-full">
           <span class="mf-col"><input type="color" id="marca-primary" value="#1c73cb"><b>Principal</b></span>
+          <span class="mf-col"><input type="color" id="marca-secondary" value="#0e2748"><b>Secundario</b></span>
           <span class="mf-col"><input type="color" id="marca-cta" value="#1c73cb"><b>CTA</b></span>
+          <span class="mf-col"><input type="color" id="marca-ctaText" value="#ffffff"><b>Texto CTA</b></span>
           <span class="mf-col"><input type="color" id="marca-text" value="#1a1a1a"><b>Texto</b></span>
           <span class="mf-col"><input type="color" id="marca-bg" value="#ffffff"><b>Fondo</b></span>
           <span class="mf-col"><input type="color" id="marca-bgpagina" value="#f5f5f5"><b>Página</b></span>
         </div>
+
+        <div class="mf-sec mf-full">Tipografía</div>
+        <label>Titulares
+          <select id="marca-fontTitulo"><option value="Inter">Inter</option><option value="Roboto">Roboto</option><option value="Open Sans">Open Sans</option><option value="Lato">Lato</option><option value="Montserrat">Montserrat</option><option value="Poppins">Poppins</option><option value="Playfair Display">Playfair</option><option value="Merriweather">Merriweather</option><option value="Arial">Arial</option><option value="Georgia">Georgia</option></select>
+        </label>
+        <label>Cuerpo
+          <select id="marca-fontCuerpo"><option value="Inter">Inter</option><option value="Roboto">Roboto</option><option value="Open Sans">Open Sans</option><option value="Lato">Lato</option><option value="Montserrat">Montserrat</option><option value="Poppins">Poppins</option><option value="Playfair Display">Playfair</option><option value="Merriweather">Merriweather</option><option value="Arial">Arial</option><option value="Georgia">Georgia</option></select>
+        </label>
+
+        <div class="mf-sec mf-full">Voz de marca <small>(la IA la usa al generar)</small></div>
+        <label class="mf-full">¿A qué se dedica? <input type="text" id="marca-negocio" placeholder="Ej: Seguros de auto 100% digitales para Chile"></label>
+        <label>Tono de voz<input type="text" id="marca-tono" placeholder="Cercano, claro, confiable"></label>
+        <label>Eslogan<input type="text" id="marca-eslogan" placeholder="Conduce tranquilo"></label>
       </div>
+      <input type="hidden" id="marca-logo-data">
+      <input type="hidden" id="marca-logoClaro-data">
       <input type="hidden" id="marca-edit-id">
       <div class="mf-actions">
         <button id="marca-cancel" onclick="resetMarcaForm()" style="display:none;">Cancelar edición</button>
@@ -4250,14 +4287,74 @@ function editarBanner(){
 
 // ── Marcas (kits de marca: logo, colores, tipografía, CTA, footer) ──
 function abrirMarcas(){ resetMarcaForm(); renderMarcas(); document.getElementById("modal-marcas").classList.add("show"); }
+// Normaliza una marca (vieja o nueva) al modelo extendido actual.
+function normalizarMarca(m){
+  m = m || {};
+  return {
+    id: m.id,
+    nombre: m.nombre || "",
+    empresa: m.empresa || "",
+    logo: m.logo || m.logoUrl || "",          // principal (data URL o URL vieja)
+    logoClaro: m.logoClaro || "",             // para fondos oscuros
+    primary: m.primary || "#1c73cb",
+    secondary: m.secondary || m.bg || "#0e2748",
+    cta: m.cta || m.primary || "#1c73cb",
+    ctaText: m.ctaText || "#ffffff",
+    text: m.text || "#1a1a1a",
+    bg: m.bg || "#ffffff",
+    bgPagina: m.bgPagina || "#f5f5f5",
+    fontTitulo: m.fontTitulo || m.font || "Inter",
+    fontCuerpo: m.fontCuerpo || m.font || "Inter",
+    negocio: m.negocio || "",
+    tono: m.tono || "",
+    eslogan: m.eslogan || ""
+  };
+}
+// Logo "vigente" según el fondo: claro si el fondo es oscuro y hay logo claro.
+function logoDeMarca(m, fondoOscuro){ m=normalizarMarca(m); return (fondoOscuro && m.logoClaro) ? m.logoClaro : (m.logo || m.logoClaro || ""); }
+function esColorOscuro(hex){
+  if(!hex || hex[0] !== "#") return false;
+  let h=hex.slice(1); if(h.length===3) h=h.split("").map(c=>c+c).join("");
+  const r=parseInt(h.slice(0,2),16), g=parseInt(h.slice(2,4),16), b=parseInt(h.slice(4,6),16);
+  return (0.299*r + 0.587*g + 0.114*b) < 140;   // luminancia
+}
+// Sube un logo desde archivo: lo reduce (máx 512px) y lo guarda como data URL.
+function subirLogoMarca(campo, input){
+  const file = input.files && input.files[0]; if(!file) return;
+  if(!/^image\//.test(file.type)){ toast("Elige un archivo de imagen"); return; }
+  const reader = new FileReader();
+  reader.onload = () => {
+    const img = new Image();
+    img.onload = () => {
+      const max = 512; let { width:w, height:h } = img;
+      if(w>max || h>max){ const r=Math.min(max/w, max/h); w=Math.round(w*r); h=Math.round(h*r); }
+      const cv=document.createElement("canvas"); cv.width=w; cv.height=h;
+      cv.getContext("2d").drawImage(img,0,0,w,h);
+      // PNG conserva transparencia (clave para logos); si no, queda PNG igual.
+      const data = cv.toDataURL("image/png");
+      document.getElementById("marca-"+campo+"-data").value = data;
+      pintarLogoPrev(campo, data);
+      toast("Logo cargado");
+    };
+    img.onerror = () => toast("No se pudo leer la imagen");
+    img.src = reader.result;
+  };
+  reader.readAsDataURL(file);
+  input.value = "";   // permite re-subir el mismo archivo
+}
+function quitarLogoMarca(campo){ document.getElementById("marca-"+campo+"-data").value=""; pintarLogoPrev(campo,""); }
+function pintarLogoPrev(campo, data){
+  const prev=document.getElementById("marca-"+campo+"-prev"); if(!prev) return;
+  prev.innerHTML = data ? `<img src="${escAttr(data)}" alt="">` : `<span>Sin logo</span>`;
+}
 function renderMarcas(){
   const cont = document.getElementById("marca-list");
   const ms = workspace.marcas || [];
   if(!ms.length){ cont.innerHTML = `<div class="marca-vacia">Aún no hay marcas. Crea una abajo.</div>`; return; }
-  cont.innerHTML = ms.map(m => `<div class="marca-card">
-    ${m.logoUrl ? `<img class="mlogo" src="${escAttr(m.logoUrl)}" alt="">` : `<span class="mlogo"></span>`}
+  cont.innerHTML = ms.map(normalizarMarca).map(m => `<div class="marca-card">
+    ${m.logo ? `<img class="mlogo" src="${escAttr(m.logo)}" alt="">` : `<span class="mlogo"></span>`}
     <div class="minfo"><div class="mn">${esc(m.nombre)}</div>
-      <div class="msw"><i style="background:${esc(m.primary)}"></i><i style="background:${esc(m.cta||m.primary)}"></i><i style="background:${esc(m.text)}"></i><i style="background:${esc(m.bg)}"></i></div></div>
+      <div class="msw"><i style="background:${esc(m.primary)}"></i><i style="background:${esc(m.secondary)}"></i><i style="background:${esc(m.cta)}"></i><i style="background:${esc(m.text)}"></i><i style="background:${esc(m.bg)}"></i></div></div>
     <div class="macc">
       <button class="primary" onclick="aplicarMarca('${m.id}')">Aplicar</button>
       <button onclick="editarMarca('${m.id}')">Editar</button>
@@ -4266,31 +4363,44 @@ function renderMarcas(){
 }
 function resetMarcaForm(){
   const set=(id,v)=>{ const e=document.getElementById(id); if(e) e.value=v; };
-  set("marca-edit-id",""); set("marca-nombre",""); set("marca-logo",""); set("marca-empresa","");
-  set("marca-font","Inter"); set("marca-primary","#1c73cb"); set("marca-cta","#1c73cb");
-  set("marca-text","#1a1a1a"); set("marca-bg","#ffffff"); set("marca-bgpagina","#f5f5f5");
+  set("marca-edit-id",""); set("marca-nombre",""); set("marca-empresa","");
+  set("marca-logo-data",""); set("marca-logoClaro-data","");
+  pintarLogoPrev("logo",""); pintarLogoPrev("logoClaro","");
+  set("marca-primary","#1c73cb"); set("marca-secondary","#0e2748"); set("marca-cta","#1c73cb");
+  set("marca-ctaText","#ffffff"); set("marca-text","#1a1a1a"); set("marca-bg","#ffffff"); set("marca-bgpagina","#f5f5f5");
+  set("marca-fontTitulo","Inter"); set("marca-fontCuerpo","Inter");
+  set("marca-negocio",""); set("marca-tono",""); set("marca-eslogan","");
   document.getElementById("marca-form-titulo").textContent="Nueva marca";
   document.getElementById("marca-cancel").style.display="none";
 }
 function editarMarca(id){
-  const m=(workspace.marcas||[]).find(x=>x.id===id); if(!m) return;
+  const raw=(workspace.marcas||[]).find(x=>x.id===id); if(!raw) return;
+  const m=normalizarMarca(raw);
   const set=(i,v)=>{ const e=document.getElementById(i); if(e) e.value=v; };
-  set("marca-edit-id",m.id); set("marca-nombre",m.nombre||""); set("marca-logo",m.logoUrl||"");
-  set("marca-empresa",m.empresa||""); set("marca-font",m.font||"Inter"); set("marca-primary",m.primary||"#1c73cb");
-  set("marca-cta",m.cta||m.primary||"#1c73cb"); set("marca-text",m.text||"#1a1a1a"); set("marca-bg",m.bg||"#ffffff");
-  set("marca-bgpagina",m.bgPagina||"#f5f5f5");
+  set("marca-edit-id",m.id); set("marca-nombre",m.nombre); set("marca-empresa",m.empresa);
+  set("marca-logo-data",m.logo); set("marca-logoClaro-data",m.logoClaro);
+  pintarLogoPrev("logo",m.logo); pintarLogoPrev("logoClaro",m.logoClaro);
+  set("marca-primary",m.primary); set("marca-secondary",m.secondary); set("marca-cta",m.cta);
+  set("marca-ctaText",m.ctaText); set("marca-text",m.text); set("marca-bg",m.bg); set("marca-bgpagina",m.bgPagina);
+  set("marca-fontTitulo",m.fontTitulo); set("marca-fontCuerpo",m.fontCuerpo);
+  set("marca-negocio",m.negocio); set("marca-tono",m.tono); set("marca-eslogan",m.eslogan);
   document.getElementById("marca-form-titulo").textContent="Editar marca";
   document.getElementById("marca-cancel").style.display="";
+  document.getElementById("modal-marcas").querySelector(".modal-body").scrollTop = 99999;
 }
 function guardarMarca(){
-  const g=id=>document.getElementById(id).value;
+  const g=id=>{ const e=document.getElementById(id); return e?e.value:""; };
   const nombre=g("marca-nombre").trim();
   if(!nombre){ toast("Ponle un nombre a la marca"); return; }
-  const datos={ nombre, logoUrl:g("marca-logo").trim(), empresa:g("marca-empresa").trim(), font:g("marca-font"),
-    primary:g("marca-primary"), cta:g("marca-cta"), text:g("marca-text"), bg:g("marca-bg"), bgPagina:g("marca-bgpagina") };
+  const datos={ nombre, empresa:g("marca-empresa").trim(),
+    logo:g("marca-logo-data"), logoClaro:g("marca-logoClaro-data"),
+    primary:g("marca-primary"), secondary:g("marca-secondary"), cta:g("marca-cta"), ctaText:g("marca-ctaText"),
+    text:g("marca-text"), bg:g("marca-bg"), bgPagina:g("marca-bgpagina"),
+    fontTitulo:g("marca-fontTitulo"), fontCuerpo:g("marca-fontCuerpo"),
+    negocio:g("marca-negocio").trim(), tono:g("marca-tono").trim(), eslogan:g("marca-eslogan").trim() };
   workspace.marcas = workspace.marcas || [];
   const id=g("marca-edit-id");
-  if(id){ const m=workspace.marcas.find(x=>x.id===id); if(m) Object.assign(m,datos); }
+  if(id){ const m=workspace.marcas.find(x=>x.id===id); if(m){ Object.keys(m).forEach(k=>{ if(!(k in datos) && k!=="id") delete m[k]; }); Object.assign(m,datos); } }
   else { datos.id="m"+Math.random().toString(36).slice(2,9); workspace.marcas.push(datos); }
   persistir(); resetMarcaForm(); renderMarcas(); renderMarcaSelector();
   toast("Marca guardada");
@@ -4301,16 +4411,35 @@ function eliminarMarca(id){
   persistir(); renderMarcas(); renderMarcaSelector();
 }
 function aplicarMarca(id){
-  const m=(workspace.marcas||[]).find(x=>x.id===id); if(!m) return;
+  const raw=(workspace.marcas||[]).find(x=>x.id===id); if(!raw) return;
+  const m=normalizarMarca(raw);
   const p=pieza(); if(!p) return;
-  p.tema.font=m.font||p.tema.font; p.tema.primary=m.primary||p.tema.primary;
+  p.tema.font=m.fontCuerpo||p.tema.font; p.tema.fontTitulo=m.fontTitulo||m.fontCuerpo||p.tema.font;
+  p.tema.primary=m.primary||p.tema.primary;
   p.tema.text=m.text||p.tema.text; p.tema.bg=m.bg||p.tema.bg; p.tema.bgPagina=m.bgPagina||"";
-  (p.canvas||[]).forEach(b=>{
-    if(b.tipo==="cta" && m.cta) b.datos.colorFondo=m.cta;
-    if(b.tipo==="header" && m.logoUrl) b.datos.logoUrl=m.logoUrl;
-    if(b.tipo==="footer" && m.empresa) b.datos.empresa=m.empresa;
-  });
-  aplicarTema(); renderCanvas(); renderForm(); persistir();
+  p.tema.marcaId=m.id;
+  if(esComposicion(p)){
+    // Banner por zonas: aplica la identidad al diseño global.
+    const C=p.composicion;
+    setPath(C,"fondo.color", m.secondary);
+    const fondoOsc = (C.fondo && C.fondo.tipo==="imagen") ? true : esColorOscuro(m.secondary);
+    setPath(C,"zonas.logo.url", logoDeMarca(m, fondoOsc));
+    setPath(C,"zonas.cta.colorFondo", m.cta);
+    setPath(C,"zonas.cta.colorTexto", m.ctaText);
+    const txtColor = fondoOsc ? "#ffffff" : m.text;
+    setPath(C,"zonas.texto.titular.color", txtColor);
+    setPath(C,"zonas.texto.cuerpo.color", txtColor);
+    if(m.eslogan && !getPath(C,"zonas.texto.titular.texto")) setPath(C,"zonas.texto.titular.texto", m.eslogan);
+    renderTablero(); renderComposicionEditor();
+  } else {
+    (p.canvas||[]).forEach(b=>{
+      if(b.tipo==="cta" && m.cta){ b.datos.colorFondo=m.cta; if(m.ctaText) b.datos.colorTexto=m.ctaText; }
+      if(b.tipo==="header" && m.logo) b.datos.logoUrl=m.logo;
+      if(b.tipo==="footer" && m.empresa) b.datos.empresa=m.empresa;
+    });
+    aplicarTema(); renderCanvas(); renderForm();
+  }
+  persistir();
   cerrarModal("marcas");
   toast("Marca aplicada: "+m.nombre);
 }

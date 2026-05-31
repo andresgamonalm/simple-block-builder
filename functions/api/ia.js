@@ -83,13 +83,18 @@ async function generar({ request, env }) {
 
   // Modo "textos": sugiere copy para una Composición (titular + cuerpo + CTA).
   if (body.modo === "textos") {
+    const mk = body.marca || null;
+    const marcaLinea = mk
+      ? `Marca: ${mk.empresa || ''}. ${mk.negocio ? 'Negocio: ' + mk.negocio + '. ' : ''}${mk.eslogan ? 'Eslogan: "' + mk.eslogan + '". ' : ''}`.trim()
+      : '';
     const instr = [
       "Eres redactor publicitario experto. Devuelve EXCLUSIVAMENTE un JSON:",
       '{ "titular": "...", "cuerpo": "...", "cta": "..." }',
       "Reglas: titular ≤ 6 palabras; cuerpo ≤ 14 palabras; cta ≤ 3 palabras. En español, persuasivo y claro.",
-      `Tono: ${brief.tono || "profesional y cercano"}.`,
+      `Tono: ${brief.tono || (mk && mk.tono) || "profesional y cercano"}.`,
+      marcaLinea,
       `Tema/brief: ${brief.que || "(general)"}.`
-    ].join("\n");
+    ].filter(Boolean).join("\n");
     const model = env.GEMINI_MODEL || "gemini-2.5-flash";
     const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${encodeURIComponent(env.GEMINI_API_KEY)}`;
     const ctl = new AbortController(); const t = setTimeout(() => ctl.abort(), 20000);
@@ -119,7 +124,15 @@ async function generar({ request, env }) {
   const tiposValidos = catalogo.map(c => c.tipo);
 
   const marcaTxt = marca
-    ? `Colores: principal=${marca.primary||'-'}, texto=${marca.text||'-'}, fondo=${marca.bg||'-'}, CTA=${marca.cta||marca.primary||'-'}. Tipografía: ${marca.font||'Inter'}. Logo (URL): ${marca.logoUrl||'(ninguno)'}. Empresa: ${marca.empresa||'-'}.`
+    ? [
+        `Empresa: ${marca.empresa || '-'}.`,
+        marca.negocio ? `A qué se dedica: ${marca.negocio}.` : '',
+        marca.eslogan ? `Eslogan: "${marca.eslogan}".` : '',
+        marca.tono ? `Tono de voz de la marca: ${marca.tono}.` : '',
+        `Colores: principal=${marca.primary||'-'}, secundario=${marca.secondary||'-'}, texto=${marca.text||'-'}, fondo=${marca.bg||'-'}, CTA=${marca.cta||marca.primary||'-'}, texto del CTA=${marca.ctaText||'-'}.`,
+        `Tipografía: títulos=${marca.fontTitulo||marca.font||'Inter'}, cuerpo=${marca.fontCuerpo||marca.font||'Inter'}.`,
+        `Logo (URL): ${marca.logoUrl||'(ninguno)'}.`
+      ].filter(Boolean).join(' ')
     : 'Sin marca específica: usa un estilo limpio y profesional.';
   const imgsTxt = imagenes.length
     ? imagenes.map(im => `- ${im.url}  →  ${im.nombre || '(sin descripción)'}`).join('\n')
