@@ -507,6 +507,7 @@ button,input,select,textarea{font-family:inherit;}
 .ab-stage{overflow:hidden;border-radius:4px;}
 .ab-scale{transform-origin:top left;}
 .ab-frame{position:relative;overflow:hidden;display:flex;flex-direction:column;box-sizing:border-box;}
+.ab-frame.fila{flex-direction:row;align-items:center;}   /* banners anchos: bloques en fila (leaderboard) */
 .ab-frame > *{flex:1;min-height:0;}
 .ab-frame .bw{position:relative;}
 .ab-frame img{max-width:100%!important;max-height:100%!important;width:auto!important;height:auto!important;object-fit:contain;}
@@ -2371,7 +2372,12 @@ const BLOQUES = {
     ],
     render: (d) => {
       const veil = `background:${hexRgba(d.colorVeil||"#000000",(parseInt(d.oscurecer)||0)/100)};`;
-      return wrap(d, `<div class="sbb-hero" style="height:${esc(d.alturaHero)}px;border-radius:${esc(d.radioImg)}px;overflow:hidden;"><img class="bg" src="${esc(d.imagenUrl)}" alt="" style="object-position:${esc(d.posImg||'center')};"><div class="veil" style="${veil}"></div><div class="content" style="height:${esc(d.alturaHero)}px;"><h2${d.colorTitulo?` style="color:${esc(d.colorTitulo)}"`:""}>${esc(d.titulo)}</h2>${d.sub?`<p${d.colorSub?` style="color:${esc(d.colorSub)}"`:""}>${escMultiline(d.sub)}</p>`:""}${d.ctaTexto&&d.ctaUrl?`<a href="${esc(d.ctaUrl)}" target="_blank" rel="noopener">${esc(d.ctaTexto)}</a>`:""}</div></div>`);
+      const et = parseFloat(d.escalaTexto) || 1;   // escala del texto encima (adaptación por tamaño)
+      const tH = Math.round(28*et), tP = Math.round(14*et), padV = Math.round(42*et), padH = Math.round(32*et);
+      const cssH = `font-size:${tH}px;${d.colorTitulo?`color:${esc(d.colorTitulo)};`:""}`;
+      const cssP = `font-size:${tP}px;${d.colorSub?`color:${esc(d.colorSub)};`:""}`;
+      const cta = d.ctaTexto ? `<a href="${esc(d.ctaUrl||'#')}" target="_blank" rel="noopener">${esc(d.ctaTexto)}</a>` : "";
+      return wrap(d, `<div class="sbb-hero" style="height:${esc(d.alturaHero)}px;border-radius:${esc(d.radioImg)}px;overflow:hidden;"><img class="bg" src="${esc(d.imagenUrl)}" alt="" style="object-position:${esc(d.posImg||'center')};"><div class="veil" style="${veil}"></div><div class="content" style="height:${esc(d.alturaHero)}px;padding:${padV}px ${padH}px;"><h2 style="${cssH}">${esc(d.titulo)}</h2>${d.sub?`<p style="${cssP}">${escMultiline(d.sub)}</p>`:""}${cta}</div></div>`);
     }
   },
 
@@ -3059,7 +3065,7 @@ ${fonts}
 *{box-sizing:border-box;margin:0;padding:0;}
 body{font-family:"${p.tema.font}",Arial,sans-serif;background:${colorPagina};color:${p.tema.text};-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale;}
 .sbb-container{max-width:${ancho}px;margin:0 auto;background:${p.tema.bg};${altoCss}}
-.sbb-page{font-family:inherit;color:inherit;background:inherit;height:100%;display:flex;flex-direction:column;}
+.sbb-page{font-family:inherit;color:inherit;background:inherit;height:100%;display:flex;flex-direction:${p._orient==='fila'?'row':'column'};${p._orient==='fila'?'align-items:center;':''}}
 .sbb-page > div{flex:1;min-height:0;}
 ${css}
 /* Banner de tamaño fijo: las imágenes se ajustan al espacio (no se desbordan). */
@@ -3141,6 +3147,43 @@ function temaVars(t){ return `--sbb-font:"${t.font}", "Inter", Arial, sans-serif
 function artboardActivo(){ const p = pieza(); if(!esSetPieza(p)) return null; return p.artboards.find(a => a.fmt === p.activaFmt) || p.artboards[0] || null; }
 function artboardMaster(p){ return p.artboards.find(a => a.fmt === p.masterFmt) || p.artboards[0]; }
 
+// Adapta el contenido del máster a un tamaño concreto (perfil por proporción):
+// orientación (fila para anchos), escala de fuentes/logo/padding, y oculta el
+// texto largo donde no cabe. Es data-driven → se ve igual en editor y export.
+function adaptarCanvasATamaño(masterCanvas, fmt){
+  const f = FORMATOS[fmt] || FORMATOS["display-300x250"];
+  const W = f.ancho, H = f.alto, ratio = W / H;
+  const orient = ratio >= 2.2 ? "fila" : "columna";
+  const esc = orient === "fila"
+    ? Math.max(0.5,  Math.min(1.1, H / 100))
+    : Math.max(0.55, Math.min(1.2, W / 300));
+  const chico = (W * H) < (260 * 260);
+  const sc = (v, mn) => String(Math.max(mn, Math.round((parseFloat(v) || 0) * esc)));
+  const blocks = clone(masterCanvas || []).filter(b => {
+    if (b.tipo === "texto" && (orient === "fila" || chico)) return false;   // el cuerpo de texto no cabe
+    return true;
+  });
+  blocks.forEach(b => {
+    const d = b.datos || {};
+    if (b.tipo === "header") {
+      if (d.tamanoTitulo) d.tamanoTitulo = sc(d.tamanoTitulo, 12);
+      if (d.tamanoBajada) d.tamanoBajada = sc(d.tamanoBajada, 10);
+      if (d.logoAncho)   d.logoAncho   = String(Math.max(32, Math.min(parseInt(sc(d.logoAncho, 32)), Math.round(W * 0.55))));
+      if (d.padTop)      d.padTop      = sc(d.padTop, 2);
+      if (d.padBottom)   d.padBottom   = sc(d.padBottom, 2);
+    } else if (b.tipo === "texto") {
+      if (d.tamano) d.tamano = sc(d.tamano, 11);
+    } else if (b.tipo === "cta") {
+      if (d.tamano) d.tamano = sc(d.tamano, 11);
+      if (d.padX)   d.padX   = sc(d.padX, 8);
+      if (d.padY)   d.padY   = sc(d.padY, 6);
+    } else if (b.tipo === "hero") {
+      d.escalaTexto = esc.toFixed(2);   // escala del texto sobre la imagen
+    }
+  });
+  return { canvas: blocks, orient: orient, esc: esc };
+}
+
 // Crea un set Desktop: un TABLERO de artboards independientes (uno por tamaño),
 // todos visibles en el lienzo. El máster (300×250) arranca con un hero (imagen +
 // texto + CTA) y el resto copia su contenido; luego cada banner se edita aparte.
@@ -3155,7 +3198,8 @@ function crearSetDesktop(){
   p.activaFmt = "display-300x250";
   p.formato = "display-300x250";
   p.canvas = p.canvas || [];
-  p.artboards = SET_DISPLAY_DESKTOP.map(fmt => ({ fmt, canvas: semilla() }));
+  const sem = semilla();
+  p.artboards = SET_DISPLAY_DESKTOP.map(fmt => { const a = adaptarCanvasATamaño(sem, fmt); return { fmt, canvas: a.canvas, orient: a.orient }; });
   proyecto.activa = p.id;
   activarPieza(p.id);
   toast("Set Desktop creado — edita cada banner; el máster (300×250) puedes aplicarlo a todos");
@@ -3174,7 +3218,7 @@ function convertirEnColeccion(tipo){
   p.masterFmt = "display-300x250";
   p.activaFmt = "display-300x250";
   p.formato = "display-300x250";
-  p.artboards = SET_DISPLAY_DESKTOP.map(fmt => ({ fmt, canvas: clone(master) }));
+  p.artboards = SET_DISPLAY_DESKTOP.map(fmt => { const a = adaptarCanvasATamaño(master, fmt); return { fmt, canvas: a.canvas, orient: a.orient }; });
   seleccionado = null;
   if(panelTab === "plantillas") cambiarPanelTab("bloques");
   activarPieza(p.id);
@@ -3230,7 +3274,7 @@ function renderTablero(){
       <div class="ab-bar"><span class="ab-tit">${fmt.ancho}×${fmt.alto}${master?' <span class="mtag">máster</span>':''}${activo?' <span class="acttag">editando</span>':''}</span><button class="ab-dl" onclick="exportarArtboard('${ab.fmt}');event.stopPropagation();" title="Descargar este banner">${svgIcon("exportar",{size:"12px"})}</button></div>
       <div class="ab-stage" style="width:${Math.round(fmt.ancho*zoom)}px;height:${Math.round(fmt.alto*zoom)}px;">
         <div class="ab-scale" style="transform:scale(${zoom});">
-          <div class="ab-frame" data-fmt="${ab.fmt}" style="width:${fmt.ancho}px;height:${fmt.alto}px;${temaVars(p.tema)};background:${esc(p.tema.bg)};">${inner}</div>
+          <div class="ab-frame ${ab.orient||'columna'}" data-fmt="${ab.fmt}" style="width:${fmt.ancho}px;height:${fmt.alto}px;${temaVars(p.tema)};background:${esc(p.tema.bg)};">${inner}</div>
         </div>
       </div>
     </div>`;
@@ -3251,14 +3295,18 @@ function aplicarMasterATodos(){
   const p = pieza(); if(!esSetPieza(p)) return;
   const master = artboardMaster(p); if(!master) return;
   if(!confirm("¿Aplicar el contenido del máster (300×250) a TODOS los tamaños? Reemplaza lo que tengas en los demás.")) return;
-  p.artboards.forEach(ab => { if(ab.fmt !== p.masterFmt) ab.canvas = clone(master.canvas); });
+  p.artboards.forEach(ab => {
+    if(ab.fmt === p.masterFmt){ ab.orient = "columna"; return; }
+    const a = adaptarCanvasATamaño(master.canvas, ab.fmt);
+    ab.canvas = a.canvas; ab.orient = a.orient;
+  });
   seleccionado = null;
   persistir(); renderCanvas(); renderForm();
   toast("Máster aplicado a todos los tamaños");
 }
 function piezaDeArtboard(p, ab){
   const fmt = FORMATOS[ab.fmt];
-  return { nombre: `${p.nombre}-${fmt.ancho}x${fmt.alto}`, formato: ab.fmt, canvas: ab.canvas || [], tema: p.tema };
+  return { nombre: `${p.nombre}-${fmt.ancho}x${fmt.alto}`, formato: ab.fmt, canvas: ab.canvas || [], tema: p.tema, _orient: ab.orient || "columna" };
 }
 function exportarArtboard(fmt){
   const p = pieza(); if(!esSetPieza(p)) return;
