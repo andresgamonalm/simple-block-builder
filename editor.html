@@ -1142,22 +1142,18 @@ button,input,select,textarea{font-family:inherit;}
         <div class="mf-sec mf-full">Logos</div>
         <div class="mf-logos mf-full">
           <div class="mf-logo">
-            <div class="mf-logo-prev" id="marca-logo-prev"><span>Sin logo</span></div>
-            <div class="mf-logo-cap">Logo principal</div>
             <input type="file" id="marca-logo-file" accept="image/*" class="mf-file" onchange="subirLogoMarca('logo', this)">
-            <div class="mf-logo-btns">
-              <button type="button" onclick="document.getElementById('marca-logo-file').click()">Subir…</button>
-              <button type="button" onclick="quitarLogoMarca('logo')">Quitar</button>
-            </div>
+            <button type="button" class="mf-drop" id="marca-logo-prev" onclick="document.getElementById('marca-logo-file').click()" title="Subir logo">
+              <span class="mf-drop-ph"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 16V4M7 9l5-5 5 5"/><path d="M4 16v3a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-3"/></svg>Subir logo</span>
+            </button>
+            <div class="mf-logo-foot"><span class="mf-logo-cap">Logo principal</span><button type="button" class="mf-logo-x" id="marca-logo-x" onclick="quitarLogoMarca('logo')" style="display:none">Quitar</button></div>
           </div>
           <div class="mf-logo">
-            <div class="mf-logo-prev dark" id="marca-logoClaro-prev"><span>Sin logo</span></div>
-            <div class="mf-logo-cap">Logo claro <small>(fondos oscuros)</small></div>
             <input type="file" id="marca-logoClaro-file" accept="image/*" class="mf-file" onchange="subirLogoMarca('logoClaro', this)">
-            <div class="mf-logo-btns">
-              <button type="button" onclick="document.getElementById('marca-logoClaro-file').click()">Subir…</button>
-              <button type="button" onclick="quitarLogoMarca('logoClaro')">Quitar</button>
-            </div>
+            <button type="button" class="mf-drop dark" id="marca-logoClaro-prev" onclick="document.getElementById('marca-logoClaro-file').click()" title="Subir logo claro">
+              <span class="mf-drop-ph"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 16V4M7 9l5-5 5 5"/><path d="M4 16v3a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-3"/></svg>Subir logo</span>
+            </button>
+            <div class="mf-logo-foot"><span class="mf-logo-cap">Logo claro <small>(fondos oscuros)</small></span><button type="button" class="mf-logo-x" id="marca-logoClaro-x" onclick="quitarLogoMarca('logoClaro')" style="display:none">Quitar</button></div>
           </div>
         </div>
 
