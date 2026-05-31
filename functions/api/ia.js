@@ -11,7 +11,16 @@ import { json, corsPreflight, getUserEmail } from './_shared.js';
 
 export const onRequestOptions = () => corsPreflight();
 
-export async function onRequestPost({ request, env }) {
+// Envoltura: cualquier excepción se convierte en un JSON legible (nunca un 502 mudo).
+export async function onRequestPost(ctx) {
+  try {
+    return await generar(ctx);
+  } catch (e) {
+    return json({ ok: false, error: 'Error interno del motor IA: ' + (e && e.message ? e.message : String(e)) }, 500);
+  }
+}
+
+async function generar({ request, env }) {
   const email = await getUserEmail(request, env);
   if (!email) return json({ ok: false, error: 'No autenticado' }, 401);
 
@@ -83,7 +92,7 @@ export async function onRequestPost({ request, env }) {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         contents: [{ role: 'user', parts: [{ text: instruccion }] }],
-        generationConfig: { responseMimeType: 'application/json', temperature: 0.65, maxOutputTokens: 6000 }
+        generationConfig: { responseMimeType: 'application/json', temperature: 0.65, maxOutputTokens: 4096 }
       })
     });
   } catch (e) {
@@ -92,13 +101,15 @@ export async function onRequestPost({ request, env }) {
 
   if (!res.ok) {
     const t = await res.text().catch(() => '');
-    return json({ ok: false, error: `Gemini respondió ${res.status}. ${t.slice(0, 300)}` }, 502);
+    return json({ ok: false, error: `Gemini (${model}) respondió ${res.status}. ${t.slice(0, 400)}` }, 502);
   }
 
   let data;
   try { data = await res.json(); } catch { return json({ ok: false, error: 'Respuesta de Gemini no es JSON.' }, 502); }
 
-  const texto = data?.candidates?.[0]?.content?.parts?.map(p => p.text || '').join('') || '';
+  let texto = '';
+  const parts = data && data.candidates && data.candidates[0] && data.candidates[0].content && data.candidates[0].content.parts;
+  if (Array.isArray(parts)) texto = parts.map(p => (p && p.text) || '').join('');
   if (!texto) {
     const motivo = data?.candidates?.[0]?.finishReason || data?.promptFeedback?.blockReason || 'sin contenido';
     return json({ ok: false, error: 'Gemini no devolvió contenido (' + motivo + ').' }, 502);
