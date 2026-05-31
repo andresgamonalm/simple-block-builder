@@ -425,6 +425,24 @@ button,input,select,textarea{font-family:inherit;}
 .bw:hover .bw-handle,.bw.selected .bw-handle{display:block;}
 .drop-line{height:3px;background:var(--sel);border-radius:2px;margin:1px 0;animation:pulse 1s infinite;pointer-events:none;}
 @keyframes pulse{0%,100%{opacity:1;}50%{opacity:.5;}}
+/* ── Set de banners adaptables (Display) ── */
+.set-intro{font-size:13px;color:#555;margin:0 0 14px;line-height:1.5;}
+.set-grid{display:flex;flex-wrap:wrap;gap:18px;align-items:flex-start;}
+.set-cell{border:1px solid var(--bdr);border-radius:10px;padding:10px;background:#fafbfd;display:flex;flex-direction:column;gap:8px;}
+.set-cell.maestro{border-color:var(--primary);box-shadow:0 0 0 2px var(--primary-l);}
+.set-cell-bar{display:flex;align-items:center;justify-content:space-between;gap:10px;font-size:11.5px;color:#444;font-weight:600;}
+.set-cell-bar .mtag{color:var(--primary);font-weight:700;}
+.set-cell-bar button{font-family:var(--f);font-size:11px;border:1px solid var(--bdr);background:#fff;border-radius:6px;padding:3px 8px;cursor:pointer;display:inline-flex;align-items:center;gap:4px;}
+.set-cell-bar button:hover{background:var(--primary);color:#fff;border-color:var(--primary);}
+.set-stage{display:flex;align-items:center;justify-content:center;background:repeating-conic-gradient(#eef0f5 0% 25%,#fff 0% 50%) 50%/16px 16px;border-radius:6px;overflow:hidden;}
+.set-box-scale{transform-origin:top left;}
+.set-box{position:relative;overflow:hidden;}
+.set-fit{position:absolute;top:50%;left:50%;will-change:transform;}
+.set-content{display:flex;align-items:center;justify-content:center;box-sizing:border-box;}
+.set-content.columna{flex-direction:column;}
+.set-content.fila{flex-direction:row;gap:8px;}
+.set-content.columna > .set-blk{width:100%;}
+.set-content.fila > .set-blk{flex:1 1 0;min-width:0;}
 
 /* ─── FORM (RIGHT PANEL) ─── */
 .form-empty{padding:36px 16px;text-align:center;color:var(--ink3);font-size:12px;line-height:1.65;}
@@ -862,6 +880,7 @@ button,input,select,textarea{font-family:inherit;}
       <button class="tb-btn" onclick="abrirEnvioPrueba()" title="Enviar prueba por correo"><span class="ico" data-ic="enviar"></span> Enviar prueba</button>
       <button class="tb-btn icon-only" onclick="abrirImportar()" title="Importar HTML"><span class="ico" data-ic="subir"></span></button>
       <button class="tb-btn danger icon-only" onclick="vaciarCanvas()" title="Vaciar pieza actual"><span class="ico" data-ic="basura"></span></button>
+      <button class="tb-btn" id="btn-set" style="display:none" onclick="abrirSetView()" title="Ver y exportar todos los tamaños del set"><span class="ico" data-ic="grid"></span> Ver set</button>
       <button class="tb-btn primary" onclick="abrirExportar()"><span class="ico" data-ic="exportar"></span> Exportar</button>
       <span class="sync-status" id="sync-status" title="Estado de guardado en la nube">—</span>
     </div>
@@ -933,6 +952,10 @@ button,input,select,textarea{font-family:inherit;}
 <div class="modal-bg" id="modal-export"><div class="modal">
   <div class="modal-head"><h3>Exportar HTML</h3><button class="modal-close" onclick="cerrarModal('export')">×</button></div>
   <div class="modal-body" id="export-body"></div>
+</div></div>
+<div class="modal-bg" id="modal-set"><div class="modal modal-lg">
+  <div class="modal-head"><h3>Set de banners — Display Desktop</h3><button class="modal-close" onclick="cerrarModal('set')">×</button></div>
+  <div class="modal-body" id="set-body"></div>
 </div></div>
 <div class="modal-bg" id="modal-import"><div class="modal">
   <div class="modal-head"><h3>Importar HTML</h3><button class="modal-close" onclick="cerrarModal('import')">×</button></div>
@@ -2320,7 +2343,11 @@ const FORMATOS = {
   "display-300x600": { label:"300×600 Half Page",         badge:"Display",   ancho:300,  alto:600,  txt:"Half Page 300×600." },
   "display-160x600": { label:"160×600 Wide Skyscraper",   badge:"Display",   ancho:160,  alto:600,  txt:"Wide Skyscraper 160×600." },
   "display-320x50":  { label:"320×50 Mobile Banner",      badge:"Display",   ancho:320,  alto:50,   txt:"Mobile Banner 320×50." },
-  "display-320x100": { label:"320×100 Large Mobile",      badge:"Display",   ancho:320,  alto:100,  txt:"Large Mobile Banner 320×100." }
+  "display-320x100": { label:"320×100 Large Mobile",      badge:"Display",   ancho:320,  alto:100,  txt:"Large Mobile Banner 320×100." },
+  "display-970x90":  { label:"970×90 Large Leaderboard",  badge:"Display",   ancho:970,  alto:90,   txt:"Large Leaderboard 970×90." },
+  "display-468x60":  { label:"468×60 Banner",             badge:"Display",   ancho:468,  alto:60,   txt:"Banner 468×60." },
+  "display-250x250": { label:"250×250 Square",            badge:"Display",   ancho:250,  alto:250,  txt:"Square 250×250." },
+  "display-200x200": { label:"200×200 Small Square",      badge:"Display",   ancho:200,  alto:200,  txt:"Small Square 200×200." }
 };
 function esFormatoFijo(f){ const x = FORMATOS[f]; return !!(x && x.alto > 0); }
 // HINTS derivado (compatibilidad con código existente: badge + txt).
@@ -2429,6 +2456,7 @@ function activarPieza(id){
   document.getElementById("fmt").value = p.formato;
   cambiarFormato(p.formato);
   aplicarTema(); renderCanvas(); renderForm(); renderTabsPiezas();
+  actualizarBotonSet();
   persistir();
 }
 function eliminarPieza(id){
@@ -2519,6 +2547,7 @@ function renderCanvas(){
     // justo sobre otro bloque.
   });
   iniciarLivePreview();
+  refrescarSetSiAbierto();   // refresca el set en vivo (añadir/borrar/reordenar bloques)
 }
 
 function ejecutarScriptsCodigo(){
@@ -2727,6 +2756,13 @@ function renderBloqueSeleccionado(){
   tmp.innerHTML = BLOQUES[item.tipo].render(item.datos);
   while(tmp.firstChild) bw.appendChild(tmp.firstChild);
   iniciarLivePreview();
+  refrescarSetSiAbierto();
+}
+// Si la vista del set está abierta y la creatividad es un set, re-renderiza las
+// adaptaciones en vivo (al editar el máster).
+function refrescarSetSiAbierto(){
+  const m = document.getElementById("modal-set");
+  if(m && m.classList.contains("show") && esSetPieza(pieza())) renderSetView();
 }
 
 function agregarBloque(tipo, datos, insertAt){
@@ -2931,6 +2967,135 @@ ${liveScript}
 </body></html>`;
 }
 
+/* ═══════════════════════════════════════════════════════════════
+   SET DE BANNERS ADAPTABLES (Google Display) — Fase 1
+   Un "set" es una creatividad (esSet:true) cuyo lienzo es el MÁSTER
+   (300×250). Todos los tamaños comparten ese contenido y se adaptan por
+   proporción: anchos→fila, el resto→columna; un auto-ajuste (scale) evita
+   que nada se desborde. Se exporta uno o todos.
+   ═══════════════════════════════════════════════════════════════ */
+const SET_DISPLAY_DESKTOP = ["display-300x250","display-336x280","display-728x90","display-970x90","display-300x600","display-160x600","display-250x250","display-200x200","display-468x60"];
+function esSetPieza(p){ return !!(p && p.esSet); }
+// Reflujo por proporción: banners anchos y bajos → fila; el resto → columna.
+function orientacionSet(fmt){ return (fmt.ancho / fmt.alto) >= 2.2 ? "fila" : "columna"; }
+function temaVars(t){ return `--sbb-font:"${t.font}", "Inter", Arial, sans-serif;--sbb-primary:${t.primary};--sbb-text:${t.text};--sbb-bg:${t.bg};`; }
+// CSS de componentes (mismo recorte que el export normal), para los HTML del set.
+function cssComponentes(){
+  const cssFull = (document.querySelector("style") && document.querySelector("style").textContent) || "";
+  const i = cssFull.indexOf("COMPONENT STYLES");
+  if(i < 0) return cssFull;
+  const c = cssFull.indexOf("*/", i);
+  return c >= 0 ? cssFull.slice(c + 2) : cssFull.slice(i);
+}
+// Contenido del máster maquetado en fila o columna (a un ancho de diseño natural).
+function contenidoSetHTML(p, orient){
+  const w = orient === "fila" ? 600 : 300;
+  const blks = (p.canvas || []).map(item => `<div class="set-blk">${BLOQUES[item.tipo].render(item.datos)}</div>`).join("");
+  return `<div class="set-content ${orient}" style="width:${w}px;${temaVars(p.tema)}">${blks}</div>`;
+}
+// Ajusta (fit) cada banner: escala el contenido para que entre exacto en su caja.
+function ajustarBannersSet(root){
+  root.querySelectorAll(".set-box").forEach(box => {
+    const W = +box.dataset.w, H = +box.dataset.h;
+    const fit = box.querySelector(".set-fit");
+    const content = fit && fit.querySelector(".set-content");
+    if(!content) return;
+    fit.style.transform = "none";
+    const cw = content.offsetWidth || 1, ch = content.offsetHeight || 1;
+    let s = Math.min(W / cw, H / ch);
+    if(!isFinite(s) || s <= 0) s = 1;
+    if(s > 2) s = 2;
+    fit.style.transform = `translate(-50%,-50%) scale(${s})`;
+  });
+}
+function abrirSetView(){
+  const p = pieza();
+  if(!esSetPieza(p)){ toast("Esta creatividad no es un set Display"); return; }
+  renderSetView();
+  document.getElementById("modal-set").classList.add("show");
+}
+function renderSetView(){
+  const p = pieza();
+  const cont = document.getElementById("set-body");
+  if(!cont) return;
+  if(!esSetPieza(p)){ cont.innerHTML = "<p>Esta creatividad no es un set.</p>"; return; }
+  const sizes = p.setSizes || SET_DISPLAY_DESKTOP;
+  const master = p.master || "display-300x250";
+  let html = `<p class="set-intro">Diseña el máster <b>300×250</b> en el lienzo de la izquierda; aquí ves <b>todos los tamaños adaptados en vivo</b>. <button class="primary" onclick="descargarTodoElSet()">${svgIcon("exportar",{size:"12px"})} Descargar todos</button></p><div class="set-grid">`;
+  sizes.forEach(fmtKey => {
+    const fmt = FORMATOS[fmtKey]; if(!fmt) return;
+    const esMaestro = fmtKey === master;
+    const orient = orientacionSet(fmt);
+    const pw = Math.min(300 / fmt.ancho, 250 / fmt.alto, 1);   // escala de la miniatura
+    html += `<div class="set-cell${esMaestro ? ' maestro' : ''}">
+      <div class="set-cell-bar"><span>${fmt.ancho}×${fmt.alto}${esMaestro ? ' <span class="mtag">· máster</span>' : ''}</span><button onclick="descargarBannerSet('${fmtKey}')">${svgIcon("exportar",{size:"11px"})} Descargar</button></div>
+      <div class="set-stage" style="width:${Math.round(fmt.ancho*pw)}px;height:${Math.round(fmt.alto*pw)}px;">
+        <div class="set-box-scale" style="transform:scale(${pw});">
+          <div class="set-box" data-w="${fmt.ancho}" data-h="${fmt.alto}" style="width:${fmt.ancho}px;height:${fmt.alto}px;background:${esc(p.tema.bg)};${temaVars(p.tema)}">
+            <div class="set-fit">${contenidoSetHTML(p, orient)}</div>
+          </div>
+        </div>
+      </div>
+    </div>`;
+  });
+  html += `</div>`;
+  cont.innerHTML = html;
+  requestAnimationFrame(() => ajustarBannersSet(cont));
+}
+// HTML autónomo de un banner del set (con script de auto-ajuste embebido).
+function generarHTMLDeBannerSet(p, fmtKey){
+  const fmt = FORMATOS[fmtKey] || FORMATOS["display-300x250"];
+  const orient = orientacionSet(fmt);
+  const css = cssComponentes();
+  const fonts = `<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=${encodeURIComponent(p.tema.font)}:wght@300;400;500;600;700&display=swap" rel="stylesheet">`;
+  const content = contenidoSetHTML(p, orient);
+  return `<!DOCTYPE html>
+<html lang="es"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>${esc(p.nombre)} · ${fmt.ancho}×${fmt.alto}</title>
+${fonts}
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:"${p.tema.font}",Arial,sans-serif;color:${p.tema.text};background:${p.tema.bg};-webkit-font-smoothing:antialiased;}
+.set-box{position:relative;overflow:hidden;width:${fmt.ancho}px;height:${fmt.alto}px;background:${p.tema.bg};${temaVars(p.tema)}}
+.set-fit{position:absolute;top:50%;left:50%;}
+.set-content{display:flex;align-items:center;justify-content:center;box-sizing:border-box;}
+.set-content.columna{flex-direction:column;}
+.set-content.fila{flex-direction:row;gap:8px;}
+.set-content.columna>.set-blk{width:100%;}
+.set-content.fila>.set-blk{flex:1 1 0;min-width:0;}
+${css}
+.set-content img{max-width:100%;height:auto;}
+</style></head><body>
+<!--SBB-SET:${esc(fmtKey)}-->
+<div class="set-box" id="b"><div class="set-fit" id="f">${content}</div></div>
+<script>(function(){var box=document.getElementById('b'),fit=document.getElementById('f'),c=fit.firstElementChild;function fitf(){fit.style.transform='none';var s=Math.min(box.clientWidth/c.offsetWidth,box.clientHeight/c.offsetHeight);if(!isFinite(s)||s<=0)s=1;if(s>2)s=2;fit.style.transform='translate(-50%,-50%) scale('+s+')';}fitf();window.addEventListener('resize',fitf);setTimeout(fitf,200);})();<\/script>
+</body></html>`;
+}
+function descargarBannerSet(fmtKey){
+  const p = pieza(); if(!esSetPieza(p)) return;
+  const fmt = FORMATOS[fmtKey]; if(!fmt) return;
+  const html = generarHTMLDeBannerSet(p, fmtKey);
+  const blob = new Blob([html], {type:"text/html"});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url; a.download = `${slugify(p.nombre)}-${fmtKey.replace("display-","")}.html`;
+  document.body.appendChild(a); a.click(); a.remove();
+  URL.revokeObjectURL(url);
+  toast(`Descargado ${fmt.ancho}×${fmt.alto}`);
+}
+function descargarTodoElSet(){
+  const p = pieza(); if(!esSetPieza(p)) return;
+  const sizes = p.setSizes || SET_DISPLAY_DESKTOP;
+  let i = 0;
+  sizes.forEach(fmtKey => { setTimeout(() => descargarBannerSet(fmtKey), i*350); i++; });
+  setTimeout(() => toast(`${sizes.length} banners descargados`), sizes.length*350 + 200);
+}
+function actualizarBotonSet(){
+  const b = document.getElementById("btn-set");
+  if(!b) return;
+  b.style.display = esSetPieza(pieza()) ? "" : "none";
+}
+
 function abrirExportar(){
   if(!proyecto || proyecto.piezas.length === 0) return;
   const actual = pieza();
@@ -3055,7 +3220,10 @@ function renderPlantillasTab(){
   const permitidos = GRUPOS_PLANTILLA_POR_CAT[cat] || ["Email","LinkedIn","Facebook","Google Display"];
   const grupos = {};
   Object.entries(PLANTILLAS).forEach(([k,v]) => { (grupos[v.grupo] = grupos[v.grupo] || []).push([k,v]); });
-  grupos["Google Display"] = [["display-set", { label:"Display kit · 8 banners", grupo:"Google Display" }]];
+  grupos["Google Display"] = [
+    ["display-desktop-set", { label:"Set Desktop (adaptable)", grupo:"Google Display" }],
+    ["display-set", { label:"8 banners separados", grupo:"Google Display" }]
+  ];
   let html = "";
   Object.entries(grupos).forEach(([g,arr]) => {
     if(!permitidos.includes(g)) return;   // solo plantillas que concuerdan con el formato
@@ -3075,6 +3243,23 @@ function cargarPlantilla(tipo){
     const actual = pieza();
     if(actual && (!actual.canvas || actual.canvas.length === 0)){ actual.formato = formato; actual.nombre = nombre; return actual; }
     return crearPieza(formato, nombre);
+  }
+  // Set Display Desktop ADAPTABLE: una sola creatividad-máster (300×250) cuyo
+  // contenido se adapta a todos los tamaños. Editas el máster y los ves todos.
+  if(tipo === "display-desktop-set"){
+    const p = getOrCreate("display-300x250", "Display Desktop");
+    p.esSet = true;
+    p.master = "display-300x250";
+    p.setSizes = SET_DISPLAY_DESKTOP.slice();
+    p.canvas = [
+      mk("header", { padTop:"14", padBottom:"6", titulo:"Tu título", bajada:"Subtítulo breve", tamanoTitulo:"20" }),
+      mk("cta", { padTop:"6", padBottom:"14", texto:"Saber más" })
+    ];
+    proyecto.activa = p.id;
+    activarPieza(p.id);
+    abrirSetView();
+    toast("Set Display Desktop creado — diseña el máster y velos todos en 'Ver set'");
+    return;
   }
   // Kit de Google Display: varias piezas, una por tamaño IAB.
   if(tipo === "display-set"){
