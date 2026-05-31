@@ -262,6 +262,23 @@ button,input,select,textarea{font-family:inherit;}
 .ia-estado.err{color:#c0392b;}
 .mf-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
 .mf-full{grid-column:1 / -1;}
+.marca-form .mf-sec{grid-column:1 / -1;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--ink3);margin:10px 0 -2px;}
+.marca-form .mf-sec small{text-transform:none;font-weight:400;letter-spacing:0;color:var(--ink4);}
+.marca-form .mf-logos{grid-column:1 / -1;display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+.marca-form .mf-logo{display:flex;flex-direction:column;gap:7px;}
+.marca-form .mf-file{display:none;}
+.marca-form .mf-drop{width:100%;height:88px;border:1.5px dashed var(--bdr);border-radius:10px;background:var(--bg);display:flex;align-items:center;justify-content:center;cursor:pointer;overflow:hidden;padding:8px;transition:border-color .14s,background .14s;}
+.marca-form .mf-drop:hover{border-color:var(--primary);background:var(--white);}
+.marca-form .mf-drop.dark{background:#0e2748;border-color:#2c4a72;}
+.marca-form .mf-drop img{max-width:100%;max-height:100%;object-fit:contain;}
+.marca-form .mf-drop-ph{display:flex;flex-direction:column;align-items:center;gap:5px;font-size:11.5px;font-weight:500;color:var(--ink3);}
+.marca-form .mf-drop.dark .mf-drop-ph{color:#8aa0c0;}
+.marca-form .mf-drop:hover .mf-drop-ph{color:var(--primary);}
+.marca-form .mf-logo-foot{display:flex;align-items:center;justify-content:space-between;gap:8px;}
+.marca-form .mf-logo-cap{font-size:11px;color:var(--ink2);font-weight:600;}
+.marca-form .mf-logo-cap small{color:var(--ink4);font-weight:400;}
+.marca-form .mf-logo-x{border:none;background:none;font-family:var(--f);font-size:11px;color:var(--ink3);cursor:pointer;padding:2px 4px;text-decoration:underline;}
+.marca-form .mf-logo-x:hover{color:var(--err);}
 .marca-form label{display:flex;flex-direction:column;gap:5px;font-size:11px;font-weight:600;color:var(--ink2);}
 .marca-form input[type=text],.marca-form select{height:38px;border:1px solid var(--bdr);border-radius:9px;padding:0 11px;font-family:var(--f);font-size:13px;color:var(--ink);background:var(--white);font-weight:400;}
 .mf-colores{display:flex;gap:14px;flex-wrap:wrap;}
