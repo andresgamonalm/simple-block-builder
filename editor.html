@@ -218,10 +218,23 @@ button,input,select,textarea{font-family:inherit;}
 /* ── Marcas (kits de marca) ── */
 .modal.modal-lg{max-width:640px;}
 .dz-btn-link{margin-top:8px;border:none;background:none;color:var(--primary);font-size:12px;font-family:var(--f);cursor:pointer;padding:0;text-decoration:underline;}
-.marca-list{display:flex;flex-direction:column;gap:8px;margin:14px 0 20px;}
-.marca-vacia{color:var(--ink3);font-size:13px;padding:10px 0;}
-.marca-card{display:flex;align-items:center;gap:12px;border:1px solid var(--bdr);border-radius:10px;padding:10px 12px;}
-.marca-card .mlogo{width:40px;height:40px;border-radius:8px;background:var(--bg);object-fit:contain;flex-shrink:0;border:1px solid var(--bdr);}
+.marca-head{display:flex;align-items:flex-start;justify-content:space-between;gap:14px;margin-bottom:6px;}
+.marca-head h4{font-size:15px;font-weight:700;color:var(--ink);margin:0;}
+.marca-head .marca-sub{font-size:12px;color:var(--ink3);margin:3px 0 0;max-width:440px;line-height:1.4;}
+.marca-nueva-btn{flex-shrink:0;display:inline-flex;align-items:center;gap:6px;border:none;background:var(--primary);color:#fff;border-radius:9px;padding:9px 14px;font-family:var(--f);font-size:13px;font-weight:600;cursor:pointer;}
+.marca-nueva-btn:hover{background:var(--primary-d);}
+.marca-volver{display:inline-flex;align-items:center;gap:5px;border:none;background:none;color:var(--ink3);font-family:var(--f);font-size:12.5px;cursor:pointer;padding:0;margin-bottom:14px;}
+.marca-volver:hover{color:var(--primary);}
+.mf-plantillas{font-size:11.5px;color:var(--ink3);display:inline-flex;align-items:center;gap:6px;margin-right:auto;}
+.mf-plantillas button{border:1px solid var(--bdr);background:var(--white);border-radius:6px;padding:5px 10px;font-size:11.5px;font-family:var(--f);cursor:pointer;color:var(--ink2);}
+.mf-plantillas button:hover{border-color:var(--primary);color:var(--primary);}
+.marca-list{display:flex;flex-direction:column;gap:8px;margin:12px 0 4px;}
+.marca-vacia{color:var(--ink3);font-size:13px;padding:26px 12px;text-align:center;border:1px dashed var(--bdr);border-radius:12px;line-height:1.6;}
+.marca-card{display:flex;align-items:center;gap:12px;border:1px solid var(--bdr);border-radius:10px;padding:10px 12px;transition:border-color .14s,box-shadow .14s;}
+.marca-card:hover{border-color:var(--primary);box-shadow:var(--sh);}
+.marca-card .mlogo{width:54px;height:40px;border-radius:8px;background:var(--bg);flex-shrink:0;border:1px solid var(--bdr);display:flex;align-items:center;justify-content:center;overflow:hidden;}
+.marca-card .mlogo.dark{background:#0e2748;}
+.marca-card .mlogo img{max-width:88%;max-height:78%;object-fit:contain;}
 .marca-card .minfo{flex:1;min-width:0;}
 .marca-card .mn{font-weight:600;font-size:13.5px;color:var(--ink);}
 .marca-card .msw{display:flex;gap:5px;margin-top:5px;}
@@ -1149,9 +1162,15 @@ button,input,select,textarea{font-family:inherit;}
 <div class="modal-bg" id="modal-marcas"><div class="modal modal-lg">
   <div class="modal-head"><h3>Marcas</h3><button class="modal-close" onclick="cerrarModal('marcas')">×</button></div>
   <div class="modal-body">
-    <p>Guarda estilos de marca (logo, colores, tipografía) y aplícalos a cualquier creación en un clic. Tu IA también puede leerlos.</p>
-    <div class="marca-list" id="marca-list"></div>
-    <div class="marca-form">
+    <div class="marca-biblioteca" id="marca-biblioteca">
+      <div class="marca-head">
+        <div><h4>Tus marcas</h4><p class="marca-sub">Tu biblioteca de marcas. Elige una para aplicarla, edítala o crea otra — todas con la misma ficha.</p></div>
+        <button class="primary marca-nueva-btn" onclick="nuevaMarcaForm()"><span class="ico" data-ic="mas"></span> Nueva marca</button>
+      </div>
+      <div class="marca-list" id="marca-list"></div>
+    </div>
+    <div class="marca-form" id="marca-form" style="display:none;">
+      <button class="marca-volver" onclick="cerrarMarcaForm()"><span class="ico" data-ic="chevleft"></span> Volver a la biblioteca</button>
       <div class="mf-title" id="marca-form-titulo">Nueva marca</div>
       <div class="mf-grid">
         <label class="mf-full">Nombre<input type="text" id="marca-nombre" placeholder="Mi marca"></label>
@@ -1216,9 +1235,8 @@ button,input,select,textarea{font-family:inherit;}
       <input type="hidden" id="marca-logoClaro-data">
       <input type="hidden" id="marca-edit-id">
       <div class="mf-actions">
-        <button id="marca-cancel" onclick="resetMarcaForm()" style="display:none;">Cancelar edición</button>
-        <button onclick="rellenarMarcaRadar()" title="Rellena el formulario con la identidad de RADAR">Plantilla RADAR</button>
-        <button onclick="rellenarMarcaZurich()" title="Rellena el formulario con la identidad propuesta de Zúrich">Plantilla Zúrich</button>
+        <span class="mf-plantillas">Plantillas rápidas: <button onclick="rellenarMarcaRadar()" title="Rellena con la identidad de RADAR">RADAR</button><button onclick="rellenarMarcaZurich()" title="Rellena con la identidad de Zúrich">Zúrich</button></span>
+        <button onclick="cerrarMarcaForm()">Cancelar</button>
         <button class="primary" onclick="guardarMarca()">Guardar marca</button>
       </div>
     </div>
@@ -4315,7 +4333,21 @@ function editarBanner(){
 }
 
 // ── Marcas (kits de marca: logo, colores, tipografía, CTA, footer) ──
-function abrirMarcas(){ resetMarcaForm(); renderMarcas(); document.getElementById("modal-marcas").classList.add("show"); }
+function abrirMarcas(){ renderMarcas(); mostrarBibliotecaMarcas(); document.getElementById("modal-marcas").classList.add("show"); }
+// Alterna entre la BIBLIOTECA (listado) y el FORMULARIO (crear/editar una marca).
+function mostrarBibliotecaMarcas(){
+  document.getElementById("marca-biblioteca").style.display="";
+  document.getElementById("marca-form").style.display="none";
+  renderMarcas();
+  const b=document.getElementById("modal-marcas").querySelector(".modal-body"); if(b) b.scrollTop=0;
+}
+function mostrarFormMarca(){
+  document.getElementById("marca-biblioteca").style.display="none";
+  document.getElementById("marca-form").style.display="";
+  const b=document.getElementById("modal-marcas").querySelector(".modal-body"); if(b) b.scrollTop=0;
+}
+function nuevaMarcaForm(){ resetMarcaForm(); mostrarFormMarca(); }
+function cerrarMarcaForm(){ mostrarBibliotecaMarcas(); }
 // Normaliza una marca (vieja o nueva) al modelo extendido actual.
 function normalizarMarca(m){
   m = m || {};
@@ -4390,16 +4422,20 @@ function pintarLogoPrev(campo, data){
 function renderMarcas(){
   const cont = document.getElementById("marca-list");
   const ms = workspace.marcas || [];
-  if(!ms.length){ cont.innerHTML = `<div class="marca-vacia">Aún no hay marcas. Crea una abajo.</div>`; return; }
-  cont.innerHTML = ms.map(normalizarMarca).map(m => `<div class="marca-card">
-    ${m.logo ? `<img class="mlogo" src="${escAttr(m.logo)}" alt="">` : `<span class="mlogo"></span>`}
+  if(!ms.length){ cont.innerHTML = `<div class="marca-vacia">Aún no tienes marcas en tu biblioteca.<br>Crea la primera con <b>＋ Nueva marca</b> (o usa una plantilla lista).</div>`; return; }
+  cont.innerHTML = ms.map(normalizarMarca).map(m => {
+    const dark = esColorOscuro(m.bg);
+    const logoCard = dark ? (m.logoClaro||m.logo) : (m.logo||m.logoClaro);
+    return `<div class="marca-card">
+    ${logoCard ? `<span class="mlogo${dark?' dark':''}"><img src="${escAttr(logoCard)}" alt=""></span>` : `<span class="mlogo"></span>`}
     <div class="minfo"><div class="mn">${esc(m.nombre)}</div>
-      <div class="msw"><i style="background:${esc(m.primary)}"></i><i style="background:${esc(m.secondary)}"></i><i style="background:${esc(m.cta)}"></i><i style="background:${esc(m.text)}"></i><i style="background:${esc(m.bg)}"></i></div></div>
+      <div class="msw"><i style="background:${esc(m.primary)}" title="Principal"></i><i style="background:${esc(m.secondary)}" title="Secundario"></i><i style="background:${esc(m.cta)}" title="CTA"></i>${m.accent1?`<i style="background:${esc(m.accent1)}" title="Acento 1"></i>`:""}${m.accent2?`<i style="background:${esc(m.accent2)}" title="Acento 2"></i>`:""}<i style="background:${esc(m.bg)}" title="Fondo"></i></div></div>
     <div class="macc">
       <button class="primary" onclick="aplicarMarca('${m.id}')">Aplicar</button>
       <button onclick="editarMarca('${m.id}')">Editar</button>
-      <button onclick="eliminarMarca('${m.id}')">Eliminar</button>
-    </div></div>`).join("");
+      <button onclick="eliminarMarca('${m.id}')" title="Eliminar">${svgIcon("basura",{size:"13px"})}</button>
+    </div></div>`;
+  }).join("");
 }
 function resetMarcaForm(){
   const set=(id,v)=>{ const e=document.getElementById(id); if(e) e.value=v; };
@@ -4414,7 +4450,6 @@ function resetMarcaForm(){
   set("marca-publico",""); set("marca-productos",""); set("marca-usar",""); set("marca-evitar","");
   set("marca-headerTagline",""); set("marca-direccion",""); set("marca-copyright",""); set("marca-unsubTexto",""); set("marca-disclaimer","");
   document.getElementById("marca-form-titulo").textContent="Nueva marca";
-  document.getElementById("marca-cancel").style.display="none";
 }
 function editarMarca(id){
   const raw=(workspace.marcas||[]).find(x=>x.id===id); if(!raw) return;
@@ -4431,8 +4466,7 @@ function editarMarca(id){
   set("marca-publico",m.publico); set("marca-productos",m.productos); set("marca-usar",m.usar); set("marca-evitar",m.evitar);
   set("marca-headerTagline",m.headerTagline); set("marca-direccion",m.direccion); set("marca-copyright",m.copyright); set("marca-unsubTexto",m.unsubTexto); set("marca-disclaimer",m.disclaimer);
   document.getElementById("marca-form-titulo").textContent="Editar marca";
-  document.getElementById("marca-cancel").style.display="";
-  document.getElementById("modal-marcas").querySelector(".modal-body").scrollTop = 99999;
+  mostrarFormMarca();
 }
 function guardarMarca(){
   const g=id=>{ const e=document.getElementById(id); return e?e.value:""; };
@@ -4451,8 +4485,8 @@ function guardarMarca(){
   const id=g("marca-edit-id");
   if(id){ const m=workspace.marcas.find(x=>x.id===id); if(m){ Object.keys(m).forEach(k=>{ if(!(k in datos) && k!=="id") delete m[k]; }); Object.assign(m,datos); } }
   else { datos.id="m"+Math.random().toString(36).slice(2,9); workspace.marcas.push(datos); }
-  persistir(); resetMarcaForm(); renderMarcas(); renderMarcaSelector();
-  toast("Marca guardada");
+  persistir(); resetMarcaForm(); renderMarcaSelector(); mostrarBibliotecaMarcas();
+  toast(id ? "Marca actualizada" : `"${nombre}" agregada a tu biblioteca`);
 }
 // Rellena el formulario con la identidad propuesta de Zúrich (punto de partida; el logo lo sube el usuario).
 function rellenarMarcaZurich(){
