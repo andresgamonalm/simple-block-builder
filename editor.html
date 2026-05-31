@@ -650,6 +650,9 @@ button,input,select,textarea{font-family:inherit;}
 .toast.show{transform:translateY(0);opacity:1;}
 
 /* ─── EXPORT LIST ─── */
+.export-tipo{display:flex;align-items:center;gap:8px;margin:6px 0 12px;font-size:12.5px;color:var(--ink3);}
+.export-tipo button{padding:6px 14px;border:1px solid var(--bdr);border-radius:7px;background:var(--white);cursor:pointer;font-size:12px;font-weight:600;color:var(--ink2);font-family:var(--f);}
+.export-tipo button.on{background:var(--primary);color:#fff;border-color:var(--primary);}
 .export-list{display:grid;gap:6px;}
 .export-row{display:flex;align-items:center;gap:10px;padding:11px 14px;border:1px solid var(--bdr);border-radius:8px;transition:border-color .14s;}
 .export-row:hover{border-color:var(--bdr2);}
@@ -1009,7 +1012,7 @@ button,input,select,textarea{font-family:inherit;}
       </div>
       <span id="set-tools" style="display:none">
         <button class="tb-btn" onclick="aplicarMasterATodos()" title="Aplicar el contenido del máster (300×250) a todos los tamaños"><span class="ico" data-ic="grid"></span> Aplicar máster a todos</button>
-        <button class="tb-btn" onclick="exportarTodoElSet()" title="Descargar todos los banners del set"><span class="ico" data-ic="exportar"></span> Descargar todos</button>
+        <button class="tb-btn" onclick="abrirExportar()" title="Descargar todos los banners (HTML, PNG o JPG)"><span class="ico" data-ic="exportar"></span> Descargar todos</button>
         <button class="tb-btn" onclick="salirDeColeccion()" title="Volver a un banner único (queda el máster)"><span class="ico" data-ic="chevright"></span> Salir de colección</button>
       </span>
       <div class="dev-seg" id="dev-seg" title="Vista de dispositivo">
@@ -3360,10 +3363,10 @@ function esComposicion(p){ return !!(p && p.esSet && p.composicion); }
 function composicionDefault(tema){
   return {
     fondoColor:{ visible:true, color:(tema&&tema.bg)||"#0e2748" },
-    imagen:{ visible:true, url:"", foco:"center", oscurecer:40 },
-    logo:{ visible:true, url:"", alinH:"left", tamano:"56" },
-    titular:{ visible:true, texto:"Tu titular aquí", tamano:"26", alinH:"left", color:"#ffffff" },
-    cuerpo:{ visible:true, texto:"Texto de apoyo breve", tamano:"13", alinH:"left", color:"#ffffff" },
+    imagen:{ visible:true, url:"", foco:"center", oscurecer:40, fit:"cover", zoom:100 },
+    logo:{ visible:true, url:"", alinH:"left", tamano:"56", maxw:60 },
+    titular:{ visible:true, texto:"", tamano:"26", alinH:"left", color:"#ffffff" },
+    cuerpo:{ visible:true, texto:"", tamano:"13", alinH:"left", color:"#ffffff" },
     cta:{ visible:true, texto:"Saber más", url:"", alinH:"left", colorFondo:(tema&&tema.primary)||"#2f80ed", colorTexto:"#ffffff" }
   };
 }
@@ -3376,9 +3379,13 @@ function renderComposicion(comp, fmt){
   const c=comp||{}, fc=c.fondoColor||{}, im=c.imagen||{}, lg=c.logo||{}, ti=c.titular||{}, cu=c.cuerpo||{}, ct=c.cta||{};
   const px=(v,base)=>Math.round((parseFloat(v)||base)*escF);
   const bg = (fc.visible!==false) ? (fc.color||"#0e2748") : "transparent";
+  const foco = im.foco||'center';
+  const zoom = Math.max(50, Math.min(300, parseInt(im.zoom)||100))/100;
+  const fit = (im.fit==='contain')?'contain':'cover';
   const capaImg = (im.visible!==false && im.url)
-    ? `<img class="cmp-bg" src="${esc(im.url)}" style="object-position:${esc(im.foco||'center')};"><div class="cmp-veil" style="background:rgba(8,14,28,${((parseInt(im.oscurecer)||0)/100).toFixed(2)});"></div>` : "";
-  const logoEl = (lg.visible!==false && lg.url) ? `<img class="cmp-logo" src="${esc(lg.url)}" style="height:${px(lg.tamano,56)}px;align-self:${alinSelf(lg.alinH)};">` : "";
+    ? `<img class="cmp-bg" src="${esc(im.url)}" style="object-fit:${fit};object-position:${esc(foco)};transform:scale(${zoom});transform-origin:${esc(foco)};"><div class="cmp-veil" style="background:rgba(8,14,28,${((parseInt(im.oscurecer)||0)/100).toFixed(2)});"></div>` : "";
+  const logoMaxw = Math.max(15, Math.min(100, parseInt(lg.maxw)||60));
+  const logoEl = (lg.visible!==false && lg.url) ? `<img class="cmp-logo" src="${esc(lg.url)}" style="height:${px(lg.tamano,56)}px;max-width:${logoMaxw}%;align-self:${alinSelf(lg.alinH)};">` : "";
   const tiEl = (ti.visible!==false && ti.texto) ? `<div class="cmp-tit" style="font-size:${px(ti.tamano,26)}px;color:${esc(ti.color||'#fff')};text-align:${esc(ti.alinH||'left')};align-self:${alinSelf(ti.alinH)};">${esc(ti.texto)}</div>` : "";
   const verCue = (cu.visible!==false && cu.texto && !(fila && H<120));
   const cuEl = verCue ? `<div class="cmp-cue" style="font-size:${px(cu.tamano,13)}px;color:${esc(cu.color||'#fff')};text-align:${esc(cu.alinH||'left')};align-self:${alinSelf(cu.alinH)};">${escMultiline(cu.texto)}</div>` : "";
@@ -3394,10 +3401,13 @@ const CAPAS_COMP = ["fondoColor","imagen","logo","titular","cuerpo","cta"];
 function ovDeFmt(p, fmt){ const ab=(p.artboards||[]).find(a=>a.fmt===fmt); if(!ab) return {}; ab.ov=ab.ov||{}; return ab.ov; }
 function composicionEfectiva(p, fmt){
   const g = p.composicion||{}; const ab=(p.artboards||[]).find(a=>a.fmt===fmt); const ov=(ab&&ab.ov)||{};
-  const m={}; CAPAS_COMP.forEach(k => { m[k]=Object.assign({}, g[k]||{}, ov[k]||{}); });
+  // Un override con string vacío significa "no tocar" (hereda del global). Para
+  // ocultar algo en un tamaño se usa el ojo (visible:false), no vaciar el campo.
+  const limpio = (o)=>{ const r={}; Object.keys(o||{}).forEach(k=>{ if(o[k]!=="") r[k]=o[k]; }); return r; };
+  const m={}; CAPAS_COMP.forEach(k => { m[k]=Object.assign({}, g[k]||{}, limpio(ov[k])); });
   return m;
 }
-function tieneOverride(p, fmt){ const ab=(p.artboards||[]).find(a=>a.fmt===fmt); return !!(ab&&ab.ov&&CAPAS_COMP.some(k=>ab.ov[k]&&Object.keys(ab.ov[k]).length)); }
+function tieneOverride(p, fmt){ const ab=(p.artboards||[]).find(a=>a.fmt===fmt); return !!(ab&&ab.ov&&CAPAS_COMP.some(k=>ab.ov[k]&&Object.keys(ab.ov[k]).some(kk=>ab.ov[k][kk]!==""))); }
 function setCompOv(fmt, capa, key, val){ const p=pieza(); if(!esComposicion(p))return; const ov=ovDeFmt(p,fmt); (ov[capa]=ov[capa]||{})[key]=val; persistir(); renderTablero(); }
 function toggleCompVisOv(fmt, capa){ const p=pieza(); if(!esComposicion(p))return; const ef=composicionEfectiva(p,fmt); setCompOv(fmt,capa,'visible',!(ef[capa].visible!==false)); renderForm(); }
 function resetTamaño(fmt){ const p=pieza(); const ab=(p.artboards||[]).find(a=>a.fmt===fmt); if(ab) ab.ov={}; persistir(); renderTablero(); renderForm(); toast("Tamaño restablecido al Diseño global"); }
@@ -3437,6 +3447,16 @@ function swatchesFondo(){
   ["#0e2748","#102a43","#1c1c28","#0b7a4b","#1c73cb","#b3261e","#ffffff","#f5f5f5"].forEach(add);
   return cols.slice(0,12).map(c=>`<button class="cmp-sw" style="background:${esc(c)}" title="${esc(c)}" onclick="setComp('fondoColor','color','${esc(c)}');renderComposicionEditor();"></button>`).join('');
 }
+function coloresMarcaPreset(){
+  const cols=[]; const add=c=>{ if(c && !cols.includes(c)) cols.push(c); };
+  (workspace.marcas||[]).forEach(m=>{ add(m.primary); add(m.bg); add(m.text); add(m.cta); });
+  ["#0e2748","#102a43","#1c1c28","#0b7a4b","#1c73cb","#b3261e","#ffffff","#f5f5f5"].forEach(add);
+  return cols.slice(0,12);
+}
+// Swatches de fondo para un tamaño concreto (escribe override).
+function swatchesFondoOv(fmt){
+  return coloresMarcaPreset().map(c=>`<button class="cmp-sw" style="background:${esc(c)}" title="${esc(c)}" onclick="setCompOv('${fmt}','fondoColor','color','${esc(c)}');renderForm();"></button>`).join('');
+}
 // ✨ Sugerir titular + cuerpo + CTA con IA (Gemini) para la composición global.
 async function sugerirTextosIA(){
   const p=pieza(); if(!esComposicion(p)) return;
@@ -3468,10 +3488,12 @@ function renderComposicionEditor(){
   const rng=(capa,key,mn,mx,base)=>`<input type="range" min="${mn}" max="${mx}" value="${parseInt(C[capa][key])||base}" oninput="setComp('${capa}','${key}',this.value)">`;
   let h="";
   h+=head("fondoColor","Fondo de color")+`<div class="cmp-row"><input type="color" value="${esc(C.fondoColor.color||'#0e2748')}" oninput="setComp('fondoColor','color',this.value)"><div class="cmp-sw-row" title="Colores rápidos (de tus marcas)">${swatchesFondo()}</div></div>`;
-  h+=head("imagen","Imagen de fondo")+`<div class="cmp-row"><input type="text" placeholder="URL imagen" value="${escAttr(C.imagen.url||'')}" onchange="setComp('imagen','url',this.value)"><button class="cmp-bib" onclick="elegirImagenComp('imagen')">${svgIcon("imagen",{size:"12px"})}</button></div><div class="cmp-row"><label>Foco</label><select onchange="setComp('imagen','foco',this.value)">${['center','top','bottom','left','right'].map(v=>`<option value="${v}" ${(C.imagen.foco||'center')===v?'selected':''}>${v}</option>`).join('')}</select></div><div class="cmp-row"><label>Oscurecer</label>${rng('imagen','oscurecer',0,80,40)}</div>`;
-  h+=head("logo","Logo")+`<div class="cmp-row"><input type="text" placeholder="URL logo (PNG/SVG)" value="${escAttr(C.logo.url||'')}" onchange="setComp('logo','url',this.value)"><button class="cmp-bib" onclick="elegirImagenComp('logo')">${svgIcon("imagen",{size:"12px"})}</button></div><div class="cmp-row"><label>Alineación</label>${alin('logo')}</div><div class="cmp-row"><label>Tamaño</label>${rng('logo','tamano',24,140,56)}</div>`;
-  h+=head("titular","Titular")+`<div class="cmp-row"><input type="text" value="${escAttr(C.titular.texto||'')}" oninput="setComp('titular','texto',this.value)"></div><div class="cmp-row"><label>Tamaño</label>${rng('titular','tamano',12,52,26)}</div><div class="cmp-row"><label>Alineación</label>${alin('titular')}<input type="color" value="${esc(C.titular.color||'#ffffff')}" oninput="setComp('titular','color',this.value)"></div>`;
-  h+=head("cuerpo","Cuerpo")+`<div class="cmp-row"><textarea oninput="setComp('cuerpo','texto',this.value)">${esc(C.cuerpo.texto||'')}</textarea></div><div class="cmp-row"><label>Tamaño</label>${rng('cuerpo','tamano',9,28,13)}</div><div class="cmp-row"><label>Alineación</label>${alin('cuerpo')}<input type="color" value="${esc(C.cuerpo.color||'#ffffff')}" oninput="setComp('cuerpo','color',this.value)"></div>`;
+  const selFoco=(capa,setter)=>`<select onchange="${setter}">${['center','top','bottom','left','right'].map(v=>`<option value="${v}" ${(C[capa].foco||'center')===v?'selected':''}>${v}</option>`).join('')}</select>`;
+  const selFit=(capa,setter)=>`<select onchange="${setter}">${[['cover','Cubrir'],['contain','Contener']].map(([v,l])=>`<option value="${v}" ${(C[capa].fit||'cover')===v?'selected':''}>${l}</option>`).join('')}</select>`;
+  h+=head("imagen","Imagen de fondo")+`<div class="cmp-row"><input type="text" placeholder="URL imagen" value="${escAttr(C.imagen.url||'')}" onchange="setComp('imagen','url',this.value)"><button class="cmp-bib" onclick="elegirImagenComp('imagen')">${svgIcon("imagen",{size:"12px"})}</button></div><div class="cmp-row"><label>Ajuste</label>${selFit('imagen',"setComp('imagen','fit',this.value)")}</div><div class="cmp-row"><label>Zoom</label>${rng('imagen','zoom',50,300,100)}</div><div class="cmp-row"><label>Foco</label>${selFoco('imagen',"setComp('imagen','foco',this.value)")}</div><div class="cmp-row"><label>Oscurecer</label>${rng('imagen','oscurecer',0,80,40)}</div>`;
+  h+=head("logo","Logo")+`<div class="cmp-row"><input type="text" placeholder="URL logo (PNG/SVG)" value="${escAttr(C.logo.url||'')}" onchange="setComp('logo','url',this.value)"><button class="cmp-bib" onclick="elegirImagenComp('logo')">${svgIcon("imagen",{size:"12px"})}</button></div><div class="cmp-row"><label>Alineación</label>${alin('logo')}</div><div class="cmp-row"><label>Alto</label>${rng('logo','tamano',24,140,56)}</div><div class="cmp-row"><label>Ancho máx</label>${rng('logo','maxw',15,100,60)}</div>`;
+  h+=head("titular","Titular")+`<div class="cmp-row"><input type="text" placeholder="Tu titular aquí" value="${escAttr(C.titular.texto||'')}" oninput="setComp('titular','texto',this.value)"></div><div class="cmp-row"><label>Tamaño</label>${rng('titular','tamano',12,52,26)}</div><div class="cmp-row"><label>Alineación</label>${alin('titular')}<input type="color" value="${esc(C.titular.color||'#ffffff')}" oninput="setComp('titular','color',this.value)"></div>`;
+  h+=head("cuerpo","Cuerpo")+`<div class="cmp-row"><textarea placeholder="Texto de apoyo breve" oninput="setComp('cuerpo','texto',this.value)">${esc(C.cuerpo.texto||'')}</textarea></div><div class="cmp-row"><label>Tamaño</label>${rng('cuerpo','tamano',9,28,13)}</div><div class="cmp-row"><label>Alineación</label>${alin('cuerpo')}<input type="color" value="${esc(C.cuerpo.color||'#ffffff')}" oninput="setComp('cuerpo','color',this.value)"></div>`;
   h+=head("cta","CTA con link")+`<div class="cmp-row"><input type="text" placeholder="Texto" value="${escAttr(C.cta.texto||'')}" oninput="setComp('cta','texto',this.value)"></div><div class="cmp-row"><input type="text" placeholder="Link (https://…)" value="${escAttr(C.cta.url||'')}" onchange="setComp('cta','url',this.value)"></div><div class="cmp-row"><label>Alineación</label>${alin('cta')}<input type="color" value="${esc(C.cta.colorFondo||'#2f80ed')}" title="Color botón" oninput="setComp('cta','colorFondo',this.value)"><input type="color" value="${esc(C.cta.colorTexto||'#ffffff')}" title="Color texto" oninput="setComp('cta','colorTexto',this.value)"></div>`;
   cont.innerHTML=`<div class="cmp-ed"><div class="dz-sec">Diseño global (capas)</div><button class="ia-sugerir" onclick="sugerirTextosIA()">✨ Sugerir textos con IA</button>${h}</div>`;
 }
@@ -3485,12 +3507,16 @@ function renderFormTamaño(f){
   const head=(capa,nom)=>`<div class="cmp-sec"><span>${esc(nom)}</span><span style="display:inline-flex;gap:4px">${eye(capa)}${rst(capa)}</span></div>`;
   const alin=(capa)=>`<div class="cmp-alin">${['left','center','right'].map(a=>`<button class="${(E[capa].alinH||'left')===a?'on':''}" onclick="setCompOv('${fmt}','${capa}','alinH','${a}');renderForm();">${ICONS[a==='left'?'alignLeft':a==='center'?'alignCenter':'alignRight']}</button>`).join('')}</div>`;
   const rng=(capa,key,mn,mx,base)=>`<input type="range" min="${mn}" max="${mx}" value="${parseInt(E[capa][key])||base}" oninput="setCompOv('${fmt}','${capa}','${key}',this.value)">`;
+  const selFoco=`<select onchange="setCompOv('${fmt}','imagen','foco',this.value)">${['center','top','bottom','left','right'].map(v=>`<option value="${v}" ${(E.imagen.foco||'center')===v?'selected':''}>${v}</option>`).join('')}</select>`;
+  const selFit=`<select onchange="setCompOv('${fmt}','imagen','fit',this.value)">${[['cover','Cubrir'],['contain','Contener']].map(([v,l])=>`<option value="${v}" ${(E.imagen.fit||'cover')===v?'selected':''}>${l}</option>`).join('')}</select>`;
+  const urlOv = (ov.imagen&&ov.imagen.url)||'';
   let h=`<button class="volver-celda" onclick="cambiarPanelTab('diseno')">${svgIcon("paleta",{size:"12px"})} Ir al Diseño global</button><div class="cmp-ed">`;
   h+=`<div class="dz-sec">Ajustar ${F.ancho}×${F.alto} <span style="font-weight:400;color:#8890a8">· ${fam} · hereda del global</span></div>`;
-  h+=head("imagen","Imagen de fondo")+`<div class="cmp-row"><input type="text" placeholder="URL imagen (solo este tamaño)" value="${escAttr(E.imagen.url||'')}" onchange="setCompOv('${fmt}','imagen','url',this.value)"><button class="cmp-bib" onclick="abrirImagenes(u=>{setCompOv('${fmt}','imagen','url',u);renderForm();})">${svgIcon("imagen",{size:"12px"})}</button></div><div class="cmp-row"><label>Foco</label><select onchange="setCompOv('${fmt}','imagen','foco',this.value)">${['center','top','bottom','left','right'].map(v=>`<option value="${v}" ${(E.imagen.foco||'center')===v?'selected':''}>${v}</option>`).join('')}</select></div><div class="cmp-row"><label>Oscurecer</label>${rng('imagen','oscurecer',0,80,40)}</div>`;
-  h+=head("logo","Logo")+`<div class="cmp-row"><label>Alineación</label>${alin('logo')}</div><div class="cmp-row"><label>Tamaño</label>${rng('logo','tamano',24,140,56)}</div>`;
-  h+=head("titular","Titular")+`<div class="cmp-row"><input type="text" value="${escAttr(E.titular.texto||'')}" oninput="setCompOv('${fmt}','titular','texto',this.value)"></div><div class="cmp-row"><label>Tamaño</label>${rng('titular','tamano',12,52,26)}</div><div class="cmp-row"><label>Alineación</label>${alin('titular')}</div>`;
-  h+=head("cuerpo","Cuerpo")+`<div class="cmp-row"><textarea oninput="setCompOv('${fmt}','cuerpo','texto',this.value)">${esc(E.cuerpo.texto||'')}</textarea></div><div class="cmp-row"><label>Tamaño</label>${rng('cuerpo','tamano',9,28,13)}</div><div class="cmp-row"><label>Alineación</label>${alin('cuerpo')}</div>`;
+  h+=head("fondoColor","Fondo de color")+`<div class="cmp-row"><input type="color" value="${esc(E.fondoColor.color||'#0e2748')}" oninput="setCompOv('${fmt}','fondoColor','color',this.value)"><div class="cmp-sw-row" title="Colores rápidos (de tus marcas)">${swatchesFondoOv(fmt)}</div></div>`;
+  h+=head("imagen","Imagen de fondo")+`<div class="cmp-row"><input type="text" placeholder="Hereda del global — escribe para cambiar solo aquí" value="${escAttr(urlOv)}" onchange="setCompOv('${fmt}','imagen','url',this.value)"><button class="cmp-bib" onclick="abrirImagenes(u=>{setCompOv('${fmt}','imagen','url',u);renderForm();})">${svgIcon("imagen",{size:"12px"})}</button></div><div class="cmp-row"><label>Ajuste</label>${selFit}</div><div class="cmp-row"><label>Zoom</label>${rng('imagen','zoom',50,300,100)}</div><div class="cmp-row"><label>Foco</label>${selFoco}</div><div class="cmp-row"><label>Oscurecer</label>${rng('imagen','oscurecer',0,80,40)}</div>`;
+  h+=head("logo","Logo")+`<div class="cmp-row"><label>Alineación</label>${alin('logo')}</div><div class="cmp-row"><label>Alto</label>${rng('logo','tamano',24,140,56)}</div><div class="cmp-row"><label>Ancho máx</label>${rng('logo','maxw',15,100,60)}</div>`;
+  h+=head("titular","Titular")+`<div class="cmp-row"><input type="text" placeholder="Tu titular aquí" value="${escAttr(E.titular.texto||'')}" oninput="setCompOv('${fmt}','titular','texto',this.value)"></div><div class="cmp-row"><label>Tamaño</label>${rng('titular','tamano',12,52,26)}</div><div class="cmp-row"><label>Alineación</label>${alin('titular')}</div>`;
+  h+=head("cuerpo","Cuerpo")+`<div class="cmp-row"><textarea placeholder="Texto de apoyo breve" oninput="setCompOv('${fmt}','cuerpo','texto',this.value)">${esc(E.cuerpo.texto||'')}</textarea></div><div class="cmp-row"><label>Tamaño</label>${rng('cuerpo','tamano',9,28,13)}</div><div class="cmp-row"><label>Alineación</label>${alin('cuerpo')}</div>`;
   h+=head("cta","CTA con link")+`<div class="cmp-row"><input type="text" placeholder="Texto" value="${escAttr(E.cta.texto||'')}" oninput="setCompOv('${fmt}','cta','texto',this.value)"></div><div class="cmp-row"><input type="text" placeholder="Link" value="${escAttr(E.cta.url||'')}" onchange="setCompOv('${fmt}','cta','url',this.value)"></div><div class="cmp-row"><label>Alineación</label>${alin('cta')}</div>`;
   h+=`<button class="set-aj-reset" onclick="resetTamaño('${fmt}')">Restablecer este tamaño al global</button></div>`;
   f.innerHTML=h;
@@ -3593,6 +3619,60 @@ function exportarTodoElSet(){
   if(i===0){ toast("No hay banners con contenido"); return; }
   setTimeout(() => toast(`${i} banner${i>1?"s":""} descargado${i>1?"s":""}`), i*350 + 200);
 }
+// ── Export a imagen (PNG/JPG) — para subir a Google Ads, redes, etc. ──────
+function blobADataURL(blob){ return new Promise((res,rej)=>{ const fr=new FileReader(); fr.onload=()=>res(fr.result); fr.onerror=rej; fr.readAsDataURL(blob); }); }
+// Convierte una URL de imagen en dataURL. Cross-origin → pasa por /api/img
+// (mismo origen) para no "contaminar" el canvas y poder exportar PNG/JPG.
+async function urlADataURL(url){
+  if(!url || /^data:/.test(url)) return url;
+  try{ const r=await fetch(url,{mode:'cors'}); if(r.ok){ return await blobADataURL(await r.blob()); } }catch(_){}
+  try{ const r=await fetch('/api/img?u='+encodeURIComponent(url)); if(r.ok){ return await blobADataURL(await r.blob()); } }catch(_){}
+  return url;
+}
+async function compConImagenesInline(comp){
+  const c=JSON.parse(JSON.stringify(comp));
+  if(c.imagen&&c.imagen.url) c.imagen.url=await urlADataURL(c.imagen.url);
+  if(c.logo&&c.logo.url) c.logo.url=await urlADataURL(c.logo.url);
+  return c;
+}
+async function rasterizarComposicion(p, fmt, tipo){
+  const f=FORMATOS[fmt]||FORMATOS["display-300x250"];
+  const W=f.ancho, H=f.alto, scale=2;
+  const comp=await compConImagenesInline(composicionEfectiva(p, fmt));
+  const css=cssComponentes();
+  // foreignObject exige XHTML válido: autocerrar elementos vacíos (img/br/…).
+  const cmpHtml=renderComposicion(comp, fmt).replace(/<(img|br|hr|input|source)\b([^>]*?)\/?>/gi, "<$1$2/>");
+  const html=`<div xmlns="http://www.w3.org/1999/xhtml" style="width:${W}px;height:${H}px;margin:0;font-family:'${p.tema.font}',Arial,sans-serif;"><style><![CDATA[${css}]]></style>${cmpHtml}</div>`;
+  const svg=`<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}"><foreignObject x="0" y="0" width="${W}" height="${H}">${html}</foreignObject></svg>`;
+  const img=new Image();
+  await new Promise((res,rej)=>{ img.onload=res; img.onerror=()=>rej(new Error("no se pudo renderizar el SVG")); img.src='data:image/svg+xml;charset=utf-8,'+encodeURIComponent(svg); });
+  const cv=document.createElement("canvas"); cv.width=W*scale; cv.height=H*scale;
+  const ctx=cv.getContext("2d"); ctx.scale(scale,scale);
+  if(tipo==='jpg'){ ctx.fillStyle="#ffffff"; ctx.fillRect(0,0,W,H); }
+  ctx.drawImage(img,0,0,W,H);
+  return await new Promise((res,rej)=>{ cv.toBlob(b=>b?res(b):rej(new Error("el navegador no pudo exportar la imagen")), tipo==='jpg'?'image/jpeg':'image/png', 0.92); });
+}
+async function exportarArtboardImg(fmt, tipo){
+  const p=pieza(); if(!esComposicion(p)) return;
+  toast("Generando "+tipo.toUpperCase()+"…", 6000);
+  try{
+    const blob=await rasterizarComposicion(p, fmt, tipo);
+    const url=URL.createObjectURL(blob); const a=document.createElement("a");
+    a.href=url; a.download=`${slugify(p.nombre)}-${fmt.replace("display-","")}.${tipo}`;
+    document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url);
+    toast(`Descargado ${FORMATOS[fmt].ancho}×${FORMATOS[fmt].alto} (${tipo.toUpperCase()})`);
+  }catch(e){ toast("No se pudo rasterizar: "+(e.message||e), 4500); }
+}
+// Dispatcher según el tipo elegido en el modal de exportación.
+let exportTipo = "html";
+function setExportTipo(t){ exportTipo=t; document.querySelectorAll("#export-tipo button").forEach(b=>b.classList.toggle("on", b.dataset.t===t)); }
+function exportarArtboardEn(fmt){ if(exportTipo==="html") exportarArtboard(fmt); else exportarArtboardImg(fmt, exportTipo); }
+function exportarTodoEnTipo(){
+  const p=pieza(); if(!esComposicion(p)) return;
+  if(exportTipo==="html"){ exportarTodoElSet(); return; }
+  let i=0; p.artboards.forEach(ab=>{ setTimeout(()=>exportarArtboardImg(ab.fmt, exportTipo), i*500); i++; });
+  toast(`Generando ${i} ${exportTipo.toUpperCase()}…`, 3000);
+}
 // Muestra/oculta los controles del set en la barra superior según la creatividad.
 function actualizarUISet(){
   const es = esSetPieza(pieza());
@@ -3618,9 +3698,10 @@ function abrirExportar(){
   // Colección por capas: exportar cada tamaño del set (no bloques).
   if(esComposicion(actual)){
     const sizes = (actual.artboards||[]).map(a=>a.fmt);
-    let h = `<p>Exporta los banners de la colección. Cada tamaño se descarga como HTML independiente. <button class="primary" onclick="exportarTodoElSet()">${svgIcon("exportar",{size:"13px"})} Descargar todos</button></p><div class="export-list" id="export-list">`;
+    const seg = `<div class="export-tipo" id="export-tipo"><span>Formato:</span>${[['html','HTML'],['png','PNG'],['jpg','JPG']].map(([t,l])=>`<button data-t="${t}" class="${exportTipo===t?'on':''}" onclick="setExportTipo('${t}')">${l}</button>`).join('')}</div>`;
+    let h = `<p>Exporta los banners de la colección para subirlos a tu plataforma. <b>HTML</b> = banner responsivo; <b>PNG/JPG</b> = imagen estática (Google Ads, redes).</p>${seg}<p><button class="primary" onclick="exportarTodoEnTipo()">${svgIcon("exportar",{size:"13px"})} Descargar todos</button></p><div class="export-list" id="export-list">`;
     sizes.forEach(fmt => { const f=FORMATOS[fmt]; if(!f) return;
-      h += `<div class="export-row"><label><div><div class="pn">${f.ancho}×${f.alto}${fmt===actual.masterFmt?' <span style="color:#1c73cb;font-weight:600;">· máster</span>':''}${tieneOverride(actual,fmt)?' <span class="ajtag">· ajustado</span>':''}</div><div class="pf">${esc(HINTS[fmt]?.badge||'Display')}</div></div></label><button class="download" onclick="exportarArtboard('${fmt}')">${svgIcon("exportar",{size:"13px"})} Descargar</button></div>`;
+      h += `<div class="export-row"><label><div><div class="pn">${f.ancho}×${f.alto}${fmt===actual.masterFmt?' <span style="color:#1c73cb;font-weight:600;">· máster</span>':''}${tieneOverride(actual,fmt)?' <span class="ajtag">· ajustado</span>':''}</div><div class="pf">${esc(HINTS[fmt]?.badge||'Display')}</div></div></label><button class="download" onclick="exportarArtboardEn('${fmt}')">${svgIcon("exportar",{size:"13px"})} Descargar</button></div>`;
     });
     h += `</div><div class="modal-foot" style="margin-top:18px;border-top:1px solid #e5e7ea;padding-top:14px;"><button onclick="cerrarModal('export')">Cerrar</button></div>`;
     body.innerHTML = h;
