@@ -337,6 +337,9 @@ button,input,select,textarea{font-family:inherit;}
 .canvas-frame[data-fijo="1"] img{max-width:100%!important;max-height:100%!important;width:auto!important;height:auto!important;object-fit:contain;}
 .canvas-frame[data-fijo="1"] .sbb-hero{height:100%!important;}
 .canvas-frame[data-fijo="1"] .sbb-hero img.bg{width:100%!important;height:100%!important;object-fit:cover;}
+/* Mientras editas, los links/forms NO navegan (sí lo hacen en Vista previa y en el HTML exportado). */
+#canvas a{pointer-events:none!important;cursor:default;}
+#canvas iframe{pointer-events:none;}
 
 /* ── Biblioteca de creaciones (galería) ── */
 .galeria{position:fixed;inset:0;background:#eef0f5;z-index:300;display:none;flex-direction:column;}
@@ -1091,6 +1094,12 @@ function getTema(){ return pieza()?.tema || { font:"Inter", primary:"#1c73cb", t
 function esc(s){ if(s==null) return ""; return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;"); }
 function escMultiline(s){ return esc(s||"").replace(/\n/g,"<br>"); }
 function escAttr(s){ return esc(s).replace(/'/g,"&#39;"); }
+function hexRgba(hex, a){
+  let h = String(hex||"#000000").replace("#","");
+  if(h.length===3) h = h.split("").map(c=>c+c).join("");
+  const r=parseInt(h.slice(0,2),16)||0, g=parseInt(h.slice(2,4),16)||0, b=parseInt(h.slice(4,6),16)||0;
+  return `rgba(${r},${g},${b},${a})`;
+}
 function uid(){ return "b"+Math.random().toString(36).slice(2,9); }
 function clone(o){ return JSON.parse(JSON.stringify(o)); }
 function toast(msg, ms=2200){ const t=document.getElementById("toast"); t.textContent=msg; t.classList.add("show"); clearTimeout(toast._t); toast._t=setTimeout(()=>t.classList.remove("show"),ms); }
@@ -1339,7 +1348,7 @@ function wrap(d, inner){
 const BLOQUES = {
   header: {
     cat:"Estructura", nombre:"Header", icono:"", sub:"Logo + título + bajada",
-    defaults: Object.assign({}, styleDefaults, { alinH:"center", padTop:"32", padBottom:"32", logoUrl:"", logoAncho:"160", mostrarEyebrow:false, eyebrow:"", titulo:"Título", bajada:"", tamanoTitulo:"26", tamanoBajada:"14" }),
+    defaults: Object.assign({}, styleDefaults, { alinH:"center", padTop:"32", padBottom:"32", logoUrl:"", logoAncho:"160", mostrarEyebrow:false, eyebrow:"", titulo:"Título", bajada:"", tamanoTitulo:"26", tamanoBajada:"14", colorTitulo:"", colorBajada:"" }),
     campos: [
       {key:"logoUrl",label:"URL del logo (vacío = sin logo)",tipo:"text"},
       {key:"logoAncho",label:"Ancho del logo (px)",tipo:"range",min:40,max:400,step:10},
@@ -1349,6 +1358,7 @@ const BLOQUES = {
       {key:"bajada",label:"Bajada (vacío = sin bajada)",tipo:"textarea"},
       {grupo:"Tamaños"},
       {tipo:"row2", izq:{key:"tamanoTitulo",label:"Título (px)",tipo:"range",min:14,max:60,step:1}, der:{key:"tamanoBajada",label:"Bajada (px)",tipo:"range",min:10,max:24,step:1}},
+      {tipo:"row2", izq:{key:"colorTitulo",label:"Color título (vacío=tema)",tipo:"color"}, der:{key:"colorBajada",label:"Color bajada (vacío=tema)",tipo:"color"}},
       ...styleFields()
     ],
     render: (d) => {
@@ -1356,38 +1366,41 @@ const BLOQUES = {
       const inner = `<div class="sbb-header" style="text-align:${esc(ta)};">
         ${d.logoUrl ? `<img src="${esc(d.logoUrl)}" alt="Logo" style="width:${esc(d.logoAncho)}px;margin:${ta==="center"?"0 auto 14px":ta==="right"?"0 0 14px auto":"0 0 14px"};">` : ""}
         ${d.mostrarEyebrow && d.eyebrow ? `<p class="eyebrow">${esc(d.eyebrow)}</p>` : ""}
-        <h1 style="font-size:${esc(d.tamanoTitulo)}px;">${esc(d.titulo)}</h1>
-        ${d.bajada ? `<p style="font-size:${esc(d.tamanoBajada)}px;">${esc(d.bajada)}</p>` : ""}
+        <h1 style="font-size:${esc(d.tamanoTitulo)}px;${d.colorTitulo?`color:${esc(d.colorTitulo)};`:""}">${esc(d.titulo)}</h1>
+        ${d.bajada ? `<p style="font-size:${esc(d.tamanoBajada)}px;${d.colorBajada?`color:${esc(d.colorBajada)};`:""}">${esc(d.bajada)}</p>` : ""}
       </div>`;
       return wrap(d, inner);
     }
   },
   texto: {
     cat:"Contenido", nombre:"Texto", icono:"", sub:"Párrafo con título opcional",
-    defaults: Object.assign({}, styleDefaults, { alinH:"left", titulo:"", contenido:"Texto", tamano:"14", negrita:false, italica:false }),
+    defaults: Object.assign({}, styleDefaults, { alinH:"left", titulo:"", contenido:"Texto", tamano:"14", color:"", negrita:false, italica:false }),
     campos: [
       {key:"titulo",label:"Título (opcional)",tipo:"text"},
       {key:"contenido",label:"Contenido",tipo:"textarea"},
       {grupo:"Estilo"},
       {key:"tamano",label:"Tamaño (px)",tipo:"range",min:10,max:60,step:1},
+      {key:"color",label:"Color del texto (vacío = tema)",tipo:"color"},
       {tipo:"row2", izq:{key:"negrita",label:"Negrita",tipo:"check"}, der:{key:"italica",label:"Itálica",tipo:"check"}},
       ...styleFields()
     ],
-    render: (d) => wrap(d, `<div class="sbb-texto" style="font-size:${esc(d.tamano)}px;text-align:${esc(d.alinH)};${d.negrita?"font-weight:600;":""}${d.italica?"font-style:italic;":""}">${d.titulo?`<h2>${esc(d.titulo)}</h2>`:""}<div>${escMultiline(d.contenido)}</div></div>`)
+    render: (d) => wrap(d, `<div class="sbb-texto" style="font-size:${esc(d.tamano)}px;text-align:${esc(d.alinH)};${d.color?`color:${esc(d.color)};`:""}${d.negrita?"font-weight:600;":""}${d.italica?"font-style:italic;":""}">${d.titulo?`<h2>${esc(d.titulo)}</h2>`:""}<div>${escMultiline(d.contenido)}</div></div>`)
   },
   imagen: {
     cat:"Contenido", nombre:"Imagen", icono:"", sub:"Imagen ajustable",
-    defaults: Object.assign({}, styleDefaults, { url:"https://placehold.co/600x300/e5e7ea/9ca3af?text=Imagen", alt:"", link:"", caption:"", anchoImg:"100", radio:"6" }),
+    defaults: Object.assign({}, styleDefaults, { url:"https://placehold.co/600x300/e5e7ea/9ca3af?text=Imagen", alt:"", link:"", caption:"", anchoImg:"100", radio:"6", altoImg:"", posicion:"center" }),
     campos: [
       {key:"url",label:"URL de la imagen",tipo:"text"},
       {key:"alt",label:"Texto alternativo",tipo:"text"},
       {key:"link",label:"Enlace (opcional)",tipo:"text"},
       {key:"caption",label:"Pie de imagen (opcional)",tipo:"text"},
       {tipo:"row2", izq:{key:"anchoImg",label:"Ancho (%)",tipo:"range",min:20,max:100,step:5}, der:{key:"radio",label:"Radio (px)",tipo:"range",min:0,max:40,step:1}},
+      {tipo:"row2", izq:{key:"altoImg",label:"Alto fijo (px · vacío=auto)",tipo:"text",placeholder:"auto"}, der:{key:"posicion",label:"Qué parte se ve",tipo:"select",opciones:[["center","Centro"],["top","Arriba"],["bottom","Abajo"],["left","Izquierda"],["right","Derecha"]]}},
       ...styleFields()
     ],
     render: (d) => {
-      const img = `<img src="${esc(d.url)}" alt="${esc(d.alt)}" style="width:${esc(d.anchoImg)}%;border-radius:${esc(d.radio)}px;">`;
+      const crop = d.altoImg ? `height:${esc(d.altoImg)}px;object-fit:cover;object-position:${esc(d.posicion||"center")};` : "";
+      const img = `<img src="${esc(d.url)}" alt="${esc(d.alt)}" style="width:${esc(d.anchoImg)}%;${crop}border-radius:${esc(d.radio)}px;">`;
       const wrapped = d.link ? `<a href="${esc(d.link)}" target="_blank" rel="noopener">${img}</a>` : img;
       return wrap(d, `<div class="sbb-imagen" style="text-align:${esc(d.alinH||"center")};">${wrapped}${d.caption?`<div class="caption">${esc(d.caption)}</div>`:""}</div>`);
     }
@@ -2099,7 +2112,7 @@ const BLOQUES = {
 
   hero: {
     cat:"Estructura", nombre:"Hero con overlay", icono:"", sub:"Imagen full + texto encima",
-    defaults: Object.assign({}, styleDefaults, { padTop:"0", padBottom:"0", imagenUrl:"https://placehold.co/1200x500/040764/9ca3af?text=Hero", titulo:"Título del hero", sub:"Subtítulo que acompaña al título", ctaTexto:"Saber más", ctaUrl:"", alturaHero:"320", oscurecer:"50", radioImg:"0" }),
+    defaults: Object.assign({}, styleDefaults, { padTop:"0", padBottom:"0", imagenUrl:"https://placehold.co/1200x500/040764/9ca3af?text=Hero", titulo:"Título del hero", sub:"Subtítulo que acompaña al título", ctaTexto:"Saber más", ctaUrl:"", alturaHero:"320", oscurecer:"50", radioImg:"0", colorVeil:"#000000", posImg:"center", colorTitulo:"#ffffff", colorSub:"#ffffff" }),
     campos: [
       {key:"imagenUrl",label:"URL imagen de fondo",tipo:"text"},
       {key:"titulo",label:"Título",tipo:"text"},
@@ -2107,11 +2120,13 @@ const BLOQUES = {
       {tipo:"row2", izq:{key:"ctaTexto",label:"Texto CTA",tipo:"text"}, der:{key:"ctaUrl",label:"URL CTA",tipo:"text"}},
       {tipo:"row2", izq:{key:"alturaHero",label:"Alto (px)",tipo:"range",min:140,max:600,step:10}, der:{key:"oscurecer",label:"Oscurecer (%)",tipo:"range",min:0,max:80,step:5}},
       {key:"radioImg",label:"Radio (px)",tipo:"range",min:0,max:40,step:1},
+      {tipo:"row2", izq:{key:"colorVeil",label:"Color de la capa",tipo:"color"}, der:{key:"posImg",label:"Posición imagen",tipo:"select",opciones:[["center","Centro"],["top","Arriba"],["bottom","Abajo"],["left","Izquierda"],["right","Derecha"]]}},
+      {tipo:"row2", izq:{key:"colorTitulo",label:"Color título",tipo:"color"}, der:{key:"colorSub",label:"Color subtítulo",tipo:"color"}},
       ...styleFields()
     ],
     render: (d) => {
-      const veil = `background:linear-gradient(180deg,rgba(0,0,0,0) 0%,rgba(0,0,0,${(parseInt(d.oscurecer)||50)/100}) 100%);`;
-      return wrap(d, `<div class="sbb-hero" style="height:${esc(d.alturaHero)}px;border-radius:${esc(d.radioImg)}px;overflow:hidden;"><img class="bg" src="${esc(d.imagenUrl)}" alt=""><div class="veil" style="${veil}"></div><div class="content" style="height:${esc(d.alturaHero)}px;"><h2>${esc(d.titulo)}</h2>${d.sub?`<p>${escMultiline(d.sub)}</p>`:""}${d.ctaTexto&&d.ctaUrl?`<a href="${esc(d.ctaUrl)}" target="_blank" rel="noopener">${esc(d.ctaTexto)}</a>`:""}</div></div>`);
+      const veil = `background:${hexRgba(d.colorVeil||"#000000",(parseInt(d.oscurecer)||0)/100)};`;
+      return wrap(d, `<div class="sbb-hero" style="height:${esc(d.alturaHero)}px;border-radius:${esc(d.radioImg)}px;overflow:hidden;"><img class="bg" src="${esc(d.imagenUrl)}" alt="" style="object-position:${esc(d.posImg||'center')};"><div class="veil" style="${veil}"></div><div class="content" style="height:${esc(d.alturaHero)}px;"><h2${d.colorTitulo?` style="color:${esc(d.colorTitulo)}"`:""}>${esc(d.titulo)}</h2>${d.sub?`<p${d.colorSub?` style="color:${esc(d.colorSub)}"`:""}>${escMultiline(d.sub)}</p>`:""}${d.ctaTexto&&d.ctaUrl?`<a href="${esc(d.ctaUrl)}" target="_blank" rel="noopener">${esc(d.ctaTexto)}</a>`:""}</div></div>`);
     }
   },
 
