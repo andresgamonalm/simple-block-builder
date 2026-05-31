@@ -214,6 +214,35 @@ button,input,select,textarea{font-family:inherit;}
 .prueba-alert.ok{display:block;background:var(--ok-l);color:var(--ok);}
 .prueba-alert.err{display:block;background:var(--err-l);color:var(--err);}
 
+/* ── Marcas (kits de marca) ── */
+.modal.modal-lg{max-width:640px;}
+.dz-btn-link{margin-top:8px;border:none;background:none;color:var(--primary);font-size:12px;font-family:var(--f);cursor:pointer;padding:0;text-decoration:underline;}
+.marca-list{display:flex;flex-direction:column;gap:8px;margin:14px 0 20px;}
+.marca-vacia{color:var(--ink3);font-size:13px;padding:10px 0;}
+.marca-card{display:flex;align-items:center;gap:12px;border:1px solid var(--bdr);border-radius:10px;padding:10px 12px;}
+.marca-card .mlogo{width:40px;height:40px;border-radius:8px;background:var(--bg);object-fit:contain;flex-shrink:0;border:1px solid var(--bdr);}
+.marca-card .minfo{flex:1;min-width:0;}
+.marca-card .mn{font-weight:600;font-size:13.5px;color:var(--ink);}
+.marca-card .msw{display:flex;gap:5px;margin-top:5px;}
+.marca-card .msw i{width:16px;height:16px;border-radius:4px;border:1px solid var(--bdr);display:inline-block;}
+.marca-card .macc{display:flex;gap:6px;}
+.marca-card .macc button{border:1px solid var(--bdr);background:var(--white);border-radius:7px;padding:6px 10px;font-size:12px;font-family:var(--f);cursor:pointer;color:var(--ink2);}
+.marca-card .macc button.primary{background:var(--primary);color:#fff;border-color:var(--primary);}
+.marca-card .macc button:hover{border-color:var(--primary);}
+.marca-form{border-top:1px solid var(--bdr);padding-top:16px;}
+.mf-title{font-weight:600;font-size:13.5px;margin-bottom:12px;color:var(--ink);}
+.mf-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+.mf-full{grid-column:1 / -1;}
+.marca-form label{display:flex;flex-direction:column;gap:5px;font-size:11px;font-weight:600;color:var(--ink2);}
+.marca-form input[type=text],.marca-form select{height:38px;border:1px solid var(--bdr);border-radius:9px;padding:0 11px;font-family:var(--f);font-size:13px;color:var(--ink);background:var(--white);font-weight:400;}
+.mf-colores{display:flex;gap:14px;flex-wrap:wrap;}
+.mf-col{display:flex;flex-direction:column;align-items:center;gap:5px;font-size:10.5px;color:var(--ink3);}
+.mf-col input[type=color]{width:42px;height:34px;border:1px solid var(--bdr);border-radius:7px;padding:2px;cursor:pointer;background:none;}
+.mf-col b{font-weight:500;}
+.mf-actions{display:flex;justify-content:flex-end;gap:10px;margin-top:16px;}
+.mf-actions button{border:1px solid var(--bdr);background:var(--white);border-radius:8px;padding:9px 18px;font-family:var(--f);font-size:13px;cursor:pointer;color:var(--ink2);}
+.mf-actions button.primary{background:var(--primary);color:#fff;border-color:var(--primary);}
+
 /* ── Dashboard "Mis campañas" (pantalla inicial) ── */
 .dash{position:fixed;inset:0;z-index:300;display:none;background:var(--bg);}
 .dash.show{display:flex;}
@@ -435,7 +464,7 @@ button,input,select,textarea{font-family:inherit;}
 .add-subitem:hover{border-color:var(--primary);color:var(--primary);background:var(--navy-l);border-style:solid;}
 
 /* ─── MODAL ─── */
-.modal-bg{position:fixed;inset:0;background:rgba(4,7,100,.45);z-index:100;display:none;align-items:center;justify-content:center;padding:24px;backdrop-filter:blur(2px);}
+.modal-bg{position:fixed;inset:0;background:rgba(4,7,100,.45);z-index:500;display:none;align-items:center;justify-content:center;padding:24px;}
 .modal-bg.show{display:flex;animation:modalFade .18s ease;}
 @keyframes modalFade{from{opacity:0;}to{opacity:1;}}
 .modal{background:var(--white);border-radius:14px;max-width:760px;width:100%;max-height:88vh;display:flex;flex-direction:column;overflow:hidden;box-shadow:0 30px 80px rgba(4,7,100,.25);}
@@ -829,6 +858,12 @@ button,input,select,textarea{font-family:inherit;}
       </div>
 
       <div class="panel-body ptab-pane" id="pane-diseno" style="display:none;">
+        <div class="dz-sec">Marca</div>
+        <div class="dz-field">
+          <label>Aplicar marca</label>
+          <select id="dz-marca" class="dz-sel" onchange="if(this.value){aplicarMarca(this.value);}"></select>
+          <button class="dz-btn-link" onclick="abrirMarcas()">Gestionar marcas</button>
+        </div>
         <div class="dz-sec">Tipografía</div>
         <div class="dz-field">
           <label>Fuente de la creatividad</label>
@@ -891,6 +926,36 @@ button,input,select,textarea{font-family:inherit;}
   </div>
   <div class="modal-foot"><button onclick="cerrarModal('prueba')">Cancelar</button><button class="primary" id="prueba-btn" onclick="enviarPrueba()">Enviar prueba</button></div>
 </div></div>
+<div class="modal-bg" id="modal-marcas"><div class="modal modal-lg">
+  <div class="modal-head"><h3>Marcas</h3><button class="modal-close" onclick="cerrarModal('marcas')">×</button></div>
+  <div class="modal-body">
+    <p>Guarda estilos de marca (logo, colores, tipografía) y aplícalos a cualquier creación en un clic. Tu IA también puede leerlos.</p>
+    <div class="marca-list" id="marca-list"></div>
+    <div class="marca-form">
+      <div class="mf-title" id="marca-form-titulo">Nueva marca</div>
+      <div class="mf-grid">
+        <label class="mf-full">Nombre<input type="text" id="marca-nombre" placeholder="Mi marca"></label>
+        <label class="mf-full">Logo (URL)<input type="text" id="marca-logo" placeholder="https://…/logo.png"></label>
+        <label>Tipografía
+          <select id="marca-font"><option value="Inter">Inter</option><option value="Roboto">Roboto</option><option value="Open Sans">Open Sans</option><option value="Lato">Lato</option><option value="Montserrat">Montserrat</option><option value="Poppins">Poppins</option><option value="Playfair Display">Playfair</option><option value="Merriweather">Merriweather</option><option value="Arial">Arial</option><option value="Georgia">Georgia</option></select>
+        </label>
+        <label class="mf-full">Empresa (para el footer)<input type="text" id="marca-empresa" placeholder="Mi Empresa S.A."></label>
+        <div class="mf-colores mf-full">
+          <span class="mf-col"><input type="color" id="marca-primary" value="#1c73cb"><b>Principal</b></span>
+          <span class="mf-col"><input type="color" id="marca-cta" value="#1c73cb"><b>CTA</b></span>
+          <span class="mf-col"><input type="color" id="marca-text" value="#1a1a1a"><b>Texto</b></span>
+          <span class="mf-col"><input type="color" id="marca-bg" value="#ffffff"><b>Fondo</b></span>
+          <span class="mf-col"><input type="color" id="marca-bgpagina" value="#f5f5f5"><b>Página</b></span>
+        </div>
+      </div>
+      <input type="hidden" id="marca-edit-id">
+      <div class="mf-actions">
+        <button id="marca-cancel" onclick="resetMarcaForm()" style="display:none;">Cancelar edición</button>
+        <button class="primary" onclick="guardarMarca()">Guardar marca</button>
+      </div>
+    </div>
+  </div>
+</div></div>
 <div class="toast" id="toast"></div>
 
 <!-- Pantalla inicial: Dashboard "Mis campañas" (también es la vista en móvil). -->
@@ -913,6 +978,7 @@ button,input,select,textarea{font-family:inherit;}
       <button class="nav-item" onclick="irAPlantillas()"><span class="ico" data-ic="plantilla"></span> Plantillas</button>
       <button class="nav-item" onclick="toast('Recursos gráficos: próximamente')"><span class="ico" data-ic="imagen"></span> Recursos gráficos</button>
       <div class="nav-sec">Sistema</div>
+      <button class="nav-item" onclick="abrirMarcas()"><span class="ico" data-ic="paleta"></span> Marcas</button>
       <button class="nav-item" onclick="toast('Permisos de usuarios: próximamente')"><span class="ico" data-ic="candado"></span> Permisos usuarios</button>
       <button class="nav-item" onclick="toast('Configuración: próximamente')"><span class="ico" data-ic="ajustes"></span> Configuración</button>
     </nav>
@@ -1638,10 +1704,11 @@ const BLOQUES = {
     cat:"Decoración", nombre:"Ícono", icono:"", sub:"SVG line icon (30+)",
     defaults: Object.assign({}, styleDefaults, {
       icono:"estrella", tamano:"40", color:"", grosor:"2",
-      estilo:"outline", textoLado:"", url:""
+      estilo:"outline", textoLado:"", url:"", imagenUrl:""
     }),
     campos: [
-      {key:"icono",label:"Elegir ícono",tipo:"icono-picker"},
+      {key:"icono",label:"Elegir ícono del banco",tipo:"icono-picker"},
+      {key:"imagenUrl",label:"O usar imagen propia (URL · PNG o SVG)",tipo:"text"},
       {tipo:"row2", izq:{key:"tamano",label:"Tamaño (px)",tipo:"range",min:12,max:200,step:2}, der:{key:"grosor",label:"Grosor línea",tipo:"range",min:1,max:3,step:0.5}},
       {key:"color",label:"Color (vacío = tema)",tipo:"color"},
       {key:"estilo",label:"Estilo",tipo:"select",opciones:[["outline","Solo línea (sin fondo)"],["filled","Círculo de color"],["square","Cuadrado de color"]]},
@@ -1653,7 +1720,7 @@ const BLOQUES = {
     render: (d) => {
       const color = d.color || getTema().primary;
       const tam = d.tamano || "40";
-      const ico = svgIcon(d.icono, {grosor:d.grosor, size:tam+"px"});
+      const ico = d.imagenUrl ? `<img src="${esc(d.imagenUrl)}" alt="" style="width:${esc(tam)}px;height:${esc(tam)}px;object-fit:contain;">` : svgIcon(d.icono, {grosor:d.grosor, size:tam+"px"});
       const wrapStyle = `color:${esc(color)};font-size:${esc(tam)}px;`;
       const wrapClass = `ico-wrap ${esc(d.estilo||"outline")}`;
       const inner = `<${d.url?'a href="'+esc(d.url)+'" target="_blank" rel="noopener"':'span'} class="sbb-icono-bloque" style="${wrapStyle}">
@@ -2236,6 +2303,7 @@ function activarPieza(id){
   const p = pieza(); if(!p) return;
   modoFormato = modoDeCategoria(categoriaDe(p.formato));   // limita formatos según el tipo
   renderFormatoSelect();
+  renderMarcaSelector();
   document.getElementById("fmt").value = p.formato;
   cambiarFormato(p.formato);
   aplicarTema(); renderCanvas(); renderForm(); renderTabsPiezas();
@@ -2978,6 +3046,79 @@ function editarBanner(){
   persistir(); renderGaleria();
 }
 
+// ── Marcas (kits de marca: logo, colores, tipografía, CTA, footer) ──
+function abrirMarcas(){ resetMarcaForm(); renderMarcas(); document.getElementById("modal-marcas").classList.add("show"); }
+function renderMarcas(){
+  const cont = document.getElementById("marca-list");
+  const ms = proyecto.marcas || [];
+  if(!ms.length){ cont.innerHTML = `<div class="marca-vacia">Aún no hay marcas. Crea una abajo.</div>`; return; }
+  cont.innerHTML = ms.map(m => `<div class="marca-card">
+    ${m.logoUrl ? `<img class="mlogo" src="${escAttr(m.logoUrl)}" alt="">` : `<span class="mlogo"></span>`}
+    <div class="minfo"><div class="mn">${esc(m.nombre)}</div>
+      <div class="msw"><i style="background:${esc(m.primary)}"></i><i style="background:${esc(m.cta||m.primary)}"></i><i style="background:${esc(m.text)}"></i><i style="background:${esc(m.bg)}"></i></div></div>
+    <div class="macc">
+      <button class="primary" onclick="aplicarMarca('${m.id}')">Aplicar</button>
+      <button onclick="editarMarca('${m.id}')">Editar</button>
+      <button onclick="eliminarMarca('${m.id}')">Eliminar</button>
+    </div></div>`).join("");
+}
+function resetMarcaForm(){
+  const set=(id,v)=>{ const e=document.getElementById(id); if(e) e.value=v; };
+  set("marca-edit-id",""); set("marca-nombre",""); set("marca-logo",""); set("marca-empresa","");
+  set("marca-font","Inter"); set("marca-primary","#1c73cb"); set("marca-cta","#1c73cb");
+  set("marca-text","#1a1a1a"); set("marca-bg","#ffffff"); set("marca-bgpagina","#f5f5f5");
+  document.getElementById("marca-form-titulo").textContent="Nueva marca";
+  document.getElementById("marca-cancel").style.display="none";
+}
+function editarMarca(id){
+  const m=(proyecto.marcas||[]).find(x=>x.id===id); if(!m) return;
+  const set=(i,v)=>{ const e=document.getElementById(i); if(e) e.value=v; };
+  set("marca-edit-id",m.id); set("marca-nombre",m.nombre||""); set("marca-logo",m.logoUrl||"");
+  set("marca-empresa",m.empresa||""); set("marca-font",m.font||"Inter"); set("marca-primary",m.primary||"#1c73cb");
+  set("marca-cta",m.cta||m.primary||"#1c73cb"); set("marca-text",m.text||"#1a1a1a"); set("marca-bg",m.bg||"#ffffff");
+  set("marca-bgpagina",m.bgPagina||"#f5f5f5");
+  document.getElementById("marca-form-titulo").textContent="Editar marca";
+  document.getElementById("marca-cancel").style.display="";
+}
+function guardarMarca(){
+  const g=id=>document.getElementById(id).value;
+  const nombre=g("marca-nombre").trim();
+  if(!nombre){ toast("Ponle un nombre a la marca"); return; }
+  const datos={ nombre, logoUrl:g("marca-logo").trim(), empresa:g("marca-empresa").trim(), font:g("marca-font"),
+    primary:g("marca-primary"), cta:g("marca-cta"), text:g("marca-text"), bg:g("marca-bg"), bgPagina:g("marca-bgpagina") };
+  proyecto.marcas = proyecto.marcas || [];
+  const id=g("marca-edit-id");
+  if(id){ const m=proyecto.marcas.find(x=>x.id===id); if(m) Object.assign(m,datos); }
+  else { datos.id="m"+Math.random().toString(36).slice(2,9); proyecto.marcas.push(datos); }
+  persistir(); resetMarcaForm(); renderMarcas(); renderMarcaSelector();
+  toast("Marca guardada");
+}
+function eliminarMarca(id){
+  if(!confirm("¿Eliminar esta marca?")) return;
+  proyecto.marcas=(proyecto.marcas||[]).filter(x=>x.id!==id);
+  persistir(); renderMarcas(); renderMarcaSelector();
+}
+function aplicarMarca(id){
+  const m=(proyecto.marcas||[]).find(x=>x.id===id); if(!m) return;
+  const p=pieza(); if(!p) return;
+  p.tema.font=m.font||p.tema.font; p.tema.primary=m.primary||p.tema.primary;
+  p.tema.text=m.text||p.tema.text; p.tema.bg=m.bg||p.tema.bg; p.tema.bgPagina=m.bgPagina||"";
+  (p.canvas||[]).forEach(b=>{
+    if(b.tipo==="cta" && m.cta) b.datos.colorFondo=m.cta;
+    if(b.tipo==="header" && m.logoUrl) b.datos.logoUrl=m.logoUrl;
+    if(b.tipo==="footer" && m.empresa) b.datos.empresa=m.empresa;
+  });
+  aplicarTema(); renderCanvas(); renderForm(); persistir();
+  cerrarModal("marcas");
+  toast("Marca aplicada: "+m.nombre);
+}
+function renderMarcaSelector(){
+  const sel=document.getElementById("dz-marca"); if(!sel) return;
+  const ms=proyecto.marcas||[];
+  sel.innerHTML = `<option value="">${ms.length ? "— Elegir marca —" : "— Sin marcas (crea una) —"}</option>` +
+    ms.map(m=>`<option value="${m.id}">${esc(m.nombre)}</option>`).join("");
+}
+
 function abrirGaleria(){ renderGaleria(); document.getElementById("galeria").classList.add("show"); }
 function cerrarGaleria(){ if(esMovil()) return; document.getElementById("galeria").classList.remove("show"); }
 function abrirCreacion(id){ document.getElementById("galeria").classList.remove("show"); activarPieza(id); }
@@ -3013,6 +3154,8 @@ function aplicarModoDispositivo(){
 renderFormatoSelect();
 renderPlantillasTab();
 recuperar();
+if(!proyecto.marcas) proyecto.marcas = [];   // kits de marca
+renderMarcaSelector();
 const p0 = pieza();
 if(p0){ document.getElementById("fmt").value = p0.formato; cambiarFormato(p0.formato); aplicarTema(); }
 renderTabsPiezas();
