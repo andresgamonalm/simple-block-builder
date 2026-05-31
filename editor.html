@@ -464,6 +464,27 @@ button,input,select,textarea{font-family:inherit;}
 .set-aj-blocks{display:flex;flex-direction:column;gap:4px;}
 .set-aj-blocks .chk{font-size:12px;color:#444;display:flex;align-items:center;gap:6px;cursor:pointer;}
 .set-aj-reset{font-family:var(--f);font-size:11.5px;border:1px solid var(--bdr);background:#fff;border-radius:6px;padding:6px 10px;cursor:pointer;color:#c0392b;align-self:flex-start;}
+/* ── Tablero de banners (set Display en el lienzo) ── */
+.tablero-hint{font-size:12.5px;color:#666;text-align:center;margin:0 auto 16px;max-width:680px;line-height:1.5;}
+.tablero{display:flex;flex-wrap:wrap;gap:26px 22px;align-items:flex-start;justify-content:center;padding:4px 0 60px;}
+.ab{background:var(--white);border:1px solid var(--bdr);border-radius:11px;padding:9px;box-shadow:var(--sh);cursor:pointer;transition:box-shadow .15s,border-color .15s;}
+.ab:hover{box-shadow:var(--sh2);}
+.ab.activo{border-color:var(--primary);box-shadow:0 0 0 2px var(--primary-l),var(--sh2);cursor:default;}
+.ab-bar{display:flex;align-items:center;justify-content:space-between;gap:8px;font-size:11.5px;color:#555;font-weight:600;margin-bottom:7px;padding:0 2px;}
+.ab-bar .mtag{color:var(--primary);font-weight:700;margin-left:3px;}
+.ab-bar .acttag{color:#1a8a4a;font-weight:600;margin-left:3px;}
+.ab-dl{font-family:var(--f);font-size:11px;border:1px solid var(--bdr);background:#fff;border-radius:6px;padding:3px 7px;cursor:pointer;display:inline-flex;align-items:center;}
+.ab-dl:hover{background:var(--primary);color:#fff;border-color:var(--primary);}
+.ab-stage{overflow:hidden;border-radius:4px;}
+.ab-scale{transform-origin:top left;}
+.ab-frame{position:relative;overflow:hidden;display:flex;flex-direction:column;box-sizing:border-box;}
+.ab-frame > *{flex:1;min-height:0;}
+.ab-frame .bw{position:relative;}
+.ab-frame img{max-width:100%!important;max-height:100%!important;width:auto!important;height:auto!important;object-fit:contain;}
+.ab-frame .sbb-hero{height:100%!important;}
+.ab-frame .sbb-hero img.bg{width:100%!important;height:100%!important;object-fit:cover;}
+.ab:not(.activo) .ab-frame{pointer-events:none;}
+.ab-empty{display:flex;align-items:center;justify-content:center;height:100%;color:#bbb;font-size:13px;text-align:center;padding:8px;}
 
 /* ─── FORM (RIGHT PANEL) ─── */
 .form-empty{padding:36px 16px;text-align:center;color:var(--ink3);font-size:12px;line-height:1.65;}
@@ -888,10 +909,14 @@ button,input,select,textarea{font-family:inherit;}
       </div>
       <button class="tb-btn icon-only" onclick="nuevaPiezaPrompt()" title="Nueva creatividad en este proyecto"><span class="ico" data-ic="mas"></span></button>
       <div class="spacer"></div>
-      <div class="tb-group">
+      <div class="tb-group" id="tb-formato">
         <span class="tb-label">Formato</span>
         <select id="fmt" onchange="cambiarFormato(this.value)"></select>
       </div>
+      <span id="set-tools" style="display:none">
+        <button class="tb-btn" onclick="aplicarMasterATodos()" title="Aplicar el contenido del máster (300×250) a todos los tamaños"><span class="ico" data-ic="grid"></span> Aplicar máster a todos</button>
+        <button class="tb-btn" onclick="exportarTodoElSet()" title="Descargar todos los banners del set"><span class="ico" data-ic="exportar"></span> Descargar todos</button>
+      </span>
       <div class="dev-seg" id="dev-seg" title="Vista de dispositivo">
         <button data-dev="desktop" class="on" onclick="setDispositivo('desktop')" title="Escritorio"><span class="ico" data-ic="monitor"></span></button>
         <button data-dev="tablet" onclick="setDispositivo('tablet')" title="Tablet"><span class="ico" data-ic="tablet"></span></button>
@@ -901,7 +926,6 @@ button,input,select,textarea{font-family:inherit;}
       <button class="tb-btn" onclick="abrirEnvioPrueba()" title="Enviar prueba por correo"><span class="ico" data-ic="enviar"></span> Enviar prueba</button>
       <button class="tb-btn icon-only" onclick="abrirImportar()" title="Importar HTML"><span class="ico" data-ic="subir"></span></button>
       <button class="tb-btn danger icon-only" onclick="vaciarCanvas()" title="Vaciar pieza actual"><span class="ico" data-ic="basura"></span></button>
-      <button class="tb-btn" id="btn-set" style="display:none" onclick="abrirSetView()" title="Ver y exportar todos los tamaños del set"><span class="ico" data-ic="grid"></span> Ver set</button>
       <button class="tb-btn primary" onclick="abrirExportar()"><span class="ico" data-ic="exportar"></span> Exportar</button>
       <span class="sync-status" id="sync-status" title="Estado de guardado en la nube">—</span>
     </div>
@@ -973,10 +997,6 @@ button,input,select,textarea{font-family:inherit;}
 <div class="modal-bg" id="modal-export"><div class="modal">
   <div class="modal-head"><h3>Exportar HTML</h3><button class="modal-close" onclick="cerrarModal('export')">×</button></div>
   <div class="modal-body" id="export-body"></div>
-</div></div>
-<div class="modal-bg" id="modal-set"><div class="modal modal-lg">
-  <div class="modal-head"><h3>Set de banners — Display Desktop</h3><button class="modal-close" onclick="cerrarModal('set')">×</button></div>
-  <div class="modal-body" id="set-body"></div>
 </div></div>
 <div class="modal-bg" id="modal-import"><div class="modal">
   <div class="modal-head"><h3>Importar HTML</h3><button class="modal-close" onclick="cerrarModal('import')">×</button></div>
@@ -1169,8 +1189,8 @@ async function enviarPrueba(){
 }
 
 function pieza(){ return proyecto && proyecto.piezas.find(p => p.id === proyecto.activa); }
-function getCanvas(){ return pieza()?.canvas || []; }
-function getFormato(){ return pieza()?.formato || "email"; }
+function getCanvas(){ const ab = artboardActivo(); if(ab) return ab.canvas || (ab.canvas = []); return pieza()?.canvas || []; }
+function getFormato(){ const ab = artboardActivo(); if(ab) return ab.fmt; return pieza()?.formato || "email"; }
 function getTema(){ return pieza()?.tema || { font:"Inter", primary:"#1c73cb", text:"#1a1a1a", bg:"#ffffff", bgPagina:"", ancho:"" }; }
 
 function esc(s){ if(s==null) return ""; return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;"); }
@@ -2427,6 +2447,9 @@ function aplicarTema(){
   const fmtKey = getFormato();
   const fmt = FORMATOS[fmtKey] || FORMATOS.email;
   const formatoFijo = fmt.alto > 0;
+  // En un set, el tablero gestiona su propio tamaño (no se dimensiona el frame a un solo artboard).
+  if(esSetPieza(pieza())){ ajustarFrameParaSet(true); }
+  else {
   f.dataset.fijo = formatoFijo ? "1" : "";
   if(formatoFijo){
     f.style.maxWidth = fmt.ancho + "px";
@@ -2438,6 +2461,7 @@ function aplicarTema(){
     // Vista de dispositivo: previsualiza el ancho en tablet/móvil (solo flexibles).
     if(dispositivo === "tablet") f.style.maxWidth = "768px";
     else if(dispositivo === "movil") f.style.maxWidth = "390px";
+  }
   }
   // El selector de dispositivo solo aplica a formatos flexibles.
   const devSeg = document.getElementById("dev-seg");
@@ -2477,7 +2501,7 @@ function activarPieza(id){
   document.getElementById("fmt").value = p.formato;
   cambiarFormato(p.formato);
   aplicarTema(); renderCanvas(); renderForm(); renderTabsPiezas();
-  actualizarBotonSet();
+  actualizarUISet();
   persistir();
 }
 function eliminarPieza(id){
@@ -2537,38 +2561,28 @@ function renderBiblioteca(){
   cont.querySelectorAll(".tile").forEach(tile => {
     tile.addEventListener("dragstart", (e) => { tile.classList.add("dragging"); dragInfo={fuente:"biblioteca",tipo:tile.dataset.tipo}; e.dataTransfer.effectAllowed="copy"; try{e.dataTransfer.setData("text/plain",tile.dataset.tipo);}catch(_){}});
     tile.addEventListener("dragend", () => { tile.classList.remove("dragging"); document.getElementById("canvas-frame").classList.remove("drag-over"); limpiarDropLines(); });
+    tile.addEventListener("click", () => agregarBloque(tile.dataset.tipo));   // clic = añadir al lienzo/artboard activo
+    tile.style.cursor = "pointer";
   });
 }
 
 function renderCanvas(){
   livePreviewIntervals.forEach(i => clearInterval(i));
   livePreviewIntervals = [];
+  if(esSetPieza(pieza())){ renderTablero(); return; }   // los sets se pintan como tablero
   const c = document.getElementById("canvas");
+  ajustarFrameParaSet(false);
   const cv = getCanvas();
   if(cv.length === 0){
     c.innerHTML = `<div class="canvas-empty"><div class="canvas-empty-ico">${svgIcon("plantilla",{size:"42px"})}</div><p>Arrastra bloques desde la izquierda<br>o usa una plantilla del menú superior</p><p class="em-hint">Reordena arrastrando · Cambia formato y colores arriba</p></div>`;
     if(!seleccionado) document.getElementById("form").innerHTML = `<div class="form-empty"><div class="form-empty-ico">${svgIcon("editar",{size:"32px"})}</div>Selecciona un bloque del canvas<br>para editar su contenido</div>`;
     return;
   }
-  c.innerHTML = `<div class="sbb-page">${cv.map(item => `<div class="bw${seleccionado===item.id?" selected":""}" data-id="${item.id}" draggable="true"><div class="bw-handle">Mover</div><div class="bw-controls"><button class="bw-btn" onclick="moverBloque('${item.id}',-1);event.stopPropagation();">${svgIcon("chevup",{size:"14px"})}</button><button class="bw-btn" onclick="moverBloque('${item.id}',1);event.stopPropagation();">${svgIcon("chevdown",{size:"14px"})}</button><button class="bw-btn" onclick="duplicarBloque('${item.id}');event.stopPropagation();">${svgIcon("copiar",{size:"13px"})}</button><button class="bw-btn del" onclick="eliminarBloque('${item.id}');event.stopPropagation();">${svgIcon("equis",{size:"14px"})}</button></div>${BLOQUES[item.tipo].render(item.datos)}</div>`).join("")}</div>`;
-  // Las imágenes son arrastrables por defecto y secuestran el gesto: al
-  // desactivar su drag nativo, arrastrar sobre la foto mueve el BLOQUE (reordenar).
-  c.querySelectorAll(".bw img").forEach(im => { im.draggable = false; });
-  c.querySelectorAll(".bw").forEach(bw => {
-    bw.addEventListener("click", (e) => { e.stopPropagation(); seleccionarBloque(bw.dataset.id); });
-    bw.addEventListener("dragstart", (e) => {
-      if(e.target.closest("input,textarea,select,button")) { e.preventDefault(); return; }
-      dragBlockId = bw.dataset.id; bw.classList.add("drag-source");
-      e.dataTransfer.effectAllowed = "move";
-      try{e.dataTransfer.setData("text/plain",bw.dataset.id);}catch(_){}
-    });
-    bw.addEventListener("dragend", () => { bw.classList.remove("drag-source"); limpiarDropLines(); dragBlockId=null; });
-    // El posicionamiento (dragover/drop) se maneja a nivel del lienzo completo
-    // — ver dropZone más abajo — para poder soltar en cualquier punto, no solo
-    // justo sobre otro bloque.
-  });
+  // Las imágenes son arrastrables por defecto y secuestran el gesto: al desactivar
+  // su drag nativo, arrastrar sobre la foto mueve el BLOQUE (reordenar).
+  c.innerHTML = `<div class="sbb-page">${cv.map(bwHTML).join("")}</div>`;
+  attachBwListeners(c);
   iniciarLivePreview();
-  refrescarSetSiAbierto();   // refresca el set en vivo (añadir/borrar/reordenar bloques)
 }
 
 function ejecutarScriptsCodigo(){
@@ -2777,13 +2791,6 @@ function renderBloqueSeleccionado(){
   tmp.innerHTML = BLOQUES[item.tipo].render(item.datos);
   while(tmp.firstChild) bw.appendChild(tmp.firstChild);
   iniciarLivePreview();
-  refrescarSetSiAbierto();
-}
-// Si la vista del set está abierta y la creatividad es un set, re-renderiza las
-// adaptaciones en vivo (al editar el máster).
-function refrescarSetSiAbierto(){
-  const m = document.getElementById("modal-set");
-  if(m && m.classList.contains("show") && esSetPieza(pieza())) renderSetView();
 }
 
 function agregarBloque(tipo, datos, insertAt){
@@ -2996,205 +3003,127 @@ ${liveScript}
    que nada se desborde. Se exporta uno o todos.
    ═══════════════════════════════════════════════════════════════ */
 const SET_DISPLAY_DESKTOP = ["display-300x250","display-336x280","display-728x90","display-970x90","display-300x600","display-160x600","display-250x250","display-200x200","display-468x60"];
-function esSetPieza(p){ return !!(p && p.esSet); }
-// Reflujo por proporción: banners anchos y bajos → fila; el resto → columna.
-function orientacionSet(fmt){ return (fmt.ancho / fmt.alto) >= 2.2 ? "fila" : "columna"; }
+function esSetPieza(p){ return !!(p && p.esSet && Array.isArray(p.artboards)); }
 function temaVars(t){ return `--sbb-font:"${t.font}", "Inter", Arial, sans-serif;--sbb-primary:${t.primary};--sbb-text:${t.text};--sbb-bg:${t.bg};`; }
-// CSS de componentes (mismo recorte que el export normal), para los HTML del set.
-function cssComponentes(){
-  const cssFull = (document.querySelector("style") && document.querySelector("style").textContent) || "";
-  const i = cssFull.indexOf("COMPONENT STYLES");
-  if(i < 0) return cssFull;
-  const c = cssFull.indexOf("*/", i);
-  return c >= 0 ? cssFull.slice(c + 2) : cssFull.slice(i);
+function artboardActivo(){ const p = pieza(); if(!esSetPieza(p)) return null; return p.artboards.find(a => a.fmt === p.activaFmt) || p.artboards[0] || null; }
+function artboardMaster(p){ return p.artboards.find(a => a.fmt === p.masterFmt) || p.artboards[0]; }
+
+// Crea un set Desktop: un TABLERO de artboards independientes (uno por tamaño),
+// todos visibles en el lienzo. El máster (300×250) arranca con un hero (imagen +
+// texto + CTA) y el resto copia su contenido; luego cada banner se edita aparte.
+function crearSetDesktop(){
+  const actual = pieza();
+  const p = (actual && (!actual.canvas || actual.canvas.length===0) && !actual.esSet) ? actual : crearPieza("display-300x250","Display Desktop");
+  const semilla = () => [ mk("hero", { titulo:"Tu título", sub:"Subtítulo breve", ctaTexto:"Saber más", alturaHero:"250", oscurecer:"45" }) ];
+  p.nombre = "Display Desktop";
+  p.esSet = true;
+  p.setTipo = "display-desktop";
+  p.masterFmt = "display-300x250";
+  p.activaFmt = "display-300x250";
+  p.formato = "display-300x250";
+  p.canvas = p.canvas || [];
+  p.artboards = SET_DISPLAY_DESKTOP.map(fmt => ({ fmt, canvas: semilla() }));
+  proyecto.activa = p.id;
+  activarPieza(p.id);
+  toast("Set Desktop creado — edita cada banner; el máster (300×250) puedes aplicarlo a todos");
 }
-// ── Fondo del set y overrides por tamaño (Fase 2) ───────────────────────
-function fondoSet(p){ if(!p.setFondo) p.setFondo = { tipo:"color", color:"", url:"", veil:0 }; return p.setFondo; }
-function overrideSet(p, fmtKey){ if(!p.setOverrides) p.setOverrides = {}; if(!p.setOverrides[fmtKey]) p.setOverrides[fmtKey] = {}; return p.setOverrides[fmtKey]; }
-function ovDe(p, fmtKey){ return (p.setOverrides && p.setOverrides[fmtKey]) || {}; }
-function orientEfectiva(p, fmtKey){ const ov = ovDe(p, fmtKey); return ov.orient || orientacionSet(FORMATOS[fmtKey]); }
-// Capa de fondo (imagen que cubre + velo opcional). El color de fondo se aplica
-// en la caja; aquí solo la imagen y su oscurecido.
-function capaFondoSetHTML(p, fmtKey){
-  const f = fondoSet(p);
-  if(f.tipo !== "imagen" || !f.url) return "";
-  const ov = ovDe(p, fmtKey);
-  const pos = ov.pos || "center";
-  const veil = f.veil ? `<div class="set-veil" style="position:absolute;inset:0;background:rgba(0,0,0,${(f.veil/100).toFixed(2)});"></div>` : "";
-  return `<div class="set-bg" style="position:absolute;inset:0;background-image:url('${escAttr(f.url)}');background-size:cover;background-position:${esc(pos)};"></div>${veil}`;
+
+// Markup de un bloque editable (compartido entre el editor normal y el tablero).
+function bwHTML(item){
+  return `<div class="bw${seleccionado===item.id?" selected":""}" data-id="${item.id}" draggable="true"><div class="bw-handle">Mover</div><div class="bw-controls"><button class="bw-btn" onclick="moverBloque('${item.id}',-1);event.stopPropagation();">${svgIcon("chevup",{size:"14px"})}</button><button class="bw-btn" onclick="moverBloque('${item.id}',1);event.stopPropagation();">${svgIcon("chevdown",{size:"14px"})}</button><button class="bw-btn" onclick="duplicarBloque('${item.id}');event.stopPropagation();">${svgIcon("copiar",{size:"13px"})}</button><button class="bw-btn del" onclick="eliminarBloque('${item.id}');event.stopPropagation();">${svgIcon("equis",{size:"14px"})}</button></div>${BLOQUES[item.tipo].render(item.datos)}</div>`;
 }
-// Contenido del máster (fila/columna) saltando los bloques ocultos en este tamaño.
-function contenidoSetHTML(p, orient, ocultos){
-  ocultos = ocultos || [];
-  const w = orient === "fila" ? 600 : 300;
-  const blks = (p.canvas || []).filter(it => !ocultos.includes(it.id))
-    .map(item => `<div class="set-blk">${BLOQUES[item.tipo].render(item.datos)}</div>`).join("");
-  return `<div class="set-content ${orient}" style="width:${w}px;${temaVars(p.tema)}">${blks}</div>`;
-}
-// Caja de un banner (fondo + contenido) reutilizada por la vista y el export.
-function cajaSetInnerHTML(p, fmtKey){
-  const orient = orientEfectiva(p, fmtKey);
-  const ocultos = ovDe(p, fmtKey).ocultos || [];
-  return `${capaFondoSetHTML(p, fmtKey)}<div class="set-fit">${contenidoSetHTML(p, orient, ocultos)}</div>`;
-}
-function fondoBoxColor(p){ const f = fondoSet(p); return (f.tipo === "color" && f.color) ? f.color : p.tema.bg; }
-// Ajusta (fit) cada banner: escala el contenido para que entre exacto; multiplica
-// por la escala manual del tamaño (data-escala).
-function ajustarBannersSet(root){
-  root.querySelectorAll(".set-box").forEach(box => {
-    const W = +box.dataset.w, H = +box.dataset.h, mult = +(box.dataset.escala || 1);
-    const fit = box.querySelector(".set-fit");
-    const content = fit && fit.querySelector(".set-content");
-    if(!content) return;
-    fit.style.transform = "none";
-    const cw = content.offsetWidth || 1, ch = content.offsetHeight || 1;
-    let s = Math.min(W / cw, H / ch);
-    if(!isFinite(s) || s <= 0) s = 1;
-    s *= mult;
-    if(s > 3) s = 3;
-    fit.style.transform = `translate(-50%,-50%) scale(${s})`;
+function attachBwListeners(c){
+  c.querySelectorAll(".bw img").forEach(im => { im.draggable = false; });
+  c.querySelectorAll(".bw").forEach(bw => {
+    bw.addEventListener("click", (e) => { e.stopPropagation(); seleccionarBloque(bw.dataset.id); });
+    bw.addEventListener("dragstart", (e) => { if(e.target.closest("input,textarea,select,button")) { e.preventDefault(); return; } dragBlockId = bw.dataset.id; bw.classList.add("drag-source"); e.dataTransfer.effectAllowed = "move"; try{e.dataTransfer.setData("text/plain",bw.dataset.id);}catch(_){} });
+    bw.addEventListener("dragend", () => { bw.classList.remove("drag-source"); limpiarDropLines(); dragBlockId=null; });
   });
 }
-function abrirSetView(){
-  const p = pieza();
-  if(!esSetPieza(p)){ toast("Esta creatividad no es un set Display"); return; }
-  renderSetView();
-  document.getElementById("modal-set").classList.add("show");
+function ajustarFrameParaSet(es){
+  const f = document.getElementById("canvas-frame"); if(!f) return;
+  if(es){ f.style.maxWidth=""; f.style.height="auto"; f.style.background="transparent"; f.style.boxShadow="none"; f.dataset.fijo=""; }
+  else { f.style.background=""; f.style.boxShadow=""; }
 }
-let _setAjusteAbierto = null;   // fmtKey cuyo panel de ajustes está expandido
-function renderSetView(){
-  const p = pieza();
-  const cont = document.getElementById("set-body");
-  if(!cont) return;
-  if(!esSetPieza(p)){ cont.innerHTML = "<p>Esta creatividad no es un set.</p>"; return; }
-  const sizes = p.setSizes || SET_DISPLAY_DESKTOP;
-  const master = p.master || "display-300x250";
-  const f = fondoSet(p);
-  // Barra de fondo del set
-  const fondoCtrl = `<div class="set-fondo">
-    <span class="set-fondo-tit">Fondo del set</span>
-    <div class="seg2">
-      <button class="${f.tipo!=='imagen'?'on':''}" onclick="setFondoTipo('color')">Color</button>
-      <button class="${f.tipo==='imagen'?'on':''}" onclick="setFondoTipo('imagen')">Imagen</button>
-    </div>
-    ${f.tipo==='imagen'
-      ? `<input type="text" class="set-fondo-url" placeholder="URL de la imagen de fondo (cubre el banner)" value="${escAttr(f.url||'')}" onchange="setFondoUrl(this.value)">
-         <label class="set-fondo-veil">Oscurecer <input type="range" min="0" max="70" step="5" value="${f.veil||0}" onchange="setFondoVeil(+this.value)"></label>`
-      : `<input type="color" class="set-fondo-color" value="${esc(f.color||p.tema.bg)}" onchange="setFondoColor(this.value)" title="Color de fondo">`}
-  </div>`;
-  let html = `<p class="set-intro">Diseña el máster <b>300×250</b> a la izquierda. Aquí ves <b>todos los tamaños en vivo</b>; con <b>Ajustar</b> cambias cada uno (orientación, tamaño, foco de la imagen, ocultar bloques) sin tocar el máster. <button class="primary" onclick="descargarTodoElSet()">${svgIcon("exportar",{size:"12px"})} Descargar todos</button></p>${fondoCtrl}<div class="set-grid">`;
-  sizes.forEach(fmtKey => {
-    const fmt = FORMATOS[fmtKey]; if(!fmt) return;
-    const esMaestro = fmtKey === master;
-    const ov = ovDe(p, fmtKey);
-    const orient = orientEfectiva(p, fmtKey);
-    const escala = ov.escala || 1;
-    const ocultos = ov.ocultos || [];
-    const tocado = !!(ov.orient || ov.escala || ov.pos || (ov.ocultos && ov.ocultos.length));
-    const pw = Math.min(300 / fmt.ancho, 250 / fmt.alto, 1);   // escala de la miniatura
-    const abierto = _setAjusteAbierto === fmtKey;
-    html += `<div class="set-cell${esMaestro ? ' maestro' : ''}">
-      <div class="set-cell-bar"><span>${fmt.ancho}×${fmt.alto}${esMaestro ? ' <span class="mtag">· máster</span>' : ''}${tocado ? ' <span class="ajtag">· ajustado</span>' : ''}</span><span class="set-cell-acc"><button onclick="toggleAjusteCell('${fmtKey}')">${svgIcon("editar",{size:"11px"})} Ajustar</button><button onclick="descargarBannerSet('${fmtKey}')">${svgIcon("exportar",{size:"11px"})}</button></span></div>
-      <div class="set-stage" style="width:${Math.round(fmt.ancho*pw)}px;height:${Math.round(fmt.alto*pw)}px;">
-        <div class="set-box-scale" style="transform:scale(${pw});">
-          <div class="set-box" data-w="${fmt.ancho}" data-h="${fmt.alto}" data-escala="${escala}" style="width:${fmt.ancho}px;height:${fmt.alto}px;background:${esc(fondoBoxColor(p))};${temaVars(p.tema)}">
-            ${cajaSetInnerHTML(p, fmtKey)}
-          </div>
+// Tablero: TODOS los banners del set en el lienzo. El activo es editable; los
+// demás son vista previa (clic para activarlos).
+function renderTablero(){
+  const p = pieza(); if(!esSetPieza(p)) return;
+  const c = document.getElementById("canvas");
+  ajustarFrameParaSet(true);
+  const zoom = 0.7;
+  let html = `<div class="tablero-hint">Clic en un banner para editarlo. Edita cada uno por separado (texto, imagen o sin imagen). El <b>máster</b> puedes aplicarlo a todos con el botón de arriba.</div><div class="tablero">`;
+  p.artboards.forEach(ab => {
+    const fmt = FORMATOS[ab.fmt]; if(!fmt) return;
+    const activo = ab.fmt === p.activaFmt;
+    const master = ab.fmt === p.masterFmt;
+    const blocks = ab.canvas || [];
+    const inner = blocks.length
+      ? (activo ? blocks.map(bwHTML).join("") : blocks.map(it => BLOQUES[it.tipo].render(it.datos)).join(""))
+      : `<div class="ab-empty">${activo ? "Añade bloques desde la izquierda" : "vacío"}</div>`;
+    html += `<div class="ab${activo?' activo':''}${master?' master':''}" data-fmt="${ab.fmt}">
+      <div class="ab-bar"><span class="ab-tit">${fmt.ancho}×${fmt.alto}${master?' <span class="mtag">máster</span>':''}${activo?' <span class="acttag">editando</span>':''}</span><button class="ab-dl" onclick="exportarArtboard('${ab.fmt}');event.stopPropagation();" title="Descargar este banner">${svgIcon("exportar",{size:"12px"})}</button></div>
+      <div class="ab-stage" style="width:${Math.round(fmt.ancho*zoom)}px;height:${Math.round(fmt.alto*zoom)}px;">
+        <div class="ab-scale" style="transform:scale(${zoom});">
+          <div class="ab-frame" data-fmt="${ab.fmt}" style="width:${fmt.ancho}px;height:${fmt.alto}px;${temaVars(p.tema)};background:${esc(p.tema.bg)};">${inner}</div>
         </div>
       </div>
-      <div class="set-ajuste" id="aj-${fmtKey}" style="display:${abierto?'block':'none'};">${panelAjusteHTML(p, fmtKey, orient, escala, ocultos)}</div>
     </div>`;
   });
   html += `</div>`;
-  cont.innerHTML = html;
-  requestAnimationFrame(() => ajustarBannersSet(cont));
+  c.innerHTML = html;
+  const activoFrame = c.querySelector(".ab.activo .ab-frame");
+  if(activoFrame) attachBwListeners(activoFrame);
+  c.querySelectorAll(".ab:not(.activo)").forEach(el => el.addEventListener("click", () => activarArtboard(el.dataset.fmt)));
+  iniciarLivePreview();
 }
-// Panel de ajustes por tamaño.
-function panelAjusteHTML(p, fmtKey, orient, escala, ocultos){
-  const f = fondoSet(p);
-  let h = `<div class="set-aj-row"><label>Orientación</label><div class="seg2">
-      <button class="${orient==='columna'?'on':''}" onclick="setOverrideSet('${fmtKey}','orient','columna')">Columna</button>
-      <button class="${orient==='fila'?'on':''}" onclick="setOverrideSet('${fmtKey}','orient','fila')">Fila</button>
-    </div></div>
-    <div class="set-aj-row"><label>Tamaño del contenido (${escala.toFixed(1)}×)</label><input type="range" min="0.5" max="1.8" step="0.1" value="${escala}" onchange="setOverrideSet('${fmtKey}','escala',+this.value)"></div>`;
-  if(f.tipo === "imagen" && f.url){
-    const pos = ovDe(p, fmtKey).pos || "center";
-    const focos = [["left top","↖"],["center top","↑"],["right top","↗"],["left center","←"],["center","•"],["right center","→"],["left bottom","↙"],["center bottom","↓"],["right bottom","↘"]];
-    h += `<div class="set-aj-row"><label>Foco de la imagen</label><div class="foco-grid">${
-      focos.map(([v,ic]) => `<button class="${pos===v?'on':''}" onclick="setFocoSet('${fmtKey}','${v}')">${ic}</button>`).join("")
-    }</div></div>`;
-  }
-  if((p.canvas||[]).length){
-    h += `<div class="set-aj-row"><label>Bloques visibles</label><div class="set-aj-blocks">${
-      p.canvas.map(b => `<label class="chk"><input type="checkbox" ${ocultos.includes(b.id)?'':'checked'} onchange="toggleOcultoSet('${fmtKey}','${b.id}')"> ${esc(BLOQUES[b.tipo].nombre)}</label>`).join("")
-    }</div></div>`;
-  }
-  h += `<button class="set-aj-reset" onclick="resetOverrideSet('${fmtKey}')">Restablecer este tamaño</button>`;
-  return h;
-}
-// Mutadores del fondo y los overrides.
-function setFondoTipo(tipo){ const p=pieza(); if(!esSetPieza(p))return; fondoSet(p).tipo=tipo; persistir(); renderSetView(); }
-function setFondoUrl(v){ const p=pieza(); if(!esSetPieza(p))return; fondoSet(p).url=v.trim(); persistir(); renderSetView(); }
-function setFondoColor(v){ const p=pieza(); if(!esSetPieza(p))return; fondoSet(p).color=v; persistir(); renderSetView(); }
-function setFondoVeil(v){ const p=pieza(); if(!esSetPieza(p))return; fondoSet(p).veil=v; persistir(); renderSetView(); }
-function setOverrideSet(fmtKey, key, val){ const p=pieza(); if(!esSetPieza(p))return; overrideSet(p,fmtKey)[key]=val; _setAjusteAbierto=fmtKey; persistir(); renderSetView(); }
-function setFocoSet(fmtKey, pos){ setOverrideSet(fmtKey,'pos',pos); }
-function toggleOcultoSet(fmtKey, blockId){ const p=pieza(); if(!esSetPieza(p))return; const ov=overrideSet(p,fmtKey); ov.ocultos=ov.ocultos||[]; const i=ov.ocultos.indexOf(blockId); if(i>=0) ov.ocultos.splice(i,1); else ov.ocultos.push(blockId); _setAjusteAbierto=fmtKey; persistir(); renderSetView(); }
-function resetOverrideSet(fmtKey){ const p=pieza(); if(!esSetPieza(p))return; if(p.setOverrides) delete p.setOverrides[fmtKey]; _setAjusteAbierto=fmtKey; persistir(); renderSetView(); }
-function toggleAjusteCell(fmtKey){ _setAjusteAbierto = (_setAjusteAbierto===fmtKey) ? null : fmtKey; renderSetView(); }
-// HTML autónomo de un banner del set (con fondo, overrides y auto-ajuste embebido).
-function generarHTMLDeBannerSet(p, fmtKey){
-  const fmt = FORMATOS[fmtKey] || FORMATOS["display-300x250"];
-  const css = cssComponentes();
-  const escala = ovDe(p, fmtKey).escala || 1;
-  const fonts = `<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=${encodeURIComponent(p.tema.font)}:wght@300;400;500;600;700&display=swap" rel="stylesheet">`;
-  return `<!DOCTYPE html>
-<html lang="es"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>${esc(p.nombre)} · ${fmt.ancho}×${fmt.alto}</title>
-${fonts}
-<style>
-*{box-sizing:border-box;margin:0;padding:0;}
-body{font-family:"${p.tema.font}",Arial,sans-serif;color:${p.tema.text};background:${fondoBoxColor(p)};-webkit-font-smoothing:antialiased;}
-.set-box{position:relative;overflow:hidden;width:${fmt.ancho}px;height:${fmt.alto}px;background:${fondoBoxColor(p)};${temaVars(p.tema)}}
-.set-fit{position:absolute;top:50%;left:50%;z-index:2;}
-.set-bg{z-index:0;}.set-veil{z-index:1;}
-.set-content{display:flex;align-items:center;justify-content:center;box-sizing:border-box;}
-.set-content.columna{flex-direction:column;}
-.set-content.fila{flex-direction:row;gap:8px;}
-.set-content.columna>.set-blk{width:100%;}
-.set-content.fila>.set-blk{flex:1 1 0;min-width:0;}
-${css}
-.set-content img{max-width:100%;height:auto;}
-</style></head><body>
-<!--SBB-SET:${esc(fmtKey)}-->
-<div class="set-box" id="b">${cajaSetInnerHTML(p, fmtKey)}</div>
-<script>(function(){var box=document.getElementById('b'),fit=box.querySelector('.set-fit'),c=fit.firstElementChild,mult=${escala};function fitf(){fit.style.transform='none';var s=Math.min(box.clientWidth/c.offsetWidth,box.clientHeight/c.offsetHeight);if(!isFinite(s)||s<=0)s=1;s*=mult;if(s>3)s=3;fit.style.transform='translate(-50%,-50%) scale('+s+')';}fitf();window.addEventListener('resize',fitf);setTimeout(fitf,250);})();<\/script>
-</body></html>`;
-}
-function descargarBannerSet(fmtKey){
+function activarArtboard(fmt){
   const p = pieza(); if(!esSetPieza(p)) return;
-  const fmt = FORMATOS[fmtKey]; if(!fmt) return;
-  const html = generarHTMLDeBannerSet(p, fmtKey);
+  p.activaFmt = fmt; seleccionado = null;
+  renderCanvas(); renderForm();
+}
+function aplicarMasterATodos(){
+  const p = pieza(); if(!esSetPieza(p)) return;
+  const master = artboardMaster(p); if(!master) return;
+  if(!confirm("¿Aplicar el contenido del máster (300×250) a TODOS los tamaños? Reemplaza lo que tengas en los demás.")) return;
+  p.artboards.forEach(ab => { if(ab.fmt !== p.masterFmt) ab.canvas = clone(master.canvas); });
+  seleccionado = null;
+  persistir(); renderCanvas(); renderForm();
+  toast("Máster aplicado a todos los tamaños");
+}
+function piezaDeArtboard(p, ab){
+  const fmt = FORMATOS[ab.fmt];
+  return { nombre: `${p.nombre}-${fmt.ancho}x${fmt.alto}`, formato: ab.fmt, canvas: ab.canvas || [], tema: p.tema };
+}
+function exportarArtboard(fmt){
+  const p = pieza(); if(!esSetPieza(p)) return;
+  const ab = p.artboards.find(a => a.fmt === fmt); if(!ab) return;
+  if(!(ab.canvas && ab.canvas.length)){ toast("Banner vacío"); return; }
+  const html = generarHTMLDePieza(piezaDeArtboard(p, ab));
   const blob = new Blob([html], {type:"text/html"});
   const url = URL.createObjectURL(blob);
   const a = document.createElement("a");
-  a.href = url; a.download = `${slugify(p.nombre)}-${fmtKey.replace("display-","")}.html`;
+  a.href = url; a.download = `${slugify(p.nombre)}-${fmt.replace("display-","")}.html`;
   document.body.appendChild(a); a.click(); a.remove();
   URL.revokeObjectURL(url);
-  toast(`Descargado ${fmt.ancho}×${fmt.alto}`);
+  toast(`Descargado ${FORMATOS[fmt].ancho}×${FORMATOS[fmt].alto}`);
 }
-function descargarTodoElSet(){
+function exportarTodoElSet(){
   const p = pieza(); if(!esSetPieza(p)) return;
-  const sizes = p.setSizes || SET_DISPLAY_DESKTOP;
   let i = 0;
-  sizes.forEach(fmtKey => { setTimeout(() => descargarBannerSet(fmtKey), i*350); i++; });
-  setTimeout(() => toast(`${sizes.length} banners descargados`), sizes.length*350 + 200);
+  p.artboards.forEach(ab => { if(ab.canvas && ab.canvas.length){ setTimeout(() => exportarArtboard(ab.fmt), i*350); i++; } });
+  if(i===0){ toast("No hay banners con contenido"); return; }
+  setTimeout(() => toast(`${i} banner${i>1?"s":""} descargado${i>1?"s":""}`), i*350 + 200);
 }
-function actualizarBotonSet(){
-  const b = document.getElementById("btn-set");
-  if(!b) return;
-  b.style.display = esSetPieza(pieza()) ? "" : "none";
+// Muestra/oculta los controles del set en la barra superior según la creatividad.
+function actualizarUISet(){
+  const es = esSetPieza(pieza());
+  const tools = document.getElementById("set-tools"); if(tools) tools.style.display = es ? "" : "none";
+  const fmt = document.getElementById("tb-formato"); if(fmt) fmt.style.display = es ? "none" : "";
+  const dev = document.getElementById("dev-seg"); if(dev) dev.style.display = es ? "none" : "";
 }
+// (compat) el set ya no usa ventana; el tablero vive en el lienzo.
+function refrescarSetSiAbierto(){}
 
 function abrirExportar(){
   if(!proyecto || proyecto.piezas.length === 0) return;
@@ -3347,23 +3276,7 @@ function cargarPlantilla(tipo){
   // Set Display Desktop ADAPTABLE: una sola creatividad-máster (300×250) cuyo
   // contenido se adapta a todos los tamaños. Editas el máster y los ves todos.
   if(tipo === "display-desktop-set"){
-    const p = getOrCreate("display-300x250", "Display Desktop");
-    p.esSet = true;
-    p.master = "display-300x250";
-    p.setSizes = SET_DISPLAY_DESKTOP.slice();
-    // Los banners de display suelen llevar imagen de fondo: el set arranca con una
-    // (editable o cambiable a color en la barra "Fondo del set"), y velo para que
-    // el texto se lea sobre la foto.
-    p.setFondo = { tipo:"imagen", url:"https://placehold.co/1200x628/1c73cb/ffffff?text=Tu+imagen", color:"", veil:25 };
-    p.setOverrides = {};
-    p.canvas = [
-      mk("header", { padTop:"14", padBottom:"6", titulo:"Tu título", bajada:"Subtítulo breve", tamanoTitulo:"20", colorTitulo:"#ffffff", colorBajada:"#ffffff" }),
-      mk("cta", { padTop:"6", padBottom:"14", texto:"Saber más" })
-    ];
-    proyecto.activa = p.id;
-    activarPieza(p.id);
-    abrirSetView();
-    toast("Set Display Desktop creado — diseña el máster y velos todos en 'Ver set'");
+    crearSetDesktop();   // tablero de banners en el lienzo, cada uno editable
     return;
   }
   // Kit de Google Display: varias piezas, una por tamaño IAB.
