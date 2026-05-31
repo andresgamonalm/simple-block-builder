@@ -183,6 +183,7 @@ button,input,select,textarea{font-family:inherit;}
 .panel-tabs{display:flex;border-bottom:1px solid var(--bdr);padding:0 8px;flex-shrink:0;}
 .panel-tabs .ptab{flex:1;border:none;background:none;padding:12px 3px;font-family:var(--f);font-size:11px;font-weight:600;color:var(--ink3);cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-1px;display:flex;flex-direction:column;align-items:center;gap:5px;transition:color .14s;}
 .panel-tabs .ptab.on{color:var(--primary);border-bottom-color:var(--primary);}
+.panel-tabs .ptab.disabled{opacity:.4;cursor:not-allowed;pointer-events:none;}
 .ptab-pane{flex:1;overflow-y:auto;padding:14px 14px 30px;}
 .ptab-pane::-webkit-scrollbar{width:6px;}
 .ptab-pane::-webkit-scrollbar-thumb{background:#e0e0f0;border-radius:3px;}
@@ -959,6 +960,7 @@ button,input,select,textarea{font-family:inherit;}
       <span id="set-tools" style="display:none">
         <button class="tb-btn" onclick="aplicarMasterATodos()" title="Aplicar el contenido del máster (300×250) a todos los tamaños"><span class="ico" data-ic="grid"></span> Aplicar máster a todos</button>
         <button class="tb-btn" onclick="exportarTodoElSet()" title="Descargar todos los banners del set"><span class="ico" data-ic="exportar"></span> Descargar todos</button>
+        <button class="tb-btn" onclick="salirDeColeccion()" title="Volver a un banner único (queda el máster)"><span class="ico" data-ic="chevright"></span> Salir de colección</button>
       </span>
       <div class="dev-seg" id="dev-seg" title="Vista de dispositivo">
         <button data-dev="desktop" class="on" onclick="setDispositivo('desktop')" title="Escritorio"><span class="ico" data-ic="monitor"></span></button>
@@ -982,7 +984,7 @@ button,input,select,textarea{font-family:inherit;}
         <button class="ptab on" data-tab="bloques" onclick="cambiarPanelTab('bloques')"><span class="ico" data-ic="grid"></span><span>Bloques</span></button>
         <button class="ptab" data-tab="diseno" onclick="cambiarPanelTab('diseno')"><span class="ico" data-ic="paleta"></span><span>Diseño</span></button>
         <button class="ptab" data-tab="editar" onclick="cambiarPanelTab('editar')"><span class="ico" data-ic="editar"></span><span>Editar bloque</span></button>
-        <button class="ptab" data-tab="plantillas" onclick="cambiarPanelTab('plantillas')"><span class="ico" data-ic="plantilla"></span><span>Plantillas</span></button>
+        <button class="ptab" id="ptab-plantillas" data-tab="plantillas" onclick="cambiarPanelTab('plantillas')"><span class="ico" data-ic="plantilla"></span><span>Plantillas</span></button>
       </div>
 
       <div class="panel-body ptab-pane" id="pane-bloques">
@@ -2492,9 +2494,12 @@ function renderFormatoSelect(){
     arr.forEach(([k,v]) => { html += `<option value="${k}">${esc(v.label)}</option>`; });
     html += `</optgroup>`;
   });
+  // Colecciones: convierten la creatividad en un tablero de varios banners a la vez.
+  html += `<optgroup label="Colecciones"><option value="__coleccion:display-desktop">Google Display · Desktop</option></optgroup>`;
   document.getElementById("fmt").innerHTML = html;
 }
 function cambiarFormato(f){
+  if(f && f.indexOf("__coleccion:") === 0){ convertirEnColeccion(f.slice("__coleccion:".length)); return; }
   const p = pieza(); if(!p) return;
   p.formato = f;
   // Cambiar de formato muestra su tamaño REAL: se sale de la vista de dispositivo.
@@ -3155,6 +3160,38 @@ function crearSetDesktop(){
   activarPieza(p.id);
   toast("Set Desktop creado — edita cada banner; el máster (300×250) puedes aplicarlo a todos");
 }
+// Convierte la creatividad ACTUAL en una colección (tablero), usando su contenido
+// actual como máster. Se llega desde el selector de Formato → "Colecciones".
+function convertirEnColeccion(tipo){
+  const p = pieza();
+  if(!p){ toast("Abre o crea una creatividad primero"); return; }
+  if(esSetPieza(p)){ return; }
+  const master = (p.canvas && p.canvas.length)
+    ? clone(p.canvas)
+    : [ mk("hero", { titulo:"Tu título", sub:"Subtítulo breve", ctaTexto:"Saber más", alturaHero:"250", oscurecer:"45" }) ];
+  p.esSet = true;
+  p.setTipo = "display-desktop";
+  p.masterFmt = "display-300x250";
+  p.activaFmt = "display-300x250";
+  p.formato = "display-300x250";
+  p.artboards = SET_DISPLAY_DESKTOP.map(fmt => ({ fmt, canvas: clone(master) }));
+  seleccionado = null;
+  if(panelTab === "plantillas") cambiarPanelTab("bloques");
+  activarPieza(p.id);
+  toast("Colección Google Display · Desktop — tu diseño es el máster en todos los tamaños");
+}
+function salirDeColeccion(){
+  const p = pieza();
+  if(!esSetPieza(p)) return;
+  if(!confirm("¿Salir de la colección? Quedará solo el banner máster (300×250) como creatividad normal; los demás tamaños se descartan.")) return;
+  const master = artboardMaster(p);
+  p.canvas = (master && master.canvas) ? master.canvas : [];
+  p.formato = p.masterFmt || "display-300x250";
+  delete p.esSet; delete p.artboards; delete p.setTipo; delete p.masterFmt; delete p.activaFmt;
+  seleccionado = null;
+  activarPieza(p.id);
+  toast("Saliste de la colección");
+}
 
 // Markup de un bloque editable (compartido entre el editor normal y el tablero).
 function bwHTML(item){
@@ -3249,6 +3286,13 @@ function actualizarUISet(){
   const tools = document.getElementById("set-tools"); if(tools) tools.style.display = es ? "" : "none";
   const fmt = document.getElementById("tb-formato"); if(fmt) fmt.style.display = es ? "none" : "";
   const dev = document.getElementById("dev-seg"); if(dev) dev.style.display = es ? "none" : "";
+  // En una colección, las plantillas no aplican (cada banner se edita aparte): se bloquean.
+  const pl = document.getElementById("ptab-plantillas");
+  if(pl){
+    pl.disabled = es;
+    pl.classList.toggle("disabled", es);
+    pl.title = es ? "No aplica en colecciones (edita cada banner del tablero)" : "";
+  }
 }
 // (compat) el set ya no usa ventana; el tablero vive en el lienzo.
 function refrescarSetSiAbierto(){}
