@@ -1293,6 +1293,12 @@ button,input,select,textarea{font-family:inherit;}
         <button type="button" data-fmt="banner" onclick="iaSetFormato('banner')"><span class="ico" data-ic="grid"></span> Banners Display</button>
       </div><input type="hidden" id="ia-formato" value="email"></label>
     </div>
+    <label class="ia-label">Tono de la pieza</label>
+    <div class="ia-seg" id="ia-tono-seg">
+      <button type="button" data-tono="promo" class="on" onclick="iaSetTono('promo')">🔥 Promocional (vende)</button>
+      <button type="button" data-tono="corporativo" onclick="iaSetTono('corporativo')">🏛️ Corporativo</button>
+      <button type="button" data-tono="informativo" onclick="iaSetTono('informativo')">ℹ️ Informativo</button>
+    </div><input type="hidden" id="ia-tono" value="promo">
     <label class="ia-label">¿Qué necesitas? <span class="ia-req">·obligatorio</span></label>
     <textarea id="ia-que" class="ia-que" placeholder="Ej: Promocionar el seguro de auto con foco en cobertura total y atención 24/7"></textarea>
     <div class="ia-row">
@@ -5111,6 +5117,11 @@ function iaSetFormato(f){
   document.getElementById("ia-formato").value = iaFormato;
   document.querySelectorAll("#ia-formato-seg button").forEach(b => b.classList.toggle("on", b.dataset.fmt===iaFormato));
 }
+function iaSetTono(t){
+  const tono = ["promo","corporativo","informativo"].includes(t) ? t : "promo";
+  document.getElementById("ia-tono").value = tono;
+  document.querySelectorAll("#ia-tono-seg button").forEach(b => b.classList.toggle("on", b.dataset.tono===tono));
+}
 function abrirIA(){
   iaSetFormato("email");
   const ms = document.getElementById("ia-marca");
@@ -5132,6 +5143,7 @@ async function generarConIA(){
   const gancho = (document.getElementById("ia-gancho").value || "").trim();
   const ctaUrl = (document.getElementById("ia-ctaurl").value || "").trim();
   const ctaCount = Math.max(1, Math.min(3, parseInt(document.getElementById("ia-ctacount").value)||1));
+  const tipo = (document.getElementById("ia-tono") || {}).value || "promo";
   let refs = (document.getElementById("ia-refs").value || "").split(/[\n,\s]+/).map(s=>s.trim()).filter(s=>/^https?:\/\//.test(s));
   const marca = (workspace.marcas||[]).find(m => m.id === document.getElementById("ia-marca").value) || null;
   const M = marca ? normalizarMarca(marca) : null;
@@ -5158,7 +5170,7 @@ async function generarConIA(){
       method:"POST", credentials:"include", headers:{ "Content-Type":"application/json" },
       body: JSON.stringify({
         producto,
-        brief: { que, accion, gancho, refs, ctaUrl, ctaCount },
+        brief: { que, accion, gancho, refs, ctaUrl, ctaCount, tipo },
         formato: producto==="email" ? "email" : "display-300x250",
         marca: M ? { nombre:M.nombre, empresa:M.empresa, primary:M.primary, secondary:M.secondary, cta:M.cta, ctaText:M.ctaText, text:M.text, bg:M.bg, accent1:M.accent1, accent2:M.accent2, fontTitulo:M.fontTitulo, fontCuerpo:M.fontCuerpo, logoUrl:M.logo, negocio:M.negocio, tono:M.tono, eslogan:M.eslogan, publico:M.publico, productos:M.productos, usar:M.usar, evitar:M.evitar, disclaimer:M.disclaimer } : null,
         imagenes,
