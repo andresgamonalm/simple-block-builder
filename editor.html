@@ -1778,8 +1778,8 @@ function formatearFecha(iso, formato){
 
 function styleFields(opts={}){
   const f = [];
-  f.push({grupo:"Posición y tamaño"});
   if(opts.h !== false || opts.v !== false){
+    f.push({grupo:"Posición y tamaño"});
     f.push({tipo:"row2", izq:{key:"alinH", label:"Alineación H", tipo:"alignH"}, der:{key:"alinV", label:"Alineación V", tipo:"alignV"}});
   }
   // (Se quitó el Ancho/Alto genérico del bloque: confundía y casi no se usaba.
@@ -2639,14 +2639,15 @@ const BLOQUES = {
   // Header de marca: banda full-width con logo (email). Dos estilos: sólido (logo claro) o blanco (logo a color).
   bandaHeader: {
     cat:"Estructura", nombre:"Header de marca", icono:"", sub:"Banda con logo (email)",
-    defaults: Object.assign({}, styleDefaults, { padTop:"0", padBottom:"0", padX:"0", estilo:"solido", bg:"#2167ae", logoClaro:"", logoColor:"", alto:"30", alinH:"left" }),
+    defaults: Object.assign({}, styleDefaults, { padTop:"0", padBottom:"0", padLeft:"0", padRight:"0", estilo:"solido", bg:"#2167ae", logoClaro:"", logoColor:"", alto:"30", alinH:"left" }),
     campos: [
       {key:"estilo",label:"Estilo de banda",tipo:"select",opciones:[["solido","Sólido (logo claro)"],["blanco","Blanco (logo a color)"]]},
       {key:"bg",label:"Color de la banda (estilo sólido)",tipo:"color"},
       {key:"alto",label:"Alto del logo (px)",tipo:"range",min:16,max:60,step:1},
       {key:"alinH",label:"Alineación del logo",tipo:"select",opciones:[["left","Izquierda"],["center","Centro"],["right","Derecha"]]},
       {key:"logoColor",label:"Logo a color (para fondo blanco)",tipo:"text"},
-      {key:"logoClaro",label:"Logo claro (para fondo sólido)",tipo:"text"}
+      {key:"logoClaro",label:"Logo claro (para fondo sólido)",tipo:"text"},
+      ...styleFields({h:false, v:false})
     ],
     render: (d) => {
       const solido = (d.estilo||"solido")!=="blanco";
@@ -2661,7 +2662,7 @@ const BLOQUES = {
   // Footer de marca: banda con logo + "Síguenos" + íconos de redes, más línea legal (email).
   bandaFooter: {
     cat:"Estructura", nombre:"Footer de marca", icono:"", sub:"Banda + Síguenos + redes (email)",
-    defaults: Object.assign({}, styleDefaults, { padTop:"0", padBottom:"0", padX:"0", estilo:"solido", bg:"#2167ae", logoClaro:"", logoColor:"", alto:"28", textoSeguir:"Síguenos",
+    defaults: Object.assign({}, styleDefaults, { padTop:"0", padBottom:"0", padLeft:"0", padRight:"0", estilo:"solido", bg:"#2167ae", logoClaro:"", logoColor:"", alto:"28", textoSeguir:"Síguenos",
       redes:[{tipo:"facebook",url:""},{tipo:"instagram",url:""},{tipo:"linkedin",url:""},{tipo:"youtube",url:""}],
       copyright:"", direccion:"", mostrarUnsub:false, unsubTexto:"Darme de baja", unsubUrl:"", disclaimer:"" }),
     campos: [
@@ -2687,7 +2688,8 @@ const BLOQUES = {
       {key:"unsubUrl",label:"URL de baja",tipo:"text"},
       {key:"disclaimer",label:"Disclaimer legal",tipo:"textarea"},
       {key:"logoColor",label:"Logo a color (para fondo blanco)",tipo:"text"},
-      {key:"logoClaro",label:"Logo claro (para fondo sólido)",tipo:"text"}
+      {key:"logoClaro",label:"Logo claro (para fondo sólido)",tipo:"text"},
+      ...styleFields({h:false, v:false})
     ],
     render: (d) => {
       const solido = (d.estilo||"solido")!=="blanco";
