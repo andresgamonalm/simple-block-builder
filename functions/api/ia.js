@@ -350,6 +350,7 @@ async function generarEmail({ env, brief, marca, imagenes, refsTxt, catalogo }) 
     '- Estructura real de email: header (logo) arriba → contenido → un CTA claro con la ACCIÓN del brief → footer.',
     '- Si la biblioteca tiene imágenes, DEBES incluir al menos UNA foto (en un bloque "imgtext" o "hero"), preferentemente cerca del inicio. Usa SOLO una URL EXACTA de la biblioteca; si la biblioteca está vacía, deja "".',
     '- En "features"/listas de atributos: usa un ícono DISTINTO y relevante para CADA item (NUNCA el mismo en todos). Claves válidas: check, candado, reloj, globo, regalo, corazon, estrella, casa, usuario, trending, tag, carrito, telefono, chat, info, descargar, calendario, equipo, pin, nube.',
+    '- DISEÑO (que NO parezca PowerPoint): da jerarquía visual. Orden recomendado: foto (imgtext/hero) → oferta destacada → beneficios (features) → CTA. Inserta un "divisor" entre secciones grandes y algún "espaciador" para que respire. La oferta va DESPUÉS de la foto.',
     '- NO uses el bloque "hero" con su botón salvo en newsletter: el único CTA va al final (bloque "cta").',
     '- Respeta el tono y las palabras de la marca; NO inventes ofertas/precios/fechas.' + logo + disc,
     '',

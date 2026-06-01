@@ -1817,9 +1817,8 @@ function styleFields(opts={}){
     f.push({grupo:"Posición y tamaño"});
     f.push({tipo:"row2", izq:{key:"alinH", label:"Alineación H", tipo:"alignH"}, der:{key:"alinV", label:"Alineación V", tipo:"alignV"}});
   }
-  // (Se quitó el Ancho/Alto genérico del bloque: confundía y casi no se usaba.
-  //  El bloque ocupa el ancho disponible; el tamaño fino vive en cada bloque
-  //  que lo necesita, p. ej. el ancho/alto del botón CTA.)
+  // Ancho del bloque: % o px (vacío/100% = todo el ancho). Combínalo con la alineación H.
+  f.push({key:"ancho", label:"Ancho del bloque (ej. 100%, 60%, 480px)", tipo:"text", placeholder:"auto / 100% / 60% / 480px"});
   f.push({grupo:"Espaciado interior (padding)"});
   f.push({tipo:"row2", izq:{key:"padTop", label:"Arriba", tipo:"range", min:0, max:120, step:2}, der:{key:"padBottom", label:"Abajo", tipo:"range", min:0, max:120, step:2}});
   f.push({tipo:"row2", izq:{key:"padLeft", label:"Izquierda", tipo:"range", min:0, max:120, step:2}, der:{key:"padRight", label:"Derecha", tipo:"range", min:0, max:120, step:2}});
@@ -5251,6 +5250,14 @@ async function generarConIA(){
           const idxH = pz.canvas.findIndex(b => b.tipo==="bandaHeader" || b.tipo==="bandaHeaderBlanco" || b.tipo==="header");
           pz.canvas.splice(idxH>=0?idxH+1:0, 0, mk("imagen", { url:fotoForzar, anchoImg:"100", radio:"0" }));
         }
+      }
+      // La OFERTA (alert) va justo DESPUÉS de la foto principal, no pegada al header.
+      const idxImg = pz.canvas.findIndex(b => ["imgtext","hero","imagen"].includes(b.tipo));
+      const idxAlert = pz.canvas.findIndex(b => b.tipo==="alert");
+      if(idxImg>=0 && idxAlert>=0 && idxAlert < idxImg){
+        const al = pz.canvas.splice(idxAlert,1)[0];
+        const ni = pz.canvas.findIndex(b => ["imgtext","hero","imagen"].includes(b.tipo));
+        pz.canvas.splice(ni+1, 0, al);
       }
     }
     // Enlace del CTA: lo fija el usuario (la IA no lo inventa).
