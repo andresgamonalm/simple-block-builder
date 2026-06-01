@@ -173,70 +173,28 @@ function extraerTextoPagina(html, max) {
   const meta = [titulo && 'Título: ' + titulo, (ogt && ogt !== titulo) && 'OG: ' + ogt, desc && 'Descripción: ' + desc].filter(Boolean).join(' · ');
   return ((meta ? meta + '\n' : '') + cuerpo.slice(0, max || 1200)).trim().slice(0, (max || 1200) + 300);
 }
-// Links internos (mismo dominio), priorizando los que cuelgan de la sección del seed.
-function extraerLinksInternos(html, base) {
-  let origin, baseU;
-  try { baseU = new URL(base); origin = baseU.origin; } catch { return []; }
-  const seedPath = baseU.pathname.replace(/\/+$/, '');
-  const out = [], seen = new Set();
-  const re = /<a\b[^>]*\bhref=["']([^"']+)["']/gi; let m;
-  while ((m = re.exec(html)) && seen.size < 60) {
-    let href = (m[1] || '').trim();
-    if (!href || href[0] === '#' || /^(mailto:|tel:|javascript:|data:)/i.test(href)) continue;
-    let abs; try { abs = new URL(href, baseU).toString().split('#')[0]; } catch { continue; }
-    let uu; try { uu = new URL(abs); } catch { continue; }
-    if (uu.origin !== origin) continue;
-    if (/\.(jpe?g|png|gif|svg|webp|pdf|zip|mp4|mp3|css|js|ico|woff2?|xml|json)($|\?)/i.test(uu.pathname)) continue;
-    if (abs === base.split('#')[0]) continue;
-    if (seen.has(abs)) continue; seen.add(abs);
-    out.push(abs);
-  }
-  // Primero los que están dentro de la misma sección que el seed (sus "interiores").
-  out.sort((a, b) => {
-    const pa = new URL(a).pathname.startsWith(seedPath) && seedPath ? 0 : 1;
-    const pb = new URL(b).pathname.startsWith(seedPath) && seedPath ? 0 : 1;
-    return pa - pb;
-  });
-  return out;
-}
 // Lee 1-3 URLs de referencia y RASTREA hasta 2 páginas internas de cada una
 // (mismo dominio), con tope de páginas y presupuesto de tiempo.
+// Lee SOLO las URLs exactas que el usuario pasa (hasta 3). No rastrea páginas
+// internas (eso era lento); si quieres una interior, pégala como otra URL.
 async function leerReferencias(refs) {
-  const seeds = Array.isArray(refs) ? refs.filter(u => /^https?:\/\//i.test(u)).slice(0, 3) : [];
-  if (!seeds.length) return '';
-  const deadline = Date.now() + 9000;      // presupuesto total para no pasarnos
-  const MAX_PAGINAS = 4, INTERNOS_POR_SEED = 2;
-  const vistos = new Set();
+  const urls = Array.isArray(refs) ? refs.filter(u => /^https?:\/\//i.test(u)).slice(0, 3) : [];
+  if (!urls.length) return '';
+  const deadline = Date.now() + 9000;
   const trozos = [];
-  let paginas = 0;
-
-  async function leerUna(u, conLinks, maxTexto) {
+  for (const u of urls) {
+    if (Date.now() > deadline) break;
     const norm = u.split('#')[0];
-    if (vistos.has(norm) || paginas >= MAX_PAGINAS || Date.now() > deadline) return null;
-    vistos.add(norm);
-    const restante = deadline - Date.now();
     try {
-      const ctl = new AbortController(); const t = setTimeout(() => ctl.abort(), Math.max(2500, Math.min(9000, restante)));
+      const ctl = new AbortController(); const t = setTimeout(() => ctl.abort(), Math.max(2500, Math.min(8000, deadline - Date.now())));
       const r = await fetch(norm, { redirect: 'follow', signal: ctl.signal, headers: UA_NAVEGADOR });
-      clearTimeout(t); paginas++;
-      if (!r.ok) return { texto: `(${norm}: HTTP ${r.status})`, links: [] };
+      clearTimeout(t);
+      if (!r.ok) { trozos.push(`(${norm}: HTTP ${r.status})`); continue; }
       const html = await r.text();
-      return { texto: extraerTextoPagina(html, maxTexto), links: conLinks ? extraerLinksInternos(html, norm) : [] };
-    } catch (e) { paginas++; return { texto: `(${norm}: no se pudo leer)`, links: [] }; }
+      trozos.push(`• ${norm}\n${extraerTextoPagina(html, 1400)}`);
+    } catch (e) { trozos.push(`(${norm}: no se pudo leer)`); }
   }
-
-  for (const seed of seeds) {
-    if (paginas >= MAX_PAGINAS || Date.now() > deadline) break;
-    const res = await leerUna(seed, true, 1000);
-    if (!res) continue;
-    trozos.push(`• ${seed}\n${res.texto}`);
-    for (const li of res.links.slice(0, INTERNOS_POR_SEED)) {
-      if (paginas >= MAX_PAGINAS || Date.now() > deadline) break;
-      const ri = await leerUna(li, false, 700);
-      if (ri && ri.texto) trozos.push(`  ↳ (interior) ${li}\n${ri.texto}`);
-    }
-  }
-  return trozos.join('\n\n').slice(0, 3500);
+  return trozos.join('\n\n').slice(0, 4000);
 }
 
 // ── Llamada a Gemini con parseo robusto de JSON ───────────────────────────
