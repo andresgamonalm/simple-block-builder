@@ -1891,7 +1891,7 @@ const BLOQUES = {
   },
   imagen: {
     cat:"Contenido", nombre:"Imagen", icono:"", sub:"Imagen ajustable",
-    defaults: Object.assign({}, styleDefaults, { url:"https://placehold.co/600x300/e5e7ea/9ca3af?text=Imagen", alt:"", link:"", caption:"", anchoImg:"100", radio:"6", altoImg:"", posicion:"center" }),
+    defaults: Object.assign({}, styleDefaults, { url:"https://placehold.co/600x300/e5e7ea/9ca3af?text=Imagen", alt:"", link:"", caption:"", anchoImg:"100", radio:"0", altoImg:"", posicion:"center" }),
     campos: [
       {key:"url",label:"URL de la imagen",tipo:"imgurl"},
       {key:"alt",label:"Texto alternativo",tipo:"text"},
@@ -1910,7 +1910,7 @@ const BLOQUES = {
   },
   cta: {
     cat:"Acción", nombre:"Botón CTA", icono:"", sub:"Botón con tamaño y hover",
-    defaults: Object.assign({}, styleDefaults, { alinH:"center", padTop:"18", padBottom:"18", texto:"Botón", url:"", colorFondo:"", colorTexto:"#ffffff", colorHover:"", anchoBoton:"auto", altoBoton:"auto", tamano:"14", padX:"28", padY:"13", radio:"6" }),
+    defaults: Object.assign({}, styleDefaults, { alinH:"center", padTop:"18", padBottom:"18", texto:"Botón", url:"", colorFondo:"", colorTexto:"#ffffff", colorHover:"", anchoBoton:"auto", altoBoton:"auto", tamano:"14", padX:"28", padY:"13", radio:"0" }),
     campos: [
       {key:"texto",label:"Texto del botón",tipo:"text"},
       {key:"url",label:"URL de destino",tipo:"text"},
@@ -1934,7 +1934,7 @@ const BLOQUES = {
   },
   imgtext: {
     cat:"Contenido", nombre:"Imagen + Texto", icono:"", sub:"Dos columnas",
-    defaults: Object.assign({}, styleDefaults, { imagenUrl:"https://placehold.co/300x300/e5e7ea/9ca3af?text=Imagen", lado:"left", titulo:"Título", texto:"Texto", linkTexto:"", linkUrl:"", proporcionImg:"40", gapCol:"18", altoImg:"auto", radioImg:"6", alineacionTexto:"left", alineacionVertCol:"center" }),
+    defaults: Object.assign({}, styleDefaults, { imagenUrl:"https://placehold.co/300x300/e5e7ea/9ca3af?text=Imagen", lado:"left", titulo:"Título", texto:"Texto", linkTexto:"", linkUrl:"", proporcionImg:"40", gapCol:"18", altoImg:"auto", radioImg:"0", alineacionTexto:"left", alineacionVertCol:"center" }),
     campos: [
       {key:"imagenUrl",label:"URL de la imagen",tipo:"text"},
       {tipo:"row2", izq:{key:"lado",label:"Posición imagen",tipo:"select",opciones:[["left","Izquierda"],["right","Derecha"]]}, der:{key:"proporcionImg",label:"Ancho col img (%)",tipo:"range",min:20,max:60,step:5}},
@@ -2269,7 +2269,7 @@ const BLOQUES = {
       filasTexto:"Plan | Precio | Acción\nBásico | $9 | Empezar\nPro | $19 | Empezar\nPremium | $49 | Empezar",
       primeraFilaHeader:true, bordes:true, rayasAlternas:false,
       colorBorde:"#e5e7ea", colorHeaderFondo:"", colorHeaderTexto:"#ffffff",
-      colorFondo:"#ffffff", colorTexto:"", radio:"10"
+      colorFondo:"#ffffff", colorTexto:"", radio:"0"
     }),
     campos: [
       {key:"filasTexto",label:"Filas (una por línea, celdas separadas por |)",tipo:"codigo-textarea"},
@@ -2329,7 +2329,7 @@ const BLOQUES = {
 
   kpi: {
     cat:"Datos", nombre:"Tarjeta KPI", icono:"", sub:"Número grande + tendencia",
-    defaults: Object.assign({}, styleDefaults, { icono:"", numero:"1,258", label:"Total clicks", mostrarTrend:true, trendValor:"+12.5%", trendDireccion:"up", color:"#1a1a1a", colorFondo:"#ffffff", radio:"14" }),
+    defaults: Object.assign({}, styleDefaults, { icono:"", numero:"1,258", label:"Total clicks", mostrarTrend:true, trendValor:"+12.5%", trendDireccion:"up", color:"#1a1a1a", colorFondo:"#ffffff", radio:"0" }),
     campos: [
       {key:"icono",label:"Ícono superior (opcional)",tipo:"icono-picker"},
       {key:"numero",label:"Número grande",tipo:"text"},
@@ -2438,7 +2438,7 @@ const BLOQUES = {
     cat:"Cards", nombre:"Tarjeta de producto", icono:"", sub:"Imagen + nombre + precio + CTA",
     defaults: Object.assign({}, styleDefaults, {
       padTop:"6", padBottom:"6",
-      imagenUrl:"https://placehold.co/600x400/e5e7ea/9ca3af?text=Producto", radioImg:"10",
+      imagenUrl:"https://placehold.co/600x400/e5e7ea/9ca3af?text=Producto", radioImg:"0",
       nombre:"Producto", descripcion:"Descripción corta", precio:"$0.00",
       ctaTexto:"Comprar", ctaUrl:"",
       alineacionTexto:"left", tamanoNombre:"15", tamanoPrecio:"15",
@@ -2516,7 +2516,7 @@ const BLOQUES = {
     cat:"Cards", nombre:"Artículo / Post", icono:"", sub:"Imagen + título + lead + link",
     defaults: Object.assign({}, styleDefaults, {
       padTop:"6", padBottom:"6",
-      imagenUrl:"https://placehold.co/600x320/e5e7ea/9ca3af?text=Imagen", radioImg:"10",
+      imagenUrl:"https://placehold.co/600x320/e5e7ea/9ca3af?text=Imagen", radioImg:"0",
       categoria:"Categoría", titulo:"Título del artículo",
       lead:"Lead del artículo en una o dos líneas para generar interés.",
       linkTexto:"Leer más", linkUrl:"",
@@ -4807,7 +4807,7 @@ function rellenarMarcaZurich(){
   set("marca-linkedin","https://www.linkedin.com/showcase/zurich-chile/");
   set("marca-youtube","https://www.youtube.com/zurichseguros");
   set("marca-spotify","https://open.spotify.com/show/6FoNs4bvFuXu740sl3leaE");
-  set("marca-gap","16"); set("marca-radio","14");
+  set("marca-gap","16"); set("marca-radio","0");
   document.getElementById("marca-form-titulo").textContent="Nueva marca · Zurich (logos, colores y redes cargados)";
   const body=document.getElementById("modal-marcas").querySelector(".modal-body"); if(body) body.scrollTop=99999;
   toast("Plantilla Zurich cargada — header/footer de marca listos (2 estilos: sólido y blanco)");
