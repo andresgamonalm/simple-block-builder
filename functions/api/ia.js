@@ -328,53 +328,99 @@ async function generarBanner({ env, brief, marca, imagenes, refsTxt }) {
   return json(out);
 }
 
-// ════════════════════ PRODUCTO 2: EMAIL MARKETING (bloques) ═══════════════
-async function generarEmail({ env, brief, marca, imagenes, refsTxt, catalogo }) {
-  const tiposValidos = catalogo.map(c => c.tipo);
+// ════════════════════ PRODUCTO 2: EMAIL MARKETING (plantilla por tipo) ═══════════════
+// PLANTILLAS POR TIPO: la IA solo redacta el COPY estructurado (titular, intro,
+// oferta, beneficios, cierre, cta, imagen). El ESQUELETO del email (qué bloques y
+// en qué orden) lo arma el código según el tipo (comercial/corporativo/informativo/
+// newsletter). Así el diseño es consistente, profesional y 100% editable, sin
+// depender del criterio de maquetación de la IA (se acabó el look "PowerPoint").
+const ICONOS_VALIDOS = ['check','candado','reloj','globo','regalo','corazon','estrella','casa','usuario','trending','tag','carrito','telefono','chat','info','descargar','calendario','equipo','pin','nube'];
+const sinPuntoFinal = s => String(s == null ? '' : s).replace(/\s*[.。]+\s*$/, '').replace(/\s+/g, ' ').trim();
+
+async function generarEmail({ env, brief, marca, imagenes, refsTxt }) {
+  const tipo = ['comercial', 'corporativo', 'informativo', 'newsletter'].includes(brief.tipo) ? brief.tipo : 'comercial';
   const imgsTxt = imagenes.length
     ? imagenes.map(im => `- ${im.url}  →  ${im.nombre || '(sin descripción)'}`).join('\n')
-    : '(biblioteca vacía: deja vacíos los campos de imagen, salvo el logo de marca)';
-  const disc = marca && marca.disclaimer ? `\n- Incluye un bloque "footer" con la empresa y este disclaimer legal: "${marca.disclaimer}".` : '';
-  const logo = marca && marca.logoUrl ? `\n- Si usas "header", pon su logoUrl = "${marca.logoUrl}".` : '';
+    : '(biblioteca vacía: deja "imagen" en "")';
+
   const prompt = [
-    `Eres director creativo de ${marca ? (marca.nombre || marca.empresa) : 'la marca'}. Escribes emails de marketing que suenan 100% a la marca y convierten.`,
-    enfoqueDe(brief.tipo),
+    `Eres director creativo de ${marca ? (marca.nombre || marca.empresa) : 'la marca'}. Escribes el COPY de un email que suena 100% a la marca y convierte.`,
+    enfoqueDe(tipo),
     '',
-    'Devuelve EXCLUSIVAMENTE este JSON (sin texto extra):',
-    '{ "nombre": "asunto/nombre corto", "bloques": [ { "tipo": "<tipo del catálogo>", "datos": { ...campos } } ] }',
+    'Devuelve EXCLUSIVAMENTE este JSON (sin texto extra). SOLO redactas el copy: NO maquetes, NO elijas bloques.',
+    '{',
+    '  "nombre": "asunto / nombre corto del email",',
+    '  "titular": "titular principal con gancho, SIN punto final, máx 8 palabras",',
+    '  "intro": "1-2 frases que presentan el mensaje (máx 30 palabras)",',
+    '  "oferta": "frase corta de la oferta/gancho a destacar (o \\"\\" si no hay oferta)",',
+    '  "beneficios": [ { "icono": "<clave de la lista>", "titulo": "máx 4 palabras SIN punto", "texto": "máx 14 palabras" } ],',
+    '  "cierre": "frase breve de cierre o refuerzo (o \\"\\")",',
+    '  "cta": "texto del botón, imperativo, máx 3 palabras",',
+    '  "imagen": "<URL EXACTA de la biblioteca que mejor calce, o \\"\\">"',
+    '}',
     '',
-    'REGLAS DURAS:',
-    `- Usa SOLO estos tipos: ${tiposValidos.join(', ')}.`,
-    '- Rellena solo los campos que aparecen en el catálogo de ese tipo (no inventes campos).',
-    '- Español de Chile, concreto y persuasivo; nada de placeholders.',
-    '- Estructura real de email: header (logo) arriba → contenido → un CTA claro con la ACCIÓN del brief → footer.',
-    '- Si la biblioteca tiene imágenes, la foto principal va en un bloque "hero" (imagen a ancho completo con un TITULAR corto encima) cerca del inicio, y el párrafo explicativo en un bloque "texto" debajo. NO uses "imgtext" (foto chica al lado = escolar) ni dejes la foto sin titular. Usa SOLO una URL EXACTA de la biblioteca; si está vacía, deja "".',
-    '- En "features"/listas de atributos: usa un ícono DISTINTO y relevante para CADA item (NUNCA el mismo en todos). Claves válidas: check, candado, reloj, globo, regalo, corazon, estrella, casa, usuario, trending, tag, carrito, telefono, chat, info, descargar, calendario, equipo, pin, nube.',
-    '- DISEÑO (que NO parezca PowerPoint): da jerarquía visual. Orden recomendado: foto (imgtext/hero) → oferta destacada → beneficios (features) → CTA. Inserta un "divisor" entre secciones grandes y algún "espaciador" para que respire. La oferta va DESPUÉS de la foto.',
-    '- NO uses el bloque "hero" con su botón salvo en newsletter: el único CTA va al final (bloque "cta").',
-    '- Respeta el tono y las palabras de la marca; NO inventes ofertas/precios/fechas.' + logo + disc,
+    'REGLAS:',
+    '- Español de Chile, concreto y persuasivo; nada de placeholders ni texto de relleno.',
+    '- Exactamente 3 beneficios. Cada "icono" DISTINTO y relevante, de esta lista EXACTA: ' + ICONOS_VALIDOS.join(', ') + '.',
+    '- "imagen": elige la URL EXACTA de la biblioteca cuya descripción mejor calce con el brief; si ninguna calza o está vacía, deja "". NUNCA un logo ni un ícono.',
+    '- Titulares y frases sobre imagen NUNCA terminan en punto.',
+    '- Respeta el tono y las palabras de la marca; NO inventes ofertas/precios/fechas.',
     '',
     'VOZ DE MARCA:',
     voorMarca(marca),
     '',
-    'CATÁLOGO (tipo → campos de ejemplo):',
-    JSON.stringify(catalogo),
-    '',
     'BIBLIOTECA DE IMÁGENES (url → descripción):',
     imgsTxt,
-    refsTxt ? '\nCONTENIDO DE LAS URLS DE REFERENCIA — ANALÍZALO y RAZONA: identifica la propuesta de valor, beneficios, público y tono, y úsalos para escribir una pieza coherente y específica (NO copies literal, NO inventes datos que no estén):\n' + refsTxt : '',
+    refsTxt ? '\nCONTENIDO DE LAS URLS DE REFERENCIA — ANALÍZALO y RAZONA: identifica la propuesta de valor, beneficios, público y tono, y úsalos para escribir copy coherente y específico (NO copies literal, NO inventes datos que no estén):\n' + refsTxt : '',
     '',
     'BRIEF:',
     reglasBrief(brief)
   ].filter(Boolean).join('\n');
 
-  const { parsed, error } = await llamarGemini(env, prompt, 8192);
+  const { parsed, error } = await llamarGemini(env, prompt, 2048);
   if (error) return json({ ok: false, error }, 500);
-  let bloques = Array.isArray(parsed && parsed.bloques) ? parsed.bloques : [];
-  bloques = bloques
-    .filter(b => b && typeof b.tipo === 'string' && tiposValidos.includes(b.tipo))
-    .slice(0, 40)
-    .map(b => ({ tipo: b.tipo, datos: (b.datos && typeof b.datos === 'object') ? b.datos : {} }));
-  if (!bloques.length) return json({ ok: false, error: 'La IA no produjo bloques válidos. Reformula el brief.' }, 500);
-  return json({ ok: true, nombre: String((parsed && parsed.nombre) || brief.que).slice(0, 120), bloques });
+
+  // ── Copy normalizado ──────────────────────────────────────────────────
+  const c = parsed || {};
+  const titular = (sinPuntoFinal(c.titular) || brief.gancho || brief.que || 'Novedad').slice(0, 90);
+  const intro   = String(c.intro || '').replace(/\s+/g, ' ').trim().slice(0, 260);
+  const oferta  = sinPuntoFinal(c.oferta).slice(0, 90);
+  const cierre  = String(c.cierre || '').replace(/\s+/g, ' ').trim().slice(0, 260);
+  const cta     = (String(c.cta || brief.accion || 'Saber más').replace(/\s+/g, ' ').trim().split(' ').slice(0, 3).join(' ')) || 'Saber más';
+  const imagen  = (typeof c.imagen === 'string' && /^https?:\/\//.test(c.imagen)) ? c.imagen
+                : (imagenes[0] && imagenes[0].url) || '';
+  // Beneficios con íconos DISTINTOS y válidos.
+  let benes = Array.isArray(c.beneficios) ? c.beneficios.slice(0, 4) : [];
+  const usados = new Set();
+  benes = benes.map((b, i) => {
+    let ico = (b && ICONOS_VALIDOS.includes(b.icono)) ? b.icono : '';
+    if (!ico || usados.has(ico)) ico = ICONOS_VALIDOS.find(k => !usados.has(k)) || ICONOS_VALIDOS[i % ICONOS_VALIDOS.length];
+    usados.add(ico);
+    return { ico, t: sinPuntoFinal(b && b.titulo).slice(0, 40), s: String((b && b.texto) || '').replace(/\s+/g, ' ').trim().slice(0, 140) };
+  }).filter(b => b.t || b.s);
+
+  // ── Esqueleto por TIPO (el "molde" del email) ─────────────────────────
+  const bloques = [];
+  const push = (t, datos) => bloques.push({ tipo: t, datos });
+  // 1) Imagen principal → HERO (titular ENCIMA de la foto). Sin foto → título de texto.
+  if (imagen) push('hero', { imagenUrl: imagen, titulo: titular, sub: '', ctaTexto: '', alturaHero: '340', oscurecer: '45', radioImg: '0' });
+  else        push('texto', { titulo: titular, contenido: '', tamano: '26', negrita: true, alinH: 'center' });
+  // 2) Oferta destacada — SIEMPRE después de la foto (solo comercial la resalta en banner).
+  if (oferta && tipo === 'comercial') push('alert', { tipo: 'info', titulo: oferta, mensaje: '' });
+  // 3) Intro
+  if (intro) push('texto', { contenido: intro });
+  // 4) Beneficios (íconos distintos)
+  if (benes.length) push('features', { items: benes });
+  // 5) Respiro / cierre según el tono del tipo
+  if (tipo === 'comercial') {
+    push('espaciador', { altoEsp: '24' });
+  } else {
+    push('divisor', {});
+    if (cierre) push('texto', { contenido: cierre });
+    else push('espaciador', { altoEsp: '16' });
+  }
+  // 6) UN solo CTA, al final (el enlace lo fija el usuario en el cliente).
+  push('cta', { texto: cta, url: '' });
+
+  return json({ ok: true, nombre: String(c.nombre || brief.que).slice(0, 120), bloques });
 }

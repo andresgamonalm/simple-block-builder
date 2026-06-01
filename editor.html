@@ -5259,14 +5259,13 @@ async function generarConIA(){
       }
       // Íconos distintos en atributos/features si la IA repitió o dejó vacío.
       diversificarIconos(pz);
-      // Garantiza una FOTO: si había imágenes disponibles y la IA no puso ninguna, la insertamos.
+      // Garantiza una FOTO: solo si NO hay ya un bloque visual (hero/imagen/imgtext con url).
+      // El servidor ya arma un hero con foto; esto es una red de seguridad por si no llegó.
       const fotoForzar = fotosElegidas ? _iaFotos[0] : (imagenes.find(i=>i&&i.url)||{}).url;
-      if(fotoForzar){
-        const yaUsa = pz.canvas.some(b => b.datos && JSON.stringify(b.datos).indexOf(fotoForzar)>=0);
-        if(!yaUsa){
-          const idxH = pz.canvas.findIndex(b => b.tipo==="bandaHeader" || b.tipo==="bandaHeaderBlanco" || b.tipo==="header");
-          pz.canvas.splice(idxH>=0?idxH+1:0, 0, mk("imagen", { url:fotoForzar, anchoImg:"100", radio:"0" }));
-        }
+      const tieneFoto = pz.canvas.some(b => ["hero","imagen","imgtext"].includes(b.tipo) && b.datos && (b.datos.imagenUrl||b.datos.url));
+      if(fotoForzar && !tieneFoto){
+        const idxH = pz.canvas.findIndex(b => b.tipo==="bandaHeader" || b.tipo==="bandaHeaderBlanco" || b.tipo==="header");
+        pz.canvas.splice(idxH>=0?idxH+1:0, 0, mk("hero", { imagenUrl:fotoForzar, titulo:(M&&M.eslogan)||(data.nombre||""), sub:"", ctaTexto:"", oscurecer:"45", alturaHero:"340", radioImg:"0" }));
       }
       // La OFERTA (alert) va justo DESPUÉS de la foto principal, no pegada al header.
       const idxImg = pz.canvas.findIndex(b => ["imgtext","hero","imagen"].includes(b.tipo));
