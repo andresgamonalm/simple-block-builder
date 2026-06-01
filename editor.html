@@ -1265,6 +1265,10 @@ button,input,select,textarea{font-family:inherit;}
         <label>LinkedIn<input type="text" id="marca-linkedin" placeholder="https://www.linkedin.com/…"></label>
         <label>YouTube<input type="text" id="marca-youtube" placeholder="https://www.youtube.com/…"></label>
         <label>Spotify<input type="text" id="marca-spotify" placeholder="https://open.spotify.com/…"></label>
+
+        <div class="mf-sec mf-full">Espaciado y bordes <small>(estándar de la marca; se aplica al usar "Aplicar marca")</small></div>
+        <label>Distancia entre bloques (px)<input type="number" id="marca-gap" min="0" max="48" placeholder="0"></label>
+        <label>Radio de los bordes (px)<input type="number" id="marca-radio" min="0" max="32" placeholder="natural"></label>
       </div>
       <input type="hidden" id="marca-logo-data">
       <input type="hidden" id="marca-logoClaro-data">
@@ -4520,7 +4524,9 @@ function normalizarMarca(m){
     instagram: m.instagram || "",
     linkedin: m.linkedin || "",
     youtube: m.youtube || "",
-    spotify: m.spotify || ""
+    spotify: m.spotify || "",
+    gap: m.gap || "",
+    radio: m.radio || ""
   };
 }
 // Redes de la marca como lista [{tipo,url}] para la fila "Síguenos" del footer
@@ -4603,6 +4609,7 @@ function resetMarcaForm(){
   set("marca-publico",""); set("marca-productos",""); set("marca-usar",""); set("marca-evitar","");
   set("marca-headerTagline",""); set("marca-direccion",""); set("marca-copyright",""); set("marca-unsubTexto",""); set("marca-disclaimer","");
   set("marca-web",""); set("marca-facebook",""); set("marca-instagram",""); set("marca-linkedin",""); set("marca-youtube",""); set("marca-spotify","");
+  set("marca-gap",""); set("marca-radio","");
   document.getElementById("marca-form-titulo").textContent="Nueva marca";
 }
 function editarMarca(id){
@@ -4620,6 +4627,7 @@ function editarMarca(id){
   set("marca-publico",m.publico); set("marca-productos",m.productos); set("marca-usar",m.usar); set("marca-evitar",m.evitar);
   set("marca-headerTagline",m.headerTagline); set("marca-direccion",m.direccion); set("marca-copyright",m.copyright); set("marca-unsubTexto",m.unsubTexto); set("marca-disclaimer",m.disclaimer);
   set("marca-web",m.web); set("marca-facebook",m.facebook); set("marca-instagram",m.instagram); set("marca-linkedin",m.linkedin); set("marca-youtube",m.youtube); set("marca-spotify",m.spotify);
+  set("marca-gap",m.gap); set("marca-radio",m.radio);
   document.getElementById("marca-form-titulo").textContent="Editar marca";
   mostrarFormMarca();
 }
@@ -4636,7 +4644,8 @@ function guardarMarca(){
     negocio:g("marca-negocio").trim(), tono:g("marca-tono").trim(), eslogan:g("marca-eslogan").trim(),
     publico:g("marca-publico").trim(), productos:g("marca-productos").trim(), usar:g("marca-usar").trim(), evitar:g("marca-evitar").trim(),
     headerTagline:g("marca-headerTagline").trim(), direccion:g("marca-direccion").trim(), copyright:g("marca-copyright").trim(), unsubTexto:g("marca-unsubTexto").trim(), disclaimer:g("marca-disclaimer").trim(),
-    web:g("marca-web").trim(), facebook:g("marca-facebook").trim(), instagram:g("marca-instagram").trim(), linkedin:g("marca-linkedin").trim(), youtube:g("marca-youtube").trim(), spotify:g("marca-spotify").trim() };
+    web:g("marca-web").trim(), facebook:g("marca-facebook").trim(), instagram:g("marca-instagram").trim(), linkedin:g("marca-linkedin").trim(), youtube:g("marca-youtube").trim(), spotify:g("marca-spotify").trim(),
+    gap:g("marca-gap").trim(), radio:g("marca-radio").trim() };
   workspace.marcas = workspace.marcas || [];
   const id=g("marca-edit-id");
   if(id){ const m=workspace.marcas.find(x=>x.id===id); if(m){ Object.keys(m).forEach(k=>{ if(!(k in datos) && k!=="id") delete m[k]; }); Object.assign(m,datos); } }
@@ -4677,6 +4686,7 @@ function rellenarMarcaZurich(){
   set("marca-linkedin","https://www.linkedin.com/showcase/zurich-chile/");
   set("marca-youtube","https://www.youtube.com/zurichseguros");
   set("marca-spotify","https://open.spotify.com/show/6FoNs4bvFuXu740sl3leaE");
+  set("marca-gap","16"); set("marca-radio","10");
   document.getElementById("marca-form-titulo").textContent="Nueva marca · Zúrich (logos, colores y redes cargados)";
   const body=document.getElementById("modal-marcas").querySelector(".modal-body"); if(body) body.scrollTop=99999;
   toast("Plantilla Zúrich cargada — header/footer de marca listos (2 estilos: sólido y blanco)");
@@ -4710,6 +4720,7 @@ function rellenarMarcaRadar(){
   set("marca-linkedin","https://www.linkedin.com/company/justradar/");
   set("marca-youtube","https://www.youtube.com/channel/UC4qznw8--sMMQg6ym8J2kTA");
   set("marca-spotify","");
+  set("marca-gap","16"); set("marca-radio","6");
   document.getElementById("marca-form-titulo").textContent="Nueva marca · RADAR (logos, colores y redes cargados)";
   const body=document.getElementById("modal-marcas").querySelector(".modal-body"); if(body) body.scrollTop=99999;
   toast("Plantilla RADAR cargada — logos y colores listos. Completa la voz de marca si quieres");
@@ -4726,6 +4737,8 @@ function aplicarMarca(id){
   p.tema.font=m.fontCuerpo||p.tema.font; p.tema.fontTitulo=m.fontTitulo||m.fontCuerpo||p.tema.font;
   p.tema.primary=m.primary||p.tema.primary;
   p.tema.text=m.text||p.tema.text; p.tema.bg=m.bg||p.tema.bg; p.tema.bgPagina=m.bgPagina||"";
+  if(m.gap!=="" && m.gap!=null) p.tema.gap=String(m.gap);
+  if(m.radio!=="" && m.radio!=null) p.tema.radio=String(m.radio);
   p.tema.marcaId=m.id;
   if(esComposicion(p)){
     // Banner por zonas: aplica la identidad al diseño global.
