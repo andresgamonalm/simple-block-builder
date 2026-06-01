@@ -259,15 +259,17 @@ function extraerJSON(texto) {
   }
   return undefined;
 }
-async function llamarGemini(env, prompt, maxTokens) {
+async function llamarGemini(env, promptOrParts, maxTokens) {
   const model = env.GEMINI_MODEL || 'gemini-2.5-flash';
   const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${encodeURIComponent(env.GEMINI_API_KEY)}`;
   const ctl = new AbortController(); const timer = setTimeout(() => ctl.abort(), 24000);
+  // Acepta un prompt de texto o un array de "parts" (texto + imágenes inlineData).
+  const partesEntrada = Array.isArray(promptOrParts) ? promptOrParts : [{ text: promptOrParts }];
   let res;
   try {
     res = await fetch(url, {
       method: 'POST', headers: { 'Content-Type': 'application/json' }, signal: ctl.signal,
-      body: JSON.stringify({ contents: [{ role: 'user', parts: [{ text: prompt }] }], generationConfig: { responseMimeType: 'application/json', temperature: 0.7, maxOutputTokens: maxTokens || 4096, thinkingConfig: { thinkingBudget: 0 } } })
+      body: JSON.stringify({ contents: [{ role: 'user', parts: partesEntrada }], generationConfig: { responseMimeType: 'application/json', temperature: 0.7, maxOutputTokens: maxTokens || 4096, thinkingConfig: { thinkingBudget: 0 } } })
     });
   } catch (e) {
     return { error: (e && e.name === 'AbortError') ? `Gemini (${model}) tardó demasiado. Prueba GEMINI_MODEL=gemini-flash-latest.` : 'No se pudo contactar a Gemini: ' + (e.message || e) };
@@ -314,7 +316,20 @@ async function generarBanner({ env, brief, marca, imagenes, refsTxt }) {
     reglasBrief(brief)
   ].filter(Boolean).join('\n');
 
-  const { parsed, error } = await llamarGemini(env, prompt, 1200);
+  // Multimodal "light": si llegan miniaturas, la IA VE las imágenes (máx 10, una sola
+  // llamada) para elegir la mejor por contenido, no solo por nombre.
+  const conThumb = (imagenes || []).filter(im => im && im.thumb).slice(0, 10);
+  let entrada = prompt;
+  if (conThumb.length) {
+    const partes = [{ text: prompt }, { text: '\nIMÁGENES CANDIDATAS (míralas y elige en "imagen" la URL EXACTA de la que mejor calce visual y temáticamente; si ninguna sirve, ""):' }];
+    for (const im of conThumb) {
+      partes.push({ text: `URL: ${im.url} — ${im.nombre || '(sin nombre)'}` });
+      partes.push({ inlineData: { mimeType: im.thumbMime || 'image/jpeg', data: im.thumb } });
+    }
+    entrada = partes;
+  }
+
+  const { parsed, error } = await llamarGemini(env, entrada, 1200);
   if (error) return json({ ok: false, error }, 500);
   const z = (parsed && parsed.zonas) || {};
   const limpia = (s, n) => String(s || '').replace(/\s+/g, ' ').trim().split(' ').slice(0, n).join(' ');

@@ -4946,6 +4946,26 @@ function optimizarImagen(file){
     reader.readAsDataURL(file);
   });
 }
+// Miniatura base64 (≤256px, JPG 0.6) para que la IA "vea" la imagen al elegirla.
+// Devuelve solo el base64 (sin prefijo) o null si no se puede (p. ej. URL externa sin CORS).
+function miniaturaIA(url, max){
+  max = max || 256;
+  return new Promise((resolve)=>{
+    if(!url){ return resolve(null); }
+    const img=new Image(); img.crossOrigin="anonymous";
+    img.onerror=()=>resolve(null);
+    img.onload=()=>{ try{
+      let w=img.naturalWidth||img.width, h=img.naturalHeight||img.height;
+      const e=(w>max||h>max)?Math.min(max/w,max/h):1;
+      const nw=Math.max(1,Math.round(w*e)), nh=Math.max(1,Math.round(h*e));
+      const cv=document.createElement("canvas"); cv.width=nw; cv.height=nh;
+      const ctx=cv.getContext("2d"); ctx.fillStyle="#ffffff"; ctx.fillRect(0,0,nw,nh); ctx.drawImage(img,0,0,nw,nh);
+      const d=cv.toDataURL("image/jpeg",0.6);
+      resolve((d.split(",")[1])||null);
+    }catch(_){ resolve(null); } };
+    img.src=url;
+  });
+}
 async function subirImagenes(files){
   const lista = [...(files||[])].filter(f => /^image\//.test(f.type));
   if(!lista.length){ toast("Elige imágenes (PNG, JPG, WEBP…)"); return; }
@@ -5085,6 +5105,13 @@ async function generarConIA(){
   refs = refs.slice(0,3);
   const btn = document.getElementById("ia-btn"); const est = document.getElementById("ia-estado");
   btn.disabled = true; est.textContent = "Generando con IA… (puede tardar unos segundos)"; est.className = "ia-estado loading";
+  // En Banners, manda miniaturas (light) de hasta 10 imágenes para que la IA ELIJA viéndolas.
+  let imagenes = (workspace.imagenes||[]).map(i => ({ url:i.url, nombre:i.nombre }));
+  if(producto==="banner" && imagenes.length){
+    est.textContent = "Mirando tus imágenes…";
+    for(const it of imagenes.slice(0,10)){ const th = await miniaturaIA(it.url); if(th) it.thumb = th; }
+    est.textContent = "Generando con IA…";
+  }
   try{
     const r = await fetch("/api/ia", {
       method:"POST", credentials:"include", headers:{ "Content-Type":"application/json" },
@@ -5093,7 +5120,7 @@ async function generarConIA(){
         brief: { que, accion, gancho, refs },
         formato: producto==="email" ? "email" : "display-300x250",
         marca: M ? { nombre:M.nombre, empresa:M.empresa, primary:M.primary, secondary:M.secondary, cta:M.cta, ctaText:M.ctaText, text:M.text, bg:M.bg, accent1:M.accent1, accent2:M.accent2, fontTitulo:M.fontTitulo, fontCuerpo:M.fontCuerpo, logoUrl:M.logo, negocio:M.negocio, tono:M.tono, eslogan:M.eslogan, publico:M.publico, productos:M.productos, usar:M.usar, evitar:M.evitar, disclaimer:M.disclaimer } : null,
-        imagenes: (workspace.imagenes||[]).map(i => ({ url:i.url, nombre:i.nombre })),
+        imagenes,
         catalogo: producto==="email" ? catalogoBloquesParaIA() : null
       })
     });
