@@ -4912,15 +4912,51 @@ function agregarImagen(){
 }
 // Subir archivos a R2 vía /api/upload. Cada uno queda en la biblioteca con su URL.
 function soltarImagenes(e){ e.preventDefault(); const z=document.getElementById("img-subir"); if(z) z.classList.remove("drag"); subirImagenes(e.dataTransfer && e.dataTransfer.files); }
+// Optimiza una imagen pesada antes de subirla: la reduce a máx 1600px de lado y
+// la recomprime (JPG calidad 0.85; PNG se conserva por la transparencia). SVG/GIF
+// no se tocan (vector/animación). Si no logra reducir, deja el original.
+function optimizarImagen(file){
+  return new Promise((resolve)=>{
+    if(/svg|gif/i.test(file.type)) return resolve({ blob:file, type:file.type, optimizada:false });
+    const reader=new FileReader();
+    reader.onerror=()=>resolve({ blob:file, type:file.type, optimizada:false });
+    reader.onload=()=>{
+      const img=new Image();
+      img.onerror=()=>resolve({ blob:file, type:file.type, optimizada:false });
+      img.onload=()=>{
+        try{
+          const MAX=1600; let w=img.naturalWidth||img.width, h=img.naturalHeight||img.height;
+          const escala = (w>MAX||h>MAX) ? Math.min(MAX/w, MAX/h) : 1;
+          const nw=Math.max(1,Math.round(w*escala)), nh=Math.max(1,Math.round(h*escala));
+          const esPng=/png/i.test(file.type);
+          const cv=document.createElement("canvas"); cv.width=nw; cv.height=nh;
+          const ctx=cv.getContext("2d");
+          if(!esPng){ ctx.fillStyle="#ffffff"; ctx.fillRect(0,0,nw,nh); }   // fondo blanco al pasar a JPG
+          ctx.drawImage(img,0,0,nw,nh);
+          const tipoSalida = esPng ? "image/png" : "image/jpeg";
+          cv.toBlob((blob)=>{
+            if(!blob) return resolve({ blob:file, type:file.type, optimizada:false });
+            if(blob.size>=file.size && escala===1) return resolve({ blob:file, type:file.type, optimizada:false });
+            resolve({ blob, type:tipoSalida, optimizada:true });
+          }, tipoSalida, esPng?undefined:0.85);
+        }catch(e){ resolve({ blob:file, type:file.type, optimizada:false }); }
+      };
+      img.src=reader.result;
+    };
+    reader.readAsDataURL(file);
+  });
+}
 async function subirImagenes(files){
   const lista = [...(files||[])].filter(f => /^image\//.test(f.type));
   if(!lista.length){ toast("Elige imágenes (PNG, JPG, WEBP…)"); return; }
   let ok=0;
   for(const f of lista){
-    if(f.size > 8*1024*1024){ toast(`"${f.name}" pesa más de 8 MB, omitida`, 3500); continue; }
-    toast(`Subiendo ${f.name}…`, 8000);
+    if(f.size > 25*1024*1024){ toast(`"${f.name}" pesa demasiado (>25 MB), omitida`, 3500); continue; }
+    toast(`Optimizando y subiendo ${f.name}…`, 8000);
     try{
-      const r = await fetch("/api/upload", { method:"POST", credentials:"include", headers:{ "Content-Type":f.type, "X-Filename":encodeURIComponent(f.name) }, body:f });
+      const opt = await optimizarImagen(f);
+      if(opt.blob.size > 8*1024*1024){ toast(`"${f.name}" sigue >8 MB tras optimizar, omitida`, 4000); continue; }
+      const r = await fetch("/api/upload", { method:"POST", credentials:"include", headers:{ "Content-Type":opt.type, "X-Filename":encodeURIComponent(f.name) }, body:opt.blob });
       const raw = await r.text(); let d={}; try{ d=JSON.parse(raw); }catch(_){}
       if(!r.ok || !d.ok){ toast(d.error || ("Error al subir "+f.name), 5000); continue; }
       workspace.imagenes = workspace.imagenes || [];
@@ -4928,7 +4964,7 @@ async function subirImagenes(files){
       ok++;
     }catch(e){ toast("Sin conexión al subir "+f.name, 4000); }
   }
-  if(ok){ persistir(); renderImagenes(); toast(`${ok} imagen${ok!==1?"es":""} subida${ok!==1?"s":""} a tu nube`); }
+  if(ok){ persistir(); renderImagenes(); toast(`${ok} imagen${ok!==1?"es":""} subida${ok!==1?"s":""} a tu nube (optimizadas)`); }
   const inp=document.getElementById("img-file"); if(inp) inp.value="";
 }
 function eliminarImagen(id){
