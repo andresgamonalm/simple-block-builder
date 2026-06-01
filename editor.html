@@ -4627,10 +4627,12 @@ function rellenarMarcaZurich(){
   set("marca-ctaText","#ffffff"); set("marca-text","#1a1a1a"); set("marca-bg","#ffffff"); set("marca-bgpagina","#F7F7F7");
   set("marca-accent1","#72CCFD"); set("marca-accent2","#FC7899");
   set("marca-fontTitulo","Montserrat"); set("marca-fontCuerpo","Inter");
-  // Logos recreados: azul para fondo blanco, blanco para banda sólida (solo si no subiste uno).
+  // Logos oficiales subidos a R2 (color para fondo blanco, blanco para banda sólida); solo si no hay uno ya.
+  const zColor="https://simple-block-builder.gamonal.app/api/upload?k=zurich/Logo-Zurich.png";
+  const zBlanco="https://simple-block-builder.gamonal.app/api/upload?k=zurich/Logo-Zurich-Blanco.png";
   const yaLogo = id => { const e=document.getElementById(id); return e && e.value; };
-  if(!yaLogo("marca-logo-data")){ set("marca-logo-data",ZURICH_LOGO_AZUL); pintarLogoPrev("logo",ZURICH_LOGO_AZUL); }
-  if(!yaLogo("marca-logoClaro-data")){ set("marca-logoClaro-data",ZURICH_LOGO_BLANCO); pintarLogoPrev("logoClaro",ZURICH_LOGO_BLANCO); }
+  if(!yaLogo("marca-logo-data")){ set("marca-logo-data",zColor); pintarLogoPrev("logo",zColor); }
+  if(!yaLogo("marca-logoClaro-data")){ set("marca-logoClaro-data",zBlanco); pintarLogoPrev("logoClaro",zBlanco); }
   set("marca-negocio","Aseguradora: seguros de auto, hogar, vida, salud y empresas en Chile.");
   set("marca-tono","Cercano, confiable y claro; transmite respaldo y tranquilidad sin tecnicismos.");
   set("marca-eslogan","");
