@@ -1251,6 +1251,14 @@ button,input,select,textarea{font-family:inherit;}
         <label>Copyright (pie)<input type="text" id="marca-copyright" placeholder="© 2026 Zurich Chile"></label>
         <label>Texto link de baja<input type="text" id="marca-unsubTexto" placeholder="Darme de baja"></label>
         <label class="mf-full">Disclaimer legal <small>(va al pie de las piezas)</small><textarea id="marca-disclaimer" rows="2" placeholder="Texto legal/regulatorio que debe aparecer en las piezas"></textarea></label>
+
+        <div class="mf-sec mf-full">Redes sociales <small>(salen en el footer de marca del email)</small></div>
+        <label>Sitio web<input type="text" id="marca-web" placeholder="https://www.zurich.cl"></label>
+        <label>Facebook<input type="text" id="marca-facebook" placeholder="https://www.facebook.com/…"></label>
+        <label>Instagram<input type="text" id="marca-instagram" placeholder="https://www.instagram.com/…"></label>
+        <label>LinkedIn<input type="text" id="marca-linkedin" placeholder="https://www.linkedin.com/…"></label>
+        <label>YouTube<input type="text" id="marca-youtube" placeholder="https://www.youtube.com/…"></label>
+        <label>Spotify<input type="text" id="marca-spotify" placeholder="https://open.spotify.com/…"></label>
       </div>
       <input type="hidden" id="marca-logo-data">
       <input type="hidden" id="marca-logoClaro-data">
@@ -2625,6 +2633,78 @@ const BLOQUES = {
       ...styleFields()
     ],
     render: (d) => wrap(d, `<footer class="sbb-footer">${d.empresa?`<div class="empresa">${esc(d.empresa)}</div>`:""}${d.direccion?`<div>${esc(d.direccion)}</div>`:""}${d.copyright?`<div style="margin-top:6px;">${esc(d.copyright)}</div>`:""}${d.mostrarUnsub?`<div style="margin-top:10px;"><a href="${esc(d.unsubUrl)}">${esc(d.unsubTexto)}</a></div>`:""}</footer>`)
+  },
+  // Header de marca: banda full-width con logo (email). Dos estilos: sólido (logo claro) o blanco (logo a color).
+  bandaHeader: {
+    cat:"Estructura", nombre:"Header de marca", icono:"", sub:"Banda con logo (email)",
+    defaults: Object.assign({}, styleDefaults, { padTop:"0", padBottom:"0", padX:"0", estilo:"solido", bg:"#2167ae", logoClaro:"", logoColor:"", alto:"30", alinH:"left" }),
+    campos: [
+      {key:"estilo",label:"Estilo de banda",tipo:"select",opciones:[["solido","Sólido (logo claro)"],["blanco","Blanco (logo a color)"]]},
+      {key:"bg",label:"Color de la banda (estilo sólido)",tipo:"color"},
+      {key:"alto",label:"Alto del logo (px)",tipo:"range",min:16,max:60,step:1},
+      {key:"alinH",label:"Alineación del logo",tipo:"select",opciones:[["left","Izquierda"],["center","Centro"],["right","Derecha"]]},
+      {key:"logoColor",label:"Logo a color (para fondo blanco)",tipo:"text"},
+      {key:"logoClaro",label:"Logo claro (para fondo sólido)",tipo:"text"}
+    ],
+    render: (d) => {
+      const solido = (d.estilo||"solido")!=="blanco";
+      const band = solido ? (d.bg||"#2167ae") : "#ffffff";
+      const borde = solido ? "none" : "1px solid #e3e6ec";
+      const logo = solido ? (d.logoClaro||d.logoColor||"") : (d.logoColor||d.logoClaro||"");
+      const ta = d.alinH || "left";
+      const inner = `<div style="background:${esc(band)};border:${borde};text-align:${ta};padding:22px 28px;box-sizing:border-box;">${logo?`<img src="${esc(logo)}" alt="logo" style="height:${esc(d.alto||30)}px;width:auto;display:inline-block;vertical-align:middle;">`:`<span style="color:#bbb;font-size:12px;">Logo de la marca</span>`}</div>`;
+      return wrap(d, inner);
+    }
+  },
+  // Footer de marca: banda con logo + "Síguenos" + íconos de redes, más línea legal (email).
+  bandaFooter: {
+    cat:"Estructura", nombre:"Footer de marca", icono:"", sub:"Banda + Síguenos + redes (email)",
+    defaults: Object.assign({}, styleDefaults, { padTop:"0", padBottom:"0", padX:"0", estilo:"solido", bg:"#2167ae", logoClaro:"", logoColor:"", alto:"28", textoSeguir:"Síguenos",
+      redes:[{tipo:"facebook",url:""},{tipo:"instagram",url:""},{tipo:"linkedin",url:""},{tipo:"youtube",url:""}],
+      copyright:"", direccion:"", mostrarUnsub:false, unsubTexto:"Darme de baja", unsubUrl:"", disclaimer:"" }),
+    campos: [
+      {key:"estilo",label:"Estilo de banda",tipo:"select",opciones:[["solido","Sólido (logo claro)"],["blanco","Blanco (logo a color)"]]},
+      {key:"bg",label:"Color de la banda (estilo sólido)",tipo:"color"},
+      {key:"alto",label:"Alto del logo (px)",tipo:"range",min:16,max:50,step:1},
+      {key:"textoSeguir",label:"Texto antes de las redes",tipo:"text"},
+      {key:"redes",label:"Redes",tipo:"lista",itemTipos:[
+        {valor:"facebook",label:"Facebook",camposItem:[{k:"url",l:"URL"}]},
+        {valor:"instagram",label:"Instagram",camposItem:[{k:"url",l:"URL"}]},
+        {valor:"linkedin",label:"LinkedIn",camposItem:[{k:"url",l:"URL"}]},
+        {valor:"youtube",label:"YouTube",camposItem:[{k:"url",l:"URL"}]},
+        {valor:"twitter",label:"X / Twitter",camposItem:[{k:"url",l:"URL"}]},
+        {valor:"tiktok",label:"TikTok",camposItem:[{k:"url",l:"URL"}]},
+        {valor:"spotify",label:"Spotify",camposItem:[{k:"url",l:"URL"}]},
+        {valor:"globo",label:"Sitio web",camposItem:[{k:"url",l:"URL"}]}
+      ]},
+      {grupo:"Legal"},
+      {key:"copyright",label:"Copyright",tipo:"text"},
+      {key:"direccion",label:"Dirección",tipo:"text"},
+      {key:"mostrarUnsub",label:"Mostrar enlace de baja",tipo:"check"},
+      {key:"unsubTexto",label:"Texto de baja",tipo:"text"},
+      {key:"unsubUrl",label:"URL de baja",tipo:"text"},
+      {key:"disclaimer",label:"Disclaimer legal",tipo:"textarea"},
+      {key:"logoColor",label:"Logo a color (para fondo blanco)",tipo:"text"},
+      {key:"logoClaro",label:"Logo claro (para fondo sólido)",tipo:"text"}
+    ],
+    render: (d) => {
+      const solido = (d.estilo||"solido")!=="blanco";
+      const band = solido ? (d.bg||"#2167ae") : "#ffffff";
+      const borde = solido ? "none" : "1px solid #e3e6ec";
+      const fg = solido ? "#ffffff" : (d.bg||"#2167ae");
+      const logo = solido ? (d.logoClaro||d.logoColor||"") : (d.logoColor||d.logoClaro||"");
+      const iconos = (d.redes||[]).filter(r=>r.url).map(r=>`<a href="${esc(r.url)}" target="_blank" rel="noopener" style="color:${fg};display:inline-flex;text-decoration:none;">${svgIcon(r.tipo,{size:"20px"})}</a>`).join("");
+      const seguir = iconos ? `<span style="display:inline-flex;align-items:center;gap:14px;">${d.textoSeguir?`<span style="color:${fg};font-size:14px;">${esc(d.textoSeguir)}</span>`:""}${iconos}</span>` : "";
+      const logoEl = logo ? `<img src="${esc(logo)}" alt="logo" style="height:${esc(d.alto||28)}px;width:auto;">` : `<span style="color:${fg};font-weight:700;font-size:13px;">Logo</span>`;
+      const banda = `<div style="background:${esc(band)};border:${borde};display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:14px;padding:18px 28px;box-sizing:border-box;">${logoEl}${seguir}</div>`;
+      const legalParts = [];
+      if(d.copyright) legalParts.push(esc(d.copyright));
+      if(d.direccion) legalParts.push(esc(d.direccion));
+      let legal = legalParts.length ? `<div style="text-align:center;font-size:11px;color:#8a8f9c;margin-top:12px;">${legalParts.join(" · ")}</div>` : "";
+      if(d.disclaimer) legal += `<div style="text-align:center;font-size:10.5px;color:#a2a6b2;margin-top:6px;line-height:1.5;">${escMultiline(d.disclaimer)}</div>`;
+      if(d.mostrarUnsub && d.unsubTexto) legal += `<div style="text-align:center;font-size:11px;margin-top:8px;"><a href="${esc(d.unsubUrl||"#")}" style="color:#8a8f9c;">${esc(d.unsubTexto)}</a></div>`;
+      return wrap(d, banda+legal);
+    }
   }
 };
 
@@ -2820,11 +2900,12 @@ const BLOQUE_ICONO = {
   tabla:"tablaico", grid:"grid", kpi:"barchart", ring:"ring", statGrid:"grid",
   spark:"trending", rating:"estrella", product:"carrito", profileCard:"usuario",
   testimonial:"chat", article:"documento", pricing:"tag", hero:"imagen", alert:"alerta",
-  features:"checklist", audio:"audioico", footer:"footerico"
+  features:"checklist", audio:"audioico", footer:"footerico",
+  bandaHeader:"heading", bandaFooter:"footerico"
 };
 // Bloques de documento/agenda que no tienen sentido en un banner de tamaño fijo
 // (display/social): se ocultan de la biblioteca cuando el formato es un banner.
-const BLOQUES_SOLO_DOC = new Set(["footer","diadivisor","fechaCard","evento","formulario","tabla"]);
+const BLOQUES_SOLO_DOC = new Set(["footer","bandaHeader","bandaFooter","diadivisor","fechaCard","evento","formulario","tabla"]);
 function renderBiblioteca(){
   const cont = document.getElementById("biblioteca");
   if(!cont) return;
@@ -4407,8 +4488,26 @@ function normalizarMarca(m){
     direccion: m.direccion || "",
     copyright: m.copyright || "",
     unsubTexto: m.unsubTexto || "",
-    disclaimer: m.disclaimer || ""
+    disclaimer: m.disclaimer || "",
+    web: m.web || "",
+    facebook: m.facebook || "",
+    instagram: m.instagram || "",
+    linkedin: m.linkedin || "",
+    youtube: m.youtube || "",
+    spotify: m.spotify || ""
   };
+}
+// Redes de la marca como lista [{tipo,url}] para la fila "Síguenos" del footer
+// (orden del manual: FB, IG, LinkedIn, YouTube, Spotify). El sitio web NO va aquí.
+function redesDeMarca(m){
+  m = normalizarMarca(m);
+  return [
+    {tipo:"facebook", url:m.facebook},
+    {tipo:"instagram", url:m.instagram},
+    {tipo:"linkedin", url:m.linkedin},
+    {tipo:"youtube", url:m.youtube},
+    {tipo:"spotify", url:m.spotify}
+  ].filter(r=>r.url);
 }
 // Logo "vigente" según el fondo: claro si el fondo es oscuro y hay logo claro.
 function logoDeMarca(m, fondoOscuro){ m=normalizarMarca(m); return (fondoOscuro && m.logoClaro) ? m.logoClaro : (m.logo || m.logoClaro || ""); }
@@ -4477,6 +4576,7 @@ function resetMarcaForm(){
   set("marca-negocio",""); set("marca-tono",""); set("marca-eslogan","");
   set("marca-publico",""); set("marca-productos",""); set("marca-usar",""); set("marca-evitar","");
   set("marca-headerTagline",""); set("marca-direccion",""); set("marca-copyright",""); set("marca-unsubTexto",""); set("marca-disclaimer","");
+  set("marca-web",""); set("marca-facebook",""); set("marca-instagram",""); set("marca-linkedin",""); set("marca-youtube",""); set("marca-spotify","");
   document.getElementById("marca-form-titulo").textContent="Nueva marca";
 }
 function editarMarca(id){
@@ -4493,6 +4593,7 @@ function editarMarca(id){
   set("marca-negocio",m.negocio); set("marca-tono",m.tono); set("marca-eslogan",m.eslogan);
   set("marca-publico",m.publico); set("marca-productos",m.productos); set("marca-usar",m.usar); set("marca-evitar",m.evitar);
   set("marca-headerTagline",m.headerTagline); set("marca-direccion",m.direccion); set("marca-copyright",m.copyright); set("marca-unsubTexto",m.unsubTexto); set("marca-disclaimer",m.disclaimer);
+  set("marca-web",m.web); set("marca-facebook",m.facebook); set("marca-instagram",m.instagram); set("marca-linkedin",m.linkedin); set("marca-youtube",m.youtube); set("marca-spotify",m.spotify);
   document.getElementById("marca-form-titulo").textContent="Editar marca";
   mostrarFormMarca();
 }
@@ -4508,7 +4609,8 @@ function guardarMarca(){
     fontTitulo:g("marca-fontTitulo"), fontCuerpo:g("marca-fontCuerpo"),
     negocio:g("marca-negocio").trim(), tono:g("marca-tono").trim(), eslogan:g("marca-eslogan").trim(),
     publico:g("marca-publico").trim(), productos:g("marca-productos").trim(), usar:g("marca-usar").trim(), evitar:g("marca-evitar").trim(),
-    headerTagline:g("marca-headerTagline").trim(), direccion:g("marca-direccion").trim(), copyright:g("marca-copyright").trim(), unsubTexto:g("marca-unsubTexto").trim(), disclaimer:g("marca-disclaimer").trim() };
+    headerTagline:g("marca-headerTagline").trim(), direccion:g("marca-direccion").trim(), copyright:g("marca-copyright").trim(), unsubTexto:g("marca-unsubTexto").trim(), disclaimer:g("marca-disclaimer").trim(),
+    web:g("marca-web").trim(), facebook:g("marca-facebook").trim(), instagram:g("marca-instagram").trim(), linkedin:g("marca-linkedin").trim(), youtube:g("marca-youtube").trim(), spotify:g("marca-spotify").trim() };
   workspace.marcas = workspace.marcas || [];
   const id=g("marca-edit-id");
   if(id){ const m=workspace.marcas.find(x=>x.id===id); if(m){ Object.keys(m).forEach(k=>{ if(!(k in datos) && k!=="id") delete m[k]; }); Object.assign(m,datos); } }
@@ -4520,10 +4622,14 @@ function guardarMarca(){
 function rellenarMarcaZurich(){
   const set=(i,v)=>{ const e=document.getElementById(i); if(e) e.value=v; };
   set("marca-nombre","Zúrich"); set("marca-empresa","Zurich Chile");
-  set("marca-primary","#2167AE"); set("marca-secondary","#23366F"); set("marca-cta","#2167AE");
-  set("marca-ctaText","#ffffff"); set("marca-text","#1a1a1a"); set("marca-bg","#ffffff"); set("marca-bgpagina","#f4f6f9");
-  set("marca-accent1","#2167AE"); set("marca-accent2","#23366F");
+  // Paleta del manual: principal #2167ae, secundario #72ccfd, CTA #e71313, terciario #fc7899, fondos #2167ae/#F7F7F7.
+  set("marca-primary","#2167AE"); set("marca-secondary","#72CCFD"); set("marca-cta","#E71313");
+  set("marca-ctaText","#ffffff"); set("marca-text","#1a1a1a"); set("marca-bg","#ffffff"); set("marca-bgpagina","#F7F7F7");
+  set("marca-accent1","#72CCFD"); set("marca-accent2","#FC7899");
   set("marca-fontTitulo","Montserrat"); set("marca-fontCuerpo","Inter");
+  // Logos recreados: azul para fondo blanco, blanco para banda sólida.
+  set("marca-logo-data",ZURICH_LOGO_AZUL); pintarLogoPrev("logo",ZURICH_LOGO_AZUL);
+  set("marca-logoClaro-data",ZURICH_LOGO_BLANCO); pintarLogoPrev("logoClaro",ZURICH_LOGO_BLANCO);
   set("marca-negocio","Aseguradora: seguros de auto, hogar, vida, salud y empresas en Chile.");
   set("marca-tono","Cercano, confiable y claro; transmite respaldo y tranquilidad sin tecnicismos.");
   set("marca-eslogan","");
@@ -4536,13 +4642,23 @@ function rellenarMarcaZurich(){
   set("marca-copyright","© "+new Date().getFullYear()+" Zurich Chile");
   set("marca-unsubTexto","Darme de baja");
   set("marca-disclaimer","Infórmate sobre las condiciones y coberturas en zurich.cl. Producto sujeto a evaluación y condiciones de la póliza.");
-  document.getElementById("marca-form-titulo").textContent="Nueva marca · Zúrich (revisa y sube el logo)";
+  set("marca-web","https://www.zurich.cl");
+  set("marca-facebook","https://www.facebook.com/ZurichCl");
+  set("marca-instagram","https://www.instagram.com/zurich_chile/");
+  set("marca-linkedin","https://www.linkedin.com/showcase/zurich-chile/");
+  set("marca-youtube","https://www.youtube.com/zurichseguros");
+  set("marca-spotify","https://open.spotify.com/show/6FoNs4bvFuXu740sl3leaE");
+  document.getElementById("marca-form-titulo").textContent="Nueva marca · Zúrich (logos, colores y redes cargados)";
   const body=document.getElementById("modal-marcas").querySelector(".modal-body"); if(body) body.scrollTop=99999;
-  toast("Plantilla Zúrich cargada — sube el logo y ajusta lo que quieras");
+  toast("Plantilla Zúrich cargada — header/footer de marca listos (2 estilos: sólido y blanco)");
 }
 // Logos RADAR incrustados (placeholder del wordmark; el usuario puede re-subir los oficiales).
 const RADAR_LOGO_AZUL="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIzMjAiIGhlaWdodD0iODAiIHZpZXdCb3g9IjAgMCAzMjAgODAiPjx0ZXh0IHg9IjUwJSIgeT0iNTAlIiBkb21pbmFudC1iYXNlbGluZT0iY2VudHJhbCIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZm9udC1mYW1pbHk9IkFyaWFsLEhlbHZldGljYSxzYW5zLXNlcmlmIiBmb250LXdlaWdodD0iODAwIiBmb250LXNpemU9IjU2IiBsZXR0ZXItc3BhY2luZz0iMiIgZmlsbD0iIzIyMkY0NyI+UkFEQVI8L3RleHQ+PC9zdmc+";
 const RADAR_LOGO_BLANCO="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIzMjAiIGhlaWdodD0iODAiIHZpZXdCb3g9IjAgMCAzMjAgODAiPjx0ZXh0IHg9IjUwJSIgeT0iNTAlIiBkb21pbmFudC1iYXNlbGluZT0iY2VudHJhbCIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZm9udC1mYW1pbHk9IkFyaWFsLEhlbHZldGljYSxzYW5zLXNlcmlmIiBmb250LXdlaWdodD0iODAwIiBmb250LXNpemU9IjU2IiBsZXR0ZXItc3BhY2luZz0iMiIgZmlsbD0iI0ZGRkZGRiI+UkFEQVI8L3RleHQ+PC9zdmc+";
+// Logos Zúrich recreados en SVG (placeholder de marca; reemplazables subiendo el oficial).
+const svgURL = s => "data:image/svg+xml,"+encodeURIComponent(s);
+const ZURICH_LOGO_BLANCO = svgURL(`<svg xmlns='http://www.w3.org/2000/svg' width='210' height='52' viewBox='0 0 210 52'><circle cx='24' cy='26' r='22' fill='#ffffff'/><text x='24' y='27' font-family='Arial,Helvetica,sans-serif' font-weight='900' font-size='27' fill='#2167ae' text-anchor='middle' dominant-baseline='central'>Z</text><text x='55' y='26' font-family='Arial,Helvetica,sans-serif' font-weight='800' font-size='25' letter-spacing='1.5' fill='#ffffff' dominant-baseline='central'>ZURICH</text></svg>`);
+const ZURICH_LOGO_AZUL = svgURL(`<svg xmlns='http://www.w3.org/2000/svg' width='210' height='52' viewBox='0 0 210 52'><circle cx='24' cy='26' r='22' fill='#2167ae'/><text x='24' y='27' font-family='Arial,Helvetica,sans-serif' font-weight='900' font-size='27' fill='#ffffff' text-anchor='middle' dominant-baseline='central'>Z</text><text x='55' y='26' font-family='Arial,Helvetica,sans-serif' font-weight='800' font-size='25' letter-spacing='1.5' fill='#2167ae' dominant-baseline='central'>ZURICH</text></svg>`);
 // Rellena el formulario con la identidad de RADAR (logos azul/blanco; paleta sin negro; Roboto).
 function rellenarMarcaRadar(){
   const set=(i,v)=>{ const e=document.getElementById(i); if(e) e.value=v; };
@@ -4559,7 +4675,12 @@ function rellenarMarcaRadar(){
   set("marca-publico",""); set("marca-productos",""); set("marca-usar",""); set("marca-evitar","");
   set("marca-headerTagline",""); set("marca-direccion","");
   set("marca-copyright","© "+new Date().getFullYear()+" RADAR"); set("marca-unsubTexto","Darme de baja"); set("marca-disclaimer","");
-  document.getElementById("marca-form-titulo").textContent="Nueva marca · RADAR (logos y colores cargados)";
+  set("marca-web","https://www.somosradar.com");
+  set("marca-facebook",""); set("marca-instagram","");
+  set("marca-linkedin","https://www.linkedin.com/company/justradar/");
+  set("marca-youtube","https://www.youtube.com/channel/UC4qznw8--sMMQg6ym8J2kTA");
+  set("marca-spotify","");
+  document.getElementById("marca-form-titulo").textContent="Nueva marca · RADAR (logos, colores y redes cargados)";
   const body=document.getElementById("modal-marcas").querySelector(".modal-body"); if(body) body.scrollTop=99999;
   toast("Plantilla RADAR cargada — logos y colores listos. Completa la voz de marca si quieres");
 }
@@ -4590,25 +4711,30 @@ function aplicarMarca(id){
     if(m.eslogan && !getPath(C,"zonas.texto.titular.texto")) setPath(C,"zonas.texto.titular.texto", m.eslogan);
     renderTablero(); renderComposicionEditor();
   } else {
+    const bandBg = m.primary || m.secondary || "#2167ae";
+    const lClaro = m.logoClaro || m.logo || "";
+    const lColor = m.logo || m.logoClaro || "";
+    const redesM = redesDeMarca(m);
     let tieneHeader=false, tieneFooter=false;
     (p.canvas||[]).forEach(b=>{
       if(b.tipo==="cta" && m.cta){ b.datos.colorFondo=m.cta; if(m.ctaText) b.datos.colorTexto=m.ctaText; }
       if(b.tipo==="header"){ tieneHeader=true; if(m.logo) b.datos.logoUrl=m.logo; if(m.headerTagline && !b.datos.bajada) b.datos.bajada=m.headerTagline; }
       if(b.tipo==="footer"){ tieneFooter=true; if(m.empresa) b.datos.empresa=m.empresa; if(m.direccion) b.datos.direccion=m.direccion; if(m.copyright) b.datos.copyright=m.copyright; if(m.unsubTexto){ b.datos.mostrarUnsub=true; b.datos.unsubTexto=m.unsubTexto; } }
+      if(b.tipo==="bandaHeader"){ tieneHeader=true; b.datos.bg=bandBg; b.datos.logoClaro=lClaro; b.datos.logoColor=lColor; }
+      if(b.tipo==="bandaFooter"){ tieneFooter=true; b.datos.bg=bandBg; b.datos.logoClaro=lClaro; b.datos.logoColor=lColor; if(redesM.length) b.datos.redes=redesM; if(m.copyright) b.datos.copyright=m.copyright; if(m.disclaimer) b.datos.disclaimer=m.disclaimer; if(m.unsubTexto){ b.datos.mostrarUnsub=true; b.datos.unsubTexto=m.unsubTexto; } }
     });
-    // En email/documento: si no hay header/footer, los creamos desde la marca.
+    // En email/documento: si no hay header/footer, creamos el header y footer de MARCA (banda con logo + redes).
     const esDoc = ["email","invitacion","libre"].includes(p.formato);
     if(esDoc){
-      if(!tieneHeader && (m.logo || m.headerTagline)){
+      if(!tieneHeader && (lClaro || lColor)){
         p.canvas = p.canvas || [];
-        p.canvas.unshift(mk("header", { logoUrl:m.logo||"", bajada:m.headerTagline||"" }));
+        p.canvas.unshift(mk("bandaHeader", { estilo:"solido", bg:bandBg, logoClaro:lClaro, logoColor:lColor }));
       }
-      if(!tieneFooter && (m.empresa || m.direccion || m.copyright || m.disclaimer)){
-        const fd = { empresa:m.empresa||"", direccion:m.direccion||"", copyright:m.copyright||"" };
+      if(!tieneFooter && (lClaro || lColor || redesM.length || m.copyright || m.disclaimer)){
+        const fd = { estilo:"solido", bg:bandBg, logoClaro:lClaro, logoColor:lColor, redes:redesM, copyright:m.copyright||"", direccion:m.direccion||"", disclaimer:m.disclaimer||"" };
         if(m.unsubTexto){ fd.mostrarUnsub=true; fd.unsubTexto=m.unsubTexto; }
-        if(m.disclaimer){ fd.direccion = (fd.direccion ? fd.direccion+"\n" : "") + m.disclaimer; }
         p.canvas = p.canvas || [];
-        p.canvas.push(mk("footer", fd));
+        p.canvas.push(mk("bandaFooter", fd));
       }
     }
     aplicarTema(); renderCanvas(); renderForm();
