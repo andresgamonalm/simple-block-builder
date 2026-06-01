@@ -7,6 +7,12 @@ binding       = "DB"
 database_name = "simple-block-builder"
 database_id   = "3b91f996-d02d-45b1-8f21-820f2e97bd19"
 
+# Almacenamiento de imágenes subidas por el usuario (Biblioteca → "Subir imágenes").
+# El código usa el binding IMAGENES (functions/api/upload.js).
+[[r2_buckets]]
+binding     = "IMAGENES"
+bucket_name = "simple-builder-block-img"
+
 # Variables NO sensibles. Se administran aquí (no en el dashboard).
 # Para agregar a alguien al sistema, edita ALLOWED_EMAILS y haz git push.
 [vars]
