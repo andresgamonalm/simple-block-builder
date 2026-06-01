@@ -5109,7 +5109,7 @@ async function generarConIA(){
   let imagenes = (workspace.imagenes||[]).map(i => ({ url:i.url, nombre:i.nombre }));
   if(producto==="banner" && imagenes.length){
     est.textContent = "Mirando tus imágenes…";
-    for(const it of imagenes.slice(0,6)){ const th = await miniaturaIA(it.url, 224); if(th) it.thumb = th; }
+    for(const it of imagenes.slice(0,3)){ const th = await miniaturaIA(it.url, 224); if(th) it.thumb = th; }
     est.textContent = "Generando con IA…";
   }
   try{

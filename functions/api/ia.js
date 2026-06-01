@@ -276,7 +276,7 @@ async function generarBanner({ env, brief, marca, imagenes, refsTxt }) {
 
   // Multimodal "light": si llegan miniaturas, la IA VE las imágenes (máx 10, una sola
   // llamada) para elegir la mejor por contenido, no solo por nombre.
-  const conThumb = (imagenes || []).filter(im => im && im.thumb).slice(0, 6);
+  const conThumb = (imagenes || []).filter(im => im && im.thumb).slice(0, 3);
   let entrada = prompt;
   if (conThumb.length) {
     const partes = [{ text: prompt }, { text: '\nIMÁGENES CANDIDATAS (míralas y elige en "imagen" la URL EXACTA de la que mejor calce visual y temáticamente; si ninguna sirve, ""):' }];
