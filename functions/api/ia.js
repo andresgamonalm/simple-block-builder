@@ -23,7 +23,7 @@ export async function onRequestGet({ request, env }) {
     out.autenticado = !!email;
     out.tieneKey = !!env.GEMINI_API_KEY;
     out.largoKey = (env.GEMINI_API_KEY || '').length;
-    out.modelo = env.GEMINI_MODEL || 'gemini-2.5-flash';
+    out.modelo = env.GEMINI_MODEL || 'gemini-2.5-flash-lite';
 
     if (u.searchParams.get('gemini') !== '1') {
       out.nota = 'Función viva y deploy actualizado. Para probar Gemini abre /api/ia?gemini=1';
@@ -95,7 +95,7 @@ async function generar({ request, env }) {
       `Tono: ${brief.tono || (mk && mk.tono) || "profesional y cercano"}.`,
       `Tema/brief: ${brief.que || "(general)"}.`
     ].filter(Boolean).join("\n");
-    const model = env.GEMINI_MODEL || "gemini-2.5-flash";
+    const model = env.GEMINI_MODEL || "gemini-2.5-flash-lite";
     const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${encodeURIComponent(env.GEMINI_API_KEY)}`;
     const ctl = new AbortController(); const t = setTimeout(() => ctl.abort(), 30000);
     let res;
@@ -180,20 +180,19 @@ function extraerTextoPagina(html, max) {
 async function leerReferencias(refs) {
   const urls = Array.isArray(refs) ? refs.filter(u => /^https?:\/\//i.test(u)).slice(0, 3) : [];
   if (!urls.length) return '';
-  const deadline = Date.now() + 9000;
-  const trozos = [];
-  for (const u of urls) {
-    if (Date.now() > deadline) break;
+  // En PARALELO (no una por una) → el total ≈ la página más lenta, no la suma.
+  const leerUna = async (u) => {
     const norm = u.split('#')[0];
     try {
-      const ctl = new AbortController(); const t = setTimeout(() => ctl.abort(), Math.max(2500, Math.min(8000, deadline - Date.now())));
+      const ctl = new AbortController(); const t = setTimeout(() => ctl.abort(), 6500);
       const r = await fetch(norm, { redirect: 'follow', signal: ctl.signal, headers: UA_NAVEGADOR });
       clearTimeout(t);
-      if (!r.ok) { trozos.push(`(${norm}: HTTP ${r.status})`); continue; }
+      if (!r.ok) return `(${norm}: HTTP ${r.status})`;
       const html = await r.text();
-      trozos.push(`• ${norm}\n${extraerTextoPagina(html, 1400)}`);
-    } catch (e) { trozos.push(`(${norm}: no se pudo leer)`); }
-  }
+      return `• ${norm}\n${extraerTextoPagina(html, 1400)}`;
+    } catch (e) { return `(${norm}: no se pudo leer)`; }
+  };
+  const trozos = await Promise.all(urls.map(leerUna));
   return trozos.join('\n\n').slice(0, 4000);
 }
 
@@ -218,7 +217,7 @@ function extraerJSON(texto) {
   return undefined;
 }
 async function llamarGemini(env, promptOrParts, maxTokens) {
-  const model = env.GEMINI_MODEL || 'gemini-2.5-flash';
+  const model = env.GEMINI_MODEL || 'gemini-2.5-flash-lite';
   const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${encodeURIComponent(env.GEMINI_API_KEY)}`;
   const ctl = new AbortController(); const timer = setTimeout(() => ctl.abort(), 40000);
   // Acepta un prompt de texto o un array de "parts" (texto + imágenes inlineData).
