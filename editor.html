@@ -274,10 +274,11 @@ button,input,select,textarea{font-family:inherit;}
 .tb-btn.ia-btn{background:linear-gradient(135deg,#6d4bff,#9b5cff);color:#fff;border:none;font-weight:600;}
 .tb-btn.ia-btn:hover{filter:brightness(1.07);}
 .nav-ia{color:#6d4bff;font-weight:600;}
-.ia-label{display:block;font-size:12.5px;font-weight:600;color:var(--ink);margin:6px 0 5px;}
-.modal-body .ia-que{width:100%;min-height:70px;height:70px;font-family:var(--f);font-size:13.5px;border:1px solid var(--bdr);border-radius:9px;padding:11px 12px;resize:vertical;line-height:1.45;}
-.modal-body .ia-refs{font-family:var(--f);}
-.ia-row{display:flex;gap:12px;margin-top:12px;flex-wrap:wrap;}
+.ia-label{display:block;font-size:12.5px;font-weight:600;color:var(--ink);margin:14px 0 6px;}
+.modal-body .ia-que{width:100%;min-height:60px;height:60px;font-family:var(--f);font-size:13.5px;border:1px solid var(--bdr);border-radius:9px;padding:11px 12px;resize:vertical;line-height:1.45;}
+/* El último textarea (Indicaciones) debe ganar a la regla genérica .modal-body textarea{min-height:300px} para no forzar scroll desde el inicio. */
+.modal-body .ia-refs{font-family:var(--f);min-height:60px;height:60px;}
+.ia-row{display:flex;gap:14px;margin-top:14px;flex-wrap:wrap;}
 .ia-col{flex:1;min-width:160px;display:flex;flex-direction:column;gap:5px;font-size:12px;color:var(--ink2,#444);font-weight:500;}
 .ia-col select,.ia-col input{font-family:var(--f);font-size:13px;border:1px solid var(--bdr);border-radius:7px;padding:8px 9px;background:#fff;margin-top:auto;}
 .ia-req{font-size:10.5px;font-weight:600;color:#6d4bff;text-transform:uppercase;letter-spacing:.04em;}
@@ -703,8 +704,8 @@ button,input,select,textarea{font-family:inherit;}
 .modal-head h3{font-size:16px;font-weight:600;color:var(--ink);letter-spacing:-.01em;}
 .modal-close{background:none;border:none;cursor:pointer;font-size:18px;color:var(--ink3);padding:0;width:30px;height:30px;border-radius:7px;background:var(--bg);display:flex;align-items:center;justify-content:center;transition:all .14s;}
 .modal-close:hover{background:var(--bdr);color:var(--ink);}
-.modal-body{flex:1;overflow-y:auto;padding:20px 22px;}
-.modal-body p{font-size:12.5px;color:var(--ink2);margin-bottom:12px;line-height:1.6;}
+.modal-body{flex:1;overflow-y:auto;padding:18px 22px;}
+.modal-body p{font-size:12.5px;color:var(--ink2);margin-bottom:10px;line-height:1.6;}
 .modal-body textarea{width:100%;min-height:300px;border:1.5px solid var(--bdr);border-radius:8px;padding:12px;font-family:Menlo,Consolas,monospace;font-size:12px;line-height:1.55;background:#f7f8fc;outline:none;color:var(--ink);transition:border-color .15s;}
 .modal-body textarea:focus{border-color:var(--primary);background:var(--white);}
 .modal-foot{padding:14px 22px;border-top:1px solid var(--bdr);display:flex;justify-content:flex-end;gap:8px;flex-wrap:wrap;}
@@ -1290,7 +1291,7 @@ button,input,select,textarea{font-family:inherit;}
 <div class="modal-bg" id="modal-ia"><div class="modal">
   <div class="modal-head"><h3>✨ Generar con Char-B (IA)</h3><button class="modal-close" onclick="cerrarModal('ia')">×</button></div>
   <div class="modal-body">
-    <p>Elige tu marca y di en una frase qué necesitas. Char-B (IA) crea la pieza en la <b>voz de tu marca</b> (colores, logo, tono) y la deja en el editor para ajustarla.</p>
+    <p>Elige tu marca, di qué necesitas y Char-B (IA) crea la pieza en la <b>voz de tu marca</b> (colores, logo, tono), lista para ajustar.</p>
     <div class="ia-row">
       <label class="ia-col">Marca<select id="ia-marca"></select></label>
       <label class="ia-col">¿Qué producto?<div class="ia-seg" id="ia-formato-seg">
@@ -1306,13 +1307,13 @@ button,input,select,textarea{font-family:inherit;}
       <button type="button" data-tono="newsletter" onclick="iaSetTono('newsletter')">📰 Newsletter</button>
     </div><input type="hidden" id="ia-tono" value="comercial">
     <label class="ia-label">¿Qué necesitas? <span class="ia-req">·obligatorio</span></label>
-    <textarea id="ia-que" class="ia-que" placeholder="Ej: Promocionar el Seguro Auto Digital con foco en contratar 100% online"></textarea>
+    <textarea id="ia-que" class="ia-que" placeholder="Ej: Promocionar el producto de pago automatizado"></textarea>
     <div class="ia-row">
-      <label class="ia-col">Acción (el CTA)<input type="text" id="ia-objetivo" placeholder="Cotizar / Comprar / Inscribirse / Saber más" list="ia-acciones"><datalist id="ia-acciones"><option>Cotizar</option><option>Comprar</option><option>Inscribirse</option><option>Reservar</option><option>Saber más</option><option>Descargar</option><option>Contactar</option></datalist></label>
-      <label class="ia-col">Gancho / oferta <small>(dato exacto; la IA no lo inventa)</small><input type="text" id="ia-gancho" placeholder="Ej: 2 cuotas gratis"></label>
+      <label class="ia-col">Acción (el CTA)<input type="text" id="ia-objetivo" placeholder="Probar / Registrarse / Comprar / Saber más" list="ia-acciones"><datalist id="ia-acciones"><option>Probar gratis</option><option>Registrarse</option><option>Comprar</option><option>Suscribirse</option><option>Reservar</option><option>Saber más</option><option>Descargar</option><option>Contactar</option></datalist></label>
+      <label class="ia-col">Gancho / oferta <small>(dato exacto; la IA no lo inventa)</small><input type="text" id="ia-gancho" placeholder="Ej: Demo gratis por 30 días"></label>
     </div>
     <label class="ia-label">Destino del CTA <small>(el link al que lleva el botón)</small></label>
-    <input type="text" id="ia-ctaurl" class="dz-inp" placeholder="https://www.zurich.cl/…/cotizar">
+    <input type="text" id="ia-ctaurl" class="dz-inp" placeholder="https://tuproducto.com/registro">
     <div class="ia-row">
       <label class="ia-col">URL referencia 1 <small>(opcional)</small><input type="text" id="ia-ref1" placeholder="https://… página de un producto"></label>
       <label class="ia-col">URL referencia 2 <small>(opcional)</small><input type="text" id="ia-ref2" placeholder="https://… una promo, un post"></label>
@@ -1321,7 +1322,7 @@ button,input,select,textarea{font-family:inherit;}
     <div id="ia-fotos" class="ia-fotos"></div>
     <button type="button" class="img-biblio-btn" onclick="elegirFotosIA()"><span class="ico" data-ic="imagen" data-icsize="12px"></span> Elegir foto de la biblioteca</button>
     <label class="ia-label">Indicaciones generales <small>(opcional · detalles, restricciones, lo que quieras pedir)</small></label>
-    <textarea id="ia-notas" class="ia-refs" placeholder="Ej: usar un tono cercano, mencionar atención 24/7, no hablar de precios…"></textarea>
+    <textarea id="ia-notas" class="ia-refs" placeholder="Ej: tono cercano y claro, destacar la facilidad de uso, sin tecnicismos…"></textarea>
     <div id="ia-estado" class="ia-estado"></div>
   </div>
   <div class="modal-foot"><button onclick="cerrarModal('ia')">Cancelar</button><button class="primary" id="ia-btn" onclick="generarConIA()">✨ Generar</button></div>
