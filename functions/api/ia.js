@@ -145,24 +145,29 @@ function voorMarca(marca) {
 
 // ── Reglas duras del brief (comunes) ──────────────────────────────────────
 function reglasBrief(brief) {
-  const n = Math.max(1, Math.min(3, parseInt(brief.ctaCount) || 1));
-  const promo = (brief.tipo || 'promo') === 'promo';
-  const out = [
-    `OBJETIVO / lo que necesito: ${brief.que}`,
-    `Incluye exactamente ${n} llamado(s) a la acción (CTA)${n > 1 ? ' (repártelos en la pieza: p. ej. uno arriba y otro al final)' : ''}.`,
-    promo
-      ? `Texto del CTA basado en: "${brief.accion || 'Saber más'}". CADA CTA debe llevar un adverbio de tiempo o lugar que enganche (ej.: "Cotiza hoy", "Cotizar aquí", "Contrata ahora", "Empieza ya"). Máx 3 palabras, en imperativo.`
-      : `Texto del CTA basado en: "${brief.accion || 'Saber más'}". CTA sobrio y claro, sin urgencia ni presión (ej.: "Conoce más", "Más información", "Conversemos"). Máx 3 palabras.`,
-  ];
+  const tipo = brief.tipo || 'comercial';
+  const newsletter = tipo === 'newsletter';
+  const vende = tipo === 'comercial';
+  const out = [`OBJETIVO / lo que necesito: ${brief.que}`];
+  // Colocación del CTA: SOLO al final, salvo newsletter (que puede llevar uno por sección).
+  out.push(newsletter
+    ? 'Es un NEWSLETTER: varias secciones de novedades; puedes incluir un CTA por sección.'
+    : 'UN SOLO CTA y SIEMPRE al final de la pieza (nunca arriba ni en el medio).');
+  out.push(vende
+    ? `Texto del CTA basado en "${brief.accion || 'Saber más'}": imperativo + adverbio de tiempo/lugar (ej.: "Cotiza hoy", "Cotizar aquí", "Contrata ahora"). Máx 3 palabras.`
+    : `Texto del CTA basado en "${brief.accion || 'Saber más'}": claro y sobrio, sin urgencia (ej.: "Conoce más", "Más información"). Máx 3 palabras.`);
+  out.push('Los TITULARES y las frases sobre imágenes NUNCA terminan en punto.');
   if (brief.gancho) out.push(`GANCHO/OFERTA EXACTO (úsalo TAL CUAL, NO inventes otros números/fechas/precios): ${brief.gancho}`);
   else out.push('Sin oferta numérica: NO inventes precios, porcentajes ni fechas.');
+  if (brief.notas && String(brief.notas).trim()) out.push(`INDICACIONES ADICIONALES del usuario (respétalas): ${String(brief.notas).trim()}`);
   return out.join('\n');
 }
-// Directriz de redacción según el TONO elegido (promo = vendedor; corp/info = más blando).
+// Directriz de redacción según el TIPO (comercial = vende; corporativo/informativo/newsletter = más blando).
 function enfoqueDe(tipo) {
   if (tipo === 'corporativo') return 'ENFOQUE CORPORATIVO: tono institucional, sobrio y de confianza; comunica respaldo, solidez y profesionalismo. NADA de urgencia ni lenguaje de oferta. Titular sereno; cuerpo claro y elegante; CTA suave.';
   if (tipo === 'informativo') return 'ENFOQUE INFORMATIVO: explica con claridad y calma el producto y sus beneficios; útil y didáctico, sin presión de venta. Titular descriptivo; cuerpo que orienta; CTA suave e invitador.';
-  return 'ENFOQUE PROMOCIONAL (que VENDA): el titular comunica un BENEFICIO claro (persuade, no describe); el cuerpo conecta con el deseo/dolor del público y resalta el gancho; genera urgencia/escasez cuando aplique; lenguaje concreto y enérgico, frases cortas, cero relleno; CTA potente en imperativo + adverbio.';
+  if (tipo === 'newsletter') return 'ENFOQUE NEWSLETTER: varias secciones cortas de novedades/contenido útil, en la voz cercana de la marca; cada sección con su mini-titular; sin sobre-venta.';
+  return 'ENFOQUE COMERCIAL (que VENDA): el titular comunica un BENEFICIO claro (persuade, no describe); el cuerpo conecta con el deseo/dolor del público y resalta el gancho; genera urgencia/escasez cuando aplique; lenguaje concreto y enérgico, frases cortas, cero relleno; CTA potente en imperativo + adverbio.';
 }
 
 // ── Lee 1-3 URLs de referencia y devuelve un extracto de texto ────────────

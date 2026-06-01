@@ -439,7 +439,7 @@ button,input,select,textarea{font-family:inherit;}
 .fmt-hint{font-size:11.5px;color:var(--ink2);margin-bottom:12px;font-weight:500;align-self:flex-start;padding-left:6px;display:flex;align-items:center;gap:8px;}
 .fmt-hint .badge{background:var(--primary);color:var(--white);padding:2px 8px;border-radius:4px;font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.04em;}
 
-.canvas-frame{background:var(--sbb-bg,var(--white));width:100%;transition:max-width .25s ease,height .25s ease;box-shadow:var(--sh2);border-radius:8px;font-family:var(--sbb-font,"Inter","Roboto",Arial,sans-serif);color:var(--sbb-text,var(--ink));position:relative;}
+.canvas-frame{background:var(--sbb-bg,var(--white));width:100%;transition:max-width .25s ease,height .25s ease;box-shadow:var(--sh2);font-family:var(--sbb-font,"Inter","Roboto",Arial,sans-serif);color:var(--sbb-text,var(--ink));position:relative;}
 .canvas-frame.drag-over{outline:2px dashed var(--primary);outline-offset:-4px;}
 /* El tamaño del lienzo lo fija JS (aplicarTema) desde el registro FORMATOS.
    Estas reglas solo manejan los formatos de tamaño fijo (banners/posts). */
@@ -1293,24 +1293,27 @@ button,input,select,textarea{font-family:inherit;}
         <button type="button" data-fmt="banner" onclick="iaSetFormato('banner')"><span class="ico" data-ic="grid"></span> Banners Display</button>
       </div><input type="hidden" id="ia-formato" value="email"></label>
     </div>
-    <label class="ia-label">Tono de la pieza</label>
+    <label class="ia-label">Tipo de email</label>
     <div class="ia-seg" id="ia-tono-seg">
-      <button type="button" data-tono="promo" class="on" onclick="iaSetTono('promo')">🔥 Promocional (vende)</button>
+      <button type="button" data-tono="comercial" class="on" onclick="iaSetTono('comercial')">🔥 Comercial</button>
       <button type="button" data-tono="corporativo" onclick="iaSetTono('corporativo')">🏛️ Corporativo</button>
       <button type="button" data-tono="informativo" onclick="iaSetTono('informativo')">ℹ️ Informativo</button>
-    </div><input type="hidden" id="ia-tono" value="promo">
+      <button type="button" data-tono="newsletter" onclick="iaSetTono('newsletter')">📰 Newsletter</button>
+    </div><input type="hidden" id="ia-tono" value="comercial">
     <label class="ia-label">¿Qué necesitas? <span class="ia-req">·obligatorio</span></label>
-    <textarea id="ia-que" class="ia-que" placeholder="Ej: Promocionar el seguro de auto con foco en cobertura total y atención 24/7"></textarea>
+    <textarea id="ia-que" class="ia-que" placeholder="Ej: Promocionar el Seguro Auto Digital con foco en contratar 100% online"></textarea>
     <div class="ia-row">
       <label class="ia-col">Acción (el CTA)<input type="text" id="ia-objetivo" placeholder="Cotizar / Comprar / Inscribirse / Saber más" list="ia-acciones"><datalist id="ia-acciones"><option>Cotizar</option><option>Comprar</option><option>Inscribirse</option><option>Reservar</option><option>Saber más</option><option>Descargar</option><option>Contactar</option></datalist></label>
-      <label class="ia-col">Gancho / oferta <small>(dato exacto; la IA no lo inventa)</small><input type="text" id="ia-gancho" placeholder="Ej: 20% dcto. hasta el 30 de junio"></label>
+      <label class="ia-col">Gancho / oferta <small>(dato exacto; la IA no lo inventa)</small><input type="text" id="ia-gancho" placeholder="Ej: 2 cuotas gratis"></label>
     </div>
+    <label class="ia-label">Destino del CTA <small>(el link al que lleva el botón)</small></label>
+    <input type="text" id="ia-ctaurl" class="dz-inp" placeholder="https://www.zurich.cl/…/cotizar">
     <div class="ia-row">
-      <label class="ia-col">Enlace del CTA (URL) <small>(a dónde lleva el botón)</small><input type="text" id="ia-ctaurl" placeholder="https://www.zurich.cl/…/cotizar"></label>
-      <label class="ia-col">¿Cuántos CTA? <small>(botones)</small><input type="number" id="ia-ctacount" min="1" max="3" value="1"></label>
+      <label class="ia-col">URL referencia 1 <small>(opcional)</small><input type="text" id="ia-ref1" placeholder="https://… página de un producto"></label>
+      <label class="ia-col">URL referencia 2 <small>(opcional)</small><input type="text" id="ia-ref2" placeholder="https://… una promo, un post"></label>
     </div>
-    <label class="ia-label">URL a revisar <small>(opcional · máx. 2 · vacío = más rápido · pega una URL solo si quieres que la IA la lea)</small></label>
-    <textarea id="ia-refs" class="ia-refs" placeholder="Pega 1–2 URLs (una por línea): la página de un producto, una promo…"></textarea>
+    <label class="ia-label">Indicaciones generales <small>(opcional · detalles, restricciones, lo que quieras pedir)</small></label>
+    <textarea id="ia-notas" class="ia-refs" placeholder="Ej: usar un tono cercano, mencionar atención 24/7, no hablar de precios…"></textarea>
     <div id="ia-estado" class="ia-estado"></div>
   </div>
   <div class="modal-foot"><button onclick="cerrarModal('ia')">Cancelar</button><button class="primary" id="ia-btn" onclick="generarConIA()">✨ Generar</button></div>
@@ -2696,7 +2699,7 @@ const BLOQUES = {
     cat:"Estructura", nombre:"Footer de marca · azul", icono:"", sub:"Banda sólida + Síguenos (email)",
     defaults: Object.assign({}, styleDefaults, { padTop:"0", padBottom:"0", padLeft:"0", padRight:"0", radioBloque:"0", estilo:"solido", bg:"#2167ae", logoClaro:"", logoColor:"", alto:"28", textoSeguir:"Síguenos",
       redes:[{tipo:"facebook",url:""},{tipo:"instagram",url:""},{tipo:"linkedin",url:""},{tipo:"youtube",url:""}],
-      copyright:"", direccion:"", mostrarUnsub:false, unsubTexto:"Darme de baja", unsubUrl:"", disclaimer:"" }),
+      copyright:"", direccion:"", mostrarUnsub:false, unsubTexto:"Darme de baja", unsubUrl:"", disclaimer:"", web:"" }),
     campos: [
       {key:"estilo",label:"Estilo de banda",tipo:"select",opciones:[["solido","Sólido (logo claro)"],["blanco","Blanco (logo a color)"]]},
       {key:"bg",label:"Color de la banda (estilo sólido)",tipo:"color"},
@@ -2719,6 +2722,7 @@ const BLOQUES = {
       {key:"unsubTexto",label:"Texto de baja",tipo:"text"},
       {key:"unsubUrl",label:"URL de baja",tipo:"text"},
       {key:"disclaimer",label:"Disclaimer legal",tipo:"textarea"},
+      {key:"web",label:"Sitio web (link del logo)",tipo:"text"},
       {key:"logoColor",label:"Logo a color (para fondo blanco)",tipo:"text"},
       {key:"logoClaro",label:"Logo claro (para fondo sólido)",tipo:"text"},
       ...styleFields({h:false, v:false})
@@ -2731,7 +2735,9 @@ const BLOQUES = {
       const logo = solido ? (d.logoClaro||d.logoColor||"") : (d.logoColor||d.logoClaro||"");
       const iconos = (d.redes||[]).filter(r=>r.url).map(r=>`<a href="${esc(r.url)}" target="_blank" rel="noopener" style="color:${fg};display:inline-flex;text-decoration:none;">${svgIcon(r.tipo,{size:"20px"})}</a>`).join("");
       const seguir = iconos ? `<span style="display:inline-flex;align-items:center;gap:14px;">${d.textoSeguir?`<span style="color:${fg};font-size:14px;">${esc(d.textoSeguir)}</span>`:""}${iconos}</span>` : "";
-      const logoEl = logo ? `<img src="${esc(logo)}" alt="logo" style="height:${esc(d.alto||28)}px;width:auto;">` : `<span style="color:${fg};font-weight:700;font-size:13px;">Logo</span>`;
+      const imgLogo = logo ? `<img src="${esc(logo)}" alt="logo" style="height:${esc(d.alto||28)}px;width:auto;display:block;">` : `<span style="color:${fg};font-weight:700;font-size:13px;">Logo</span>`;
+      // El logo del footer también lleva link (a la web de la marca, si hay).
+      const logoEl = d.web ? `<a href="${esc(d.web)}" target="_blank" rel="noopener" style="text-decoration:none;display:inline-block;">${imgLogo}</a>` : imgLogo;
       const banda = `<div style="background:${esc(band)};border:${borde};display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:14px;padding:18px 28px;box-sizing:border-box;">${logoEl}${seguir}</div>`;
       const legalParts = [];
       if(d.copyright) legalParts.push(esc(d.copyright));
@@ -4872,7 +4878,7 @@ function aplicarMarca(id){
       if(b.tipo==="header"){ tieneHeader=true; if(m.logo) b.datos.logoUrl=m.logo; if(m.headerTagline && !b.datos.bajada) b.datos.bajada=m.headerTagline; }
       if(b.tipo==="footer"){ tieneFooter=true; if(m.empresa) b.datos.empresa=m.empresa; if(m.direccion) b.datos.direccion=m.direccion; if(m.copyright) b.datos.copyright=m.copyright; if(m.unsubTexto){ b.datos.mostrarUnsub=true; b.datos.unsubTexto=m.unsubTexto; } }
       if(b.tipo==="bandaHeader"||b.tipo==="bandaHeaderBlanco"){ tieneHeader=true; b.datos.bg=bandBg; b.datos.logoClaro=lClaro; b.datos.logoColor=lColor; }
-      if(b.tipo==="bandaFooter"||b.tipo==="bandaFooterBlanco"){ tieneFooter=true; b.datos.bg=bandBg; b.datos.logoClaro=lClaro; b.datos.logoColor=lColor; if(redesM.length) b.datos.redes=redesM; if(m.copyright) b.datos.copyright=m.copyright; if(m.disclaimer) b.datos.disclaimer=m.disclaimer; if(m.unsubTexto){ b.datos.mostrarUnsub=true; b.datos.unsubTexto=m.unsubTexto; } }
+      if(b.tipo==="bandaFooter"||b.tipo==="bandaFooterBlanco"){ tieneFooter=true; b.datos.bg=bandBg; b.datos.logoClaro=lClaro; b.datos.logoColor=lColor; if(m.web) b.datos.web=m.web; if(redesM.length) b.datos.redes=redesM; if(m.copyright) b.datos.copyright=m.copyright; if(m.disclaimer) b.datos.disclaimer=m.disclaimer; if(m.unsubTexto){ b.datos.mostrarUnsub=true; b.datos.unsubTexto=m.unsubTexto; } }
     });
     // En email/documento: si no hay header/footer, creamos el header y footer de MARCA (banda con logo + redes).
     const esDoc = ["email","invitacion","libre"].includes(p.formato);
@@ -4883,7 +4889,7 @@ function aplicarMarca(id){
         p.canvas.unshift(mk("bandaHeader", { estilo:estiloBanda, bg:bandBg, logoClaro:lClaro, logoColor:lColor }));
       }
       if(!tieneFooter && (lClaro || lColor || redesM.length || m.copyright || m.disclaimer)){
-        const fd = { estilo:estiloBanda, bg:bandBg, logoClaro:lClaro, logoColor:lColor, redes:redesM, copyright:m.copyright||"", direccion:m.direccion||"", disclaimer:m.disclaimer||"" };
+        const fd = { estilo:estiloBanda, bg:bandBg, logoClaro:lClaro, logoColor:lColor, web:m.web||"", redes:redesM, copyright:m.copyright||"", direccion:m.direccion||"", disclaimer:m.disclaimer||"" };
         if(m.unsubTexto){ fd.mostrarUnsub=true; fd.unsubTexto=m.unsubTexto; }
         p.canvas = p.canvas || [];
         p.canvas.push(mk("bandaFooter", fd));
@@ -5118,7 +5124,7 @@ function iaSetFormato(f){
   document.querySelectorAll("#ia-formato-seg button").forEach(b => b.classList.toggle("on", b.dataset.fmt===iaFormato));
 }
 function iaSetTono(t){
-  const tono = ["promo","corporativo","informativo"].includes(t) ? t : "promo";
+  const tono = ["comercial","corporativo","informativo","newsletter"].includes(t) ? t : "comercial";
   document.getElementById("ia-tono").value = tono;
   document.querySelectorAll("#ia-tono-seg button").forEach(b => b.classList.toggle("on", b.dataset.tono===tono));
 }
@@ -5142,13 +5148,13 @@ async function generarConIA(){
   const accion = (document.getElementById("ia-objetivo").value || "").trim();
   const gancho = (document.getElementById("ia-gancho").value || "").trim();
   const ctaUrl = (document.getElementById("ia-ctaurl").value || "").trim();
-  const ctaCount = Math.max(1, Math.min(3, parseInt(document.getElementById("ia-ctacount").value)||1));
-  const tipo = (document.getElementById("ia-tono") || {}).value || "promo";
-  let refs = (document.getElementById("ia-refs").value || "").split(/[\n,\s]+/).map(s=>s.trim()).filter(s=>/^https?:\/\//.test(s));
+  const tipo = (document.getElementById("ia-tono") || {}).value || "comercial";
+  const notas = (document.getElementById("ia-notas").value || "").trim();
+  // Dos URLs de referencia (opcionales) → solo se leen las que pegues.
+  const refs = [document.getElementById("ia-ref1").value, document.getElementById("ia-ref2").value]
+    .map(s => (s||"").trim()).filter(s => /^https?:\/\//.test(s)).slice(0,2);
   const marca = (workspace.marcas||[]).find(m => m.id === document.getElementById("ia-marca").value) || null;
   const M = marca ? normalizarMarca(marca) : null;
-  // Solo se leen los links que TÚ pegues (no la web de la marca) → IA más rápida.
-  refs = refs.slice(0,2);
   const btn = document.getElementById("ia-btn"); const est = document.getElementById("ia-estado");
   btn.disabled = true; est.textContent = `Generando ${producto==='banner'?'banner':'email'} para «${M ? M.nombre : 'sin marca'}»…`; est.className = "ia-estado loading";
   // Candidatas para la IA: excluye logos e íconos (esos no son foto de contenido).
@@ -5170,7 +5176,7 @@ async function generarConIA(){
       method:"POST", credentials:"include", headers:{ "Content-Type":"application/json" },
       body: JSON.stringify({
         producto,
-        brief: { que, accion, gancho, refs, ctaUrl, ctaCount, tipo },
+        brief: { que, accion, gancho, refs, ctaUrl, tipo, notas },
         formato: producto==="email" ? "email" : "display-300x250",
         marca: M ? { nombre:M.nombre, empresa:M.empresa, primary:M.primary, secondary:M.secondary, cta:M.cta, ctaText:M.ctaText, text:M.text, bg:M.bg, accent1:M.accent1, accent2:M.accent2, fontTitulo:M.fontTitulo, fontCuerpo:M.fontCuerpo, logoUrl:M.logo, negocio:M.negocio, tono:M.tono, eslogan:M.eslogan, publico:M.publico, productos:M.productos, usar:M.usar, evitar:M.evitar, disclaimer:M.disclaimer } : null,
         imagenes,
@@ -5212,7 +5218,14 @@ function insertarPiezaIA(data, formato, marca){
   // Con marca: quitamos el header/footer que haya inventado la IA (su logo suele
   // quedar roto) — la marca pondrá su propio header y footer con el logo real.
   if(M) bloques = bloques.filter(b => !["header","footer","bandaHeader","bandaFooter","bandaHeaderBlanco","bandaFooterBlanco"].includes(b.tipo));
-  const canvas = bloques.map(b => ({ id:uid(), tipo:b.tipo, datos:Object.assign(clone(BLOQUES[b.tipo].defaults), b.datos||{}) }));
+  const sinPunto = s => String(s==null?"":s).replace(/\s*[.。]+\s*$/,"").replace(/\s+$/,"");
+  const canvas = bloques.map(b => {
+    const d = Object.assign(clone(BLOQUES[b.tipo].defaults), b.datos||{});
+    // Los TÍTULOS no llevan punto final (sí el cuerpo).
+    if(d.titulo!==undefined) d.titulo = sinPunto(d.titulo);
+    if(d.titular!==undefined) d.titular = sinPunto(d.titular);
+    return { id:uid(), tipo:b.tipo, datos:d };
+  });
   const p = { id:uid(), nombre:(data.nombre||"Generado por IA"), campana:"General", formato, canvas, tema };
   proyecto.piezas.push(p); proyecto.activa = p.id;
   document.getElementById("galeria").classList.remove("show");
