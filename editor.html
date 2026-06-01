@@ -1252,6 +1252,7 @@ button,input,select,textarea{font-family:inherit;}
         <label>Palabras a evitar<input type="text" id="marca-evitar" placeholder="barato, gratis"></label>
 
         <div class="mf-sec mf-full">Email: encabezado y pie <small>(base de cada email; se puede ajustar luego)</small></div>
+        <label class="mf-full">Estilo del header/footer de marca <small>(la IA y "Aplicar marca" usan este)</small><select id="marca-bandaEstilo"><option value="solido">Banda sólida (color de marca, logo claro)</option><option value="blanco">Banda blanca (logo a color)</option></select></label>
         <label class="mf-full">Bajada del encabezado <small>(junto al logo)</small><input type="text" id="marca-headerTagline" placeholder="Ej: Seguros que te respaldan"></label>
         <label class="mf-full">Dirección (pie)<input type="text" id="marca-direccion" placeholder="Av. Ejemplo 123, Santiago, Chile"></label>
         <label>Copyright (pie)<input type="text" id="marca-copyright" placeholder="© 2026 Zurich Chile"></label>
@@ -4613,7 +4614,8 @@ function normalizarMarca(m){
     youtube: m.youtube || "",
     spotify: m.spotify || "",
     gap: m.gap || "",
-    radio: m.radio || ""
+    radio: m.radio || "",
+    bandaEstilo: (m.bandaEstilo === "blanco") ? "blanco" : "solido"
   };
 }
 // Redes de la marca como lista [{tipo,url}] para la fila "Síguenos" del footer
@@ -4699,7 +4701,7 @@ function resetMarcaForm(){
   set("marca-publico",""); set("marca-productos",""); set("marca-usar",""); set("marca-evitar","");
   set("marca-headerTagline",""); set("marca-direccion",""); set("marca-copyright",""); set("marca-unsubTexto",""); set("marca-disclaimer","");
   set("marca-web",""); set("marca-facebook",""); set("marca-instagram",""); set("marca-linkedin",""); set("marca-youtube",""); set("marca-spotify","");
-  set("marca-gap",""); set("marca-radio","");
+  set("marca-gap",""); set("marca-radio",""); set("marca-bandaEstilo","solido");
   document.getElementById("marca-form-titulo").textContent="Nueva marca";
 }
 function editarMarca(id){
@@ -4717,7 +4719,7 @@ function editarMarca(id){
   set("marca-publico",m.publico); set("marca-productos",m.productos); set("marca-usar",m.usar); set("marca-evitar",m.evitar);
   set("marca-headerTagline",m.headerTagline); set("marca-direccion",m.direccion); set("marca-copyright",m.copyright); set("marca-unsubTexto",m.unsubTexto); set("marca-disclaimer",m.disclaimer);
   set("marca-web",m.web); set("marca-facebook",m.facebook); set("marca-instagram",m.instagram); set("marca-linkedin",m.linkedin); set("marca-youtube",m.youtube); set("marca-spotify",m.spotify);
-  set("marca-gap",m.gap); set("marca-radio",m.radio);
+  set("marca-gap",m.gap); set("marca-radio",m.radio); set("marca-bandaEstilo",m.bandaEstilo||"solido");
   document.getElementById("marca-form-titulo").textContent="Editar marca";
   mostrarFormMarca();
 }
@@ -4735,7 +4737,7 @@ function guardarMarca(){
     publico:g("marca-publico").trim(), productos:g("marca-productos").trim(), usar:g("marca-usar").trim(), evitar:g("marca-evitar").trim(),
     headerTagline:g("marca-headerTagline").trim(), direccion:g("marca-direccion").trim(), copyright:g("marca-copyright").trim(), unsubTexto:g("marca-unsubTexto").trim(), disclaimer:g("marca-disclaimer").trim(),
     web:g("marca-web").trim(), facebook:g("marca-facebook").trim(), instagram:g("marca-instagram").trim(), linkedin:g("marca-linkedin").trim(), youtube:g("marca-youtube").trim(), spotify:g("marca-spotify").trim(),
-    gap:g("marca-gap").trim(), radio:g("marca-radio").trim() };
+    gap:g("marca-gap").trim(), radio:g("marca-radio").trim(), bandaEstilo:g("marca-bandaEstilo") };
   workspace.marcas = workspace.marcas || [];
   const id=g("marca-edit-id");
   if(id){ const m=workspace.marcas.find(x=>x.id===id); if(m){ Object.keys(m).forEach(k=>{ if(!(k in datos) && k!=="id") delete m[k]; }); Object.assign(m,datos); } }
@@ -4859,13 +4861,14 @@ function aplicarMarca(id){
     });
     // En email/documento: si no hay header/footer, creamos el header y footer de MARCA (banda con logo + redes).
     const esDoc = ["email","invitacion","libre"].includes(p.formato);
+    const estiloBanda = (m.bandaEstilo === "blanco") ? "blanco" : "solido";   // estilo definido en la marca
     if(esDoc){
       if(!tieneHeader && (lClaro || lColor)){
         p.canvas = p.canvas || [];
-        p.canvas.unshift(mk("bandaHeader", { estilo:"solido", bg:bandBg, logoClaro:lClaro, logoColor:lColor }));
+        p.canvas.unshift(mk("bandaHeader", { estilo:estiloBanda, bg:bandBg, logoClaro:lClaro, logoColor:lColor }));
       }
       if(!tieneFooter && (lClaro || lColor || redesM.length || m.copyright || m.disclaimer)){
-        const fd = { estilo:"solido", bg:bandBg, logoClaro:lClaro, logoColor:lColor, redes:redesM, copyright:m.copyright||"", direccion:m.direccion||"", disclaimer:m.disclaimer||"" };
+        const fd = { estilo:estiloBanda, bg:bandBg, logoClaro:lClaro, logoColor:lColor, redes:redesM, copyright:m.copyright||"", direccion:m.direccion||"", disclaimer:m.disclaimer||"" };
         if(m.unsubTexto){ fd.mostrarUnsub=true; fd.unsubTexto=m.unsubTexto; }
         p.canvas = p.canvas || [];
         p.canvas.push(mk("bandaFooter", fd));
