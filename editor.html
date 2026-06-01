@@ -1814,7 +1814,7 @@ const BLOQUES = {
     cat:"Estructura", nombre:"Header", icono:"", sub:"Logo + título + bajada",
     defaults: Object.assign({}, styleDefaults, { alinH:"center", padTop:"32", padBottom:"32", logoUrl:"", logoAncho:"160", mostrarEyebrow:false, eyebrow:"", titulo:"Título", bajada:"", tamanoTitulo:"26", tamanoBajada:"14", colorTitulo:"", colorBajada:"" }),
     campos: [
-      {key:"logoUrl",label:"URL del logo (vacío = sin logo)",tipo:"text"},
+      {key:"logoUrl",label:"Logo / imagen (vacío = sin logo)",tipo:"imgurl"},
       {key:"logoAncho",label:"Ancho del logo (px)",tipo:"range",min:40,max:400,step:10},
       {key:"mostrarEyebrow",label:"Mostrar etiqueta superior",tipo:"check"},
       {key:"eyebrow",label:"Etiqueta",tipo:"text"},
@@ -2621,8 +2621,10 @@ const BLOQUES = {
 
   footer: {
     cat:"Estructura", nombre:"Footer", icono:"", sub:"Pie de pieza",
-    defaults: Object.assign({}, styleDefaults, { padTop:"24", padBottom:"32", empresa:"Empresa", direccion:"", copyright:"", mostrarUnsub:false, unsubTexto:"Darme de baja", unsubUrl:"" }),
+    defaults: Object.assign({}, styleDefaults, { padTop:"24", padBottom:"32", logoUrl:"", logoAncho:"120", empresa:"Empresa", direccion:"", copyright:"", mostrarUnsub:false, unsubTexto:"Darme de baja", unsubUrl:"" }),
     campos: [
+      {key:"logoUrl",label:"Logo / imagen (vacío = sin logo)",tipo:"imgurl"},
+      {key:"logoAncho",label:"Ancho del logo (px)",tipo:"range",min:40,max:300,step:10},
       {key:"empresa",label:"Empresa",tipo:"text"},
       {key:"direccion",label:"Dirección",tipo:"text"},
       {key:"copyright",label:"Copyright",tipo:"text"},
@@ -2632,7 +2634,7 @@ const BLOQUES = {
       {key:"unsubUrl",label:"URL",tipo:"text"},
       ...styleFields()
     ],
-    render: (d) => wrap(d, `<footer class="sbb-footer">${d.empresa?`<div class="empresa">${esc(d.empresa)}</div>`:""}${d.direccion?`<div>${esc(d.direccion)}</div>`:""}${d.copyright?`<div style="margin-top:6px;">${esc(d.copyright)}</div>`:""}${d.mostrarUnsub?`<div style="margin-top:10px;"><a href="${esc(d.unsubUrl)}">${esc(d.unsubTexto)}</a></div>`:""}</footer>`)
+    render: (d) => wrap(d, `<footer class="sbb-footer">${d.logoUrl?`<img src="${esc(d.logoUrl)}" alt="logo" style="width:${esc(d.logoAncho||120)}px;max-width:100%;display:block;margin:0 auto 12px;">`:""}${d.empresa?`<div class="empresa">${esc(d.empresa)}</div>`:""}${d.direccion?`<div>${esc(d.direccion)}</div>`:""}${d.copyright?`<div style="margin-top:6px;">${esc(d.copyright)}</div>`:""}${d.mostrarUnsub?`<div style="margin-top:10px;"><a href="${esc(d.unsubUrl)}">${esc(d.unsubTexto)}</a></div>`:""}</footer>`)
   },
   // Header de marca: banda full-width con logo (email). Dos estilos: sólido (logo claro) o blanco (logo a color).
   bandaHeader: {
