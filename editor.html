@@ -5106,6 +5106,9 @@ function abrirIA(){
   const marcas = workspace.marcas||[];
   ms.innerHTML = (marcas.length ? "" : `<option value="">— Sin marca (crea una en Marcas) —</option>`) +
     marcas.map(m => `<option value="${m.id}">${esc(m.nombre)}</option>`).join("");
+  // Preselecciona la marca ya aplicada a la pieza activa (evita confundir marcas).
+  const aplicada = (typeof pieza==="function") && pieza() && pieza().tema && pieza().tema.marcaId;
+  if(aplicada && marcas.some(m=>m.id===aplicada)) ms.value = aplicada;
   const est = document.getElementById("ia-estado"); est.textContent = ""; est.className = "ia-estado";
   document.getElementById("modal-ia").classList.add("show");
   setTimeout(() => { const q = document.getElementById("ia-que"); if(q) q.focus(); }, 60);
@@ -5123,7 +5126,7 @@ async function generarConIA(){
   if(M && M.web && /^https?:\/\//.test(M.web) && !refs.includes(M.web)) refs.unshift(M.web);
   refs = refs.slice(0,3);
   const btn = document.getElementById("ia-btn"); const est = document.getElementById("ia-estado");
-  btn.disabled = true; est.textContent = "Generando con IA… (puede tardar unos segundos)"; est.className = "ia-estado loading";
+  btn.disabled = true; est.textContent = `Generando ${producto==='banner'?'banner':'email'} para «${M ? M.nombre : 'sin marca'}»…`; est.className = "ia-estado loading";
   // Candidatas para la IA: excluye logos e íconos (esos no son foto de contenido).
   let imagenes = (workspace.imagenes||[]).filter(i => !esLogoOIcono(i)).map(i => ({ url:i.url, nombre:i.nombre }));
   if(producto==="banner" && imagenes.length){
