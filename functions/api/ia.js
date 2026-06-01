@@ -161,16 +161,28 @@ async function leerReferencias(refs) {
   const trozos = [];
   for (const u of urls) {
     try {
-      const ctl = new AbortController(); const t = setTimeout(() => ctl.abort(), 6000);
-      const r = await fetch(u, { headers: { 'User-Agent': 'SimpleBlockBuilder/1.0' }, signal: ctl.signal });
+      const ctl = new AbortController(); const t = setTimeout(() => ctl.abort(), 10000);
+      const r = await fetch(u, { redirect: 'follow', signal: ctl.signal, headers: {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
+        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+        'Accept-Language': 'es-ES,es;q=0.9,en;q=0.8'
+      } });
       clearTimeout(t);
       if (!r.ok) { trozos.push(`(${u}: no se pudo leer, HTTP ${r.status})`); continue; }
       const html = await r.text();
-      const texto = html
+      const pick = (re) => { const m = html.match(re); return m ? m[1].replace(/\s+/g, ' ').trim() : ''; };
+      // Metadatos (presentes aun en webs hechas con JS) + texto visible.
+      const titulo = pick(/<title[^>]*>([\s\S]*?)<\/title>/i);
+      const ogt    = pick(/<meta[^>]+(?:property|name)=["']og:title["'][^>]+content=["']([^"']+)["']/i);
+      const desc   = pick(/<meta[^>]+name=["']description["'][^>]+content=["']([^"']+)["']/i)
+                  || pick(/<meta[^>]+(?:property|name)=["']og:description["'][^>]+content=["']([^"']+)["']/i);
+      const cuerpo = html
         .replace(/<script[\s\S]*?<\/script>/gi, ' ').replace(/<style[\s\S]*?<\/style>/gi, ' ')
-        .replace(/<[^>]+>/g, ' ').replace(/&[a-z]+;/gi, ' ').replace(/\s+/g, ' ').trim().slice(0, 1200);
-      trozos.push(`• ${u}\n${texto}`);
-    } catch (e) { trozos.push(`(${u}: no se pudo leer)`); }
+        .replace(/<[^>]+>/g, ' ').replace(/&[a-z#0-9]+;/gi, ' ').replace(/\s+/g, ' ').trim();
+      const meta = [titulo && 'Título: ' + titulo, (ogt && ogt !== titulo) && 'OG: ' + ogt, desc && 'Descripción: ' + desc].filter(Boolean).join(' · ');
+      const texto = ((meta ? meta + '\n' : '') + cuerpo.slice(0, 1400)).trim();
+      trozos.push(texto ? `• ${u}\n${texto.slice(0, 1700)}` : `(${u}: sin texto legible)`);
+    } catch (e) { trozos.push(`(${u}: no se pudo leer — ${(e && e.message) || e})`); }
   }
   return trozos.length ? trozos.join('\n\n') : '';
 }

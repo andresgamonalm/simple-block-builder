@@ -1274,7 +1274,7 @@ button,input,select,textarea{font-family:inherit;}
       <input type="hidden" id="marca-logoClaro-data">
       <input type="hidden" id="marca-edit-id">
       <div class="mf-actions">
-        <span class="mf-plantillas">Plantillas rápidas: <button onclick="rellenarMarcaRadar()" title="Rellena con la identidad de RADAR">RADAR</button><button onclick="rellenarMarcaZurich()" title="Rellena con la identidad de Zúrich">Zúrich</button></span>
+        <span class="mf-plantillas">Plantillas rápidas: <button onclick="rellenarMarcaRadar()" title="Rellena con la identidad de RADAR">RADAR</button><button onclick="rellenarMarcaZurich()" title="Rellena con la identidad de Zurich">Zurich</button></span>
         <button onclick="cerrarMarcaForm()">Cancelar</button>
         <button class="primary" onclick="guardarMarca()">Guardar marca</button>
       </div>
@@ -4736,10 +4736,10 @@ function guardarMarca(){
   persistir(); resetMarcaForm(); renderMarcaSelector(); mostrarBibliotecaMarcas();
   toast(id ? "Marca actualizada" : `"${nombre}" agregada a tu biblioteca`);
 }
-// Rellena el formulario con la identidad propuesta de Zúrich (punto de partida; el logo lo sube el usuario).
+// Rellena el formulario con la identidad propuesta de Zurich (punto de partida; el logo lo sube el usuario).
 function rellenarMarcaZurich(){
   const set=(i,v)=>{ const e=document.getElementById(i); if(e) e.value=v; };
-  set("marca-nombre","Zúrich"); set("marca-empresa","Zurich Chile");
+  set("marca-nombre","Zurich"); set("marca-empresa","Zurich Chile");
   // Paleta del manual: principal #2167ae, secundario #72ccfd, CTA #e71313, terciario #fc7899, fondos #2167ae/#F7F7F7.
   set("marca-primary","#2167AE"); set("marca-secondary","#72CCFD"); set("marca-cta","#E71313");
   set("marca-ctaText","#ffffff"); set("marca-text","#1a1a1a"); set("marca-bg","#ffffff"); set("marca-bgpagina","#F7F7F7");
@@ -4770,14 +4770,14 @@ function rellenarMarcaZurich(){
   set("marca-youtube","https://www.youtube.com/zurichseguros");
   set("marca-spotify","https://open.spotify.com/show/6FoNs4bvFuXu740sl3leaE");
   set("marca-gap","16"); set("marca-radio","14");
-  document.getElementById("marca-form-titulo").textContent="Nueva marca · Zúrich (logos, colores y redes cargados)";
+  document.getElementById("marca-form-titulo").textContent="Nueva marca · Zurich (logos, colores y redes cargados)";
   const body=document.getElementById("modal-marcas").querySelector(".modal-body"); if(body) body.scrollTop=99999;
-  toast("Plantilla Zúrich cargada — header/footer de marca listos (2 estilos: sólido y blanco)");
+  toast("Plantilla Zurich cargada — header/footer de marca listos (2 estilos: sólido y blanco)");
 }
 // Logos RADAR incrustados (placeholder del wordmark; el usuario puede re-subir los oficiales).
 const RADAR_LOGO_AZUL="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIzMjAiIGhlaWdodD0iODAiIHZpZXdCb3g9IjAgMCAzMjAgODAiPjx0ZXh0IHg9IjUwJSIgeT0iNTAlIiBkb21pbmFudC1iYXNlbGluZT0iY2VudHJhbCIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZm9udC1mYW1pbHk9IkFyaWFsLEhlbHZldGljYSxzYW5zLXNlcmlmIiBmb250LXdlaWdodD0iODAwIiBmb250LXNpemU9IjU2IiBsZXR0ZXItc3BhY2luZz0iMiIgZmlsbD0iIzIyMkY0NyI+UkFEQVI8L3RleHQ+PC9zdmc+";
 const RADAR_LOGO_BLANCO="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIzMjAiIGhlaWdodD0iODAiIHZpZXdCb3g9IjAgMCAzMjAgODAiPjx0ZXh0IHg9IjUwJSIgeT0iNTAlIiBkb21pbmFudC1iYXNlbGluZT0iY2VudHJhbCIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZm9udC1mYW1pbHk9IkFyaWFsLEhlbHZldGljYSxzYW5zLXNlcmlmIiBmb250LXdlaWdodD0iODAwIiBmb250LXNpemU9IjU2IiBsZXR0ZXItc3BhY2luZz0iMiIgZmlsbD0iI0ZGRkZGRiI+UkFEQVI8L3RleHQ+PC9zdmc+";
-// Logos Zúrich recreados en SVG (placeholder de marca; reemplazables subiendo el oficial).
+// Logos Zurich recreados en SVG (placeholder de marca; reemplazables subiendo el oficial).
 const svgURL = s => "data:image/svg+xml,"+encodeURIComponent(s);
 const ZURICH_LOGO_BLANCO = svgURL(`<svg xmlns='http://www.w3.org/2000/svg' width='210' height='52' viewBox='0 0 210 52'><circle cx='24' cy='26' r='22' fill='#ffffff'/><text x='24' y='27' font-family='Arial,Helvetica,sans-serif' font-weight='900' font-size='27' fill='#2167ae' text-anchor='middle' dominant-baseline='central'>Z</text><text x='55' y='26' font-family='Arial,Helvetica,sans-serif' font-weight='800' font-size='25' letter-spacing='1.5' fill='#ffffff' dominant-baseline='central'>ZURICH</text></svg>`);
 const ZURICH_LOGO_AZUL = svgURL(`<svg xmlns='http://www.w3.org/2000/svg' width='210' height='52' viewBox='0 0 210 52'><circle cx='24' cy='26' r='22' fill='#2167ae'/><text x='24' y='27' font-family='Arial,Helvetica,sans-serif' font-weight='900' font-size='27' fill='#ffffff' text-anchor='middle' dominant-baseline='central'>Z</text><text x='55' y='26' font-family='Arial,Helvetica,sans-serif' font-weight='800' font-size='25' letter-spacing='1.5' fill='#2167ae' dominant-baseline='central'>ZURICH</text></svg>`);
