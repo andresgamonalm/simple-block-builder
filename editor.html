@@ -587,10 +587,14 @@ button,input,select,textarea{font-family:inherit;}
 .cmp-ed .cmp-bibmini{display:flex;flex-wrap:wrap;gap:4px;margin:-2px 0 7px;}
 .cmp-ed .cmp-bibmini .bibmini{width:34px;height:28px;padding:0;border:1px solid var(--bdr);border-radius:5px;overflow:hidden;cursor:pointer;background:var(--bg2,#f3f4f8);}
 .cmp-ed .cmp-bibmini .bibmini img{width:100%;height:100%;object-fit:cover;display:block;}
-.cmp-ed .cmp-prop{display:flex;gap:8px;margin-bottom:7px;}
+.cmp-ed .cmp-prop{display:flex;gap:8px;margin-bottom:9px;}
 .cmp-ed .cmp-prop .pcol{flex:1;text-align:center;}
-.cmp-ed .cmp-prop .pcol span{font-size:10px;color:var(--ink3,#888);display:block;}
-.cmp-ed .cmp-prop .pcol input{width:100%;}
+.cmp-ed .cmp-prop .pcol span{font-size:10px;color:var(--ink3,#888);display:block;margin-bottom:3px;}
+.cmp-ed .cmp-prop .pcol .pnum{display:flex;align-items:center;gap:1px;border:1px solid var(--bdr);border-radius:7px;padding:2px 6px;background:#fff;}
+.cmp-ed .cmp-prop .pcol .pnum input{width:100%;min-width:0;border:none;background:transparent;text-align:center;font-size:14px;font-weight:600;font-family:var(--f);padding:3px 0;color:var(--ink,#222);}
+.cmp-ed .cmp-prop .pcol .pnum i{font-style:normal;font-size:11px;color:#aaa;}
+.cmp-ed .cmp-num{width:60px;font-family:var(--f);font-size:12.5px;border:1px solid var(--bdr);border-radius:6px;padding:6px 7px;text-align:center;background:#fff;}
+.cmp-ed .cmp-unit{font-size:10px;color:#aaa;margin-left:-1px;}
 .cmp-ed .cmp-sec{display:flex;align-items:center;justify-content:space-between;font-size:12px;font-weight:700;color:var(--ink2,#3a3a4a);margin:14px 0 6px;padding-bottom:5px;border-bottom:1px solid var(--bdr);}
 .cmp-ed .cmp-eye{border:1px solid var(--bdr);background:#fff;border-radius:6px;padding:3px 7px;cursor:pointer;color:var(--primary);}
 .cmp-ed .cmp-eye.off{opacity:.4;color:#888;}
@@ -3542,7 +3546,9 @@ function zonaContenido(zk, z, px){
   }
   if(zk==="cta"){
     if(!z.texto) return "";
-    return `<a class="cmp-cta" href="${esc(z.url||'#')}" target="_blank" rel="noopener" style="font-size:${px(z.tamano,13)}px;background:${esc(z.colorFondo||'#2f80ed')};color:${esc(z.colorTexto||'#fff')};border-radius:${px(z.radio,8)}px;padding:${px('7',7)}px ${px('16',16)}px;">${esc(z.texto)}</a>`;
+    const t=parseFloat(z.tamano)||13;
+    const pY=Math.round(t*0.55), pX=Math.round(t*1.25);
+    return `<a class="cmp-cta" href="${esc(z.url||'#')}" target="_blank" rel="noopener" style="font-size:${px(z.tamano,13)}px;background:${esc(z.colorFondo||'#2f80ed')};color:${esc(z.colorTexto||'#fff')};border-radius:${px(z.radio,8)}px;padding:${px(pY,pY)}px ${px(pX,pX)}px;">${esc(z.texto)}</a>`;
   }
   return "";
 }
@@ -3669,7 +3675,7 @@ function compEditorHTML(p, fmt){
   const RE = isOv ? "renderForm()" : "renderComposicionEditor()";
   const S = (path,expr)=> isOv ? `setCompOv('${fmt}','${path}',${expr})` : `setComp('${path}',${expr})`;
   const SV = (path,val)=> isOv ? `setCompOv('${fmt}','${path}','${val}')` : `setComp('${path}','${val}')`;
-  const rng=(path,mn,mx,base)=>`<input type="range" min="${mn}" max="${mx}" value="${parseInt(getPath(C,path))||base}" oninput="${S(path,'this.value')}">`;
+  const rng=(path,mn,mx,base)=>`<input type="number" class="cmp-num" min="${mn}" max="${mx}" value="${parseInt(getPath(C,path))||base}" oninput="${S(path,'this.value')}">`;
   const colorInp=(path,def)=>`<input type="color" value="${esc(getPath(C,path)||def)}" oninput="${S(path,'this.value')}">`;
   const selFit=(base)=>`<select onchange="${S(base+'.fit','this.value')}">${[['cover','Cubrir'],['contain','Contener']].map(([v,l])=>`<option value="${v}" ${(getPath(C,base+'.fit')||'cover')===v?'selected':''}>${l}</option>`).join('')}</select>`;
   const selFoco=(base)=>`<select onchange="${S(base+'.foco','this.value')}">${['center','top','bottom','left','right'].map(v=>`<option value="${v}" ${(getPath(C,base+'.foco')||'center')===v?'selected':''}>${v}</option>`).join('')}</select>`;
@@ -3704,7 +3710,7 @@ function compEditorHTML(p, fmt){
   if(fondoTipo==='color') h+=`<div class="cmp-row">${colorInp('fondo.color','#0e2748')}<div class="cmp-sw-row" title="Colores de tus marcas">${swatchesColor('fondo.color',isOv?fmt:null)}</div></div>`;
   else h+=imgBlock('fondo.imagen');
   const prop=getPath(C,'prop')||[25,50,25];
-  h+=`<div class="dz-sec">Proporciones · Logo / Texto / CTA</div><div class="cmp-prop">`+['Logo','Texto','CTA'].map((l,i)=>`<div class="pcol"><span>${l}</span><input type="range" min="0" max="100" value="${parseInt(prop[i])||0}" oninput="${S('prop.'+i,'this.value')}"></div>`).join('')+`</div>`;
+  h+=`<div class="dz-sec">Espacio de cada zona · escribe el %</div><div class="cmp-prop">`+['Logo','Texto','CTA'].map((l,i)=>`<div class="pcol"><span>${l}</span><div class="pnum"><input type="number" min="0" max="100" value="${parseInt(prop[i])||0}" oninput="${S('prop.'+i,'this.value')}"><i>%</i></div></div>`).join('')+`</div>`;
   h+=zonaSec('logo','Logo','imagen')+alinRow('logo')+zonaBg('logo');
   const logoUrl = isOv ? (getPath(ov,'zonas.logo.url')||"") : (getPath(C,'zonas.logo.url')||"");
   h+=`<div class="cmp-row"><input type="text" placeholder="${isOv?'Hereda del global':'URL logo (PNG/SVG)'}" value="${escAttr(logoUrl)}" onchange="${S('zonas.logo.url','this.value')}"><button class="cmp-bib" onclick="elegirImagenPath('zonas.logo.url',${isOv?`'${fmt}'`:'null'})">${svgIcon("imagen",{size:"12px"})}</button></div>`;
@@ -3719,7 +3725,7 @@ function compEditorHTML(p, fmt){
   h+=`<div class="cmp-row"><input type="text" placeholder="Texto del botón" value="${escAttr(getPath(C,'zonas.cta.texto')||'')}" oninput="${S('zonas.cta.texto','this.value')}"></div>`;
   h+=`<div class="cmp-row"><input type="text" placeholder="Link (https://…)" value="${escAttr(getPath(C,'zonas.cta.url')||'')}" onchange="${S('zonas.cta.url','this.value')}"></div>`;
   h+=`<div class="cmp-row"><label>Colores</label>${colorInp('zonas.cta.colorFondo','#2f80ed')}${colorInp('zonas.cta.colorTexto','#ffffff')}</div>`;
-  h+=`<div class="cmp-row"><label>Radio</label>${rng('zonas.cta.radio',0,30,8)}</div>`;
+  h+=`<div class="cmp-row"><label>Tamaño</label>${rng('zonas.cta.tamano',11,40,13)}<span class="cmp-unit">px</span><label style="min-width:auto;margin-left:12px">Radio</label>${rng('zonas.cta.radio',0,30,8)}</div>`;
   return h;
 }
 // Editor del Diseño global (3 zonas con controles por zona).
