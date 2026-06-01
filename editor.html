@@ -4966,6 +4966,13 @@ function miniaturaIA(url, max){
     img.src=url;
   });
 }
+// ¿La imagen es un logo o ícono? (no debe usarse como foto de contenido/banner).
+function esLogoOIcono(img){
+  const t = ((img && img.nombre || "") + " " + decodeURIComponent(img && img.url || "")).toLowerCase();
+  if(/\.svg(\?|$|")/.test(t)) return true;                                   // vector → ícono/logo
+  return /(^|[\s\-_\/])(logos?|iconos?|icon|favicon|isotipo|imagotipo)([\s\-_\/.]|$)/.test(t)
+      || /(^|[\s\-_\/])ic[-_]/.test(t);
+}
 async function subirImagenes(files){
   const lista = [...(files||[])].filter(f => /^image\//.test(f.type));
   if(!lista.length){ toast("Elige imágenes (PNG, JPG, WEBP…)"); return; }
@@ -5105,8 +5112,8 @@ async function generarConIA(){
   refs = refs.slice(0,3);
   const btn = document.getElementById("ia-btn"); const est = document.getElementById("ia-estado");
   btn.disabled = true; est.textContent = "Generando con IA… (puede tardar unos segundos)"; est.className = "ia-estado loading";
-  // En Banners, manda miniaturas (light) de hasta 10 imágenes para que la IA ELIJA viéndolas.
-  let imagenes = (workspace.imagenes||[]).map(i => ({ url:i.url, nombre:i.nombre }));
+  // Candidatas para la IA: excluye logos e íconos (esos no son foto de contenido).
+  let imagenes = (workspace.imagenes||[]).filter(i => !esLogoOIcono(i)).map(i => ({ url:i.url, nombre:i.nombre }));
   if(producto==="banner" && imagenes.length){
     est.textContent = "Mirando tus imágenes…";
     for(const it of imagenes.slice(0,3)){ const th = await miniaturaIA(it.url, 224); if(th) it.thumb = th; }

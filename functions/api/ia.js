@@ -261,6 +261,7 @@ async function generarBanner({ env, brief, marca, imagenes, refsTxt }) {
     '- LÍMITES: titular ≤ 6 palabras; cuerpo ≤ 14 palabras; cta ≤ 3 palabras.',
     '- El "cta" debe reflejar la ACCIÓN del brief.',
     '- "imagen": elige la URL EXACTA de la biblioteca cuya descripción mejor calce con el brief; si ninguna calza, deja "".',
+    '- NUNCA uses un logo ni un ícono como "imagen" (esos van en su propia zona, no como foto del banner).',
     '- Respeta el tono y las palabras de la marca; NO inventes ofertas/precios/fechas.',
     '',
     'VOZ DE MARCA:',
