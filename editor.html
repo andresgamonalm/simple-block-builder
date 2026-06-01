@@ -5186,11 +5186,21 @@ async function generarConIA(){
   const M = marca ? normalizarMarca(marca) : null;
   const btn = document.getElementById("ia-btn"); const est = document.getElementById("ia-estado");
   btn.disabled = true; est.textContent = `Generando ${producto==='banner'?'banner':'email'} para «${M ? M.nombre : 'sin marca'}»…`; est.className = "ia-estado loading";
-  // Candidatas para la IA. Si elegiste fotos a mano, se usan SOLO esas; si no, toda la biblioteca (sin logos/íconos).
+  // Candidatas para la IA. Si elegiste fotos a mano, se usan SOLO esas; si no, toda la biblioteca + las del bucket R2 (sin logos/íconos).
   const fotosElegidas = _iaFotos.length > 0;
-  let imagenes = fotosElegidas
-    ? _iaFotos.map(u => { const im=(workspace.imagenes||[]).find(x=>x.url===u); return { url:u, nombre: im?im.nombre:"" }; })
-    : (workspace.imagenes||[]).filter(i => !esLogoOIcono(i)).map(i => ({ url:i.url, nombre:i.nombre }));
+  let imagenes;
+  if(fotosElegidas){
+    imagenes = _iaFotos.map(u => { const im=(workspace.imagenes||[]).find(x=>x.url===u); return { url:u, nombre: im?im.nombre:"" }; });
+  } else {
+    imagenes = (workspace.imagenes||[]).filter(i => !esLogoOIcono(i)).map(i => ({ url:i.url, nombre:i.nombre }));
+    try{
+      const rr = await fetch("/api/upload?list=1",{credentials:"include"});
+      if(rr.ok){ const dd=await rr.json(); if(dd&&dd.ok&&Array.isArray(dd.objects)){
+        const urls=new Set(imagenes.map(i=>i.url));
+        dd.objects.forEach(o=>{ const nombre=String(o.key||"").split("/").pop().replace(/\.[a-z0-9]+$/i,""); const cand={url:o.url,nombre}; if(!urls.has(o.url) && !esLogoOIcono(cand)) imagenes.push(cand); });
+      }}
+    }catch(e){}
+  }
   if(producto==="banner" && imagenes.length){
     est.textContent = "Mirando tus imágenes…";
     for(const it of imagenes.slice(0,3)){ const th = await miniaturaIA(it.url, 224); if(th) it.thumb = th; }
@@ -5233,6 +5243,15 @@ async function generarConIA(){
       }
       // Íconos distintos en atributos/features si la IA repitió o dejó vacío.
       diversificarIconos(pz);
+      // Garantiza una FOTO: si había imágenes disponibles y la IA no puso ninguna, la insertamos.
+      const fotoForzar = fotosElegidas ? _iaFotos[0] : (imagenes.find(i=>i&&i.url)||{}).url;
+      if(fotoForzar){
+        const yaUsa = pz.canvas.some(b => b.datos && JSON.stringify(b.datos).indexOf(fotoForzar)>=0);
+        if(!yaUsa){
+          const idxH = pz.canvas.findIndex(b => b.tipo==="bandaHeader" || b.tipo==="bandaHeaderBlanco" || b.tipo==="header");
+          pz.canvas.splice(idxH>=0?idxH+1:0, 0, mk("imagen", { url:fotoForzar, anchoImg:"100", radio:"0" }));
+        }
+      }
     }
     // Enlace del CTA: lo fija el usuario (la IA no lo inventa).
     if(ctaUrl && pz){

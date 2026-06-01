@@ -185,11 +185,19 @@ function extraerTextoPagina(html, max) {
   const ogt    = pick(/<meta[^>]+(?:property|name)=["']og:title["'][^>]+content=["']([^"']+)["']/i);
   const desc   = pick(/<meta[^>]+name=["']description["'][^>]+content=["']([^"']+)["']/i)
               || pick(/<meta[^>]+(?:property|name)=["']og:description["'][^>]+content=["']([^"']+)["']/i);
-  const cuerpo = html
+  // Quita ruido (scripts, estilos, navegación, pies, cabeceras, svg) para quedarnos con el contenido.
+  const limpio = html
     .replace(/<script[\s\S]*?<\/script>/gi, ' ').replace(/<style[\s\S]*?<\/style>/gi, ' ')
-    .replace(/<[^>]+>/g, ' ').replace(/&[a-z#0-9]+;/gi, ' ').replace(/\s+/g, ' ').trim();
+    .replace(/<noscript[\s\S]*?<\/noscript>/gi, ' ').replace(/<svg[\s\S]*?<\/svg>/gi, ' ')
+    .replace(/<(nav|footer|header|aside|form)[\s\S]*?<\/\1>/gi, ' ');
+  // Prioriza titulares y párrafos (lo importante de una landing).
+  const destacados = (limpio.match(/<(h1|h2|h3|li|p)[^>]*>([\s\S]*?)<\/\1>/gi) || [])
+    .map(s => s.replace(/<[^>]+>/g, ' ').replace(/&[a-z#0-9]+;/gi, ' ').replace(/\s+/g, ' ').trim())
+    .filter(t => t.length > 2).slice(0, 60).join(' · ');
+  const cuerpo = limpio.replace(/<[^>]+>/g, ' ').replace(/&[a-z#0-9]+;/gi, ' ').replace(/\s+/g, ' ').trim();
   const meta = [titulo && 'Título: ' + titulo, (ogt && ogt !== titulo) && 'OG: ' + ogt, desc && 'Descripción: ' + desc].filter(Boolean).join(' · ');
-  return ((meta ? meta + '\n' : '') + cuerpo.slice(0, max || 1200)).trim().slice(0, (max || 1200) + 300);
+  const texto = (destacados || cuerpo);
+  return ((meta ? meta + '\n' : '') + texto.slice(0, max || 1200)).trim().slice(0, (max || 1200) + 300);
 }
 // Lee 1-3 URLs de referencia y RASTREA hasta 2 páginas internas de cada una
 // (mismo dominio), con tope de páginas y presupuesto de tiempo.
@@ -287,7 +295,7 @@ async function generarBanner({ env, brief, marca, imagenes, refsTxt }) {
     '',
     'BIBLIOTECA DE IMÁGENES (url → descripción):',
     imgsTxt,
-    refsTxt ? '\nREFERENCIAS DE LA MARCA (extractos de links; úsalos para tono y datos, no copies literal):\n' + refsTxt : '',
+    refsTxt ? '\nCONTENIDO DE LAS URLS DE REFERENCIA — ANALÍZALO y RAZONA: identifica la propuesta de valor, beneficios, público y tono, y úsalos para escribir una pieza coherente y específica (NO copies literal, NO inventes datos que no estén):\n' + refsTxt : '',
     '',
     'BRIEF:',
     reglasBrief(brief)
@@ -340,7 +348,7 @@ async function generarEmail({ env, brief, marca, imagenes, refsTxt, catalogo }) 
     '- Rellena solo los campos que aparecen en el catálogo de ese tipo (no inventes campos).',
     '- Español de Chile, concreto y persuasivo; nada de placeholders.',
     '- Estructura real de email: header (logo) arriba → contenido → un CTA claro con la ACCIÓN del brief → footer.',
-    '- Para imágenes usa SOLO una URL EXACTA de la biblioteca; si ninguna encaja, deja "".',
+    '- Si la biblioteca tiene imágenes, DEBES incluir al menos UNA foto (en un bloque "imgtext" o "hero"), preferentemente cerca del inicio. Usa SOLO una URL EXACTA de la biblioteca; si la biblioteca está vacía, deja "".',
     '- En "features"/listas de atributos: usa un ícono DISTINTO y relevante para CADA item (NUNCA el mismo en todos). Claves válidas: check, candado, reloj, globo, regalo, corazon, estrella, casa, usuario, trending, tag, carrito, telefono, chat, info, descargar, calendario, equipo, pin, nube.',
     '- NO uses el bloque "hero" con su botón salvo en newsletter: el único CTA va al final (bloque "cta").',
     '- Respeta el tono y las palabras de la marca; NO inventes ofertas/precios/fechas.' + logo + disc,
@@ -353,7 +361,7 @@ async function generarEmail({ env, brief, marca, imagenes, refsTxt, catalogo }) 
     '',
     'BIBLIOTECA DE IMÁGENES (url → descripción):',
     imgsTxt,
-    refsTxt ? '\nREFERENCIAS DE LA MARCA (extractos de links; úsalos para tono y datos, no copies literal):\n' + refsTxt : '',
+    refsTxt ? '\nCONTENIDO DE LAS URLS DE REFERENCIA — ANALÍZALO y RAZONA: identifica la propuesta de valor, beneficios, público y tono, y úsalos para escribir una pieza coherente y específica (NO copies literal, NO inventes datos que no estén):\n' + refsTxt : '',
     '',
     'BRIEF:',
     reglasBrief(brief)
