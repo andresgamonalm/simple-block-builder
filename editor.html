@@ -3712,6 +3712,21 @@ function toggleCompVisOv(fmt, path){ const p=pieza(); if(!esComposicion(p))retur
 function resetTamaño(fmt){ const p=pieza(); const ab=(p.artboards||[]).find(a=>a.fmt===fmt); if(ab) ab.ov={}; persistir(); renderTablero(); renderForm(); toast("Tamaño restablecido al Diseño global"); }
 function resetCapaTamaño(fmt, path){ const p=pieza(); const ab=(p.artboards||[]).find(a=>a.fmt===fmt); if(ab&&ab.ov){ delPath(ab.ov, path); } persistir(); renderTablero(); renderForm(); }
 function familiaDeFormato(fmt){ const f=FORMATOS[fmt]; if(!f) return "cuadrado"; const r=f.ancho/f.alto; return r>=2.2?"franja":(r<=0.6?"vertical":"cuadrado"); }
+// Pone el logo de la marca aplicada en la zona Logo de la composición (global o por tamaño).
+function usarLogoMarcaEnZona(fmt){
+  const p=pieza(); if(!esComposicion(p)) return;
+  const mid = p.tema && p.tema.marcaId;
+  let m = mid ? (workspace.marcas||[]).find(x=>x.id===mid) : null;
+  if(!m && (workspace.marcas||[]).length===1) m = workspace.marcas[0];
+  if(!m){ toast("Elige una marca primero (selector «Marca» arriba)"); return; }
+  m = normalizarMarca(m);
+  const fondoCol = (p.composicion && p.composicion.fondo && p.composicion.fondo.color) || "#0e2748";
+  const url = logoDeMarca(m, esColorOscuro(fondoCol));
+  if(!url){ toast("La marca no tiene logo"); return; }
+  if(fmt) setCompOv(fmt,'zonas.logo.url',url); else setComp('zonas.logo.url',url);
+  renderForm(); renderTablero();
+  toast("Logo de la marca aplicado");
+}
 function renderTableroComposicion(p, c){
   const sizes = (p.artboards && p.artboards.length) ? p.artboards.map(a=>a.fmt) : SET_DISPLAY_DESKTOP;
   const grupos = { cuadrado:[], vertical:[], franja:[] };
@@ -3824,7 +3839,7 @@ function compEditorHTML(p, fmt){
   h+=`<div class="dz-sec">Espacio de cada zona · escribe el %</div><div class="cmp-prop">`+['Logo','Texto','CTA'].map((l,i)=>`<div class="pcol"><span>${l}</span><div class="pnum"><input type="number" min="0" max="100" value="${parseInt(prop[i])||0}" oninput="${S('prop.'+i,'this.value')}"><i>%</i></div></div>`).join('')+`</div>`;
   h+=zonaSec('logo','Logo','imagen')+alinRow('logo')+zonaBg('logo');
   const logoUrl = isOv ? (getPath(ov,'zonas.logo.url')||"") : (getPath(C,'zonas.logo.url')||"");
-  h+=`<div class="cmp-row"><input type="text" placeholder="${isOv?'Hereda del global':'URL logo (PNG/SVG)'}" value="${escAttr(logoUrl)}" onchange="${S('zonas.logo.url','this.value')}"><button class="cmp-bib" onclick="elegirImagenPath('zonas.logo.url',${isOv?`'${fmt}'`:'null'})">${svgIcon("imagen",{size:"12px"})}</button></div>`;
+  h+=`<div class="cmp-row"><input type="text" placeholder="${isOv?'Hereda del global':'URL logo (PNG/SVG)'}" value="${escAttr(logoUrl)}" onchange="${S('zonas.logo.url','this.value')}"><button class="cmp-bib" onclick="usarLogoMarcaEnZona(${isOv?`'${fmt}'`:'null'})" title="Usar el logo de la marca aplicada">${svgIcon("paleta",{size:"12px"})}</button><button class="cmp-bib" onclick="elegirImagenPath('zonas.logo.url',${isOv?`'${fmt}'`:'null'})" title="Elegir de la biblioteca">${svgIcon("imagen",{size:"12px"})}</button></div>`;
   h+=miniaturasBiblioteca('zonas.logo.url', isOv?fmt:null);
   h+=`<div class="cmp-row"><label>Alto</label>${rng('zonas.logo.alto',16,160,48)}</div><div class="cmp-row"><label>Ancho máx</label>${rng('zonas.logo.maxw',15,100,70)}</div>`;
   h+=zonaSec('texto','Texto','documento')+alinRow('texto')+zonaBg('texto');
@@ -3847,7 +3862,12 @@ function renderComposicionEditor(){
   if(!esComposicion(p)){ cont.style.display="none"; cont.innerHTML=""; if(tema) tema.style.display=""; return; }
   asegurarComposicionNueva(p);
   cont.style.display=""; if(tema) tema.style.display="none";
-  cont.innerHTML=`<div class="cmp-ed"><div class="dz-sec">Diseño global · 3 zonas</div><button class="ia-sugerir" onclick="sugerirTextosIA()">✨ Sugerir textos con IA</button>${compEditorHTML(p,null)}</div>`;
+  const marcas = workspace.marcas||[];
+  const marcaSel = `<div class="dz-sec">Marca</div><div class="cmp-row"><select onchange="if(this.value)aplicarMarca(this.value)">`+
+    `<option value="">${marcas.length?'— Aplicar marca —':'— Sin marcas (crea una) —'}</option>`+
+    marcas.map(m=>`<option value="${m.id}" ${p.tema&&p.tema.marcaId===m.id?'selected':''}>${esc(m.nombre)}</option>`).join('')+
+    `</select><button class="cmp-bib" onclick="abrirMarcas()" title="Gestionar marcas">${svgIcon("paleta",{size:"12px"})}</button></div>`;
+  cont.innerHTML=`<div class="cmp-ed">${marcaSel}<div class="dz-sec">Diseño global · 3 zonas</div><button class="ia-sugerir" onclick="sugerirTextosIA()">✨ Sugerir textos con IA</button>${compEditorHTML(p,null)}</div>`;
 }
 // Panel "Ajustar este tamaño" (overrides sobre el global) en la pestaña Editar.
 function renderFormTamaño(f){
@@ -3911,7 +3931,18 @@ function activarArtboard(fmt){
 }
 function aplicarMasterATodos(){
   const p = pieza(); if(!esSetPieza(p)) return;
-  if(esComposicion(p)){ toast("En colecciones por capas el Diseño global ya se aplica a todos los tamaños"); cambiarPanelTab("diseno"); return; }
+  if(esComposicion(p)){
+    // Colección por zonas: el máster efectivo (global + su ajuste) pasa a ser el
+    // Diseño global, y se limpian TODOS los ajustes por tamaño → todos heredan.
+    if(!confirm("¿Aplicar el diseño del banner máster a TODOS los tamaños? Se borran los ajustes individuales y todos heredan del máster.")) return;
+    const mf = p.masterFmt || "display-300x250";
+    p.composicion = clone(composicionEfectiva(p, mf));
+    (p.artboards||[]).forEach(ab => { ab.ov = {}; });
+    seleccionado = null;
+    persistir(); renderTablero(); renderComposicionEditor(); renderForm();
+    toast("Máster aplicado a todos · los demás tamaños ahora heredan");
+    return;
+  }
   const master = artboardMaster(p); if(!master) return;
   if(!confirm("¿Aplicar el contenido del máster (300×250) a TODOS los tamaños? Reemplaza lo que tengas en los demás.")) return;
   p.artboards.forEach(ab => {
