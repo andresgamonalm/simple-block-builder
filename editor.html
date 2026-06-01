@@ -2682,7 +2682,7 @@ const BLOQUES = {
   },
   // Footer de marca: banda con logo + "Síguenos" + íconos de redes, más línea legal (email).
   bandaFooter: {
-    cat:"Estructura", nombre:"Footer de marca", icono:"", sub:"Banda + Síguenos + redes (email)",
+    cat:"Estructura", nombre:"Footer de marca · azul", icono:"", sub:"Banda sólida + Síguenos (email)",
     defaults: Object.assign({}, styleDefaults, { padTop:"0", padBottom:"0", padLeft:"0", padRight:"0", estilo:"solido", bg:"#2167ae", logoClaro:"", logoColor:"", alto:"28", textoSeguir:"Síguenos",
       redes:[{tipo:"facebook",url:""},{tipo:"instagram",url:""},{tipo:"linkedin",url:""},{tipo:"youtube",url:""}],
       copyright:"", direccion:"", mostrarUnsub:false, unsubTexto:"Darme de baja", unsubUrl:"", disclaimer:"" }),
@@ -2731,6 +2731,14 @@ const BLOQUES = {
       return wrap(d, banda+legal);
     }
   }
+};
+// Segunda variante del footer de marca: banda BLANCA (logo e íconos a color).
+// Reutiliza render y campos del footer azul; solo cambia el estilo por defecto.
+BLOQUES.bandaFooterBlanco = {
+  cat:"Estructura", nombre:"Footer de marca · blanco", icono:"", sub:"Banda blanca + Síguenos (email)",
+  defaults: Object.assign({}, BLOQUES.bandaFooter.defaults, { estilo:"blanco" }),
+  campos: BLOQUES.bandaFooter.campos,
+  render: BLOQUES.bandaFooter.render
 };
 
 // Formatos de tamaño fijo (banners): el Formato manda y el "Ancho canvas"
@@ -2931,11 +2939,11 @@ const BLOQUE_ICONO = {
   spark:"trending", rating:"estrella", product:"carrito", profileCard:"usuario",
   testimonial:"chat", article:"documento", pricing:"tag", hero:"imagen", alert:"alerta",
   features:"checklist", audio:"audioico", footer:"footerico",
-  bandaHeader:"heading", bandaFooter:"footerico"
+  bandaHeader:"heading", bandaFooter:"footerico", bandaFooterBlanco:"footerico"
 };
 // Bloques de documento/agenda que no tienen sentido en un banner de tamaño fijo
 // (display/social): se ocultan de la biblioteca cuando el formato es un banner.
-const BLOQUES_SOLO_DOC = new Set(["footer","bandaHeader","bandaFooter","diadivisor","fechaCard","evento","formulario","tabla"]);
+const BLOQUES_SOLO_DOC = new Set(["footer","bandaHeader","bandaFooter","bandaFooterBlanco","diadivisor","fechaCard","evento","formulario","tabla"]);
 function renderBiblioteca(){
   const cont = document.getElementById("biblioteca");
   if(!cont) return;
@@ -4826,7 +4834,7 @@ function aplicarMarca(id){
       if(b.tipo==="header"){ tieneHeader=true; if(m.logo) b.datos.logoUrl=m.logo; if(m.headerTagline && !b.datos.bajada) b.datos.bajada=m.headerTagline; }
       if(b.tipo==="footer"){ tieneFooter=true; if(m.empresa) b.datos.empresa=m.empresa; if(m.direccion) b.datos.direccion=m.direccion; if(m.copyright) b.datos.copyright=m.copyright; if(m.unsubTexto){ b.datos.mostrarUnsub=true; b.datos.unsubTexto=m.unsubTexto; } }
       if(b.tipo==="bandaHeader"){ tieneHeader=true; b.datos.bg=bandBg; b.datos.logoClaro=lClaro; b.datos.logoColor=lColor; }
-      if(b.tipo==="bandaFooter"){ tieneFooter=true; b.datos.bg=bandBg; b.datos.logoClaro=lClaro; b.datos.logoColor=lColor; if(redesM.length) b.datos.redes=redesM; if(m.copyright) b.datos.copyright=m.copyright; if(m.disclaimer) b.datos.disclaimer=m.disclaimer; if(m.unsubTexto){ b.datos.mostrarUnsub=true; b.datos.unsubTexto=m.unsubTexto; } }
+      if(b.tipo==="bandaFooter"||b.tipo==="bandaFooterBlanco"){ tieneFooter=true; b.datos.bg=bandBg; b.datos.logoClaro=lClaro; b.datos.logoColor=lColor; if(redesM.length) b.datos.redes=redesM; if(m.copyright) b.datos.copyright=m.copyright; if(m.disclaimer) b.datos.disclaimer=m.disclaimer; if(m.unsubTexto){ b.datos.mostrarUnsub=true; b.datos.unsubTexto=m.unsubTexto; } }
     });
     // En email/documento: si no hay header/footer, creamos el header y footer de MARCA (banda con logo + redes).
     const esDoc = ["email","invitacion","libre"].includes(p.formato);
