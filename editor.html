@@ -5234,13 +5234,21 @@ async function generarConIA(){
     else insertarPiezaIA(data, "email", marca);
     const pz=pieza();
     if(pz && producto==="email" && Array.isArray(pz.canvas)){
-      // Foto a ANCHO COMPLETO + texto debajo (en vez de imgtext con foto chica al lado = escolar).
-      for(let i=pz.canvas.length-1;i>=0;i--){
-        const b=pz.canvas[i];
-        if(b.tipo==="imgtext" && b.datos && b.datos.imagenUrl){
-          const repl=[ mk("imagen",{ url:b.datos.imagenUrl, anchoImg:"100", radio:"0" }) ];
-          if(b.datos.titulo || b.datos.texto) repl.push(mk("texto",{ titulo:b.datos.titulo||"", contenido:b.datos.texto||"", tamano:String(b.datos.tamTexto||14), color:b.datos.colorTexto||"" }));
-          pz.canvas.splice(i, 1, ...repl);
+      // Foto principal como HERO (titular ENCIMA de la foto) + párrafo debajo.
+      // Evita el "foto chica al lado" (escolar) y la "foto sola sin texto".
+      const iVis = pz.canvas.findIndex(b => ["imgtext","imagen","hero"].includes(b.tipo));
+      if(iVis>=0 && pz.canvas[iVis].tipo!=="hero"){
+        const v = pz.canvas[iVis];
+        const url = v.tipo==="imgtext" ? v.datos.imagenUrl : v.datos.url;
+        if(url){
+          let titulo = v.tipo==="imgtext" ? (v.datos.titulo||"") : "";
+          let cuerpo = v.tipo==="imgtext" ? (v.datos.texto||"") : "";
+          let quitar = 1;
+          if(v.tipo==="imagen"){ const nx=pz.canvas[iVis+1]; if(nx && nx.tipo==="texto"){ titulo=nx.datos.titulo||""; cuerpo=nx.datos.contenido||""; quitar=2; } }
+          if(!titulo) titulo = (M && M.eslogan) || (data.nombre||"");
+          const repl = [ mk("hero", { imagenUrl:url, titulo:titulo, sub:"", ctaTexto:"", oscurecer:"45", alturaHero:"340", radioImg:"0" }) ];
+          if(cuerpo) repl.push(mk("texto", { contenido:cuerpo }));
+          pz.canvas.splice(iVis, quitar, ...repl);
         }
       }
       // Salvo newsletter: un solo CTA, abajo. Quita el botón del hero y los CTA intermedios.
