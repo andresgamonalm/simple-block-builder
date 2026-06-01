@@ -1093,7 +1093,7 @@ button,input,select,textarea{font-family:inherit;}
       </div>
       <button class="tb-btn" onclick="abrirPreviewActual()" title="Vista previa"><span class="ico" data-ic="ojo"></span> Vista previa</button>
       <button class="tb-btn" onclick="abrirEnvioPrueba()" title="Enviar prueba por correo"><span class="ico" data-ic="enviar"></span> Enviar prueba</button>
-      <button class="tb-btn ia-btn" onclick="abrirIA()" title="Generar con IA">✨ IA</button>
+      <button class="tb-btn ia-btn" onclick="abrirIA()" title="Generar con Char-B (IA)">✨ Char-B</button>
       <button class="tb-btn icon-only" onclick="abrirImagenes()" title="Biblioteca de imágenes"><span class="ico" data-ic="imagen"></span></button>
       <button class="tb-btn icon-only" onclick="abrirImportar()" title="Importar HTML"><span class="ico" data-ic="subir"></span></button>
       <button class="tb-btn danger icon-only" onclick="eliminarPiezaActual()" title="Eliminar esta creatividad"><span class="ico" data-ic="basura"></span></button>
@@ -1288,9 +1288,9 @@ button,input,select,textarea{font-family:inherit;}
   </div>
 </div></div>
 <div class="modal-bg" id="modal-ia"><div class="modal">
-  <div class="modal-head"><h3>✨ Generar con IA</h3><button class="modal-close" onclick="cerrarModal('ia')">×</button></div>
+  <div class="modal-head"><h3>✨ Generar con Char-B (IA)</h3><button class="modal-close" onclick="cerrarModal('ia')">×</button></div>
   <div class="modal-body">
-    <p>Elige tu marca y di en una frase qué necesitas. La IA crea la pieza en la <b>voz de tu marca</b> (colores, logo, tono) y la deja en el editor para ajustarla.</p>
+    <p>Elige tu marca y di en una frase qué necesitas. Char-B (IA) crea la pieza en la <b>voz de tu marca</b> (colores, logo, tono) y la deja en el editor para ajustarla.</p>
     <div class="ia-row">
       <label class="ia-col">Marca<select id="ia-marca"></select></label>
       <label class="ia-col">¿Qué producto?<div class="ia-seg" id="ia-formato-seg">
@@ -1371,7 +1371,7 @@ button,input,select,textarea{font-family:inherit;}
       <button class="nav-item activo" onclick="volverAProyectos()"><span class="ico" data-ic="biblioteca"></span> Mis proyectos</button>
       <button class="nav-item" onclick="crearProyecto()"><span class="ico" data-ic="mas"></span> Nuevo proyecto</button>
       <div class="nav-sec">Crear creatividad</div>
-      <button class="nav-item nav-ia" onclick="abrirIA()"><span class="ico" data-ic="estrella"></span> Generar con IA</button>
+      <button class="nav-item nav-ia" onclick="abrirIA()"><span class="ico" data-ic="estrella"></span> Generar con Char-B (IA)</button>
       <button class="nav-item" onclick="crearDesde('email')"><span class="ico" data-ic="email"></span> Email</button>
       <button class="nav-item" onclick="crearDesde('display-300x250')"><span class="ico" data-ic="grid"></span> Banners</button>
       <button class="nav-item" onclick="crearDesde('linkedin-post')"><span class="ico" data-ic="compartir"></span> Post RRSS</button>
@@ -3879,7 +3879,7 @@ async function sugerirTextosIA(){
     if(d.cuerpo) setComp('zonas.texto.cuerpo.texto',d.cuerpo);
     if(d.cta) setComp('zonas.cta.texto',d.cta);
     renderComposicionEditor();
-    toast("Textos sugeridos por IA ✨");
+    toast("Textos sugeridos por Char-B ✨");
   }catch(e){ toast("Sin conexión: "+(e.message||e),4000); }
 }
 // Editor de composición (3 zonas). fmt=null → Diseño global; fmt → ajuste por tamaño.
@@ -3959,7 +3959,7 @@ function renderComposicionEditor(){
     `<option value="">${marcas.length?'— Aplicar marca —':'— Sin marcas (crea una) —'}</option>`+
     marcas.map(m=>`<option value="${m.id}" ${p.tema&&p.tema.marcaId===m.id?'selected':''}>${esc(m.nombre)}</option>`).join('')+
     `</select><button class="cmp-bib" onclick="abrirMarcas()" title="Gestionar marcas">${svgIcon("paleta",{size:"12px"})}</button></div>`;
-  cont.innerHTML=`<div class="cmp-ed">${marcaSel}<div class="dz-sec">Diseño global · 3 zonas</div><button class="ia-sugerir" onclick="sugerirTextosIA()">✨ Sugerir textos con IA</button>${compEditorHTML(p,null)}</div>`;
+  cont.innerHTML=`<div class="cmp-ed">${marcaSel}<div class="dz-sec">Diseño global · 3 zonas</div><button class="ia-sugerir" onclick="sugerirTextosIA()">✨ Sugerir textos con Char-B</button>${compEditorHTML(p,null)}</div>`;
 }
 // Panel "Ajustar este tamaño" (overrides sobre el global) en la pestaña Editar.
 function renderFormTamaño(f){
@@ -5203,14 +5203,14 @@ async function generarConIA(){
   if(producto==="banner" && imagenes.length){
     est.textContent = "Mirando tus imágenes…";
     for(const it of imagenes.slice(0,3)){ const th = await miniaturaIA(it.url, 224); if(th) it.thumb = th; }
-    est.textContent = "Generando con IA…";
+    est.textContent = "Generando con Char-B…";
   } else if(producto==="email" && imagenes.length && !fotosElegidas){
     // En email, descarta imágenes muy pequeñas (lado < 300px → suelen ser íconos).
     est.textContent = "Revisando imágenes…";
     const lista = imagenes.slice(0,20);
     const dims = await Promise.all(lista.map(it => dimsImagen(it.url)));
     imagenes = lista.filter((it,i) => !dims[i] || Math.min(dims[i].w, dims[i].h) >= 300).concat(imagenes.slice(20));
-    est.textContent = "Generando con IA…";
+    est.textContent = "Generando con Char-B…";
   }
   try{
     const r = await fetch("/api/ia", {
@@ -5276,13 +5276,13 @@ async function generarConIA(){
     }
     persistir(); if(esComposicion(pz)) renderTablero(); else renderCanvas();
     cerrarModal("ia");
-    toast("Pieza generada por IA — edítala a tu gusto");
+    toast("Pieza generada por Char-B (IA) — edítala a tu gusto");
   }catch(e){ est.textContent = "Sin conexión: " + (e.message||e); est.className = "ia-estado err"; }
   finally{ btn.disabled = false; }
 }
 function asegurarProyectoIA(){
   if(!proyecto){
-    const pr = { id:uid(), nombre:"Generado con IA", creado:Date.now(), piezas:[], activa:null };
+    const pr = { id:uid(), nombre:"Generado con Char-B (IA)", creado:Date.now(), piezas:[], activa:null };
     workspace.proyectos.push(pr); proyecto = pr; proyectoVistoId = pr.id;
   }
 }
@@ -5317,7 +5317,7 @@ function insertarPiezaIA(data, formato, marca){
     if(d.titular!==undefined) d.titular = sinPunto(d.titular);
     return { id:uid(), tipo:b.tipo, datos:d };
   });
-  const p = { id:uid(), nombre:(data.nombre||"Generado por IA"), campana:"General", formato, canvas, tema };
+  const p = { id:uid(), nombre:(data.nombre||"Generado por Char-B (IA)"), campana:"General", formato, canvas, tema };
   proyecto.piezas.push(p); proyecto.activa = p.id;
   document.getElementById("galeria").classList.remove("show");
   activarPieza(p.id);
