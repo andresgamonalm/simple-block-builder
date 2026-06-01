@@ -1299,6 +1299,10 @@ button,input,select,textarea{font-family:inherit;}
       <label class="ia-col">Acción (el CTA)<input type="text" id="ia-objetivo" placeholder="Cotizar / Comprar / Inscribirse / Saber más" list="ia-acciones"><datalist id="ia-acciones"><option>Cotizar</option><option>Comprar</option><option>Inscribirse</option><option>Reservar</option><option>Saber más</option><option>Descargar</option><option>Contactar</option></datalist></label>
       <label class="ia-col">Gancho / oferta <small>(dato exacto; la IA no lo inventa)</small><input type="text" id="ia-gancho" placeholder="Ej: 20% dcto. hasta el 30 de junio"></label>
     </div>
+    <div class="ia-row">
+      <label class="ia-col">Enlace del CTA (URL) <small>(a dónde lleva el botón)</small><input type="text" id="ia-ctaurl" placeholder="https://www.zurich.cl/…/cotizar"></label>
+      <label class="ia-col">¿Cuántos CTA? <small>(botones)</small><input type="number" id="ia-ctacount" min="1" max="3" value="1"></label>
+    </div>
     <label class="ia-label">URL a revisar <small>(opcional · máx. 2 · vacío = más rápido · pega una URL solo si quieres que la IA la lea)</small></label>
     <textarea id="ia-refs" class="ia-refs" placeholder="Pega 1–2 URLs (una por línea): la página de un producto, una promo…"></textarea>
     <div id="ia-estado" class="ia-estado"></div>
@@ -2661,7 +2665,7 @@ const BLOQUES = {
   // Header de marca: banda full-width con logo (email). Dos estilos: sólido (logo claro) o blanco (logo a color).
   bandaHeader: {
     cat:"Estructura", nombre:"Header de marca · azul", icono:"", sub:"Banda sólida con logo (email)",
-    defaults: Object.assign({}, styleDefaults, { padTop:"0", padBottom:"0", padLeft:"0", padRight:"0", estilo:"solido", bg:"#2167ae", logoClaro:"", logoColor:"", alto:"30", alinH:"left" }),
+    defaults: Object.assign({}, styleDefaults, { padTop:"0", padBottom:"0", padLeft:"0", padRight:"0", radioBloque:"0", estilo:"solido", bg:"#2167ae", logoClaro:"", logoColor:"", alto:"30", alinH:"left" }),
     campos: [
       {key:"estilo",label:"Estilo de banda",tipo:"select",opciones:[["solido","Sólido (logo claro)"],["blanco","Blanco (logo a color)"]]},
       {key:"bg",label:"Color de la banda (estilo sólido)",tipo:"color"},
@@ -2684,7 +2688,7 @@ const BLOQUES = {
   // Footer de marca: banda con logo + "Síguenos" + íconos de redes, más línea legal (email).
   bandaFooter: {
     cat:"Estructura", nombre:"Footer de marca · azul", icono:"", sub:"Banda sólida + Síguenos (email)",
-    defaults: Object.assign({}, styleDefaults, { padTop:"0", padBottom:"0", padLeft:"0", padRight:"0", estilo:"solido", bg:"#2167ae", logoClaro:"", logoColor:"", alto:"28", textoSeguir:"Síguenos",
+    defaults: Object.assign({}, styleDefaults, { padTop:"0", padBottom:"0", padLeft:"0", padRight:"0", radioBloque:"0", estilo:"solido", bg:"#2167ae", logoClaro:"", logoColor:"", alto:"28", textoSeguir:"Síguenos",
       redes:[{tipo:"facebook",url:""},{tipo:"instagram",url:""},{tipo:"linkedin",url:""},{tipo:"youtube",url:""}],
       copyright:"", direccion:"", mostrarUnsub:false, unsubTexto:"Darme de baja", unsubUrl:"", disclaimer:"" }),
     campos: [
@@ -5126,6 +5130,8 @@ async function generarConIA(){
   const producto = document.getElementById("ia-formato").value;   // email | banner
   const accion = (document.getElementById("ia-objetivo").value || "").trim();
   const gancho = (document.getElementById("ia-gancho").value || "").trim();
+  const ctaUrl = (document.getElementById("ia-ctaurl").value || "").trim();
+  const ctaCount = Math.max(1, Math.min(3, parseInt(document.getElementById("ia-ctacount").value)||1));
   let refs = (document.getElementById("ia-refs").value || "").split(/[\n,\s]+/).map(s=>s.trim()).filter(s=>/^https?:\/\//.test(s));
   const marca = (workspace.marcas||[]).find(m => m.id === document.getElementById("ia-marca").value) || null;
   const M = marca ? normalizarMarca(marca) : null;
@@ -5152,7 +5158,7 @@ async function generarConIA(){
       method:"POST", credentials:"include", headers:{ "Content-Type":"application/json" },
       body: JSON.stringify({
         producto,
-        brief: { que, accion, gancho, refs },
+        brief: { que, accion, gancho, refs, ctaUrl, ctaCount },
         formato: producto==="email" ? "email" : "display-300x250",
         marca: M ? { nombre:M.nombre, empresa:M.empresa, primary:M.primary, secondary:M.secondary, cta:M.cta, ctaText:M.ctaText, text:M.text, bg:M.bg, accent1:M.accent1, accent2:M.accent2, fontTitulo:M.fontTitulo, fontCuerpo:M.fontCuerpo, logoUrl:M.logo, negocio:M.negocio, tono:M.tono, eslogan:M.eslogan, publico:M.publico, productos:M.productos, usar:M.usar, evitar:M.evitar, disclaimer:M.disclaimer } : null,
         imagenes,
@@ -5167,6 +5173,12 @@ async function generarConIA(){
     }
     if(producto==="banner") insertarBannerIA(data, marca);
     else insertarPiezaIA(data, "email", marca);
+    // Enlace del CTA: lo fija el usuario (la IA no lo inventa).
+    if(ctaUrl){
+      const pz=pieza();
+      if(pz && esComposicion(pz)){ setComp("zonas.cta.url", ctaUrl); renderTablero(); }
+      else if(pz){ (pz.canvas||[]).forEach(b=>{ if(b.tipo==="cta") b.datos.url=ctaUrl; }); persistir(); renderCanvas(); }
+    }
     cerrarModal("ia");
     toast("Pieza generada por IA — edítala a tu gusto");
   }catch(e){ est.textContent = "Sin conexión: " + (e.message||e); est.className = "ia-estado err"; }

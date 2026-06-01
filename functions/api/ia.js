@@ -145,14 +145,22 @@ function voorMarca(marca) {
 
 // ── Reglas duras del brief (comunes) ──────────────────────────────────────
 function reglasBrief(brief) {
+  const n = Math.max(1, Math.min(3, parseInt(brief.ctaCount) || 1));
   const out = [
     `OBJETIVO / lo que necesito: ${brief.que}`,
-    `ACCIÓN (texto base del CTA): ${brief.accion || '(infiere una acción razonable, ej. "Saber más")'}`,
+    `Incluye exactamente ${n} llamado(s) a la acción (CTA)${n > 1 ? ' (repártelos en la pieza: p. ej. uno arriba y otro al final)' : ''}.`,
+    `Texto del CTA basado en: "${brief.accion || 'Saber más'}". CADA CTA debe llevar un adverbio de tiempo o lugar que enganche (ej.: "Cotiza hoy", "Cotizar aquí", "Contrata ahora", "Empieza ya", "Pídelo hoy"). Máx 3 palabras, en imperativo.`,
   ];
   if (brief.gancho) out.push(`GANCHO/OFERTA EXACTO (úsalo TAL CUAL, NO inventes otros números/fechas/precios): ${brief.gancho}`);
   else out.push('Sin oferta numérica: NO inventes precios, porcentajes ni fechas.');
   return out.join('\n');
 }
+// Directriz de redacción comercial compartida por email y banner.
+const ENFOQUE_VENTA = [
+  'ENFOQUE PUBLICITARIO (que VENDA): el titular comunica un BENEFICIO claro (no describe, persuade);',
+  'el cuerpo conecta con el dolor/deseo del público y resalta el gancho; genera urgencia/escasez cuando aplique;',
+  'lenguaje concreto y enérgico, frases cortas, cero relleno. El CTA es potente y con verbo en imperativo + adverbio.'
+].join(' ');
 
 // ── Lee 1-3 URLs de referencia y devuelve un extracto de texto ────────────
 const UA_NAVEGADOR = {
@@ -251,6 +259,7 @@ async function generarBanner({ env, brief, marca, imagenes, refsTxt }) {
     : '(biblioteca vacía: deja "imagen" en "")';
   const prompt = [
     `Eres director creativo de ${marca ? (marca.nombre || marca.empresa) : 'la marca'}. Creas banners de Google Display que rinden y suenan 100% a la marca.`,
+    ENFOQUE_VENTA,
     '',
     'Devuelve EXCLUSIVAMENTE este JSON (sin texto extra):',
     '{ "nombre": "nombre corto de la campaña", "zonas": { "titular": "...", "cuerpo": "...", "cta": "..." }, "imagen": "<URL exacta de la biblioteca o \\"\\"> " }',
@@ -311,6 +320,7 @@ async function generarEmail({ env, brief, marca, imagenes, refsTxt, catalogo }) 
   const logo = marca && marca.logoUrl ? `\n- Si usas "header", pon su logoUrl = "${marca.logoUrl}".` : '';
   const prompt = [
     `Eres director creativo de ${marca ? (marca.nombre || marca.empresa) : 'la marca'}. Escribes emails de marketing que suenan 100% a la marca y convierten.`,
+    ENFOQUE_VENTA,
     '',
     'Devuelve EXCLUSIVAMENTE este JSON (sin texto extra):',
     '{ "nombre": "asunto/nombre corto", "bloques": [ { "tipo": "<tipo del catálogo>", "datos": { ...campos } } ] }',
