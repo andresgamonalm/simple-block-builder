@@ -178,7 +178,7 @@ function extraerTextoPagina(html, max) {
 // Lee SOLO las URLs exactas que el usuario pasa (hasta 3). No rastrea páginas
 // internas (eso era lento); si quieres una interior, pégala como otra URL.
 async function leerReferencias(refs) {
-  const urls = Array.isArray(refs) ? refs.filter(u => /^https?:\/\//i.test(u)).slice(0, 3) : [];
+  const urls = Array.isArray(refs) ? refs.filter(u => /^https?:\/\//i.test(u)).slice(0, 2) : [];
   if (!urls.length) return '';
   // En PARALELO (no una por una) → el total ≈ la página más lenta, no la suma.
   const leerUna = async (u) => {

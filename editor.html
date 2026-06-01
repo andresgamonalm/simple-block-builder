@@ -1298,8 +1298,8 @@ button,input,select,textarea{font-family:inherit;}
       <label class="ia-col">Acción (el CTA)<input type="text" id="ia-objetivo" placeholder="Cotizar / Comprar / Inscribirse / Saber más" list="ia-acciones"><datalist id="ia-acciones"><option>Cotizar</option><option>Comprar</option><option>Inscribirse</option><option>Reservar</option><option>Saber más</option><option>Descargar</option><option>Contactar</option></datalist></label>
       <label class="ia-col">Gancho / oferta <small>(dato exacto; la IA no lo inventa)</small><input type="text" id="ia-gancho" placeholder="Ej: 20% dcto. hasta el 30 de junio"></label>
     </div>
-    <label class="ia-label">Links de referencia <small>(opcional · vacío = más rápido · pega un link solo si quieres que la IA lo lea)</small></label>
-    <textarea id="ia-refs" class="ia-refs" placeholder="Pega 1–3 URLs (una por línea): tu web, una promo, un post…"></textarea>
+    <label class="ia-label">URL a revisar <small>(opcional · máx. 2 · vacío = más rápido · pega una URL solo si quieres que la IA la lea)</small></label>
+    <textarea id="ia-refs" class="ia-refs" placeholder="Pega 1–2 URLs (una por línea): la página de un producto, una promo…"></textarea>
     <div id="ia-estado" class="ia-estado"></div>
   </div>
   <div class="modal-foot"><button onclick="cerrarModal('ia')">Cancelar</button><button class="primary" id="ia-btn" onclick="generarConIA()">✨ Generar</button></div>
@@ -3830,9 +3830,9 @@ async function sugerirTextosIA(){
   const mid = p.tema && p.tema.marcaId;
   const marcaRaw = mid ? (workspace.marcas||[]).find(x=>x.id===mid) : null;
   const marca = marcaRaw ? normalizarMarca(marcaRaw) : null;
-  // Links de referencia OPCIONALES (vacío por defecto → más rápido; pega uno si quieres que lo lea).
-  const refsIn = prompt("Links de referencia (opcional, separa con espacios).\nDéjalo vacío para que sea más rápido; pega un link solo si quieres que la IA lo lea:", "");
-  const refs = (refsIn||"").split(/[\s,]+/).map(s=>s.trim()).filter(s=>/^https?:\/\//.test(s)).slice(0,3);
+  // URL a revisar OPCIONAL (vacío por defecto → más rápido; pega una si quieres que la lea).
+  const refsIn = prompt("URL a revisar (opcional, máx. 2, separa con espacios).\nDéjalo vacío para que sea más rápido; pega una URL solo si quieres que la IA la lea:", "");
+  const refs = (refsIn||"").split(/[\s,]+/).map(s=>s.trim()).filter(s=>/^https?:\/\//.test(s)).slice(0,2);
   toast("✨ Pensando textos…", 8000);
   try{
     const r=await fetch('/api/ia',{method:'POST',credentials:'include',headers:{'Content-Type':'application/json'},body:JSON.stringify({modo:'textos',marca,brief:{que,tono:(marca&&marca.tono)||'profesional y cercano',refs}})});
@@ -5122,7 +5122,7 @@ async function generarConIA(){
   const marca = (workspace.marcas||[]).find(m => m.id === document.getElementById("ia-marca").value) || null;
   const M = marca ? normalizarMarca(marca) : null;
   // Solo se leen los links que TÚ pegues (no la web de la marca) → IA más rápida.
-  refs = refs.slice(0,3);
+  refs = refs.slice(0,2);
   const btn = document.getElementById("ia-btn"); const est = document.getElementById("ia-estado");
   btn.disabled = true; est.textContent = `Generando ${producto==='banner'?'banner':'email'} para «${M ? M.nombre : 'sin marca'}»…`; est.className = "ia-estado loading";
   // Candidatas para la IA: excluye logos e íconos (esos no son foto de contenido).
