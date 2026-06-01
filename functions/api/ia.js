@@ -155,36 +155,88 @@ function reglasBrief(brief) {
 }
 
 // ── Lee 1-3 URLs de referencia y devuelve un extracto de texto ────────────
-async function leerReferencias(refs) {
-  const urls = Array.isArray(refs) ? refs.filter(u => /^https?:\/\//i.test(u)).slice(0, 3) : [];
-  if (!urls.length) return '';
-  const trozos = [];
-  for (const u of urls) {
-    try {
-      const ctl = new AbortController(); const t = setTimeout(() => ctl.abort(), 10000);
-      const r = await fetch(u, { redirect: 'follow', signal: ctl.signal, headers: {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
-        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
-        'Accept-Language': 'es-ES,es;q=0.9,en;q=0.8'
-      } });
-      clearTimeout(t);
-      if (!r.ok) { trozos.push(`(${u}: no se pudo leer, HTTP ${r.status})`); continue; }
-      const html = await r.text();
-      const pick = (re) => { const m = html.match(re); return m ? m[1].replace(/\s+/g, ' ').trim() : ''; };
-      // Metadatos (presentes aun en webs hechas con JS) + texto visible.
-      const titulo = pick(/<title[^>]*>([\s\S]*?)<\/title>/i);
-      const ogt    = pick(/<meta[^>]+(?:property|name)=["']og:title["'][^>]+content=["']([^"']+)["']/i);
-      const desc   = pick(/<meta[^>]+name=["']description["'][^>]+content=["']([^"']+)["']/i)
-                  || pick(/<meta[^>]+(?:property|name)=["']og:description["'][^>]+content=["']([^"']+)["']/i);
-      const cuerpo = html
-        .replace(/<script[\s\S]*?<\/script>/gi, ' ').replace(/<style[\s\S]*?<\/style>/gi, ' ')
-        .replace(/<[^>]+>/g, ' ').replace(/&[a-z#0-9]+;/gi, ' ').replace(/\s+/g, ' ').trim();
-      const meta = [titulo && 'Título: ' + titulo, (ogt && ogt !== titulo) && 'OG: ' + ogt, desc && 'Descripción: ' + desc].filter(Boolean).join(' · ');
-      const texto = ((meta ? meta + '\n' : '') + cuerpo.slice(0, 1400)).trim();
-      trozos.push(texto ? `• ${u}\n${texto.slice(0, 1700)}` : `(${u}: sin texto legible)`);
-    } catch (e) { trozos.push(`(${u}: no se pudo leer — ${(e && e.message) || e})`); }
+const UA_NAVEGADOR = {
+  'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
+  'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+  'Accept-Language': 'es-ES,es;q=0.9,en;q=0.8'
+};
+// Extrae título + meta description + Open Graph + texto visible (sirve aun en webs JS).
+function extraerTextoPagina(html, max) {
+  const pick = (re) => { const m = html.match(re); return m ? m[1].replace(/\s+/g, ' ').trim() : ''; };
+  const titulo = pick(/<title[^>]*>([\s\S]*?)<\/title>/i);
+  const ogt    = pick(/<meta[^>]+(?:property|name)=["']og:title["'][^>]+content=["']([^"']+)["']/i);
+  const desc   = pick(/<meta[^>]+name=["']description["'][^>]+content=["']([^"']+)["']/i)
+              || pick(/<meta[^>]+(?:property|name)=["']og:description["'][^>]+content=["']([^"']+)["']/i);
+  const cuerpo = html
+    .replace(/<script[\s\S]*?<\/script>/gi, ' ').replace(/<style[\s\S]*?<\/style>/gi, ' ')
+    .replace(/<[^>]+>/g, ' ').replace(/&[a-z#0-9]+;/gi, ' ').replace(/\s+/g, ' ').trim();
+  const meta = [titulo && 'Título: ' + titulo, (ogt && ogt !== titulo) && 'OG: ' + ogt, desc && 'Descripción: ' + desc].filter(Boolean).join(' · ');
+  return ((meta ? meta + '\n' : '') + cuerpo.slice(0, max || 1200)).trim().slice(0, (max || 1200) + 300);
+}
+// Links internos (mismo dominio), priorizando los que cuelgan de la sección del seed.
+function extraerLinksInternos(html, base) {
+  let origin, baseU;
+  try { baseU = new URL(base); origin = baseU.origin; } catch { return []; }
+  const seedPath = baseU.pathname.replace(/\/+$/, '');
+  const out = [], seen = new Set();
+  const re = /<a\b[^>]*\bhref=["']([^"']+)["']/gi; let m;
+  while ((m = re.exec(html)) && seen.size < 60) {
+    let href = (m[1] || '').trim();
+    if (!href || href[0] === '#' || /^(mailto:|tel:|javascript:|data:)/i.test(href)) continue;
+    let abs; try { abs = new URL(href, baseU).toString().split('#')[0]; } catch { continue; }
+    let uu; try { uu = new URL(abs); } catch { continue; }
+    if (uu.origin !== origin) continue;
+    if (/\.(jpe?g|png|gif|svg|webp|pdf|zip|mp4|mp3|css|js|ico|woff2?|xml|json)($|\?)/i.test(uu.pathname)) continue;
+    if (abs === base.split('#')[0]) continue;
+    if (seen.has(abs)) continue; seen.add(abs);
+    out.push(abs);
   }
-  return trozos.length ? trozos.join('\n\n') : '';
+  // Primero los que están dentro de la misma sección que el seed (sus "interiores").
+  out.sort((a, b) => {
+    const pa = new URL(a).pathname.startsWith(seedPath) && seedPath ? 0 : 1;
+    const pb = new URL(b).pathname.startsWith(seedPath) && seedPath ? 0 : 1;
+    return pa - pb;
+  });
+  return out;
+}
+// Lee 1-3 URLs de referencia y RASTREA hasta 2 páginas internas de cada una
+// (mismo dominio), con tope de páginas y presupuesto de tiempo.
+async function leerReferencias(refs) {
+  const seeds = Array.isArray(refs) ? refs.filter(u => /^https?:\/\//i.test(u)).slice(0, 3) : [];
+  if (!seeds.length) return '';
+  const deadline = Date.now() + 13000;     // presupuesto total para no pasarnos
+  const MAX_PAGINAS = 5, INTERNOS_POR_SEED = 2;
+  const vistos = new Set();
+  const trozos = [];
+  let paginas = 0;
+
+  async function leerUna(u, conLinks, maxTexto) {
+    const norm = u.split('#')[0];
+    if (vistos.has(norm) || paginas >= MAX_PAGINAS || Date.now() > deadline) return null;
+    vistos.add(norm);
+    const restante = deadline - Date.now();
+    try {
+      const ctl = new AbortController(); const t = setTimeout(() => ctl.abort(), Math.max(2500, Math.min(9000, restante)));
+      const r = await fetch(norm, { redirect: 'follow', signal: ctl.signal, headers: UA_NAVEGADOR });
+      clearTimeout(t); paginas++;
+      if (!r.ok) return { texto: `(${norm}: HTTP ${r.status})`, links: [] };
+      const html = await r.text();
+      return { texto: extraerTextoPagina(html, maxTexto), links: conLinks ? extraerLinksInternos(html, norm) : [] };
+    } catch (e) { paginas++; return { texto: `(${norm}: no se pudo leer)`, links: [] }; }
+  }
+
+  for (const seed of seeds) {
+    if (paginas >= MAX_PAGINAS || Date.now() > deadline) break;
+    const res = await leerUna(seed, true, 1300);
+    if (!res) continue;
+    trozos.push(`• ${seed}\n${res.texto}`);
+    for (const li of res.links.slice(0, INTERNOS_POR_SEED)) {
+      if (paginas >= MAX_PAGINAS || Date.now() > deadline) break;
+      const ri = await leerUna(li, false, 900);
+      if (ri && ri.texto) trozos.push(`  ↳ (interior) ${li}\n${ri.texto}`);
+    }
+  }
+  return trozos.join('\n\n').slice(0, 6500);
 }
 
 // ── Llamada a Gemini con parseo robusto de JSON ───────────────────────────
