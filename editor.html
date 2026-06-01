@@ -3728,7 +3728,9 @@ function renderComposicion(comp, fmt){
     return `<div class="cmp-zona" style="flex:${grow} 1 0;justify-content:${alinFlex(z.alinV)};align-items:${alinFlex(z.alinH)};padding:${pad}px;">${bg}<div class="cmp-zin" style="align-items:${alinFlex(z.alinH)};text-align:${alinText(z.alinH)};">${inner}</div></div>`;
   };
   const zonas = ["logo","texto","cta"].map((zk,i)=>zonaHTML(zk,i)).join("");
-  return `<div class="cmp" style="width:${W}px;height:${H}px;background:${esc(bgColor)};">${fondoLayer}<div class="cmp-zonas ${fila?'row':'col'}">${zonas}</div></div>`;
+  const mg=c.margen||{};
+  const mpad=`${px(mg.t,0)}px ${px(mg.r,0)}px ${px(mg.b,0)}px ${px(mg.l,0)}px`;
+  return `<div class="cmp" style="width:${W}px;height:${H}px;background:${esc(bgColor)};">${fondoLayer}<div class="cmp-zonas ${fila?'row':'col'}" style="padding:${mpad};box-sizing:border-box;">${zonas}</div></div>`;
 }
 // ── Custom por tamaño (overrides sobre el Diseño global) ──
 function ovDeFmt(p, fmt){ const ab=(p.artboards||[]).find(a=>a.fmt===fmt); if(!ab) return {}; ab.ov=ab.ov||{}; return ab.ov; }
@@ -3890,6 +3892,9 @@ function compEditorHTML(p, fmt){
   else h+=imgBlock('fondo.imagen');
   const prop=getPath(C,'prop')||[25,50,25];
   h+=`<div class="dz-sec">Espacio de cada zona · escribe el %</div><div class="cmp-prop">`+['Logo','Texto','CTA'].map((l,i)=>`<div class="pcol"><span>${l}</span><div class="pnum"><input type="number" min="0" max="100" value="${parseInt(prop[i])||0}" oninput="${S('prop.'+i,'this.value')}"><i>%</i></div></div>`).join('')+`</div>`;
+  h+=`<div class="dz-sec">Márgenes del banner (px)</div>`;
+  h+=`<div class="cmp-row"><label>Arriba</label>${rng('margen.t',0,200,0)}<label style="min-width:auto;margin-left:10px">Abajo</label>${rng('margen.b',0,200,0)}</div>`;
+  h+=`<div class="cmp-row"><label>Izquierda</label>${rng('margen.l',0,200,0)}<label style="min-width:auto;margin-left:10px">Derecha</label>${rng('margen.r',0,200,0)}</div>`;
   h+=zonaSec('logo','Logo','imagen')+alinRow('logo')+zonaBg('logo');
   const logoUrl = isOv ? (getPath(ov,'zonas.logo.url')||"") : (getPath(C,'zonas.logo.url')||"");
   h+=`<div class="cmp-row"><input type="text" placeholder="${isOv?'Hereda del global':'URL logo (PNG/SVG)'}" value="${escAttr(logoUrl)}" onchange="${S('zonas.logo.url','this.value')}"><button class="cmp-bib" onclick="usarLogoMarcaEnZona(${isOv?`'${fmt}'`:'null'})" title="Usar el logo de la marca aplicada">${svgIcon("paleta",{size:"12px"})}</button><button class="cmp-bib" onclick="elegirImagenPath('zonas.logo.url',${isOv?`'${fmt}'`:'null'})" title="Elegir de la biblioteca">${svgIcon("imagen",{size:"12px"})}</button></div>`;
