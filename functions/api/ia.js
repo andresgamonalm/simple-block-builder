@@ -41,7 +41,7 @@ export async function onRequestGet({ request, env }) {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         signal: ctl.signal,
-        body: JSON.stringify({ contents: [{ role: 'user', parts: [{ text: 'Responde solo: ok' }] }], generationConfig: { maxOutputTokens: 10 } })
+        body: JSON.stringify({ contents: [{ role: 'user', parts: [{ text: 'Responde solo: ok' }] }], generationConfig: { maxOutputTokens: 50, thinkingConfig: { thinkingBudget: 0 } } })
       });
       out.httpStatus = res.status;
       out.respuesta = (await res.text()).slice(0, 600);
@@ -101,15 +101,15 @@ async function generar({ request, env }) {
     let res;
     try {
       res = await fetch(url, { method:"POST", headers:{ "Content-Type":"application/json" }, signal:ctl.signal,
-        body: JSON.stringify({ contents:[{ role:"user", parts:[{ text:instr }] }], generationConfig:{ responseMimeType:"application/json", temperature:0.85, maxOutputTokens:300 } }) });
+        body: JSON.stringify({ contents:[{ role:"user", parts:[{ text:instr }] }], generationConfig:{ responseMimeType:"application/json", temperature:0.85, maxOutputTokens:1024, thinkingConfig:{ thinkingBudget:0 } } }) });
     } catch(e) { return json({ ok:false, error:(e && e.name==="AbortError") ? `Gemini (${model}) tardó demasiado. Prueba GEMINI_MODEL=gemini-2.5-flash (o gemini-flash-latest).` : "No se pudo contactar a Gemini: "+(e.message||e) }, 500); }
     finally { clearTimeout(t); }
     if(!res.ok){ const tx = await res.text().catch(()=> ""); return json({ ok:false, error:`Gemini (${model}) respondió ${res.status}. ${tx.slice(0,400)}` }, 500); }
     let data; try { data = await res.json(); } catch { return json({ ok:false, error:"Respuesta de Gemini no es JSON." }, 500); }
     let texto = ""; const parts = data && data.candidates && data.candidates[0] && data.candidates[0].content && data.candidates[0].content.parts;
     if(Array.isArray(parts)) texto = parts.map(p => (p && p.text) || "").join("");
-    let parsed; try { parsed = JSON.parse(texto.trim().replace(/^```(?:json)?\s*/i,"").replace(/\s*```$/i,"")); }
-    catch { return json({ ok:false, error:"No se pudo interpretar la respuesta de la IA." }, 500); }
+    const parsed = extraerJSON(texto);
+    if(!parsed) return json({ ok:false, error:"No se pudo interpretar la respuesta de la IA. Inicio: "+String(texto).slice(0,160) }, 500);
     return json({ ok:true, titular:String(parsed.titular||"").slice(0,120), cuerpo:String(parsed.cuerpo||"").slice(0,240), cta:String(parsed.cta||"").slice(0,40) });
   }
 
@@ -176,6 +176,25 @@ async function leerReferencias(refs) {
 }
 
 // ── Llamada a Gemini con parseo robusto de JSON ───────────────────────────
+// Extrae JSON de la respuesta de Gemini de forma tolerante: quita ```fences```,
+// y si hay texto alrededor, busca el primer objeto/array balanceado y lo parsea.
+function extraerJSON(texto) {
+  let t = String(texto || '').trim().replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/i, '').trim();
+  try { return JSON.parse(t); } catch {}
+  const iObj = t.indexOf('{'), iArr = t.indexOf('[');
+  let start = (iObj < 0) ? iArr : (iArr < 0 ? iObj : Math.min(iObj, iArr));
+  if (start < 0) return undefined;
+  const open = t[start], close = open === '{' ? '}' : ']';
+  let depth = 0, inStr = false, escaped = false;
+  for (let i = start; i < t.length; i++) {
+    const ch = t[i];
+    if (inStr) { if (escaped) escaped = false; else if (ch === '\\') escaped = true; else if (ch === '"') inStr = false; continue; }
+    if (ch === '"') inStr = true;
+    else if (ch === open) depth++;
+    else if (ch === close) { depth--; if (depth === 0) { try { return JSON.parse(t.slice(start, i + 1)); } catch { return undefined; } } }
+  }
+  return undefined;
+}
 async function llamarGemini(env, prompt, maxTokens) {
   const model = env.GEMINI_MODEL || 'gemini-2.5-flash';
   const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${encodeURIComponent(env.GEMINI_API_KEY)}`;
@@ -184,7 +203,7 @@ async function llamarGemini(env, prompt, maxTokens) {
   try {
     res = await fetch(url, {
       method: 'POST', headers: { 'Content-Type': 'application/json' }, signal: ctl.signal,
-      body: JSON.stringify({ contents: [{ role: 'user', parts: [{ text: prompt }] }], generationConfig: { responseMimeType: 'application/json', temperature: 0.7, maxOutputTokens: maxTokens || 2048 } })
+      body: JSON.stringify({ contents: [{ role: 'user', parts: [{ text: prompt }] }], generationConfig: { responseMimeType: 'application/json', temperature: 0.7, maxOutputTokens: maxTokens || 4096, thinkingConfig: { thinkingBudget: 0 } } })
     });
   } catch (e) {
     return { error: (e && e.name === 'AbortError') ? `Gemini (${model}) tardó demasiado. Prueba GEMINI_MODEL=gemini-flash-latest.` : 'No se pudo contactar a Gemini: ' + (e.message || e) };
@@ -197,8 +216,9 @@ async function llamarGemini(env, prompt, maxTokens) {
     const motivo = (data && data.candidates && data.candidates[0] && data.candidates[0].finishReason) || (data && data.promptFeedback && data.promptFeedback.blockReason) || 'sin contenido';
     return { error: 'Gemini no devolvió contenido (' + motivo + ').' };
   }
-  try { return { parsed: JSON.parse(texto.trim().replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/i, '')) }; }
-  catch { return { error: 'No se pudo interpretar la respuesta de la IA como JSON.' }; }
+  const parsed = extraerJSON(texto);
+  if (parsed === undefined) return { error: 'No se pudo interpretar la respuesta de la IA como JSON. Inicio: ' + String(texto).slice(0, 160) };
+  return { parsed };
 }
 
 // ════════════ PRODUCTO 1: BANNERS DE GOOGLE DISPLAY (3 zonas) ════════════
@@ -230,7 +250,7 @@ async function generarBanner({ env, brief, marca, imagenes, refsTxt }) {
     reglasBrief(brief)
   ].filter(Boolean).join('\n');
 
-  const { parsed, error } = await llamarGemini(env, prompt, 700);
+  const { parsed, error } = await llamarGemini(env, prompt, 1200);
   if (error) return json({ ok: false, error }, 500);
   const z = (parsed && parsed.zonas) || {};
   const limpia = (s, n) => String(s || '').replace(/\s+/g, ' ').trim().split(' ').slice(0, n).join(' ');
@@ -280,7 +300,7 @@ async function generarEmail({ env, brief, marca, imagenes, refsTxt, catalogo }) 
     reglasBrief(brief)
   ].filter(Boolean).join('\n');
 
-  const { parsed, error } = await llamarGemini(env, prompt, 2048);
+  const { parsed, error } = await llamarGemini(env, prompt, 8192);
   if (error) return json({ ok: false, error }, 500);
   let bloques = Array.isArray(parsed && parsed.bloques) ? parsed.bloques : [];
   bloques = bloques
