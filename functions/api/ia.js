@@ -97,7 +97,7 @@ async function generar({ request, env }) {
     ].filter(Boolean).join("\n");
     const model = env.GEMINI_MODEL || "gemini-2.5-flash";
     const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${encodeURIComponent(env.GEMINI_API_KEY)}`;
-    const ctl = new AbortController(); const t = setTimeout(() => ctl.abort(), 20000);
+    const ctl = new AbortController(); const t = setTimeout(() => ctl.abort(), 30000);
     let res;
     try {
       res = await fetch(url, { method:"POST", headers:{ "Content-Type":"application/json" }, signal:ctl.signal,
@@ -204,8 +204,8 @@ function extraerLinksInternos(html, base) {
 async function leerReferencias(refs) {
   const seeds = Array.isArray(refs) ? refs.filter(u => /^https?:\/\//i.test(u)).slice(0, 3) : [];
   if (!seeds.length) return '';
-  const deadline = Date.now() + 13000;     // presupuesto total para no pasarnos
-  const MAX_PAGINAS = 5, INTERNOS_POR_SEED = 2;
+  const deadline = Date.now() + 9000;      // presupuesto total para no pasarnos
+  const MAX_PAGINAS = 4, INTERNOS_POR_SEED = 2;
   const vistos = new Set();
   const trozos = [];
   let paginas = 0;
@@ -227,16 +227,16 @@ async function leerReferencias(refs) {
 
   for (const seed of seeds) {
     if (paginas >= MAX_PAGINAS || Date.now() > deadline) break;
-    const res = await leerUna(seed, true, 1300);
+    const res = await leerUna(seed, true, 1000);
     if (!res) continue;
     trozos.push(`• ${seed}\n${res.texto}`);
     for (const li of res.links.slice(0, INTERNOS_POR_SEED)) {
       if (paginas >= MAX_PAGINAS || Date.now() > deadline) break;
-      const ri = await leerUna(li, false, 900);
+      const ri = await leerUna(li, false, 700);
       if (ri && ri.texto) trozos.push(`  ↳ (interior) ${li}\n${ri.texto}`);
     }
   }
-  return trozos.join('\n\n').slice(0, 6500);
+  return trozos.join('\n\n').slice(0, 3500);
 }
 
 // ── Llamada a Gemini con parseo robusto de JSON ───────────────────────────
@@ -262,7 +262,7 @@ function extraerJSON(texto) {
 async function llamarGemini(env, promptOrParts, maxTokens) {
   const model = env.GEMINI_MODEL || 'gemini-2.5-flash';
   const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${encodeURIComponent(env.GEMINI_API_KEY)}`;
-  const ctl = new AbortController(); const timer = setTimeout(() => ctl.abort(), 24000);
+  const ctl = new AbortController(); const timer = setTimeout(() => ctl.abort(), 40000);
   // Acepta un prompt de texto o un array de "parts" (texto + imágenes inlineData).
   const partesEntrada = Array.isArray(promptOrParts) ? promptOrParts : [{ text: promptOrParts }];
   let res;
@@ -318,7 +318,7 @@ async function generarBanner({ env, brief, marca, imagenes, refsTxt }) {
 
   // Multimodal "light": si llegan miniaturas, la IA VE las imágenes (máx 10, una sola
   // llamada) para elegir la mejor por contenido, no solo por nombre.
-  const conThumb = (imagenes || []).filter(im => im && im.thumb).slice(0, 10);
+  const conThumb = (imagenes || []).filter(im => im && im.thumb).slice(0, 6);
   let entrada = prompt;
   if (conThumb.length) {
     const partes = [{ text: prompt }, { text: '\nIMÁGENES CANDIDATAS (míralas y elige en "imagen" la URL EXACTA de la que mejor calce visual y temáticamente; si ninguna sirve, ""):' }];
