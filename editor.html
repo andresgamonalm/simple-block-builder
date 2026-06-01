@@ -5191,12 +5191,23 @@ async function generarConIA(){
     }
     if(producto==="banner") insertarBannerIA(data, marca);
     else insertarPiezaIA(data, "email", marca);
-    // Enlace del CTA: lo fija el usuario (la IA no lo inventa).
-    if(ctaUrl){
-      const pz=pieza();
-      if(pz && esComposicion(pz)){ setComp("zonas.cta.url", ctaUrl); renderTablero(); }
-      else if(pz){ (pz.canvas||[]).forEach(b=>{ if(b.tipo==="cta") b.datos.url=ctaUrl; }); persistir(); renderCanvas(); }
+    const pz=pieza();
+    if(pz && producto==="email" && Array.isArray(pz.canvas)){
+      // Salvo newsletter: un solo CTA, abajo. Quita el botón del hero y los CTA intermedios.
+      if(tipo!=="newsletter"){
+        pz.canvas.forEach(b=>{ if(b.tipo==="hero"){ b.datos.ctaTexto=""; } });
+        const idx = pz.canvas.map((b,i)=>b.tipo==="cta"?i:-1).filter(i=>i>=0);
+        idx.slice(0,-1).reverse().forEach(i=>pz.canvas.splice(i,1));
+      }
+      // Íconos distintos en atributos/features si la IA repitió o dejó vacío.
+      diversificarIconos(pz);
     }
+    // Enlace del CTA: lo fija el usuario (la IA no lo inventa).
+    if(ctaUrl && pz){
+      if(esComposicion(pz)){ setComp("zonas.cta.url", ctaUrl); }
+      else { (pz.canvas||[]).forEach(b=>{ if(b.tipo==="cta") b.datos.url=ctaUrl; if(b.tipo==="hero"&&b.datos.ctaTexto) b.datos.ctaUrl=ctaUrl; }); }
+    }
+    persistir(); if(esComposicion(pz)) renderTablero(); else renderCanvas();
     cerrarModal("ia");
     toast("Pieza generada por IA — edítala a tu gusto");
   }catch(e){ est.textContent = "Sin conexión: " + (e.message||e); est.className = "ia-estado err"; }
@@ -5207,6 +5218,19 @@ function asegurarProyectoIA(){
     const pr = { id:uid(), nombre:"Generado con IA", creado:Date.now(), piezas:[], activa:null };
     workspace.proyectos.push(pr); proyecto = pr; proyectoVistoId = pr.id;
   }
+}
+// Si la IA puso el mismo ícono (o ninguno) en los atributos, asigna íconos distintos y relevantes.
+const ICONOS_FEATURES = ["check","candado","reloj","globo","regalo","corazon","estrella","casa","usuario","trending","tag","carrito","telefono","chat","info","descargar"];
+function diversificarIconos(p){
+  (p.canvas||[]).forEach(b=>{
+    if(!b.datos || !Array.isArray(b.datos.items)) return;
+    const items = b.datos.items;
+    const icos = items.map(it=>it && it.ico).filter(Boolean);
+    const repetidos = icos.length && new Set(icos).size < items.length;  // hay vacíos o repetidos
+    if(!repetidos) return;
+    let k=0;
+    items.forEach(it=>{ if(it) it.ico = ICONOS_FEATURES[k++ % ICONOS_FEATURES.length]; });
+  });
 }
 function insertarPiezaIA(data, formato, marca){
   asegurarProyectoIA();

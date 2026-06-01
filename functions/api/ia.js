@@ -157,8 +157,10 @@ function reglasBrief(brief) {
     ? `Texto del CTA basado en "${brief.accion || 'Saber más'}": imperativo + adverbio de tiempo/lugar (ej.: "Cotiza hoy", "Cotizar aquí", "Contrata ahora"). Máx 3 palabras.`
     : `Texto del CTA basado en "${brief.accion || 'Saber más'}": claro y sobrio, sin urgencia (ej.: "Conoce más", "Más información"). Máx 3 palabras.`);
   out.push('Los TITULARES y las frases sobre imágenes NUNCA terminan en punto.');
-  if (brief.gancho) out.push(`GANCHO/OFERTA EXACTO (úsalo TAL CUAL, NO inventes otros números/fechas/precios): ${brief.gancho}`);
-  else out.push('Sin oferta numérica: NO inventes precios, porcentajes ni fechas.');
+  if (brief.gancho) {
+    out.push(`GANCHO/OFERTA EXACTO (úsalo TAL CUAL, NO inventes otros números/fechas/precios): ${brief.gancho}`);
+    out.push(`DESTACA el gancho de forma MUY visible y al PRINCIPIO: ponlo en el TITULAR principal (hero) bien grande, y además resáltalo en un bloque "alert" (o un divisor con color de marca) cerca del inicio. Que sea lo primero que se vea.`);
+  } else out.push('Sin oferta numérica: NO inventes precios, porcentajes ni fechas.');
   if (brief.notas && String(brief.notas).trim()) out.push(`INDICACIONES ADICIONALES del usuario (respétalas): ${String(brief.notas).trim()}`);
   return out.join('\n');
 }
@@ -205,11 +207,11 @@ async function leerReferencias(refs) {
       clearTimeout(t);
       if (!r.ok) return `(${norm}: HTTP ${r.status})`;
       const html = await r.text();
-      return `• ${norm}\n${extraerTextoPagina(html, 1400)}`;
+      return `• ${norm}\n${extraerTextoPagina(html, 3500)}`;
     } catch (e) { return `(${norm}: no se pudo leer)`; }
   };
   const trozos = await Promise.all(urls.map(leerUna));
-  return trozos.join('\n\n').slice(0, 4000);
+  return trozos.join('\n\n').slice(0, 7000);
 }
 
 // ── Llamada a Gemini con parseo robusto de JSON ───────────────────────────
@@ -339,6 +341,8 @@ async function generarEmail({ env, brief, marca, imagenes, refsTxt, catalogo }) 
     '- Español de Chile, concreto y persuasivo; nada de placeholders.',
     '- Estructura real de email: header (logo) arriba → contenido → un CTA claro con la ACCIÓN del brief → footer.',
     '- Para imágenes usa SOLO una URL EXACTA de la biblioteca; si ninguna encaja, deja "".',
+    '- En "features"/listas de atributos: usa un ícono DISTINTO y relevante para CADA item (NUNCA el mismo en todos). Claves válidas: check, candado, reloj, globo, regalo, corazon, estrella, casa, usuario, trending, tag, carrito, telefono, chat, info, descargar, calendario, equipo, pin, nube.',
+    '- NO uses el bloque "hero" con su botón salvo en newsletter: el único CTA va al final (bloque "cta").',
     '- Respeta el tono y las palabras de la marca; NO inventes ofertas/precios/fechas.' + logo + disc,
     '',
     'VOZ DE MARCA:',
