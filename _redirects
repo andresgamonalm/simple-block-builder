@@ -1,2 +1,4 @@
 # Cloudflare Pages sirve automáticamente editor.html en /editor.
-# No se necesita rewrite. Si en el futuro hay rutas SPA, agregarlas acá.
+# El "home" (dashboard) vive en /home y lo sirve el mismo SPA (editor.html).
+# La app cambia la URL entre /home (dashboard) y /editor (editando) sin recargar.
+/home /editor.html 200

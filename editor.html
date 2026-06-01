@@ -5062,5 +5062,23 @@ document.getElementById("canvas-area").addEventListener("click", (e) => {
     renderForm();
   }
 });
+/* ── URL por vista: /home en el dashboard (home), /editor al editar una creatividad.
+   El dashboard se muestra con la clase "show" en #galeria; observamos ese estado y
+   ajustamos la URL sin recargar (replaceState). */
+(function(){
+  const gal = document.getElementById("galeria");
+  if(!gal || !window.history || !history.replaceState) return;
+  function sincronizarRuta(){
+    const enHome = gal.classList.contains("show");
+    const destino = enHome ? "/home" : "/editor";
+    if(location.pathname !== destino){ try{ history.replaceState(null, "", destino); }catch(_){} }
+  }
+  new MutationObserver(sincronizarRuta).observe(gal, { attributes:true, attributeFilter:["class"] });
+  window.addEventListener("popstate", () => {
+    const quiereEditor = location.pathname.replace(/\/+$/,"") === "/editor";
+    if(!quiereEditor && !gal.classList.contains("show")) volverAProyectos();
+  });
+  sincronizarRuta();
+})();
 </script>
 </body></html>

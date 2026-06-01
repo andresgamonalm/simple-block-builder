@@ -90,10 +90,10 @@ input[type=email]:disabled{opacity:.6;cursor:not-allowed;}
   const splash = document.getElementById("splash");
   const card = document.getElementById("card");
 
-  // Si ya hay sesión, redirigir directo al editor
+  // Si ya hay sesión, redirigir directo al home (dashboard)
   try {
     const r = await fetch("/api/whoami", { credentials: "include" });
-    if (r.ok) { location.replace("/editor"); return; }
+    if (r.ok) { location.replace("/home"); return; }
   } catch (e) {}
 
   splash.classList.add("hidden");
