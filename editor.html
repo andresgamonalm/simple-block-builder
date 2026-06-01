@@ -639,6 +639,7 @@ button,input,select,textarea{font-family:inherit;}
 .form-row.range-row{display:flex;align-items:center;gap:10px;}
 .form-row.range-row input[type=range]{flex:1;margin:0;}
 .form-row.range-row .rval{font-size:12px;color:var(--primary);font-weight:600;min-width:38px;text-align:right;background:var(--navy-l);border-radius:5px;padding:3px 8px;}
+.form-row.range-row .rnum{width:56px;flex:none;font-family:var(--f);font-size:12.5px;border:1px solid var(--bdr);border-radius:6px;padding:4px 6px;text-align:center;color:var(--ink);background:#fff;}
 .form-group-title{font-size:9.5px;font-weight:600;color:var(--ink4);text-transform:uppercase;letter-spacing:.08em;margin:18px 0 10px;padding-top:12px;border-top:1px dashed var(--bdr);}
 .form-row-2col{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
 .form-row-2col .form-row{margin-bottom:0;}
@@ -1815,11 +1816,12 @@ function styleFields(opts={}){
   f.push({grupo:"Espaciado interior (padding)"});
   f.push({tipo:"row2", izq:{key:"padTop", label:"Arriba", tipo:"range", min:0, max:120, step:2}, der:{key:"padBottom", label:"Abajo", tipo:"range", min:0, max:120, step:2}});
   f.push({tipo:"row2", izq:{key:"padLeft", label:"Izquierda", tipo:"range", min:0, max:120, step:2}, der:{key:"padRight", label:"Derecha", tipo:"range", min:0, max:120, step:2}});
-  f.push({grupo:"Bordes"});
+  f.push({grupo:"Fondo y bordes"});
+  f.push({key:"bgBloque", label:"Fondo del bloque", tipo:"colorOpt"});
   f.push({key:"radioBloque", label:"Radio del bloque (px · vacío = natural, 0 = cuadrado)", tipo:"text", placeholder:"vacío / 0 / 16…"});
   return f;
 }
-const styleDefaults = { alinH:"center", alinV:"center", ancho:"", alto:"", padTop:"14", padRight:"24", padBottom:"14", padLeft:"24", radioBloque:"" };
+const styleDefaults = { alinH:"center", alinV:"center", ancho:"", alto:"", padTop:"14", padRight:"24", padBottom:"14", padLeft:"24", radioBloque:"", bgBloque:"" };
 
 // Contexto de render del tema en curso (espacio entre bloques y radio por defecto).
 // Inline (no variables CSS) para que funcione igual en el editor y en el email exportado.
@@ -1836,8 +1838,10 @@ function wrap(d, inner){
   const rbVal = (d.radioBloque!==undefined && d.radioBloque!=="" && /^\d+$/.test(String(d.radioBloque))) ? String(d.radioBloque)
               : ((_renderRadio!=="" && /^\d+$/.test(_renderRadio)) ? _renderRadio : "");
   const rb = (rbVal!=="" && parseInt(rbVal)>0) ? `border-radius:${rbVal}px;overflow:hidden;` : "";
-  return `<div style="${pad}${gap}display:flex;flex-direction:column;justify-content:${jV};align-items:${jH};box-sizing:border-box;width:100%;height:100%;">
-    <div style="${w}${h}max-width:100%;box-sizing:border-box;${rb}">${inner}</div>
+  // Fondo propio del bloque (vacío = sin fondo, se ve el de la página).
+  const bg = (d.bgBloque && /^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/.test(String(d.bgBloque).trim())) ? `background:${esc(String(d.bgBloque).trim())};` : "";
+  return `<div style="${pad}${gap}${bg}${rb}display:flex;flex-direction:column;justify-content:${jV};align-items:${jH};box-sizing:border-box;width:100%;height:100%;">
+    <div style="${w}${h}max-width:100%;box-sizing:border-box;">${inner}</div>
   </div>`;
 }
 
@@ -3180,6 +3184,10 @@ function renderCampoSimple(c, datos){
   if(c.tipo === "textarea") return `<div class="form-row"><label>${esc(c.label)}</label><textarea oninput="actualizarDato('${c.key}',this.value)">${esc(val||"")}</textarea></div>`;
   if(c.tipo === "imgurl") return `<div class="form-row"><label>${esc(c.label)}</label><input type="text" value="${esc(val||"")}" placeholder="${esc(c.placeholder||'https://…')}" oninput="actualizarDato('${c.key}',this.value)"><button class="img-biblio-btn" onclick="elegirImagenPara('${c.key}')">${svgIcon("imagen",{size:"12px"})} Elegir de la biblioteca</button></div>`;
   if(c.tipo === "color") return `<div class="form-row"><label>${esc(c.label)}</label><input type="color" value="${esc(val||"#000000")}" oninput="actualizarDato('${c.key}',this.value)"></div>`;
+  if(c.tipo === "colorOpt"){
+    const tiene = val && /^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/.test(String(val).trim());
+    return `<div class="form-row"><label>${esc(c.label)}</label><span style="display:inline-flex;gap:6px;align-items:center;"><input type="color" value="${esc(tiene?val:"#ffffff")}" oninput="actualizarDato('${c.key}',this.value)"><button type="button" class="img-biblio-btn" onclick="actualizarDato('${c.key}','');renderForm()">${tiene?"Quitar":"Sin fondo"}</button></span></div>`;
+  }
   if(c.tipo === "date") return `<div class="form-row"><label>${esc(c.label)}</label><input type="date" value="${esc(val||"")}" onchange="actualizarDato('${c.key}',this.value)"></div>`;
   if(c.tipo === "time") return `<div class="form-row"><label>${esc(c.label)}</label><input type="time" value="${esc(val||"")}" onchange="actualizarDato('${c.key}',this.value)"></div>`;
   if(c.tipo === "datetime-local") return `<div class="form-row"><label>${esc(c.label)}</label><input type="datetime-local" value="${esc(val||"")}" onchange="actualizarDato('${c.key}',this.value)"></div>`;
@@ -3187,7 +3195,7 @@ function renderCampoSimple(c, datos){
     const opts = (c.opciones||[]).map(([v,t]) => `<option value="${esc(v)}" ${v===val?"selected":""}>${esc(t)}</option>`).join("");
     return `<div class="form-row"><label>${esc(c.label)}</label><select onchange="actualizarDato('${c.key}',this.value)">${opts}</select></div>`;
   }
-  if(c.tipo === "range") return `<div class="form-row"><label>${esc(c.label)}</label><div class="range-row"><input type="range" min="${c.min}" max="${c.max}" step="${c.step||1}" value="${esc(val)}" oninput="actualizarDato('${c.key}',this.value);this.parentElement.querySelector('.rval').textContent=this.value;"><span class="rval">${esc(val)}</span></div></div>`;
+  if(c.tipo === "range") return `<div class="form-row"><label>${esc(c.label)}</label><div class="range-row"><input type="range" min="${c.min}" max="${c.max}" step="${c.step||1}" value="${esc(val)}" oninput="actualizarDato('${c.key}',this.value);var n=this.parentElement.querySelector('.rnum');if(n)n.value=this.value;"><input type="number" class="rnum" min="${c.min}" max="${c.max}" step="${c.step||1}" value="${esc(val)}" oninput="actualizarDato('${c.key}',this.value);var s=this.parentElement.querySelector('input[type=range]');if(s)s.value=this.value;"></div></div>`;
   if(c.tipo === "alignH") return `<div class="form-row"><label>${esc(c.label)}</label><div class="align-picker"><button title="Izquierda" class="${val==="left"?"on":""}" onclick="actualizarDato('${c.key}','left');renderForm();">${ICONS.alignLeft}</button><button title="Centro" class="${val==="center"?"on":""}" onclick="actualizarDato('${c.key}','center');renderForm();">${ICONS.alignCenter}</button><button title="Derecha" class="${val==="right"?"on":""}" onclick="actualizarDato('${c.key}','right');renderForm();">${ICONS.alignRight}</button></div></div>`;
   if(c.tipo === "alignV") return `<div class="form-row"><label>${esc(c.label)}</label><div class="align-picker"><button title="Arriba" class="${val==="top"?"on":""}" onclick="actualizarDato('${c.key}','top');renderForm();">${ICONS.alignTop}</button><button title="Centro" class="${val==="center"?"on":""}" onclick="actualizarDato('${c.key}','center');renderForm();">${ICONS.alignMiddle}</button><button title="Abajo" class="${val==="bottom"?"on":""}" onclick="actualizarDato('${c.key}','bottom');renderForm();">${ICONS.alignBottom}</button></div></div>`;
   if(c.tipo === "icono-picker"){
