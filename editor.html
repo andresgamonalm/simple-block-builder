@@ -1091,7 +1091,7 @@ button,input,select,textarea{font-family:inherit;}
       <button class="tb-btn ia-btn" onclick="abrirIA()" title="Generar con IA">✨ IA</button>
       <button class="tb-btn icon-only" onclick="abrirImagenes()" title="Biblioteca de imágenes"><span class="ico" data-ic="imagen"></span></button>
       <button class="tb-btn icon-only" onclick="abrirImportar()" title="Importar HTML"><span class="ico" data-ic="subir"></span></button>
-      <button class="tb-btn danger icon-only" onclick="vaciarCanvas()" title="Vaciar pieza actual"><span class="ico" data-ic="basura"></span></button>
+      <button class="tb-btn danger icon-only" onclick="eliminarPiezaActual()" title="Eliminar esta creatividad"><span class="ico" data-ic="basura"></span></button>
       <button class="tb-btn primary" onclick="abrirExportar()"><span class="ico" data-ic="exportar"></span> Exportar</button>
       <span class="sync-status" id="sync-status" title="Estado de guardado en la nube">—</span>
     </div>
@@ -3285,6 +3285,24 @@ function actualizarDato(key, valor){
   const item = bloqueCtx(); if(!item) return;
   item.datos[key] = valor;
   persistir(); renderBloqueSeleccionado();
+}
+// Elimina la creatividad actual completa (en colecciones = todos los banners) y vuelve al dashboard.
+function eliminarPiezaActual(){
+  const p=pieza(); const pr=proyecto; if(!p||!pr) return;
+  const esCol = esSetPieza(p);
+  const msg = esCol
+    ? `¿Eliminar esta creatividad y TODOS sus banners (${(p.artboards||[]).length} tamaños)?\n\nNo se puede deshacer.`
+    : "¿Eliminar esta creatividad?\n\nNo se puede deshacer.";
+  if(!confirm(msg)) return;
+  pr.piezas = (pr.piezas||[]).filter(x => x.id !== p.id);
+  pr.activa = pr.piezas[0] ? pr.piezas[0].id : null;
+  proyecto = pr;
+  persistir();
+  // Volver a la lista de creatividades del proyecto.
+  proyectoVistoId = pr.id; vistaDash = "creatividades";
+  document.getElementById("galeria").classList.add("show");
+  renderGaleria();
+  toast("Creatividad eliminada");
 }
 function vaciarCanvas(){
   const p=pieza(); if(!p) return;
