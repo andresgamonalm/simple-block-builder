@@ -1525,7 +1525,8 @@ let _undo = [], _redo = [], _undoRestoring = false, _undoPiezaId = null;
 function registrarHistorial(){
   if(_undoRestoring) return;
   const p = pieza(); if(!p) return;
-  const snap = JSON.stringify({ canvas:p.canvas, tema:p.tema, formato:p.formato, nombre:p.nombre });
+  const snap = JSON.stringify({ canvas:p.canvas, tema:p.tema, formato:p.formato, nombre:p.nombre,
+    composicion:p.composicion, artboards:p.artboards, esSet:p.esSet, setTipo:p.setTipo, masterFmt:p.masterFmt, activaFmt:p.activaFmt });
   if(_undoPiezaId !== p.id){ _undo = []; _redo = []; _undoPiezaId = p.id; }  // pieza nueva → historial limpio
   if(_undo.length && _undo[_undo.length-1] === snap) return;                 // sin cambios reales
   _undo.push(snap);
@@ -1536,12 +1537,14 @@ function aplicarSnapshot(snap){
   const p = pieza(); if(!p || !snap) return;
   const s = JSON.parse(snap);
   p.canvas = s.canvas; p.tema = s.tema; p.formato = s.formato; p.nombre = s.nombre;
+  // Restaura también el estado de colección (composición por zonas / tablero).
+  p.composicion = s.composicion; p.artboards = s.artboards; p.esSet = s.esSet; p.setTipo = s.setTipo; p.masterFmt = s.masterFmt; p.activaFmt = s.activaFmt;
   seleccionado = null;
   _undoRestoring = true;
   try{
     const fmtSel = document.getElementById("fmt"); if(fmtSel) fmtSel.value = p.formato;
     const frame = document.getElementById("canvas-frame"); if(frame) frame.dataset.formato = p.formato;
-    aplicarTema(); renderCanvas(); renderForm(); renderTabsPiezas();
+    aplicarTema(); renderCanvas(); renderComposicionEditor(); renderForm(); renderTabsPiezas();
     workspace._ts = Date.now();
     try{ localStorage.setItem(STORAGE_KEY, JSON.stringify(workspace)); }catch(e){}
     guardarEnNubeDebounced();
@@ -3284,6 +3287,15 @@ function actualizarDato(key, valor){
   persistir(); renderBloqueSeleccionado();
 }
 function vaciarCanvas(){
+  const p=pieza(); if(!p) return;
+  if(esComposicion(p)){
+    if(!confirm("¿Vaciar la colección? Se restablece el diseño (textos, logo, CTA y fondo) y se borran los ajustes por tamaño.")) return;
+    p.composicion = composicionDefault(p.tema);
+    (p.artboards||[]).forEach(ab => ab.ov={});
+    seleccionado = null; persistir(); renderTablero(); renderComposicionEditor(); renderForm();
+    toast("Colección vaciada");
+    return;
+  }
   const cv = getCanvas();
   if(cv.length===0) return;
   if(!confirm("¿Borrar todos los bloques de esta pieza?")) return;
@@ -4776,7 +4788,8 @@ function aplicarMarca(id){
     const C=p.composicion;
     setPath(C,"fondo.color", m.secondary);
     const fondoOsc = (C.fondo && C.fondo.tipo==="imagen") ? true : esColorOscuro(m.secondary);
-    setPath(C,"zonas.logo.url", logoDeMarca(m, fondoOsc));
+    const logoMarca = logoDeMarca(m, fondoOsc);
+    if(logoMarca){ setPath(C,"zonas.logo.url", logoMarca); setPath(C,"zonas.logo.visible", true); }
     setPath(C,"zonas.cta.colorFondo", m.cta);
     setPath(C,"zonas.cta.colorTexto", m.ctaText);
     const txtColor = fondoOsc ? "#ffffff" : m.text;
