@@ -5234,6 +5234,15 @@ async function generarConIA(){
     else insertarPiezaIA(data, "email", marca);
     const pz=pieza();
     if(pz && producto==="email" && Array.isArray(pz.canvas)){
+      // Foto a ANCHO COMPLETO + texto debajo (en vez de imgtext con foto chica al lado = escolar).
+      for(let i=pz.canvas.length-1;i>=0;i--){
+        const b=pz.canvas[i];
+        if(b.tipo==="imgtext" && b.datos && b.datos.imagenUrl){
+          const repl=[ mk("imagen",{ url:b.datos.imagenUrl, anchoImg:"100", radio:"0" }) ];
+          if(b.datos.titulo || b.datos.texto) repl.push(mk("texto",{ titulo:b.datos.titulo||"", contenido:b.datos.texto||"", tamano:String(b.datos.tamTexto||14), color:b.datos.colorTexto||"" }));
+          pz.canvas.splice(i, 1, ...repl);
+        }
+      }
       // Salvo newsletter: un solo CTA, abajo. Quita el botón del hero y los CTA intermedios.
       if(tipo!=="newsletter"){
         pz.canvas.forEach(b=>{ if(b.tipo==="hero"){ b.datos.ctaTexto=""; } });
