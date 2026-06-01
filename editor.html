@@ -288,6 +288,10 @@ button,input,select,textarea{font-family:inherit;}
 .ia-seg button:last-child{border-right:none;}
 .ia-seg button.on{background:#6d4bff;color:#fff;}
 .ia-seg button .ico{width:15px;height:15px;}
+.ia-fotos{display:flex;flex-wrap:wrap;gap:6px;margin:4px 0 6px;}
+.ia-fotos .ia-foto{position:relative;}
+.ia-fotos .ia-foto img{width:48px;height:36px;object-fit:cover;border:1px solid var(--bdr);border-radius:5px;display:block;}
+.ia-fotos .ia-foto button{position:absolute;top:-6px;right:-6px;width:17px;height:17px;border-radius:50%;border:none;background:#e23;color:#fff;font-size:12px;line-height:1;cursor:pointer;padding:0;}
 .ia-refs{width:100%;min-height:54px;font-family:var(--f);font-size:13px;border:1px solid var(--bdr);border-radius:9px;padding:9px 11px;resize:vertical;line-height:1.5;margin-top:5px;}
 .ia-estado{margin-top:12px;font-size:12.5px;min-height:18px;}
 .ia-estado.loading{color:#6d4bff;}
@@ -761,7 +765,7 @@ button,input,select,textarea{font-family:inherit;}
 
 .sbb-img-text{display:flex;gap:18px;}
 .sbb-img-text.right{flex-direction:row-reverse;}
-.sbb-img-text .col-img img{width:100%;height:auto;display:block;border-radius:6px;}
+.sbb-img-text .col-img img{width:100%;height:auto;display:block;}
 .sbb-img-text .col-text h3{font-size:18px;font-weight:600;margin:0 0 8px;font-family:inherit;color:inherit;}
 .sbb-img-text .col-text p{font-size:13.5px;line-height:1.55;margin:0 0 10px;font-family:inherit;color:inherit;}
 .sbb-img-text .col-text a{color:var(--sbb-primary,#040764);font-size:13px;font-weight:600;text-decoration:none;font-family:inherit;}
@@ -1313,6 +1317,9 @@ button,input,select,textarea{font-family:inherit;}
       <label class="ia-col">URL referencia 1 <small>(opcional)</small><input type="text" id="ia-ref1" placeholder="https://… página de un producto"></label>
       <label class="ia-col">URL referencia 2 <small>(opcional)</small><input type="text" id="ia-ref2" placeholder="https://… una promo, un post"></label>
     </div>
+    <label class="ia-label">Fotos a usar <small>(opcional · elígelas de tu biblioteca; la IA usará SOLO estas)</small></label>
+    <div id="ia-fotos" class="ia-fotos"></div>
+    <button type="button" class="img-biblio-btn" onclick="elegirFotosIA()"><span class="ico" data-ic="imagen" data-icsize="12px"></span> Elegir foto de la biblioteca</button>
     <label class="ia-label">Indicaciones generales <small>(opcional · detalles, restricciones, lo que quieras pedir)</small></label>
     <textarea id="ia-notas" class="ia-refs" placeholder="Ej: usar un tono cercano, mencionar atención 24/7, no hablar de precios…"></textarea>
     <div id="ia-estado" class="ia-estado"></div>
@@ -1934,7 +1941,7 @@ const BLOQUES = {
   },
   imgtext: {
     cat:"Contenido", nombre:"Imagen + Texto", icono:"", sub:"Dos columnas",
-    defaults: Object.assign({}, styleDefaults, { imagenUrl:"https://placehold.co/300x300/e5e7ea/9ca3af?text=Imagen", lado:"left", titulo:"Título", texto:"Texto", linkTexto:"", linkUrl:"", proporcionImg:"40", gapCol:"18", altoImg:"auto", radioImg:"0", alineacionTexto:"left", alineacionVertCol:"center" }),
+    defaults: Object.assign({}, styleDefaults, { imagenUrl:"https://placehold.co/300x300/e5e7ea/9ca3af?text=Imagen", lado:"left", titulo:"Título", texto:"Texto", linkTexto:"", linkUrl:"", proporcionImg:"40", gapCol:"18", altoImg:"auto", radioImg:"0", alineacionTexto:"left", alineacionVertCol:"center", tamTitulo:"18", colorTitulo:"", tamTexto:"14", colorTexto:"" }),
     campos: [
       {key:"imagenUrl",label:"URL de la imagen",tipo:"text"},
       {tipo:"row2", izq:{key:"lado",label:"Posición imagen",tipo:"select",opciones:[["left","Izquierda"],["right","Derecha"]]}, der:{key:"proporcionImg",label:"Ancho col img (%)",tipo:"range",min:20,max:60,step:5}},
@@ -1942,7 +1949,9 @@ const BLOQUES = {
       {key:"radioImg",label:"Radio de la imagen (px)",tipo:"range",min:0,max:40,step:1},
       {grupo:"Contenido"},
       {key:"titulo",label:"Título",tipo:"text"},
-      {key:"texto",label:"Texto",tipo:"textarea"},
+      {tipo:"row2", izq:{key:"tamTitulo",label:"Tamaño título (px)",tipo:"range",min:12,max:40,step:1}, der:{key:"colorTitulo",label:"Color título (vacío=tema)",tipo:"color"}},
+      {key:"texto",label:"Texto (bajada)",tipo:"textarea"},
+      {tipo:"row2", izq:{key:"tamTexto",label:"Tamaño texto (px)",tipo:"range",min:10,max:24,step:1}, der:{key:"colorTexto",label:"Color texto (vacío=tema)",tipo:"color"}},
       {tipo:"row2", izq:{key:"alineacionTexto",label:"Alineación texto",tipo:"alignH"}, der:{key:"alineacionVertCol",label:"Alineación vert",tipo:"alignV"}},
       {grupo:"Enlace (opcional)"},
       {key:"linkTexto",label:"Texto enlace",tipo:"text"},
@@ -1952,7 +1961,9 @@ const BLOQUES = {
     render: (d) => {
       const altoImg = d.altoImg && d.altoImg !== "auto" ? `height:${esc(d.altoImg)};object-fit:cover;` : "";
       const gap = d.gapCol ? `gap:${esc(d.gapCol)}px;` : "";
-      return wrap(d, `<div class="sbb-img-text${d.lado==="right"?" right":""}" style="align-items:${justifyV(d.alineacionVertCol||d.alinV)};${gap}"><div class="col-img" style="flex:0 0 ${esc(d.proporcionImg)}%;"><img src="${esc(d.imagenUrl)}" alt="" style="${altoImg}border-radius:${esc(d.radioImg)}px;"></div><div class="col-text" style="text-align:${esc(d.alineacionTexto||"left")};">${d.titulo?`<h3>${esc(d.titulo)}</h3>`:""}${d.texto?`<p>${escMultiline(d.texto)}</p>`:""}${d.linkTexto && d.linkUrl?`<a href="${esc(d.linkUrl)}" target="_blank" rel="noopener">${esc(d.linkTexto)}</a>`:""}</div></div>`);
+      const stT = `font-size:${esc(d.tamTitulo||18)}px;${d.colorTitulo?`color:${esc(d.colorTitulo)};`:""}`;
+      const stP = `font-size:${esc(d.tamTexto||14)}px;${d.colorTexto?`color:${esc(d.colorTexto)};`:""}`;
+      return wrap(d, `<div class="sbb-img-text${d.lado==="right"?" right":""}" style="align-items:${justifyV(d.alineacionVertCol||d.alinV)};${gap}"><div class="col-img" style="flex:0 0 ${esc(d.proporcionImg)}%;"><img src="${esc(d.imagenUrl)}" alt="" style="${altoImg}border-radius:${esc(d.radioImg)}px;"></div><div class="col-text" style="text-align:${esc(d.alineacionTexto||"left")};">${d.titulo?`<h3 style="${stT}">${esc(d.titulo)}</h3>`:""}${d.texto?`<p style="${stP}">${escMultiline(d.texto)}</p>`:""}${d.linkTexto && d.linkUrl?`<a href="${esc(d.linkUrl)}" target="_blank" rel="noopener">${esc(d.linkTexto)}</a>`:""}</div></div>`);
     }
   },
   divisor: {
@@ -5131,6 +5142,15 @@ function iaSetFormato(f){
   document.getElementById("ia-formato").value = iaFormato;
   document.querySelectorAll("#ia-formato-seg button").forEach(b => b.classList.toggle("on", b.dataset.fmt===iaFormato));
 }
+let _iaFotos = [];   // fotos elegidas de la biblioteca para la IA
+function elegirFotosIA(){ abrirImagenes(url => { if(url && !_iaFotos.includes(url)){ _iaFotos.push(url); } renderIaFotos(); }); }
+function quitarFotoIA(i){ _iaFotos.splice(i,1); renderIaFotos(); }
+function renderIaFotos(){
+  const c=document.getElementById("ia-fotos"); if(!c) return;
+  c.innerHTML = _iaFotos.length
+    ? _iaFotos.map((u,i)=>`<span class="ia-foto"><img src="${escAttr(u)}" alt=""><button type="button" onclick="quitarFotoIA(${i})" title="Quitar">×</button></span>`).join("")
+    : `<span style="font-size:12px;color:#8890a8">Ninguna elegida · la IA elegirá sola de tu biblioteca</span>`;
+}
 function iaSetTono(t){
   const tono = ["comercial","corporativo","informativo","newsletter"].includes(t) ? t : "comercial";
   document.getElementById("ia-tono").value = tono;
@@ -5145,6 +5165,7 @@ function abrirIA(){
   // Preselecciona la marca ya aplicada a la pieza activa (evita confundir marcas).
   const aplicada = (typeof pieza==="function") && pieza() && pieza().tema && pieza().tema.marcaId;
   if(aplicada && marcas.some(m=>m.id===aplicada)) ms.value = aplicada;
+  _iaFotos = []; renderIaFotos();
   const est = document.getElementById("ia-estado"); est.textContent = ""; est.className = "ia-estado";
   document.getElementById("modal-ia").classList.add("show");
   setTimeout(() => { const q = document.getElementById("ia-que"); if(q) q.focus(); }, 60);
@@ -5165,13 +5186,16 @@ async function generarConIA(){
   const M = marca ? normalizarMarca(marca) : null;
   const btn = document.getElementById("ia-btn"); const est = document.getElementById("ia-estado");
   btn.disabled = true; est.textContent = `Generando ${producto==='banner'?'banner':'email'} para «${M ? M.nombre : 'sin marca'}»…`; est.className = "ia-estado loading";
-  // Candidatas para la IA: excluye logos e íconos (esos no son foto de contenido).
-  let imagenes = (workspace.imagenes||[]).filter(i => !esLogoOIcono(i)).map(i => ({ url:i.url, nombre:i.nombre }));
+  // Candidatas para la IA. Si elegiste fotos a mano, se usan SOLO esas; si no, toda la biblioteca (sin logos/íconos).
+  const fotosElegidas = _iaFotos.length > 0;
+  let imagenes = fotosElegidas
+    ? _iaFotos.map(u => { const im=(workspace.imagenes||[]).find(x=>x.url===u); return { url:u, nombre: im?im.nombre:"" }; })
+    : (workspace.imagenes||[]).filter(i => !esLogoOIcono(i)).map(i => ({ url:i.url, nombre:i.nombre }));
   if(producto==="banner" && imagenes.length){
     est.textContent = "Mirando tus imágenes…";
     for(const it of imagenes.slice(0,3)){ const th = await miniaturaIA(it.url, 224); if(th) it.thumb = th; }
     est.textContent = "Generando con IA…";
-  } else if(producto==="email" && imagenes.length){
+  } else if(producto==="email" && imagenes.length && !fotosElegidas){
     // En email, descarta imágenes muy pequeñas (lado < 300px → suelen ser íconos).
     est.textContent = "Revisando imágenes…";
     const lista = imagenes.slice(0,20);
