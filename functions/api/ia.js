@@ -84,15 +84,15 @@ async function generar({ request, env }) {
   // Modo "textos": sugiere copy para una Composición (titular + cuerpo + CTA).
   if (body.modo === "textos") {
     const mk = body.marca || null;
-    const marcaLinea = mk
-      ? `Marca: ${mk.empresa || ''}. ${mk.negocio ? 'Negocio: ' + mk.negocio + '. ' : ''}${mk.eslogan ? 'Eslogan: "' + mk.eslogan + '". ' : ''}`.trim()
-      : '';
+    const refsTxt = await leerReferencias(brief.refs);
     const instr = [
       "Eres redactor publicitario experto. Devuelve EXCLUSIVAMENTE un JSON:",
       '{ "titular": "...", "cuerpo": "...", "cta": "..." }',
       "Reglas: titular ≤ 6 palabras; cuerpo ≤ 14 palabras; cta ≤ 3 palabras. En español, persuasivo y claro.",
+      "Escribe EN LA VOZ DE LA MARCA (tono, vocabulario y público); respeta las palabras a usar/evitar para que la pieza sea aprobada.",
+      voorMarca(mk),
+      refsTxt ? "CONTEXTO de los links de referencia (úsalo para el tono, los datos y el estilo de la marca; no copies literal):\n" + refsTxt : "",
       `Tono: ${brief.tono || (mk && mk.tono) || "profesional y cercano"}.`,
-      marcaLinea,
       `Tema/brief: ${brief.que || "(general)"}.`
     ].filter(Boolean).join("\n");
     const model = env.GEMINI_MODEL || "gemini-2.5-flash";

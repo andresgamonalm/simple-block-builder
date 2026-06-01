@@ -3826,9 +3826,17 @@ async function sugerirTextosIA(){
   const p=pieza(); if(!esComposicion(p)) return;
   const que = prompt("¿De qué es la pieza? (una frase) — la IA escribe titular, cuerpo y CTA:", getPath(p.composicion,'zonas.texto.titular.texto')||"");
   if(que===null) return;
+  // Usa TODOS los recursos de la marca aplicada (voz + colores) para que el texto suene a la marca.
+  const mid = p.tema && p.tema.marcaId;
+  const marcaRaw = mid ? (workspace.marcas||[]).find(x=>x.id===mid) : null;
+  const marca = marcaRaw ? normalizarMarca(marcaRaw) : null;
+  // Links de referencia (prerrellenados con la web de la marca) para imitar su look y expresión.
+  const refsDefault = (marca && marca.web) ? marca.web : "";
+  const refsIn = prompt("Links de referencia (opcional, separa con espacios).\nLa IA los lee para que el texto se parezca a la marca:", refsDefault);
+  const refs = (refsIn||"").split(/[\s,]+/).map(s=>s.trim()).filter(s=>/^https?:\/\//.test(s)).slice(0,3);
   toast("✨ Pensando textos…", 8000);
   try{
-    const r=await fetch('/api/ia',{method:'POST',credentials:'include',headers:{'Content-Type':'application/json'},body:JSON.stringify({modo:'textos',brief:{que,tono:'profesional y cercano'}})});
+    const r=await fetch('/api/ia',{method:'POST',credentials:'include',headers:{'Content-Type':'application/json'},body:JSON.stringify({modo:'textos',marca,brief:{que,tono:(marca&&marca.tono)||'profesional y cercano',refs}})});
     const raw=await r.text(); let d={}; try{ d=JSON.parse(raw); }catch(_){}
     if(!r.ok||!d.ok){ toast(d.error||raw.slice(0,140)||('Error '+r.status),5000); return; }
     if(d.titular) setComp('zonas.texto.titular.texto',d.titular);
@@ -5033,9 +5041,12 @@ async function generarConIA(){
   const producto = document.getElementById("ia-formato").value;   // email | banner
   const accion = (document.getElementById("ia-objetivo").value || "").trim();
   const gancho = (document.getElementById("ia-gancho").value || "").trim();
-  const refs = (document.getElementById("ia-refs").value || "").split(/[\n,\s]+/).map(s=>s.trim()).filter(s=>/^https?:\/\//.test(s)).slice(0,3);
+  let refs = (document.getElementById("ia-refs").value || "").split(/[\n,\s]+/).map(s=>s.trim()).filter(s=>/^https?:\/\//.test(s));
   const marca = (workspace.marcas||[]).find(m => m.id === document.getElementById("ia-marca").value) || null;
   const M = marca ? normalizarMarca(marca) : null;
+  // Suma la web de la marca como referencia (sin duplicar) → la IA usa todos los recursos.
+  if(M && M.web && /^https?:\/\//.test(M.web) && !refs.includes(M.web)) refs.unshift(M.web);
+  refs = refs.slice(0,3);
   const btn = document.getElementById("ia-btn"); const est = document.getElementById("ia-estado");
   btn.disabled = true; est.textContent = "Generando con IA… (puede tardar unos segundos)"; est.className = "ia-estado loading";
   try{
