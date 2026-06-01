@@ -4514,8 +4514,12 @@ function duplicarCreatividad(id){
 function crearDesde(formato){
   let pr = proyectoPorId(proyectoVistoId);
   if(!pr){
-    if(!workspace.proyectos.length){ crearProyecto(); pr = proyectoPorId(proyectoVistoId); if(!pr) return; }
-    else { toast("Abre un proyecto primero, o crea uno nuevo"); return; }
+    // Sin proyecto abierto (p. ej. desde la barra lateral en el dashboard):
+    // crea uno automáticamente para no dejar el botón "muerto".
+    workspace.proyectos = workspace.proyectos || [];
+    pr = { id:uid(), nombre:"Proyecto "+(workspace.proyectos.length+1), creado:Date.now(), piezas:[], activa:null };
+    workspace.proyectos.push(pr);
+    proyectoVistoId = pr.id;
   }
   proyecto = pr;
   const cat = categoriaDe(formato);
@@ -4877,6 +4881,7 @@ function abrirImagenes(pick){
   const nom = document.getElementById("img-nombre"); if(nom) nom.value = "";
   previsualizarImagen();
   renderImagenes();
+  cargarR2();   // trae también lo que subiste directo al bucket de Cloudflare
   document.getElementById("modal-imagenes").classList.add("show");
 }
 function previsualizarImagen(){
@@ -4938,18 +4943,54 @@ function elegirImagenPara(key){
     b.datos[key] = url; persistir(); renderBloqueSeleccionado(); renderForm();
   });
 }
+let _r2Objetos = [];
+function tarjetaImagenHTML(url, nombre, accHTML){
+  return `<div class="img-card">
+    <div class="img-thumb"><img src="${escAttr(url)}" alt="" loading="lazy" onerror="this.classList.add('roto')"></div>
+    <div class="img-meta" title="${escAttr(nombre||url)}">${esc(nombre || "(sin nombre)")}</div>
+    <div class="img-acc">${accHTML}</div></div>`;
+}
 function renderImagenes(){
   const cont = document.getElementById("img-grid");
   if(!cont) return;
   const ims = workspace.imagenes || [];
-  if(!ims.length){ cont.innerHTML = `<div class="img-vacia">Aún no hay imágenes. Pega una URL arriba y dale Agregar.</div>`; return; }
-  cont.innerHTML = ims.slice().reverse().map(im => `<div class="img-card">
-    <div class="img-thumb"><img src="${escAttr(im.url)}" alt="" loading="lazy" onerror="this.classList.add('roto')"></div>
-    <div class="img-meta" title="${escAttr(im.nombre||im.url)}">${esc(im.nombre || "(sin nombre)")}</div>
-    <div class="img-acc">
-      <button class="primary" onclick="usarImagen('${im.id}')">${_imgPickCb ? "Usar" : "Copiar URL"}</button>
-      <button onclick="eliminarImagen('${im.id}')" title="Quitar">${svgIcon("basura",{size:"13px"})}</button>
-    </div></div>`).join("");
+  let html = ims.slice().reverse().map(im => tarjetaImagenHTML(im.url, im.nombre,
+    `<button class="primary" onclick="usarImagen('${im.id}')">${_imgPickCb ? "Usar" : "Copiar URL"}</button>`+
+    `<button onclick="eliminarImagen('${im.id}')" title="Quitar">${svgIcon("basura",{size:"13px"})}</button>`)).join("");
+  // Archivos que subiste directo a Cloudflare (R2) y que aún no están en la biblioteca.
+  const yaUrls = new Set(ims.map(i => decodeURIComponent(i.url||"")));
+  const r2 = (_r2Objetos||[]).filter(o => !yaUrls.has(decodeURIComponent(o.url||"")));
+  if(r2.length){
+    html += `<div style="grid-column:1/-1;font-size:12px;font-weight:600;color:var(--ink2);margin:8px 0 -2px;border-top:1px solid var(--bdr);padding-top:10px;">Tus archivos en Cloudflare (R2) · ${r2.length}</div>`;
+    html += r2.map(o => {
+      const nombre = String(o.key||"").split("/").pop().replace(/\.[a-z0-9]+$/i,"");
+      return tarjetaImagenHTML(o.url, nombre,
+        `<button class="primary" onclick="usarImagenUrl('${escAttr(o.url)}')">${_imgPickCb ? "Usar" : "Copiar URL"}</button>`+
+        `<button onclick="guardarR2EnBiblioteca('${escAttr(o.url)}','${escAttr(nombre)}')" title="Guardar en la biblioteca">${svgIcon("mas",{size:"13px"})}</button>`);
+    }).join("");
+  }
+  if(!html){ cont.innerHTML = `<div class="img-vacia">Aún no hay imágenes. Sube archivos con el botón de arriba o pega una URL.</div>`; return; }
+  cont.innerHTML = html;
+}
+// Lista los archivos del bucket R2 (los que subiste por el dashboard de Cloudflare) y los muestra.
+async function cargarR2(){
+  try{
+    const r = await fetch("/api/upload?list=1", { credentials:"include" });
+    if(!r.ok) return;
+    const d = await r.json();
+    if(d && d.ok && Array.isArray(d.objects)){ _r2Objetos = d.objects; renderImagenes(); }
+  }catch(e){}
+}
+function usarImagenUrl(url){
+  if(_imgPickCb){ _imgPickCb(url); cerrarModal("imagenes"); _imgPickCb = null; return; }
+  if(navigator.clipboard){ navigator.clipboard.writeText(url).then(()=>toast("URL copiada")); } else toast(url);
+}
+function guardarR2EnBiblioteca(url, nombre){
+  workspace.imagenes = workspace.imagenes || [];
+  if((workspace.imagenes).some(i => decodeURIComponent(i.url||"")===decodeURIComponent(url))){ toast("Ya está en la biblioteca"); return; }
+  workspace.imagenes.push({ id:"img"+Math.random().toString(36).slice(2,9), url, nombre:nombre||"", creado:Date.now(), enR2:true });
+  persistir(); renderImagenes();
+  toast("Guardada en tu biblioteca");
 }
 
 // ── Generar con IA (Gemini) ─────────────────────────────────────────────

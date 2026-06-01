@@ -56,7 +56,26 @@ export async function onRequestPost({ request, env }) {
 
 // ── Servir (GET) ─────────────────────────────────────────────────────────────
 export async function onRequestGet({ request, env }) {
-  const key = new URL(request.url).searchParams.get('k') || '';
+  const u = new URL(request.url);
+  // Listado del bucket: GET /api/upload?list=1 → { ok, objects:[{key,url,size}] } (requiere sesión).
+  if (u.searchParams.get('list') != null) {
+    const email = await getUserEmail(request, env);
+    if (!email) return json({ ok:false, error:'No autenticado' }, 401);
+    if (!env.IMAGENES) return json({ ok:false, error:'Falta configurar R2 (binding IMAGENES).' }, 500);
+    try {
+      const out = []; let cursor;
+      do {
+        const res = await env.IMAGENES.list({ limit: 1000, cursor });
+        for (const o of res.objects) out.push({ key:o.key, size:o.size, url:`${u.origin}/api/upload?k=${encodeURIComponent(o.key)}` });
+        cursor = res.truncated ? res.cursor : null;
+      } while (cursor);
+      out.sort((a,b)=> a.key.localeCompare(b.key));
+      return json({ ok:true, objects: out });
+    } catch (e) {
+      return json({ ok:false, error:'Error al listar R2: ' + (e && e.message ? e.message : String(e)) }, 500);
+    }
+  }
+  const key = u.searchParams.get('k') || '';
   if (!key) return new Response('falta k', { status: 400 });
   if (!env.IMAGENES) return new Response('R2 no configurado', { status: 500 });
   const obj = await env.IMAGENES.get(key);
