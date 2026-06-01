@@ -5173,15 +5173,18 @@ function insertarPiezaIA(data, formato, marca){
   asegurarProyectoIA();
   const M = marca ? normalizarMarca(marca) : null;
   const tema = M
-    ? { font:M.fontCuerpo||"Inter", fontTitulo:M.fontTitulo||"Inter", primary:M.primary, text:M.text, bg:M.bg, bgPagina:M.bgPagina||"", ancho:"" }
+    ? { font:M.fontCuerpo||"Inter", fontTitulo:M.fontTitulo||"Inter", primary:M.primary, text:M.text, bg:M.bg, bgPagina:M.bgPagina||"", ancho:"", radio:(M.radio||""), gap:(M.gap||"0"), marcaId:M.id }
     : { font:"Inter", primary:"#1c73cb", text:"#1a1a1a", bg:"#ffffff", bgPagina:"", ancho:"", radio:"", gap:"0" };
-  const canvas = (data.bloques||[])
-    .filter(b => b && BLOQUES[b.tipo])
-    .map(b => ({ id:uid(), tipo:b.tipo, datos:Object.assign(clone(BLOQUES[b.tipo].defaults), b.datos||{}) }));
+  let bloques = (data.bloques||[]).filter(b => b && BLOQUES[b.tipo]);
+  // Con marca: quitamos el header/footer que haya inventado la IA (su logo suele
+  // quedar roto) — la marca pondrá su propio header y footer con el logo real.
+  if(M) bloques = bloques.filter(b => !["header","footer","bandaHeader","bandaFooter","bandaHeaderBlanco","bandaFooterBlanco"].includes(b.tipo));
+  const canvas = bloques.map(b => ({ id:uid(), tipo:b.tipo, datos:Object.assign(clone(BLOQUES[b.tipo].defaults), b.datos||{}) }));
   const p = { id:uid(), nombre:(data.nombre||"Generado por IA"), campana:"General", formato, canvas, tema };
   proyecto.piezas.push(p); proyecto.activa = p.id;
   document.getElementById("galeria").classList.remove("show");
   activarPieza(p.id);
+  if(M) aplicarMarca(M.id);   // añade header + footer de marca (con el logo real) y aplica identidad
   persistir();
 }
 // Banner: la IA devuelve la composición de 3 zonas; creamos la colección Display
