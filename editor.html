@@ -246,7 +246,14 @@ button,input,select,textarea{font-family:inherit;}
 .marca-form{border-top:1px solid var(--bdr);padding-top:16px;}
 .mf-title{font-weight:600;font-size:13.5px;margin-bottom:12px;color:var(--ink);}
 /* ── Biblioteca de imágenes ── */
-.img-form{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:12px 0 10px;}
+.img-subir{display:flex;align-items:center;gap:12px;border:1.5px dashed var(--bdr);border-radius:11px;padding:16px 18px;cursor:pointer;color:var(--ink3);transition:border-color .14s,background .14s;margin:12px 0 6px;}
+.img-subir:hover,.img-subir.drag{border-color:var(--primary);background:var(--primary-l,#eef4ff);color:var(--primary);}
+.img-subir div{display:flex;flex-direction:column;gap:2px;}
+.img-subir b{font-size:13.5px;color:var(--ink);}
+.img-subir:hover b,.img-subir.drag b{color:var(--primary);}
+.img-subir span{font-size:11.5px;color:var(--ink3);}
+.img-ourl{font-size:11px;color:var(--ink4);text-transform:uppercase;letter-spacing:.06em;text-align:center;margin:8px 0 4px;}
+.img-form{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:8px 0 10px;}
 .img-form input[type=text]{flex:1;min-width:180px;font-family:var(--f);font-size:13px;border:1px solid var(--bdr);border-radius:8px;padding:9px 11px;}
 .img-prev{display:flex;align-items:center;gap:10px;margin:0 0 14px;font-size:12px;color:var(--ink3);}
 .img-prev img{width:84px;height:60px;object-fit:cover;border-radius:8px;border:1px solid var(--bdr);background:#f2f3f8;}
@@ -1278,7 +1285,13 @@ button,input,select,textarea{font-family:inherit;}
 <div class="modal-bg" id="modal-imagenes"><div class="modal modal-lg">
   <div class="modal-head"><h3>Biblioteca de imágenes</h3><button class="modal-close" onclick="cerrarModal('imagenes')">×</button></div>
   <div class="modal-body">
-    <p id="img-intro">Guarda enlaces (URLs) de tus imágenes con una previsualización. Las usas en cualquier bloque y, más adelante, tu IA elegirá de aquí. No se suben archivos: solo links, libre para todos.</p>
+    <p id="img-intro">Sube tus fotos (quedan guardadas en tu nube) o pega un enlace. Las usas en cualquier banner o email, y tu IA elige de aquí.</p>
+    <div class="img-subir" id="img-subir" ondragover="event.preventDefault();this.classList.add('drag')" ondragleave="this.classList.remove('drag')" ondrop="soltarImagenes(event)" onclick="document.getElementById('img-file').click()">
+      <input type="file" id="img-file" accept="image/*" multiple style="display:none" onchange="subirImagenes(this.files)">
+      <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 16V4M7 9l5-5 5 5"/><path d="M4 16v3a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-3"/></svg>
+      <div><b>Subir imágenes</b><span>Arrastra aquí o haz clic · PNG, JPG, WEBP (máx 8 MB)</span></div>
+    </div>
+    <div class="img-ourl">o pega un enlace</div>
     <div class="img-form">
       <input type="text" id="img-url" placeholder="Pega la URL de la imagen (https://…)" oninput="previsualizarImagen()">
       <input type="text" id="img-nombre" placeholder="Nombre / descripción (opcional, ayuda a la IA)">
@@ -4628,6 +4641,27 @@ function agregarImagen(){
   document.getElementById("img-url").value = ""; document.getElementById("img-nombre").value = "";
   previsualizarImagen(); renderImagenes();
   toast("Imagen agregada a la biblioteca");
+}
+// Subir archivos a R2 vía /api/upload. Cada uno queda en la biblioteca con su URL.
+function soltarImagenes(e){ e.preventDefault(); const z=document.getElementById("img-subir"); if(z) z.classList.remove("drag"); subirImagenes(e.dataTransfer && e.dataTransfer.files); }
+async function subirImagenes(files){
+  const lista = [...(files||[])].filter(f => /^image\//.test(f.type));
+  if(!lista.length){ toast("Elige imágenes (PNG, JPG, WEBP…)"); return; }
+  let ok=0;
+  for(const f of lista){
+    if(f.size > 8*1024*1024){ toast(`"${f.name}" pesa más de 8 MB, omitida`, 3500); continue; }
+    toast(`Subiendo ${f.name}…`, 8000);
+    try{
+      const r = await fetch("/api/upload", { method:"POST", credentials:"include", headers:{ "Content-Type":f.type, "X-Filename":encodeURIComponent(f.name) }, body:f });
+      const raw = await r.text(); let d={}; try{ d=JSON.parse(raw); }catch(_){}
+      if(!r.ok || !d.ok){ toast(d.error || ("Error al subir "+f.name), 5000); continue; }
+      workspace.imagenes = workspace.imagenes || [];
+      workspace.imagenes.push({ id:"img"+Math.random().toString(36).slice(2,9), url:d.url, nombre:f.name.replace(/\.[a-z0-9]+$/i,""), creado:Date.now(), enR2:true });
+      ok++;
+    }catch(e){ toast("Sin conexión al subir "+f.name, 4000); }
+  }
+  if(ok){ persistir(); renderImagenes(); toast(`${ok} imagen${ok!==1?"es":""} subida${ok!==1?"s":""} a tu nube`); }
+  const inp=document.getElementById("img-file"); if(inp) inp.value="";
 }
 function eliminarImagen(id){
   if(!confirm("¿Quitar esta imagen de la biblioteca?")) return;
