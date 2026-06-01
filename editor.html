@@ -1191,7 +1191,7 @@ button,input,select,textarea{font-family:inherit;}
   <div class="modal-body">
     <div class="marca-biblioteca" id="marca-biblioteca">
       <div class="marca-head">
-        <div><h4>Tus marcas</h4><p class="marca-sub">Tu biblioteca de marcas. Elige una para aplicarla, edítala o crea otra — todas con la misma ficha.</p></div>
+        <div><h4>Tus marcas</h4><p class="marca-sub">Tu biblioteca de marcas: edítalas o crea nuevas. Para aplicar una, ábrela dentro de una creatividad.</p></div>
         <button class="primary marca-nueva-btn" onclick="nuevaMarcaForm()"><span class="ico" data-ic="mas"></span> Nueva marca</button>
       </div>
       <div class="marca-list" id="marca-list"></div>
@@ -4658,7 +4658,10 @@ function renderMarcas(){
   const cont = document.getElementById("marca-list");
   const ms = workspace.marcas || [];
   if(!ms.length){ cont.innerHTML = `<div class="marca-vacia">Aún no tienes marcas en tu biblioteca.<br>Crea la primera con <b>＋ Nueva marca</b> (o usa una plantilla lista).</div>`; return; }
-  cont.innerHTML = ms.map(normalizarMarca).map(m => {
+  // "Aplicar" solo tiene sentido con una creatividad abierta (en el editor).
+  const enEditor = !document.getElementById("galeria").classList.contains("show") && !!pieza();
+  const hint = enEditor ? "" : `<div style="font-size:12px;color:#6b7280;background:#f3f4f8;border:1px solid var(--bdr);border-radius:9px;padding:9px 12px;margin-bottom:12px;line-height:1.45;">Esta es tu <b>biblioteca de marcas</b>: edítalas o crea nuevas. Para <b>aplicar</b> una marca, ábrela dentro de una creatividad (Email, Banner…) y usa <b>«Aplicar marca»</b> en la pestaña Diseño.</div>`;
+  cont.innerHTML = hint + ms.map(normalizarMarca).map(m => {
     const dark = esColorOscuro(m.bg);
     const logoCard = dark ? (m.logoClaro||m.logo) : (m.logo||m.logoClaro);
     return `<div class="marca-card">
@@ -4666,7 +4669,7 @@ function renderMarcas(){
     <div class="minfo"><div class="mn">${esc(m.nombre)}</div>
       <div class="msw"><i style="background:${esc(m.primary)}" title="Principal"></i><i style="background:${esc(m.secondary)}" title="Secundario"></i><i style="background:${esc(m.cta)}" title="CTA"></i>${m.accent1?`<i style="background:${esc(m.accent1)}" title="Acento 1"></i>`:""}${m.accent2?`<i style="background:${esc(m.accent2)}" title="Acento 2"></i>`:""}<i style="background:${esc(m.bg)}" title="Fondo"></i></div></div>
     <div class="macc">
-      <button class="primary" onclick="aplicarMarca('${m.id}')">Aplicar</button>
+      ${enEditor ? `<button class="primary" onclick="aplicarMarca('${m.id}')">Aplicar</button>` : ""}
       <button onclick="editarMarca('${m.id}')">Editar</button>
       <button onclick="eliminarMarca('${m.id}')" title="Eliminar">${svgIcon("basura",{size:"13px"})}</button>
     </div></div>`;
