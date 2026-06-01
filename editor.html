@@ -4627,9 +4627,10 @@ function rellenarMarcaZurich(){
   set("marca-ctaText","#ffffff"); set("marca-text","#1a1a1a"); set("marca-bg","#ffffff"); set("marca-bgpagina","#F7F7F7");
   set("marca-accent1","#72CCFD"); set("marca-accent2","#FC7899");
   set("marca-fontTitulo","Montserrat"); set("marca-fontCuerpo","Inter");
-  // Logos recreados: azul para fondo blanco, blanco para banda sólida.
-  set("marca-logo-data",ZURICH_LOGO_AZUL); pintarLogoPrev("logo",ZURICH_LOGO_AZUL);
-  set("marca-logoClaro-data",ZURICH_LOGO_BLANCO); pintarLogoPrev("logoClaro",ZURICH_LOGO_BLANCO);
+  // Logos recreados: azul para fondo blanco, blanco para banda sólida (solo si no subiste uno).
+  const yaLogo = id => { const e=document.getElementById(id); return e && e.value; };
+  if(!yaLogo("marca-logo-data")){ set("marca-logo-data",ZURICH_LOGO_AZUL); pintarLogoPrev("logo",ZURICH_LOGO_AZUL); }
+  if(!yaLogo("marca-logoClaro-data")){ set("marca-logoClaro-data",ZURICH_LOGO_BLANCO); pintarLogoPrev("logoClaro",ZURICH_LOGO_BLANCO); }
   set("marca-negocio","Aseguradora: seguros de auto, hogar, vida, salud y empresas en Chile.");
   set("marca-tono","Cercano, confiable y claro; transmite respaldo y tranquilidad sin tecnicismos.");
   set("marca-eslogan","");
@@ -4668,9 +4669,10 @@ function rellenarMarcaRadar(){
   set("marca-ctaText","#ffffff"); set("marca-text","#222F47"); set("marca-bg","#ffffff"); set("marca-bgpagina","#F3F3E7");
   set("marca-accent1","#D9C6B1"); set("marca-accent2","#A3BDCB");
   set("marca-fontTitulo","Roboto"); set("marca-fontCuerpo","Roboto");
-  // Logos: azul para fondos claros, blanco para fondos oscuros.
-  set("marca-logo-data",RADAR_LOGO_AZUL); pintarLogoPrev("logo",RADAR_LOGO_AZUL);
-  set("marca-logoClaro-data",RADAR_LOGO_BLANCO); pintarLogoPrev("logoClaro",RADAR_LOGO_BLANCO);
+  // Logos: azul para fondos claros, blanco para fondos oscuros (solo si no subiste uno).
+  const yaLogo = id => { const e=document.getElementById(id); return e && e.value; };
+  if(!yaLogo("marca-logo-data")){ set("marca-logo-data",RADAR_LOGO_AZUL); pintarLogoPrev("logo",RADAR_LOGO_AZUL); }
+  if(!yaLogo("marca-logoClaro-data")){ set("marca-logoClaro-data",RADAR_LOGO_BLANCO); pintarLogoPrev("logoClaro",RADAR_LOGO_BLANCO); }
   set("marca-negocio",""); set("marca-tono",""); set("marca-eslogan","");
   set("marca-publico",""); set("marca-productos",""); set("marca-usar",""); set("marca-evitar","");
   set("marca-headerTagline",""); set("marca-direccion","");
