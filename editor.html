@@ -266,10 +266,20 @@ button,input,select,textarea{font-family:inherit;}
 .tb-btn.ia-btn:hover{filter:brightness(1.07);}
 .nav-ia{color:#6d4bff;font-weight:600;}
 .ia-label{display:block;font-size:12.5px;font-weight:600;color:var(--ink);margin:6px 0 5px;}
-.ia-que{width:100%;min-height:84px;font-family:var(--f);font-size:13.5px;border:1px solid var(--bdr);border-radius:9px;padding:11px 12px;resize:vertical;line-height:1.45;}
+.modal-body .ia-que{width:100%;min-height:70px;height:70px;font-family:var(--f);font-size:13.5px;border:1px solid var(--bdr);border-radius:9px;padding:11px 12px;resize:vertical;line-height:1.45;}
+.modal-body .ia-refs{font-family:var(--f);}
 .ia-row{display:flex;gap:12px;margin-top:12px;flex-wrap:wrap;}
 .ia-col{flex:1;min-width:160px;display:flex;flex-direction:column;gap:5px;font-size:12px;color:var(--ink2,#444);font-weight:500;}
 .ia-col select,.ia-col input{font-family:var(--f);font-size:13px;border:1px solid var(--bdr);border-radius:7px;padding:8px 9px;background:#fff;}
+.ia-req{font-size:10.5px;font-weight:600;color:#6d4bff;text-transform:uppercase;letter-spacing:.04em;}
+.ia-label small{font-weight:400;color:var(--ink3);font-size:11px;}
+.ia-col small{font-weight:400;color:var(--ink3);font-size:10.5px;}
+.ia-seg{display:flex;border:1px solid var(--bdr);border-radius:8px;overflow:hidden;}
+.ia-seg button{flex:1;border:none;background:var(--white);padding:9px 6px;font-family:var(--f);font-size:12.5px;font-weight:500;color:var(--ink2);cursor:pointer;border-right:1px solid var(--bdr);display:inline-flex;align-items:center;justify-content:center;gap:6px;}
+.ia-seg button:last-child{border-right:none;}
+.ia-seg button.on{background:#6d4bff;color:#fff;}
+.ia-seg button .ico{width:15px;height:15px;}
+.ia-refs{width:100%;min-height:54px;font-family:var(--f);font-size:13px;border:1px solid var(--bdr);border-radius:9px;padding:9px 11px;resize:vertical;line-height:1.5;margin-top:5px;}
 .ia-estado{margin-top:12px;font-size:12.5px;min-height:18px;}
 .ia-estado.loading{color:#6d4bff;}
 .ia-estado.err{color:#c0392b;}
@@ -1245,23 +1255,22 @@ button,input,select,textarea{font-family:inherit;}
 <div class="modal-bg" id="modal-ia"><div class="modal">
   <div class="modal-head"><h3>✨ Generar con IA</h3><button class="modal-close" onclick="cerrarModal('ia')">×</button></div>
   <div class="modal-body">
-    <p>Dime en una frase qué necesitas. La IA arma la pieza con tus bloques (y tus imágenes de la biblioteca) y la deja en el editor para que la ajustes.</p>
-    <label class="ia-label">¿Qué necesitas?</label>
-    <textarea id="ia-que" class="ia-que" placeholder="Ej: Email de bienvenida al evento de Zurich del 28 de mayo, con la agenda y un botón para inscribirse"></textarea>
+    <p>Elige tu marca y di en una frase qué necesitas. La IA crea la pieza en la <b>voz de tu marca</b> (colores, logo, tono) y la deja en el editor para ajustarla.</p>
     <div class="ia-row">
-      <label class="ia-col">Formato<select id="ia-formato"></select></label>
-      <label class="ia-col">Tono<select id="ia-tono">
-        <option value="profesional y cercano">Profesional y cercano</option>
-        <option value="formal">Formal</option>
-        <option value="cercano y entusiasta">Cercano / entusiasta</option>
-        <option value="vendedor y directo">Vendedor / directo</option>
-        <option value="elegante y sobrio">Elegante / sobrio</option>
-      </select></label>
-    </div>
-    <div class="ia-row">
-      <label class="ia-col">Objetivo (qué debe hacer la persona)<input type="text" id="ia-objetivo" placeholder="Inscribirse / comprar / reservar / saber más"></label>
       <label class="ia-col">Marca<select id="ia-marca"></select></label>
+      <label class="ia-col">¿Qué producto?<div class="ia-seg" id="ia-formato-seg">
+        <button type="button" data-fmt="email" class="on" onclick="iaSetFormato('email')"><span class="ico" data-ic="email"></span> Email Marketing</button>
+        <button type="button" data-fmt="banner" onclick="iaSetFormato('banner')"><span class="ico" data-ic="grid"></span> Banners Display</button>
+      </div><input type="hidden" id="ia-formato" value="email"></label>
     </div>
+    <label class="ia-label">¿Qué necesitas? <span class="ia-req">·obligatorio</span></label>
+    <textarea id="ia-que" class="ia-que" placeholder="Ej: Promocionar el seguro de auto con foco en cobertura total y atención 24/7"></textarea>
+    <div class="ia-row">
+      <label class="ia-col">Acción (el CTA)<input type="text" id="ia-objetivo" placeholder="Cotizar / Comprar / Inscribirse / Saber más" list="ia-acciones"><datalist id="ia-acciones"><option>Cotizar</option><option>Comprar</option><option>Inscribirse</option><option>Reservar</option><option>Saber más</option><option>Descargar</option><option>Contactar</option></datalist></label>
+      <label class="ia-col">Gancho / oferta <small>(dato exacto; la IA no lo inventa)</small><input type="text" id="ia-gancho" placeholder="Ej: 20% dcto. hasta el 30 de junio"></label>
+    </div>
+    <label class="ia-label">Links de referencia <small>(opcional · la IA los lee para inspirarse en tu marca)</small></label>
+    <textarea id="ia-refs" class="ia-refs" placeholder="Pega 1–3 URLs (una por línea): tu web, una promo, un post…"></textarea>
     <div id="ia-estado" class="ia-estado"></div>
   </div>
   <div class="modal-foot"><button onclick="cerrarModal('ia')">Cancelar</button><button class="primary" id="ia-btn" onclick="generarConIA()">✨ Generar</button></div>
@@ -4671,15 +4680,19 @@ function catalogoBloquesParaIA(){
     return { tipo, nombre: def.nombre, campos };
   }).filter(Boolean);
 }
+// Dos productos: 'email' (bloques) y 'banner' (colección Display por zonas).
+let iaFormato = "email";
+function iaSetFormato(f){
+  iaFormato = (f==="banner") ? "banner" : "email";
+  document.getElementById("ia-formato").value = iaFormato;
+  document.querySelectorAll("#ia-formato-seg button").forEach(b => b.classList.toggle("on", b.dataset.fmt===iaFormato));
+}
 function abrirIA(){
-  const sel = document.getElementById("ia-formato");
-  const grupos = {};
-  Object.entries(FORMATOS).forEach(([k,v]) => { (grupos[v.badge] = grupos[v.badge] || []).push([k,v]); });
-  sel.innerHTML = Object.entries(grupos).map(([b,arr]) => `<optgroup label="${esc(b)}">` + arr.map(([k,v]) => `<option value="${k}">${esc(v.label)}</option>`).join("") + `</optgroup>`).join("");
-  const fActual = (pieza() && !esSetPieza(pieza())) ? pieza().formato : "email";
-  if([...sel.options].some(o => o.value === fActual)) sel.value = fActual;
+  iaSetFormato("email");
   const ms = document.getElementById("ia-marca");
-  ms.innerHTML = `<option value="">— Sin marca —</option>` + (workspace.marcas||[]).map(m => `<option value="${m.id}">${esc(m.nombre)}</option>`).join("");
+  const marcas = workspace.marcas||[];
+  ms.innerHTML = (marcas.length ? "" : `<option value="">— Sin marca (crea una en Marcas) —</option>`) +
+    marcas.map(m => `<option value="${m.id}">${esc(m.nombre)}</option>`).join("");
   const est = document.getElementById("ia-estado"); est.textContent = ""; est.className = "ia-estado";
   document.getElementById("modal-ia").classList.add("show");
   setTimeout(() => { const q = document.getElementById("ia-que"); if(q) q.focus(); }, 60);
@@ -4687,19 +4700,24 @@ function abrirIA(){
 async function generarConIA(){
   const que = (document.getElementById("ia-que").value || "").trim();
   if(!que){ toast("Cuéntame qué necesitas"); return; }
-  const formato = document.getElementById("ia-formato").value;
-  const objetivo = (document.getElementById("ia-objetivo").value || "").trim();
-  const tono = document.getElementById("ia-tono").value;
+  const producto = document.getElementById("ia-formato").value;   // email | banner
+  const accion = (document.getElementById("ia-objetivo").value || "").trim();
+  const gancho = (document.getElementById("ia-gancho").value || "").trim();
+  const refs = (document.getElementById("ia-refs").value || "").split(/[\n,\s]+/).map(s=>s.trim()).filter(s=>/^https?:\/\//.test(s)).slice(0,3);
   const marca = (workspace.marcas||[]).find(m => m.id === document.getElementById("ia-marca").value) || null;
+  const M = marca ? normalizarMarca(marca) : null;
   const btn = document.getElementById("ia-btn"); const est = document.getElementById("ia-estado");
   btn.disabled = true; est.textContent = "Generando con IA… (puede tardar unos segundos)"; est.className = "ia-estado loading";
   try{
     const r = await fetch("/api/ia", {
       method:"POST", credentials:"include", headers:{ "Content-Type":"application/json" },
       body: JSON.stringify({
-        brief: { que, objetivo, tono }, formato, marca,
+        producto,
+        brief: { que, accion, gancho, refs },
+        formato: producto==="email" ? "email" : "display-300x250",
+        marca: M ? { nombre:M.nombre, empresa:M.empresa, primary:M.primary, secondary:M.secondary, cta:M.cta, ctaText:M.ctaText, text:M.text, bg:M.bg, accent1:M.accent1, accent2:M.accent2, fontTitulo:M.fontTitulo, fontCuerpo:M.fontCuerpo, logoUrl:M.logo, negocio:M.negocio, tono:M.tono, eslogan:M.eslogan, publico:M.publico, productos:M.productos, usar:M.usar, evitar:M.evitar, disclaimer:M.disclaimer } : null,
         imagenes: (workspace.imagenes||[]).map(i => ({ url:i.url, nombre:i.nombre })),
-        catalogo: catalogoBloquesParaIA()
+        catalogo: producto==="email" ? catalogoBloquesParaIA() : null
       })
     });
     const raw = await r.text();
@@ -4708,19 +4726,24 @@ async function generarConIA(){
       est.textContent = data.error || (raw ? raw.slice(0,400) : ("Error " + r.status));
       est.className = "ia-estado err"; btn.disabled = false; return;
     }
-    insertarPiezaIA(data, formato, marca);
+    if(producto==="banner") insertarBannerIA(data, marca);
+    else insertarPiezaIA(data, "email", marca);
     cerrarModal("ia");
     toast("Pieza generada por IA — edítala a tu gusto");
   }catch(e){ est.textContent = "Sin conexión: " + (e.message||e); est.className = "ia-estado err"; }
   finally{ btn.disabled = false; }
 }
-function insertarPiezaIA(data, formato, marca){
+function asegurarProyectoIA(){
   if(!proyecto){
     const pr = { id:uid(), nombre:"Generado con IA", creado:Date.now(), piezas:[], activa:null };
     workspace.proyectos.push(pr); proyecto = pr; proyectoVistoId = pr.id;
   }
-  const tema = marca
-    ? { font:marca.font||"Inter", primary:marca.primary||"#1c73cb", text:marca.text||"#1a1a1a", bg:marca.bg||"#ffffff", bgPagina:marca.bgPagina||"", ancho:"" }
+}
+function insertarPiezaIA(data, formato, marca){
+  asegurarProyectoIA();
+  const M = marca ? normalizarMarca(marca) : null;
+  const tema = M
+    ? { font:M.fontCuerpo||"Inter", fontTitulo:M.fontTitulo||"Inter", primary:M.primary, text:M.text, bg:M.bg, bgPagina:M.bgPagina||"", ancho:"" }
     : { font:"Inter", primary:"#1c73cb", text:"#1a1a1a", bg:"#ffffff", bgPagina:"", ancho:"" };
   const canvas = (data.bloques||[])
     .filter(b => b && BLOQUES[b.tipo])
@@ -4729,6 +4752,45 @@ function insertarPiezaIA(data, formato, marca){
   proyecto.piezas.push(p); proyecto.activa = p.id;
   document.getElementById("galeria").classList.remove("show");
   activarPieza(p.id);
+  persistir();
+}
+// Banner: la IA devuelve la composición de 3 zonas; creamos la colección Display
+// (máster 300x250 + todos los tamaños) con ese contenido.
+function insertarBannerIA(data, marca){
+  asegurarProyectoIA();
+  const M = marca ? normalizarMarca(marca) : null;
+  const tema = M ? { font:M.fontCuerpo||"Inter", fontTitulo:M.fontTitulo||"Inter", primary:M.primary, text:M.text, bg:M.bg, bgPagina:M.bgPagina||"", ancho:"" }
+                 : { font:"Inter", primary:"#1c73cb", text:"#1a1a1a", bg:"#ffffff", bgPagina:"", ancho:"" };
+  // Base desde la marca, luego sobreescribimos con lo que dio la IA.
+  const comp = composicionDefault(tema);
+  const z = (data.zonas)||{};
+  const fondoOscuro = M ? esColorOscuro(M.secondary) : true;
+  if(M){
+    setPath(comp,"fondo.color", M.secondary);
+    setPath(comp,"zonas.logo.url", logoDeMarca(M, true) || logoDeMarca(M, false));
+    setPath(comp,"zonas.cta.colorFondo", M.cta);
+    setPath(comp,"zonas.cta.colorTexto", M.ctaText);
+    const tcol = fondoOscuro ? "#ffffff" : M.text;
+    setPath(comp,"zonas.texto.titular.color", tcol);
+    setPath(comp,"zonas.texto.cuerpo.color", tcol);
+  }
+  // Imagen elegida por la IA desde la biblioteca (si vino una URL válida).
+  if(data.imagen && /^https?:\/\/|^data:/.test(data.imagen)){
+    setPath(comp,"fondo.tipo","imagen"); setPath(comp,"fondo.imagen.url", data.imagen);
+    setPath(comp,"fondo.imagen.oscurecer", 45);
+  }
+  if(z.titular) setPath(comp,"zonas.texto.titular.texto", String(z.titular).slice(0,80));
+  if(z.cuerpo) setPath(comp,"zonas.texto.cuerpo.texto", String(z.cuerpo).slice(0,160));
+  if(z.cta) setPath(comp,"zonas.cta.texto", String(z.cta).slice(0,40));
+  const cfg = COLECCIONES["display-desktop"];
+  const p = crearPieza(cfg.master, data.nombre||"Banners IA");
+  p.tema = tema;
+  p.esSet=true; p.setTipo="display-desktop"; p.masterFmt=cfg.master; p.activaFmt=cfg.master; p.formato=cfg.master;
+  p.canvas=[]; p.composicion=comp; p.artboards=cfg.fmts.map(fmt=>({fmt}));
+  proyecto.activa = p.id;
+  document.getElementById("galeria").classList.remove("show");
+  activarPieza(p.id);
+  cambiarPanelTab("diseno");
   persistir();
 }
 function renderMarcaSelector(){

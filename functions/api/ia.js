@@ -117,119 +117,176 @@ async function generar({ request, env }) {
     return json({ ok: false, error: 'Dime qué necesitas (el brief está vacío).' }, 400);
   }
 
-  const formato = String(body.formato || 'email');
+  const producto = (body.producto === 'banner') ? 'banner' : 'email';
   const marca = body.marca || null;
   const imagenes = Array.isArray(body.imagenes) ? body.imagenes.slice(0, 40) : [];
-  const catalogo = Array.isArray(body.catalogo) ? body.catalogo : [];
-  const tiposValidos = catalogo.map(c => c.tipo);
+  const refsTxt = await leerReferencias(brief.refs);
 
-  const marcaTxt = marca
-    ? [
-        `Empresa: ${marca.empresa || '-'}.`,
-        marca.negocio ? `A qué se dedica: ${marca.negocio}.` : '',
-        marca.eslogan ? `Eslogan: "${marca.eslogan}".` : '',
-        marca.tono ? `Tono de voz de la marca: ${marca.tono}.` : '',
-        marca.publico ? `Público objetivo: ${marca.publico}.` : '',
-        marca.productos ? `Productos/líneas: ${marca.productos}.` : '',
-        marca.usar ? `Palabras a USAR: ${marca.usar}.` : '',
-        marca.evitar ? `Palabras PROHIBIDAS (no las uses): ${marca.evitar}.` : '',
-        marca.disclaimer ? `Si la pieza incluye footer, añade este disclaimer legal: "${marca.disclaimer}".` : '',
-        `Colores: principal=${marca.primary||'-'}, secundario=${marca.secondary||'-'}, texto=${marca.text||'-'}, fondo=${marca.bg||'-'}, CTA=${marca.cta||marca.primary||'-'}, texto del CTA=${marca.ctaText||'-'}.`,
-        `Tipografía: títulos=${marca.fontTitulo||marca.font||'Inter'}, cuerpo=${marca.fontCuerpo||marca.font||'Inter'}.`,
-        `Logo (URL): ${marca.logoUrl||'(ninguno)'}.`
-      ].filter(Boolean).join(' ')
-    : 'Sin marca específica: usa un estilo limpio y profesional.';
+  if (producto === 'banner') return generarBanner({ env, brief, marca, imagenes, refsTxt });
+  return generarEmail({ env, brief, marca, imagenes, refsTxt, catalogo: Array.isArray(body.catalogo) ? body.catalogo : [] });
+}
+
+// ── Voz de marca: el bloque de contexto que comparten ambos productos ──────
+function voorMarca(marca) {
+  if (!marca) return 'Sin marca específica: usa un estilo limpio, profesional y neutral.';
+  return [
+    `Marca: ${marca.nombre || marca.empresa || '-'}${marca.empresa && marca.nombre !== marca.empresa ? ' (' + marca.empresa + ')' : ''}.`,
+    marca.negocio ? `A qué se dedica: ${marca.negocio}.` : '',
+    marca.productos ? `Productos/líneas: ${marca.productos}.` : '',
+    marca.eslogan ? `Eslogan de marca: "${marca.eslogan}".` : '',
+    marca.tono ? `TONO DE VOZ (respétalo siempre): ${marca.tono}.` : '',
+    marca.publico ? `Público objetivo: ${marca.publico}.` : '',
+    marca.usar ? `Palabras/conceptos a USAR cuando encajen: ${marca.usar}.` : '',
+    marca.evitar ? `Palabras PROHIBIDAS (NUNCA las uses): ${marca.evitar}.` : '',
+    `Paleta: principal=${marca.primary || '-'}, secundario=${marca.secondary || '-'}, CTA=${marca.cta || marca.primary || '-'}, texto-CTA=${marca.ctaText || '#fff'}, acentos=${marca.accent1 || '-'}/${marca.accent2 || '-'}, texto=${marca.text || '-'}, fondo=${marca.bg || '-'}.`,
+    `Tipografías: títulos=${marca.fontTitulo || 'Inter'}, cuerpo=${marca.fontCuerpo || 'Inter'}.`
+  ].filter(Boolean).join('\n');
+}
+
+// ── Reglas duras del brief (comunes) ──────────────────────────────────────
+function reglasBrief(brief) {
+  const out = [
+    `OBJETIVO / lo que necesito: ${brief.que}`,
+    `ACCIÓN (texto base del CTA): ${brief.accion || '(infiere una acción razonable, ej. "Saber más")'}`,
+  ];
+  if (brief.gancho) out.push(`GANCHO/OFERTA EXACTO (úsalo TAL CUAL, NO inventes otros números/fechas/precios): ${brief.gancho}`);
+  else out.push('Sin oferta numérica: NO inventes precios, porcentajes ni fechas.');
+  return out.join('\n');
+}
+
+// ── Lee 1-3 URLs de referencia y devuelve un extracto de texto ────────────
+async function leerReferencias(refs) {
+  const urls = Array.isArray(refs) ? refs.filter(u => /^https?:\/\//i.test(u)).slice(0, 3) : [];
+  if (!urls.length) return '';
+  const trozos = [];
+  for (const u of urls) {
+    try {
+      const ctl = new AbortController(); const t = setTimeout(() => ctl.abort(), 6000);
+      const r = await fetch(u, { headers: { 'User-Agent': 'SimpleBlockBuilder/1.0' }, signal: ctl.signal });
+      clearTimeout(t);
+      if (!r.ok) { trozos.push(`(${u}: no se pudo leer, HTTP ${r.status})`); continue; }
+      const html = await r.text();
+      const texto = html
+        .replace(/<script[\s\S]*?<\/script>/gi, ' ').replace(/<style[\s\S]*?<\/style>/gi, ' ')
+        .replace(/<[^>]+>/g, ' ').replace(/&[a-z]+;/gi, ' ').replace(/\s+/g, ' ').trim().slice(0, 1200);
+      trozos.push(`• ${u}\n${texto}`);
+    } catch (e) { trozos.push(`(${u}: no se pudo leer)`); }
+  }
+  return trozos.length ? trozos.join('\n\n') : '';
+}
+
+// ── Llamada a Gemini con parseo robusto de JSON ───────────────────────────
+async function llamarGemini(env, prompt, maxTokens) {
+  const model = env.GEMINI_MODEL || 'gemini-2.5-flash';
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${encodeURIComponent(env.GEMINI_API_KEY)}`;
+  const ctl = new AbortController(); const timer = setTimeout(() => ctl.abort(), 24000);
+  let res;
+  try {
+    res = await fetch(url, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' }, signal: ctl.signal,
+      body: JSON.stringify({ contents: [{ role: 'user', parts: [{ text: prompt }] }], generationConfig: { responseMimeType: 'application/json', temperature: 0.7, maxOutputTokens: maxTokens || 2048 } })
+    });
+  } catch (e) {
+    return { error: (e && e.name === 'AbortError') ? `Gemini (${model}) tardó demasiado. Prueba GEMINI_MODEL=gemini-flash-latest.` : 'No se pudo contactar a Gemini: ' + (e.message || e) };
+  } finally { clearTimeout(timer); }
+  if (!res.ok) { const t = await res.text().catch(() => ''); return { error: `Gemini (${model}) respondió ${res.status}. ${t.slice(0, 400)}` }; }
+  let data; try { data = await res.json(); } catch { return { error: 'Respuesta de Gemini no es JSON.' }; }
+  const parts = data && data.candidates && data.candidates[0] && data.candidates[0].content && data.candidates[0].content.parts;
+  let texto = Array.isArray(parts) ? parts.map(p => (p && p.text) || '').join('') : '';
+  if (!texto) {
+    const motivo = (data && data.candidates && data.candidates[0] && data.candidates[0].finishReason) || (data && data.promptFeedback && data.promptFeedback.blockReason) || 'sin contenido';
+    return { error: 'Gemini no devolvió contenido (' + motivo + ').' };
+  }
+  try { return { parsed: JSON.parse(texto.trim().replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/i, '')) }; }
+  catch { return { error: 'No se pudo interpretar la respuesta de la IA como JSON.' }; }
+}
+
+// ════════════ PRODUCTO 1: BANNERS DE GOOGLE DISPLAY (3 zonas) ════════════
+async function generarBanner({ env, brief, marca, imagenes, refsTxt }) {
   const imgsTxt = imagenes.length
     ? imagenes.map(im => `- ${im.url}  →  ${im.nombre || '(sin descripción)'}`).join('\n')
-    : '(la biblioteca está vacía: deja vacíos los campos de imagen, salvo el logo de marca)';
+    : '(biblioteca vacía: deja "imagen" en "")';
+  const prompt = [
+    `Eres director creativo de ${marca ? (marca.nombre || marca.empresa) : 'la marca'}. Creas banners de Google Display que rinden y suenan 100% a la marca.`,
+    '',
+    'Devuelve EXCLUSIVAMENTE este JSON (sin texto extra):',
+    '{ "nombre": "nombre corto de la campaña", "zonas": { "titular": "...", "cuerpo": "...", "cta": "..." }, "imagen": "<URL exacta de la biblioteca o \\"\\"> " }',
+    '',
+    'REGLAS DURAS:',
+    '- Español de Chile, claro y persuasivo. Nada de placeholders ni texto de relleno.',
+    '- LÍMITES: titular ≤ 6 palabras; cuerpo ≤ 14 palabras; cta ≤ 3 palabras.',
+    '- El "cta" debe reflejar la ACCIÓN del brief.',
+    '- "imagen": elige la URL EXACTA de la biblioteca cuya descripción mejor calce con el brief; si ninguna calza, deja "".',
+    '- Respeta el tono y las palabras de la marca; NO inventes ofertas/precios/fechas.',
+    '',
+    'VOZ DE MARCA:',
+    voorMarca(marca),
+    '',
+    'BIBLIOTECA DE IMÁGENES (url → descripción):',
+    imgsTxt,
+    refsTxt ? '\nREFERENCIAS DE LA MARCA (extractos de links; úsalos para tono y datos, no copies literal):\n' + refsTxt : '',
+    '',
+    'BRIEF:',
+    reglasBrief(brief)
+  ].filter(Boolean).join('\n');
 
-  const instruccion = [
-    'Eres un compositor experto de piezas de marketing (emails, banners, posts, invitaciones) para un editor de bloques.',
-    'A partir del brief, compón UNA pieza ordenada y lista para usar, eligiendo bloques del catálogo y rellenando sus campos con contenido real en español.',
+  const { parsed, error } = await llamarGemini(env, prompt, 700);
+  if (error) return json({ ok: false, error }, 500);
+  const z = (parsed && parsed.zonas) || {};
+  const limpia = (s, n) => String(s || '').replace(/\s+/g, ' ').trim().split(' ').slice(0, n).join(' ');
+  const out = {
+    ok: true,
+    nombre: String((parsed && parsed.nombre) || brief.que).slice(0, 80),
+    zonas: { titular: limpia(z.titular, 8), cuerpo: limpia(z.cuerpo, 18), cta: limpia(z.cta, 4) },
+    imagen: (typeof parsed.imagen === 'string' && /^https?:\/\//.test(parsed.imagen)) ? parsed.imagen : ''
+  };
+  if (!out.zonas.titular && !out.zonas.cuerpo) return json({ ok: false, error: 'La IA no produjo textos. Reformula el brief.' }, 500);
+  return json(out);
+}
+
+// ════════════════════ PRODUCTO 2: EMAIL MARKETING (bloques) ═══════════════
+async function generarEmail({ env, brief, marca, imagenes, refsTxt, catalogo }) {
+  const tiposValidos = catalogo.map(c => c.tipo);
+  const imgsTxt = imagenes.length
+    ? imagenes.map(im => `- ${im.url}  →  ${im.nombre || '(sin descripción)'}`).join('\n')
+    : '(biblioteca vacía: deja vacíos los campos de imagen, salvo el logo de marca)';
+  const disc = marca && marca.disclaimer ? `\n- Incluye un bloque "footer" con la empresa y este disclaimer legal: "${marca.disclaimer}".` : '';
+  const logo = marca && marca.logoUrl ? `\n- Si usas "header", pon su logoUrl = "${marca.logoUrl}".` : '';
+  const prompt = [
+    `Eres director creativo de ${marca ? (marca.nombre || marca.empresa) : 'la marca'}. Escribes emails de marketing que suenan 100% a la marca y convierten.`,
     '',
-    'Devuelve EXCLUSIVAMENTE un JSON válido con esta forma exacta:',
-    '{ "nombre": "nombre corto", "bloques": [ { "tipo": "<tipo del catálogo>", "datos": { ...campos } } ] }',
+    'Devuelve EXCLUSIVAMENTE este JSON (sin texto extra):',
+    '{ "nombre": "asunto/nombre corto", "bloques": [ { "tipo": "<tipo del catálogo>", "datos": { ...campos } } ] }',
     '',
-    'Reglas:',
+    'REGLAS DURAS:',
     `- Usa SOLO estos tipos: ${tiposValidos.join(', ')}.`,
     '- Rellena solo los campos que aparecen en el catálogo de ese tipo (no inventes campos).',
-    '- Textos concretos y persuasivos acordes al objetivo; nada de placeholders.',
-    '- El CTA debe reflejar el objetivo del brief.',
-    '- Para imágenes (url/imagenUrl) usa SOLO una URL EXACTA de la biblioteca; si ninguna encaja, deja "".',
-    '- Ordena como una pieza real: encabezado/hero arriba, contenido en medio, CTA al final, footer si aplica.',
+    '- Español de Chile, concreto y persuasivo; nada de placeholders.',
+    '- Estructura real de email: header (logo) arriba → contenido → un CTA claro con la ACCIÓN del brief → footer.',
+    '- Para imágenes usa SOLO una URL EXACTA de la biblioteca; si ninguna encaja, deja "".',
+    '- Respeta el tono y las palabras de la marca; NO inventes ofertas/precios/fechas.' + logo + disc,
     '',
-    `Formato: ${formato}. Marca: ${marcaTxt}`,
+    'VOZ DE MARCA:',
+    voorMarca(marca),
     '',
     'CATÁLOGO (tipo → campos de ejemplo):',
     JSON.stringify(catalogo),
     '',
     'BIBLIOTECA DE IMÁGENES (url → descripción):',
     imgsTxt,
+    refsTxt ? '\nREFERENCIAS DE LA MARCA (extractos de links; úsalos para tono y datos, no copies literal):\n' + refsTxt : '',
     '',
     'BRIEF:',
-    `- Qué necesito: ${brief.que}`,
-    `- Objetivo / CTA: ${brief.objetivo || '(infiere uno razonable)'}`,
-    `- Tono: ${brief.tono || 'profesional y cercano'}`,
-  ].join('\n');
+    reglasBrief(brief)
+  ].filter(Boolean).join('\n');
 
-  const model = env.GEMINI_MODEL || 'gemini-2.5-flash';
-  const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${encodeURIComponent(env.GEMINI_API_KEY)}`;
-
-  const ctl = new AbortController();
-  const timer = setTimeout(() => ctl.abort(), 22000);
-  let res;
-  try {
-    res = await fetch(url, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      signal: ctl.signal,
-      body: JSON.stringify({
-        contents: [{ role: 'user', parts: [{ text: instruccion }] }],
-        generationConfig: { responseMimeType: 'application/json', temperature: 0.6, maxOutputTokens: 2048 }
-      })
-    });
-  } catch (e) {
-    const abortado = e && (e.name === 'AbortError');
-    return json({ ok: false, error: abortado
-      ? `Gemini (${model}) tardó demasiado y se canceló. Prueba GEMINI_MODEL=gemini-2.5-flash (o gemini-flash-latest).`
-      : 'No se pudo contactar a Gemini: ' + (e.message || e) }, 500);
-  } finally {
-    clearTimeout(timer);
-  }
-
-  if (!res.ok) {
-    const t = await res.text().catch(() => '');
-    return json({ ok: false, error: `Gemini (${model}) respondió ${res.status}. ${t.slice(0, 400)}` }, 500);
-  }
-
-  let data;
-  try { data = await res.json(); } catch { return json({ ok: false, error: 'Respuesta de Gemini no es JSON.' }, 500); }
-
-  let texto = '';
-  const parts = data && data.candidates && data.candidates[0] && data.candidates[0].content && data.candidates[0].content.parts;
-  if (Array.isArray(parts)) texto = parts.map(p => (p && p.text) || '').join('');
-  if (!texto) {
-    const motivo = (data && data.candidates && data.candidates[0] && data.candidates[0].finishReason) || (data && data.promptFeedback && data.promptFeedback.blockReason) || 'sin contenido';
-    return json({ ok: false, error: 'Gemini no devolvió contenido (' + motivo + ').' }, 500);
-  }
-
-  let parsed;
-  try {
-    const limpio = texto.trim().replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/i, '');
-    parsed = JSON.parse(limpio);
-  } catch {
-    return json({ ok: false, error: 'No se pudo interpretar la respuesta de la IA como JSON.' }, 500);
-  }
-
+  const { parsed, error } = await llamarGemini(env, prompt, 2048);
+  if (error) return json({ ok: false, error }, 500);
   let bloques = Array.isArray(parsed && parsed.bloques) ? parsed.bloques : [];
   bloques = bloques
     .filter(b => b && typeof b.tipo === 'string' && tiposValidos.includes(b.tipo))
     .slice(0, 40)
     .map(b => ({ tipo: b.tipo, datos: (b.datos && typeof b.datos === 'object') ? b.datos : {} }));
-
-  if (!bloques.length) {
-    return json({ ok: false, error: 'La IA no produjo bloques válidos. Reformula el brief.' }, 500);
-  }
-
+  if (!bloques.length) return json({ ok: false, error: 'La IA no produjo bloques válidos. Reformula el brief.' }, 500);
   return json({ ok: true, nombre: String((parsed && parsed.nombre) || brief.que).slice(0, 120), bloques });
 }
