@@ -174,7 +174,10 @@ button,input,select,textarea{font-family:inherit;}
 .crumb-camp{white-space:nowrap;}
 .crumb-sep{color:var(--ink4);}
 .crumb-pieza{color:var(--ink);font-weight:600;outline:none;max-width:240px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;border-radius:4px;padding:1px 5px;}
-.crumb-pieza[contenteditable="true"]{background:var(--primary-l);}
+.crumb-edit{cursor:text;border-radius:4px;padding:1px 5px;transition:background .12s;}
+.crumb-edit:hover{background:var(--primary-l,#eaf1fb);}
+.crumb-camp.crumb-edit{color:var(--ink2,#444);}
+.crumb-pieza[contenteditable="true"],.crumb-camp[contenteditable="true"]{background:var(--primary-l);cursor:text;}
 .dev-seg{display:inline-flex;background:var(--bg);border:1px solid var(--bdr);border-radius:9px;padding:3px;gap:2px;flex-shrink:0;}
 .dev-seg button{border:none;background:none;width:32px;height:26px;border-radius:7px;cursor:pointer;color:var(--ink3);display:inline-flex;align-items:center;justify-content:center;}
 .dev-seg button.on{background:var(--white);color:var(--primary);box-shadow:var(--sh);}
@@ -1115,9 +1118,9 @@ button,input,select,textarea{font-family:inherit;}
     <div class="topbar-row secondary">
       <button class="tb-btn" onclick="abrirGaleria()" title="Volver al proyecto"><span class="ico" data-ic="chevleft"></span> Proyecto</button>
       <div class="crumb">
-        <span class="crumb-camp" id="crumb-proyecto">Proyecto</span>
+        <span class="crumb-camp crumb-edit" id="crumb-proyecto" onclick="renombrarProyectoDesdeEditor()" title="Clic para renombrar el proyecto">Proyecto</span>
         <span class="ico crumb-sep" data-ic="chevright" data-icsize="13px"></span>
-        <span class="crumb-pieza" id="crumb-pieza" ondblclick="renombrarPiezaActual()" title="Doble clic para renombrar">Creatividad</span>
+        <span class="crumb-pieza crumb-edit" id="crumb-pieza" onclick="renombrarPiezaActual()" title="Clic para renombrar la creatividad">Creatividad</span>
       </div>
       <button class="tb-btn icon-only" onclick="nuevaPiezaPrompt()" title="Nueva creatividad en este proyecto"><span class="ico" data-ic="mas"></span></button>
       <div class="spacer"></div>
@@ -1563,15 +1566,33 @@ function setDispositivo(d){
   aplicarTema();
 }
 
-// Renombrar la pieza actual desde el breadcrumb (doble clic).
-function renombrarPiezaActual(){
-  const span = document.getElementById("crumb-pieza");
-  const p = pieza(); if(!p || !span) return;
+// Edición inline robusta de un nombre en el breadcrumb (clic = editar).
+function _renombrarInline(span, valorActual, guardar){
+  if(!span || span.getAttribute("contenteditable")==="true") return;   // ya editando
   span.contentEditable = "true"; span.focus();
-  document.execCommand("selectAll", false, null);
-  const fin = () => { span.contentEditable = "false"; const v = span.textContent.trim(); p.nombre = v || "Creatividad"; span.textContent = p.nombre; persistir(); };
-  span.addEventListener("blur", fin, { once:true });
-  span.addEventListener("keydown", e => { if(e.key === "Enter"){ e.preventDefault(); span.blur(); } }, { once:true });
+  try{ const r=document.createRange(); r.selectNodeContents(span); const s=getSelection(); s.removeAllRanges(); s.addRange(r); }catch(_){}
+  const onKey = (e) => {
+    if(e.key==="Enter"){ e.preventDefault(); span.blur(); }
+    else if(e.key==="Escape"){ e.preventDefault(); span.textContent = valorActual; span.blur(); }
+  };
+  const fin = () => {
+    span.removeEventListener("blur", fin); span.removeEventListener("keydown", onKey);
+    span.contentEditable = "false";
+    const v = (span.textContent||"").replace(/\s+/g," ").trim();
+    guardar(v || valorActual);
+  };
+  span.addEventListener("blur", fin);
+  span.addEventListener("keydown", onKey);
+}
+// Renombrar la creatividad (pieza) activa desde el breadcrumb.
+function renombrarPiezaActual(){
+  const span = document.getElementById("crumb-pieza"); const p = pieza(); if(!p || !span) return;
+  _renombrarInline(span, p.nombre || "Creatividad", (v)=>{ p.nombre = v; span.textContent = v; persistir(); if(typeof renderGaleria==="function") renderGaleria(); });
+}
+// Renombrar el proyecto activo desde el breadcrumb del editor.
+function renombrarProyectoDesdeEditor(){
+  const span = document.getElementById("crumb-proyecto"); if(!proyecto || !span) return;
+  _renombrarInline(span, proyecto.nombre || "Proyecto", (v)=>{ proyecto.nombre = v; span.textContent = v; persistir(); if(typeof renderGaleria==="function") renderGaleria(); });
 }
 
 // Abre la vista previa de la pieza actual (modal con toggle de dispositivo).
