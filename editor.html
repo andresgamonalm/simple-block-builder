@@ -642,6 +642,11 @@ button,input,select,textarea{font-family:inherit;}
 .cmp-ed .cmp-alin svg{width:15px;height:15px;}
 .cmp-ed .cmp-sw-row{display:flex;flex-wrap:wrap;gap:4px;flex:1;}
 .cmp-ed .cmp-sw{width:18px;height:18px;border-radius:4px;border:1px solid rgba(0,0,0,.15);cursor:pointer;padding:0;}
+.cmp-ed .cmp-sw-vacio{font-size:11px;color:var(--ink3);font-style:italic;}
+.cmp-ed .cmp-hex{width:78px;font-family:Menlo,Consolas,monospace;font-size:11.5px;border:1px solid var(--bdr);border-radius:6px;padding:6px 7px;background:#fff;text-transform:uppercase;color:var(--ink);}
+.cmp-ed select{font-family:var(--f);font-size:12.5px;border:1px solid var(--bdr);border-radius:6px;padding:5px 7px;background:#fff;color:var(--ink);flex:1;min-width:0;}
+.cmp-ed .cmp-estilo button{font-size:13px;line-height:1;min-width:28px;justify-content:center;}
+.cmp-ed .cmp-estilo button b{font-weight:800;}
 .cmp-ed .ia-sugerir{width:100%;margin:2px 0 6px;border:none;border-radius:8px;padding:9px;cursor:pointer;font-family:var(--f);font-size:12.5px;font-weight:700;color:#fff;background:linear-gradient(135deg,#6d4bff,#9b5cff);}
 .cmp-ed .ia-sugerir:hover{filter:brightness(1.07);}
 
@@ -3879,6 +3884,16 @@ function asegurarComposicionNueva(p){
     p.composicion = migrarComposicion(p.composicion, p.tema);
     (p.artboards||[]).forEach(a=>{ if(a.ov) a.ov={}; });   // overrides viejos no son compatibles
   }
+  // El MÁSTER nunca debe tener override propio (taparía el Diseño global y editarlo
+  // no se propagaría). Si una pieza vieja lo tiene, se fusiona al global y se limpia.
+  if(p && p.esSet && p.composicion){
+    const mf = p.masterFmt || "display-300x250";
+    const abM = (p.artboards||[]).find(a=>a.fmt===mf);
+    if(abM && abM.ov && ovTieneValor(abM.ov)){
+      p.composicion = deepMergeOv(p.composicion, abM.ov);
+      abM.ov = {};
+    }
+  }
 }
 // Acceso por ruta ("zonas.texto.titular.texto").
 function getPath(obj, path){ return String(path).split('.').reduce((o,k)=> (o==null?undefined:o[k]), obj); }
@@ -3904,15 +3919,19 @@ function zonaContenido(zk, z, px){
   }
   if(zk==="texto"){
     const ti=z.titular||{}, cu=z.cuerpo||{};
-    const tiEl = ti.texto ? `<div class="cmp-tit" style="font-size:${px(ti.tamano,26)}px;color:${esc(ti.color||'#fff')};text-align:${alinText(z.alinH)};">${esc(ti.texto)}</div>` : "";
-    const cuEl = cu.texto ? `<div class="cmp-cue" style="font-size:${px(cu.tamano,13)}px;color:${esc(cu.color||'#fff')};text-align:${alinText(z.alinH)};">${escMultiline(cu.texto)}</div>` : "";
+    const fam = z.fuente ? `font-family:'${esc(z.fuente)}',Arial,sans-serif;` : "";
+    const est = (o)=> `${o.negrita?'font-weight:700;':''}${o.italica?'font-style:italic;':''}`;
+    const tiEl = ti.texto ? `<div class="cmp-tit" style="font-size:${px(ti.tamano,26)}px;color:${esc(ti.color||'#fff')};text-align:${alinText(z.alinH)};${fam}${est(ti)}">${esc(ti.texto)}</div>` : "";
+    const cuEl = cu.texto ? `<div class="cmp-cue" style="font-size:${px(cu.tamano,13)}px;color:${esc(cu.color||'#fff')};text-align:${alinText(z.alinH)};${fam}${est(cu)}">${escMultiline(cu.texto)}</div>` : "";
     return tiEl+cuEl;
   }
   if(zk==="cta"){
     if(!z.texto) return "";
     const t=parseFloat(z.tamano)||13;
     const pY=Math.round(t*0.55), pX=Math.round(t*1.25);
-    return `<a class="cmp-cta" href="${esc(z.url||'#')}" target="_blank" rel="noopener" style="font-size:${px(z.tamano,13)}px;background:${esc(z.colorFondo||'#2f80ed')};color:${esc(z.colorTexto||'#fff')};border-radius:${px(z.radio,8)}px;padding:${px(pY,pY)}px ${px(pX,pX)}px;">${esc(z.texto)}</a>`;
+    const fam = z.fuente ? `font-family:'${esc(z.fuente)}',Arial,sans-serif;` : "";
+    const est = `${z.negrita?'font-weight:700;':''}${z.italica?'font-style:italic;':''}`;
+    return `<a class="cmp-cta" href="${esc(z.url||'#')}" target="_blank" rel="noopener" style="font-size:${px(z.tamano,13)}px;background:${esc(z.colorFondo||'#2f80ed')};color:${esc(z.colorTexto||'#fff')};border-radius:${px(z.radio,8)}px;padding:${px(pY,pY)}px ${px(pX,pX)}px;${fam}${est}">${esc(z.texto)}</a>`;
   }
   return "";
 }
@@ -4008,6 +4027,13 @@ function renderTableroComposicion(p, c){
 // Mutadores de la composición global (por ruta, ej. "zonas.texto.titular.texto").
 function setComp(path, val){ const p=pieza(); if(!esComposicion(p))return; setPath(p.composicion, path, val); persistir(); renderTablero(); }
 function toggleCompVis(path){ const p=pieza(); if(!esComposicion(p))return; const cur=getPath(p.composicion,path); setComp(path, !(cur!==false)); renderComposicionEditor(); }
+// Numéricos con CLAMP: nunca se guardan dimensiones fuera del rango permitido.
+function clampN(v, mn, mx){ v=parseFloat(v); if(isNaN(v)) return mn; return Math.max(mn, Math.min(mx, v)); }
+function setCompN(path, val, mn, mx){ setComp(path, String(clampN(val,mn,mx))); }
+function setCompOvN(fmt, path, val, mn, mx){ setCompOv(fmt, path, String(clampN(val,mn,mx))); }
+// Alterna un booleano (negrita/cursiva) global o por tamaño.
+function setCompTog(path){ const p=pieza(); if(!esComposicion(p))return; setComp(path, getPath(p.composicion,path)!==true); }
+function setCompOvTog(fmt, path){ const p=pieza(); if(!esComposicion(p))return; const ef=composicionEfectiva(p,fmt); setCompOv(fmt, path, getPath(ef,path)!==true); }
 // Biblioteca: elegir imagen/logo y aplicarla a una ruta (global o por tamaño).
 function elegirImagenPath(path, fmt){ abrirImagenes(url=>{ if(fmt){ setCompOv(fmt,path,url); renderForm(); } else { setComp(path,url); renderComposicionEditor(); } }); }
 function elegirImagenComp(path){ elegirImagenPath(path, null); }
@@ -4025,11 +4051,19 @@ function coloresMarcaPreset(){
   ["#0e2748","#102a43","#1c1c28","#0b7a4b","#1c73cb","#b3261e","#ffffff","#f5f5f5"].forEach(add);
   return cols.slice(0,14);
 }
-// Swatches de color que escriben en una ruta (global o por tamaño).
+// SOLO colores de la marca (sin presets genéricos). El resto se elige con el mezclador HEX.
+function coloresDeMarca(){
+  const cols=[]; const add=c=>{ if(c && /^#?[0-9a-fA-F]{3}([0-9a-fA-F]{3})?$/.test(String(c).trim()) && !cols.includes(c)) cols.push(c); };
+  (workspace.marcas||[]).forEach(m=>{ const n=normalizarMarca(m); [n.primary,n.secondary,n.cta,n.accent1,n.accent2,n.bg,n.text].forEach(add); });
+  return cols.slice(0,16);
+}
+// Swatches de color = SOLO colores de la marca; escriben en una ruta (global o por tamaño).
 function swatchesColor(path, fmt){
   const re = fmt ? "renderForm()" : "renderComposicionEditor()";
   const set = (c)=> fmt ? `setCompOv('${fmt}','${path}','${c}')` : `setComp('${path}','${c}')`;
-  return coloresMarcaPreset().map(c=>`<button class="cmp-sw" style="background:${esc(c)}" title="${esc(c)}" onclick="${set(c)};${re}"></button>`).join("");
+  const cols = coloresDeMarca();
+  if(!cols.length) return `<span class="cmp-sw-vacio">Aplica una marca para ver su paleta · o usa el HEX</span>`;
+  return cols.map(c=>`<button class="cmp-sw" style="background:${esc(c)}" title="${esc(c)}" onclick="${set(c)};${re}"></button>`).join("");
 }
 // ✨ Sugerir titular + cuerpo + CTA con IA (Gemini) para la composición global.
 async function sugerirTextosIA(){
@@ -4056,15 +4090,24 @@ async function sugerirTextosIA(){
   }catch(e){ toast("Sin conexión: "+(e.message||e),4000); }
 }
 // Editor de composición (3 zonas). fmt=null → Diseño global; fmt → ajuste por tamaño.
-function compEditorHTML(p, fmt){
-  const isOv=!!fmt;
+// El MÁSTER edita el Diseño global (no un override): así "editar el máster" se
+// propaga a todos los que heredan, y el máster nunca queda tapado por un override.
+function compEditorHTML(p, fmt, ctx){
+  const esMaster = !!fmt && fmt === (p.masterFmt||"display-300x250");
+  const isOv = !!fmt && !esMaster;
   const C = isOv ? composicionEfectiva(p,fmt) : (p.composicion||composicionDefault(p.tema));
   const ov = isOv ? ovDeFmt(p,fmt) : null;
-  const RE = isOv ? "renderForm()" : "renderComposicionEditor()";
+  const RE = (ctx==='form') ? "renderForm()" : "renderComposicionEditor()";
   const S = (path,expr)=> isOv ? `setCompOv('${fmt}','${path}',${expr})` : `setComp('${path}',${expr})`;
   const SV = (path,val)=> isOv ? `setCompOv('${fmt}','${path}','${val}')` : `setComp('${path}','${val}')`;
-  const rng=(path,mn,mx,base)=>`<input type="number" class="cmp-num" min="${mn}" max="${mx}" value="${parseInt(getPath(C,path))||base}" oninput="${S(path,'this.value')}">`;
+  const NUM = (path,mn,mx)=> isOv ? `setCompOvN('${fmt}','${path}',this.value,${mn},${mx})` : `setCompN('${path}',this.value,${mn},${mx})`;
+  const TG = (path)=> isOv ? `setCompOvTog('${fmt}','${path}')` : `setCompTog('${path}')`;
+  // Numéricos: clamp en vivo (no se aceptan dimensiones fuera de rango) y al salir se corrige el campo.
+  const rng=(path,mn,mx,base)=>`<input type="number" class="cmp-num" min="${mn}" max="${mx}" value="${parseInt(getPath(C,path))||base}" oninput="${NUM(path,mn,mx)}" onchange="${NUM(path,mn,mx)};${RE}">`;
   const colorInp=(path,def)=>`<input type="color" value="${esc(getPath(C,path)||def)}" oninput="${S(path,'this.value')}">`;
+  const hexInp=(path)=>`<input type="text" class="cmp-hex" placeholder="#hex" value="${esc(getPath(C,path)||'')}" onchange="${S(path,'this.value')};${RE}">`;
+  const selFuente=(path)=>`<select onchange="${S(path,'this.value')};${RE}">${FUENTES.map(([v,l])=>`<option value="${esc(v)}" ${(getPath(C,path)||'')===v?'selected':''}>${esc(l)}</option>`).join('')}</select>`;
+  const togBtns=(base)=>`<div class="cmp-alin cmp-estilo"><button class="${getPath(C,base+'.negrita')===true?'on':''}" title="Negrita" onclick="${TG(base+'.negrita')};${RE}"><b>B</b></button><button class="${getPath(C,base+'.italica')===true?'on':''}" title="Cursiva" onclick="${TG(base+'.italica')};${RE}"><i>i</i></button></div>`;
   const selFit=(base)=>`<select onchange="${S(base+'.fit','this.value')}">${[['cover','Cubrir'],['contain','Contener']].map(([v,l])=>`<option value="${v}" ${(getPath(C,base+'.fit')||'cover')===v?'selected':''}>${l}</option>`).join('')}</select>`;
   const selFoco=(base)=>`<select onchange="${S(base+'.foco','this.value')}">${['center','top','bottom','left','right'].map(v=>`<option value="${v}" ${(getPath(C,base+'.foco')||'center')===v?'selected':''}>${v}</option>`).join('')}</select>`;
   const alinH=(path)=>`<div class="cmp-alin">${['left','center','right'].map(a=>`<button class="${(getPath(C,path)||'left')===a?'on':''}" onclick="${SV(path,a)};${RE}" title="${a}">${ICONS[a==='left'?'alignLeft':a==='center'?'alignCenter':'alignRight']}</button>`).join('')}</div>`;
@@ -4080,7 +4123,7 @@ function compEditorHTML(p, fmt){
   const zonaBg=(zk)=>{
     const mode=getPath(C,'zonas.'+zk+'.bg')||'hereda';
     let s=`<div class="cmp-row"><label>Fondo</label><select onchange="${S('zonas.'+zk+'.bg','this.value')};${RE}">${[['hereda','Hereda del banner'],['color','Color propio'],['imagen','Imagen propia']].map(([v,l])=>`<option value="${v}" ${mode===v?'selected':''}>${l}</option>`).join('')}</select></div>`;
-    if(mode==='color') s+=`<div class="cmp-row">${colorInp('zonas.'+zk+'.color','#102a43')}<div class="cmp-sw-row">${swatchesColor('zonas.'+zk+'.color',isOv?fmt:null)}</div></div>`;
+    if(mode==='color') s+=`<div class="cmp-row">${colorInp('zonas.'+zk+'.color','#102a43')}${hexInp('zonas.'+zk+'.color')}</div><div class="cmp-row"><div class="cmp-sw-row">${swatchesColor('zonas.'+zk+'.color',isOv?fmt:null)}</div></div>`;
     else if(mode==='imagen') s+=imgBlock('zonas.'+zk+'.imagen');
     return s;
   };
@@ -4095,10 +4138,10 @@ function compEditorHTML(p, fmt){
   const fondoTipo=getPath(C,'fondo.tipo')||'color';
   h+=`<div class="dz-sec">Fondo del banner (continúa en las 3 zonas)</div>`;
   h+=`<div class="cmp-row"><label>Tipo</label><select onchange="${S('fondo.tipo','this.value')};${RE}">${[['color','Color'],['imagen','Imagen']].map(([v,l])=>`<option value="${v}" ${fondoTipo===v?'selected':''}>${l}</option>`).join('')}</select></div>`;
-  if(fondoTipo==='color') h+=`<div class="cmp-row">${colorInp('fondo.color','#0e2748')}<div class="cmp-sw-row" title="Colores de tus marcas">${swatchesColor('fondo.color',isOv?fmt:null)}</div></div>`;
+  if(fondoTipo==='color') h+=`<div class="cmp-row">${colorInp('fondo.color','#0e2748')}${hexInp('fondo.color')}</div><div class="cmp-row"><div class="cmp-sw-row" title="Colores de tu marca (solo marca)">${swatchesColor('fondo.color',isOv?fmt:null)}</div></div>`;
   else h+=imgBlock('fondo.imagen');
   const prop=getPath(C,'prop')||[25,50,25];
-  h+=`<div class="dz-sec">Espacio de cada zona · escribe el %</div><div class="cmp-prop">`+['Logo','Texto','CTA'].map((l,i)=>`<div class="pcol"><span>${l}</span><div class="pnum"><input type="number" min="0" max="100" value="${parseInt(prop[i])||0}" oninput="${S('prop.'+i,'this.value')}"><i>%</i></div></div>`).join('')+`</div>`;
+  h+=`<div class="dz-sec">Espacio de cada zona · escribe el %</div><div class="cmp-prop">`+['Logo','Texto','CTA'].map((l,i)=>`<div class="pcol"><span>${l}</span><div class="pnum"><input type="number" min="0" max="100" value="${parseInt(prop[i])||0}" oninput="${NUM('prop.'+i,0,100)}" onchange="${NUM('prop.'+i,0,100)};${RE}"><i>%</i></div></div>`).join('')+`</div>`;
   h+=`<div class="dz-sec">Márgenes del banner (px)</div>`;
   h+=`<div class="cmp-row"><label>Arriba</label>${rng('margen.t',0,200,0)}<label style="min-width:auto;margin-left:10px">Abajo</label>${rng('margen.b',0,200,0)}</div>`;
   h+=`<div class="cmp-row"><label>Izquierda</label>${rng('margen.l',0,200,0)}<label style="min-width:auto;margin-left:10px">Derecha</label>${rng('margen.r',0,200,0)}</div>`;
@@ -4108,14 +4151,16 @@ function compEditorHTML(p, fmt){
   h+=miniaturasBiblioteca('zonas.logo.url', isOv?fmt:null);
   h+=`<div class="cmp-row"><label>Alto</label>${rng('zonas.logo.alto',16,160,48)}</div><div class="cmp-row"><label>Ancho máx</label>${rng('zonas.logo.maxw',15,100,70)}</div>`;
   h+=zonaSec('texto','Texto','documento')+alinRow('texto')+zonaBg('texto');
+  h+=`<div class="cmp-row"><label>Tipografía</label>${selFuente('zonas.texto.fuente')}</div>`;
   h+=`<div class="cmp-row"><input type="text" placeholder="Tu titular aquí" value="${escAttr(getPath(C,'zonas.texto.titular.texto')||'')}" oninput="${S('zonas.texto.titular.texto','this.value')}"></div>`;
-  h+=`<div class="cmp-row"><label>Tít. tam.</label>${rng('zonas.texto.titular.tamano',12,60,26)}${colorInp('zonas.texto.titular.color','#ffffff')}</div>`;
+  h+=`<div class="cmp-row"><label>Tít. tam.</label>${rng('zonas.texto.titular.tamano',12,60,26)}${colorInp('zonas.texto.titular.color','#ffffff')}<label style="min-width:auto;margin-left:10px">Estilo</label>${togBtns('zonas.texto.titular')}</div>`;
   h+=`<div class="cmp-row"><textarea placeholder="Texto de apoyo breve" oninput="${S('zonas.texto.cuerpo.texto','this.value')}">${esc(getPath(C,'zonas.texto.cuerpo.texto')||'')}</textarea></div>`;
-  h+=`<div class="cmp-row"><label>Cuerpo tam.</label>${rng('zonas.texto.cuerpo.tamano',9,32,13)}${colorInp('zonas.texto.cuerpo.color','#ffffff')}</div>`;
+  h+=`<div class="cmp-row"><label>Cuerpo tam.</label>${rng('zonas.texto.cuerpo.tamano',9,32,13)}${colorInp('zonas.texto.cuerpo.color','#ffffff')}<label style="min-width:auto;margin-left:10px">Estilo</label>${togBtns('zonas.texto.cuerpo')}</div>`;
   h+=zonaSec('cta','Call to action','compartir')+alinRow('cta')+zonaBg('cta');
+  h+=`<div class="cmp-row"><label>Tipografía</label>${selFuente('zonas.cta.fuente')}</div>`;
   h+=`<div class="cmp-row"><input type="text" placeholder="Texto del botón" value="${escAttr(getPath(C,'zonas.cta.texto')||'')}" oninput="${S('zonas.cta.texto','this.value')}"></div>`;
   h+=`<div class="cmp-row"><input type="text" placeholder="Link (https://…)" value="${escAttr(getPath(C,'zonas.cta.url')||'')}" onchange="${S('zonas.cta.url','this.value')}"></div>`;
-  h+=`<div class="cmp-row"><label>Colores</label>${colorInp('zonas.cta.colorFondo','#2f80ed')}${colorInp('zonas.cta.colorTexto','#ffffff')}</div>`;
+  h+=`<div class="cmp-row"><label>Colores</label>${colorInp('zonas.cta.colorFondo','#2f80ed')}${colorInp('zonas.cta.colorTexto','#ffffff')}<label style="min-width:auto;margin-left:10px">Estilo</label>${togBtns('zonas.cta')}</div>`;
   h+=`<div class="cmp-row"><label>Tamaño</label>${rng('zonas.cta.tamano',11,40,13)}<span class="cmp-unit">px</span><label style="min-width:auto;margin-left:12px">Radio</label>${rng('zonas.cta.radio',0,30,8)}</div>`;
   return h;
 }
@@ -4132,14 +4177,20 @@ function renderComposicionEditor(){
     `<option value="">${marcas.length?'— Aplicar marca —':'— Sin marcas (crea una) —'}</option>`+
     marcas.map(m=>`<option value="${m.id}" ${p.tema&&p.tema.marcaId===m.id?'selected':''}>${esc(m.nombre)}</option>`).join('')+
     `</select><button class="cmp-bib" onclick="abrirMarcas()" title="Gestionar marcas">${svgIcon("paleta",{size:"12px"})}</button></div>`;
-  cont.innerHTML=`<div class="cmp-ed">${marcaSel}<div class="dz-sec">Diseño global · 3 zonas</div><button class="ia-sugerir" onclick="sugerirTextosIA()">✨ Sugerir textos con Char-B</button>${compEditorHTML(p,null)}</div>`;
+  cont.innerHTML=`<div class="cmp-ed">${marcaSel}<div class="dz-sec">Diseño global · 3 zonas</div><button class="ia-sugerir" onclick="sugerirTextosIA()">✨ Sugerir textos con Char-B</button>${compEditorHTML(p,null,'diseno')}</div>`;
 }
 // Panel "Ajustar este tamaño" (overrides sobre el global) en la pestaña Editar.
 function renderFormTamaño(f){
   const p=pieza(); asegurarComposicionNueva(p); const fmt=p.activaFmt; const F=FORMATOS[fmt];
   if(!fmt||!F){ f.innerHTML=`<div class="form-empty"><div class="form-empty-ico">${svgIcon("editar",{size:"32px"})}</div>Haz clic en un banner del tablero<br>para ajustar ese tamaño</div>`; return; }
   const fam=familiaDeFormato(fmt);
-  f.innerHTML=`<button class="volver-celda" onclick="cambiarPanelTab('diseno')">${svgIcon("paleta",{size:"12px"})} Ir al Diseño global</button><div class="cmp-ed"><div class="dz-sec">Ajustar ${F.ancho}×${F.alto} <span style="font-weight:400;color:#8890a8">· ${fam} · hereda del global</span></div>${compEditorHTML(p,fmt)}<button class="set-aj-reset" onclick="resetTamaño('${fmt}')">Restablecer este tamaño al global</button></div>`;
+  const esMaster = fmt === (p.masterFmt||"display-300x250");
+  // El MÁSTER edita el Diseño global (base de todos); los demás ajustan SOLO su tamaño.
+  const cab = esMaster
+    ? `<div class="dz-sec">Máster ${F.ancho}×${F.alto} <span style="font-weight:400;color:#1c73cb">· edita el Diseño base (todos heredan)</span></div>`
+    : `<div class="dz-sec">Ajustar ${F.ancho}×${F.alto} <span style="font-weight:400;color:#8890a8">· ${fam} · hereda del global</span></div>`;
+  const reset = esMaster ? "" : `<button class="set-aj-reset" onclick="resetTamaño('${fmt}')">Restablecer este tamaño al global</button>`;
+  f.innerHTML=`<button class="volver-celda" onclick="cambiarPanelTab('diseno')">${svgIcon("paleta",{size:"12px"})} Ir al Diseño global</button><div class="cmp-ed">${cab}${compEditorHTML(p,fmt,'form')}${reset}</div>`;
 }
 function cssComponentes(){
   const cssFull = (document.querySelector("style") && document.querySelector("style").textContent) || "";
