@@ -1,4 +1,21 @@
-# Cloudflare Pages sirve automáticamente editor.html en /editor.
-# El "home" (dashboard) vive en /home y lo sirve el mismo SPA (editor.html).
-# La app cambia la URL entre /home (dashboard) y /editor (editando) sin recargar.
-/home /editor.html 200
+# Cloudflare Pages sirve el mismo SPA (editor.html) en todas las rutas de la app.
+# El SPA lee location.pathname y entra a la sección correspondiente (ver irARuta()).
+#   /home        → dashboard (lanzador + proyectos)
+#   /email-ia    → Email (con Char-B)
+#   /gdn-ia      → Banner Display (con Char-B)
+#   /free        → Estilo Libre
+#   /post-ia     → Post RRSS (pronto)
+#   /ads-ia      → Google Search Ads (pronto)
+#   /editor      → editando una creatividad
+#   /marcas /papelera /permisos /configuracion → menú (abren su panel sobre el dashboard)
+/home          /editor.html 200
+/editor        /editor.html 200
+/email-ia      /editor.html 200
+/gdn-ia        /editor.html 200
+/free          /editor.html 200
+/post-ia       /editor.html 200
+/ads-ia        /editor.html 200
+/marcas        /editor.html 200
+/papelera      /editor.html 200
+/permisos      /editor.html 200
+/configuracion /editor.html 200
