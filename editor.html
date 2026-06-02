@@ -2943,10 +2943,12 @@ function modoDeCategoria(cat){
   return cat==="Email" ? "email" : cat==="Banners" ? "banners" : cat==="Post" ? "post" : "todos";
 }
 function renderFormatoSelect(){
-  // El selector es para DOCUMENTOS (email/invitación/libre). Los formatos visuales
-  // de tamaño fijo (Display/Social) NO son piezas sueltas: se crean como Colecciones
-  // (modelo de capas). Así no se mezclan plantillas/bloques con banners.
-  const DOC = ["libre","email","invitacion"];
+  // El selector depende de la SECCIÓN: en /email-ia solo se ofrece Email (no se
+  // cambia a Display/Social desde ahí). En /free (universal) van todos los documentos
+  // + Colecciones. Los formatos visuales fijos (Display/Social) son Colecciones (capas).
+  const sec = (typeof rutaDeProducto==="function") ? rutaDeProducto(pieza()) : null;
+  const soloEmail = sec === "/email-ia";
+  const DOC = soloEmail ? ["email"] : ["libre","email","invitacion"];
   const grupos = {};
   DOC.forEach(k => { const v=FORMATOS[k]; if(v){ (grupos[v.badge]=grupos[v.badge]||[]).push([k,v]); } });
   let html = "";
@@ -2955,8 +2957,8 @@ function renderFormatoSelect(){
     arr.forEach(([k,v]) => { html += `<option value="${k}">${esc(v.label)}</option>`; });
     html += `</optgroup>`;
   });
-  // Colecciones: crean/convierten en un tablero por capas (varios tamaños a la vez).
-  html += `<optgroup label="Colecciones"><option value="__coleccion:display-desktop">Google Display · Desktop</option><option value="__coleccion:social">Social (LinkedIn / Facebook)</option></optgroup>`;
+  // Colecciones solo fuera de email-ia (en /free / universal).
+  if(!soloEmail) html += `<optgroup label="Colecciones"><option value="__coleccion:display-desktop">Google Display · Desktop</option><option value="__coleccion:social">Social (LinkedIn / Facebook)</option></optgroup>`;
   document.getElementById("fmt").innerHTML = html;
 }
 function cambiarFormato(f){
@@ -3104,12 +3106,16 @@ const BLOQUE_ICONO = {
 // Bloques de documento/agenda que no tienen sentido en un banner de tamaño fijo
 // (display/social): se ocultan de la biblioteca cuando el formato es un banner.
 const BLOQUES_SOLO_DOC = new Set(["footer","bandaHeader","bandaHeaderBlanco","bandaFooter","bandaFooterBlanco","diadivisor","fechaCard","evento","formulario","tabla"]);
+// Curación por sección: en /email-ia la biblioteca muestra SOLO los bloques de email
+// (los del mockup + header/footer de marca + estructura básica). En /free van todos.
+const BLOQUES_EMAIL_IA = new Set(["bandaHeader","bandaHeaderBlanco","bandaFooter","bandaFooterBlanco","grid","hero","texto","imagen","cta","divisor","espaciador","features","kpi","audio","formulario","social","icono"]);
 function renderBiblioteca(){
   const cont = document.getElementById("biblioteca");
   if(!cont) return;
   const fmt = FORMATOS[getFormato()] || {};
   const esBannerFijo = fmt.alto > 0;   // display/social fijos → sin bloques de email/agenda
-  const permitido = (tipo) => !(esBannerFijo && BLOQUES_SOLO_DOC.has(tipo));
+  const sec = (typeof rutaDeProducto==="function") ? rutaDeProducto(pieza()) : null;
+  const permitido = (tipo) => !(esBannerFijo && BLOQUES_SOLO_DOC.has(tipo)) && (sec!=="/email-ia" || BLOQUES_EMAIL_IA.has(tipo));
   const cats = {};
   Object.entries(BLOQUES).forEach(([tipo,b]) => { if(!permitido(tipo)) return; const c=b.cat||"Otros"; if(!cats[c])cats[c]=[]; cats[c].push([tipo,b]); });
   const orden = ["Estructura","Contenido","Acción","Agenda","Datos","Cards","Multimedia","Widgets","Decoración","Avanzado"];
