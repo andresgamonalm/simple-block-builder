@@ -1001,6 +1001,10 @@ button,input,select,textarea{font-family:inherit;}
 .sbb-features ul{list-style:none;padding:0;margin:0;}
 .sbb-features li{display:flex;gap:12px;padding:10px 0;align-items:flex-start;}
 .sbb-features li:not(:last-child){border-bottom:1px solid #f0f0f4;}
+/* Orientación vertical: ícono arriba del texto */
+.sbb-features.vertical li{flex-direction:column;align-items:center;}
+.sbb-features.vertical .ico{margin-bottom:2px;}
+.sbb-features.vertical .txt{width:100%;}
 .sbb-features .ico{width:36px;height:36px;border-radius:8px;background:#f0f0f4;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0;color:var(--sbb-primary,#040764);}
 .sbb-features .txt .t{font-size:13.5px;font-weight:600;color:inherit;}
 .sbb-features .txt .s{font-size:12px;color:#888;margin-top:2px;line-height:1.45;}
@@ -1688,13 +1692,19 @@ async function sincronizarConNube(){
   }catch(e){ setSyncEstado("Sin conexión", "err"); }
 }
 function paddings(d){ const t=d.padTop??"14",r=d.padRight??"24",b=d.padBottom??"14",l=d.padLeft??"24"; return `${t}px ${r}px ${b}px ${l}px`; }
-function justifyH(v){ return v==="left"?"flex-start":v==="right"?"flex-end":"center"; }
+function justifyH(v){ return v==="left"?"flex-start":v==="right"?"flex-end":v==="justify"?"stretch":"center"; }
 function justifyV(v){ return v==="top"?"flex-start":v==="bottom"?"flex-end":"center"; }
+// Tipografías disponibles (todas precargadas arriba vía Google Fonts). "" = hereda del tema.
+const FUENTES = [["","Hereda del tema"],["Inter","Inter"],["Roboto","Roboto"],["Open Sans","Open Sans"],["Lato","Lato"],["Montserrat","Montserrat"],["Poppins","Poppins"],["Playfair Display","Playfair (serif)"],["Merriweather","Merriweather (serif)"],["Arial","Arial"],["Georgia","Georgia"]];
+function fontFamilyCSS(f){ return f ? `font-family:'${esc(f)}',Arial,Helvetica,sans-serif;` : ""; }
+// Mapea la Alineación H a text-align (incluye "justify" = justificado).
+function textAlignDe(v){ return v==="left"?"left":v==="right"?"right":v==="justify"?"justify":"center"; }
 
 const ICONS = {
   alignLeft: '<svg viewBox="0 0 16 16" fill="currentColor"><rect x="1" y="2" width="14" height="2" rx="1"/><rect x="1" y="6" width="9" height="2" rx="1"/><rect x="1" y="10" width="14" height="2" rx="1"/><rect x="1" y="14" width="9" height="2" rx="1"/></svg>',
   alignCenter: '<svg viewBox="0 0 16 16" fill="currentColor"><rect x="1" y="2" width="14" height="2" rx="1"/><rect x="3.5" y="6" width="9" height="2" rx="1"/><rect x="1" y="10" width="14" height="2" rx="1"/><rect x="3.5" y="14" width="9" height="2" rx="1"/></svg>',
   alignRight: '<svg viewBox="0 0 16 16" fill="currentColor"><rect x="1" y="2" width="14" height="2" rx="1"/><rect x="6" y="6" width="9" height="2" rx="1"/><rect x="1" y="10" width="14" height="2" rx="1"/><rect x="6" y="14" width="9" height="2" rx="1"/></svg>',
+  alignJustify: '<svg viewBox="0 0 16 16" fill="currentColor"><rect x="1" y="2" width="14" height="2" rx="1"/><rect x="1" y="6" width="14" height="2" rx="1"/><rect x="1" y="10" width="14" height="2" rx="1"/><rect x="1" y="14" width="14" height="2" rx="1"/></svg>',
   alignTop: '<svg viewBox="0 0 16 16" fill="currentColor"><rect x="2" y="1" width="12" height="2" rx="1"/><rect x="4" y="6" width="8" height="6" rx="1"/></svg>',
   alignMiddle: '<svg viewBox="0 0 16 16" fill="currentColor"><rect x="1" y="7" width="14" height="2" rx="1"/><rect x="4" y="2" width="8" height="3" rx="1"/><rect x="4" y="11" width="8" height="3" rx="1"/></svg>',
   alignBottom: '<svg viewBox="0 0 16 16" fill="currentColor"><rect x="2" y="13" width="12" height="2" rx="1"/><rect x="4" y="4" width="8" height="6" rx="1"/></svg>'
@@ -2617,12 +2627,16 @@ const BLOQUES = {
 
   hero: {
     cat:"Estructura", nombre:"Hero con overlay", icono:"", sub:"Imagen full + texto encima",
-    defaults: Object.assign({}, styleDefaults, { padTop:"0", padBottom:"0", imagenUrl:"https://placehold.co/1200x500/040764/9ca3af?text=Hero", titulo:"Título del hero", sub:"Subtítulo que acompaña al título", ctaTexto:"Saber más", ctaUrl:"", alturaHero:"320", oscurecer:"50", radioImg:"0", colorVeil:"#000000", posImg:"center", colorTitulo:"#ffffff", colorSub:"#ffffff" }),
+    defaults: Object.assign({}, styleDefaults, { padTop:"0", padBottom:"0", imagenUrl:"https://placehold.co/1200x500/040764/9ca3af?text=Hero", titulo:"Título del hero", sub:"Subtítulo que acompaña al título", ctaTexto:"Saber más", ctaUrl:"", alturaHero:"320", oscurecer:"50", radioImg:"0", colorVeil:"#000000", posImg:"center", colorTitulo:"#ffffff", colorSub:"#ffffff", fuente:"", tamTitulo:"28", tamSub:"14" }),
     campos: [
       {key:"imagenUrl",label:"URL imagen de fondo",tipo:"imgurl"},
       {key:"titulo",label:"Título",tipo:"text"},
       {key:"sub",label:"Subtítulo",tipo:"textarea"},
       {tipo:"row2", izq:{key:"ctaTexto",label:"Texto CTA",tipo:"text"}, der:{key:"ctaUrl",label:"URL CTA",tipo:"text"}},
+      {grupo:"Tipografía"},
+      {key:"fuente",label:"Tipografía",tipo:"select",opciones:FUENTES},
+      {tipo:"row2", izq:{key:"tamTitulo",label:"Tamaño título (px)",tipo:"range",min:14,max:72,step:1}, der:{key:"tamSub",label:"Tamaño subtítulo (px)",tipo:"range",min:10,max:32,step:1}},
+      {grupo:"Imagen"},
       {tipo:"row2", izq:{key:"alturaHero",label:"Alto (px)",tipo:"range",min:140,max:600,step:10}, der:{key:"oscurecer",label:"Oscurecer (%)",tipo:"range",min:0,max:80,step:5}},
       {key:"radioImg",label:"Radio (px)",tipo:"range",min:0,max:40,step:1},
       {tipo:"row2", izq:{key:"colorVeil",label:"Color de la capa",tipo:"color"}, der:{key:"posImg",label:"Posición imagen",tipo:"select",opciones:[["center","Centro"],["top","Arriba"],["bottom","Abajo"],["left","Izquierda"],["right","Derecha"]]}},
@@ -2632,11 +2646,13 @@ const BLOQUES = {
     render: (d) => {
       const veil = `background:${hexRgba(d.colorVeil||"#000000",(parseInt(d.oscurecer)||0)/100)};`;
       const et = parseFloat(d.escalaTexto) || 1;   // escala del texto encima (adaptación por tamaño)
-      const tH = Math.round(28*et), tP = Math.round(14*et), padV = Math.round(42*et), padH = Math.round(32*et);
+      const tH = Math.round((parseFloat(d.tamTitulo)||28)*et), tP = Math.round((parseFloat(d.tamSub)||14)*et), padV = Math.round(42*et), padH = Math.round(32*et);
       const cssH = `font-size:${tH}px;${d.colorTitulo?`color:${esc(d.colorTitulo)};`:""}`;
       const cssP = `font-size:${tP}px;${d.colorSub?`color:${esc(d.colorSub)};`:""}`;
+      const ta = textAlignDe(d.alinH);   // alineación del texto (incluye justificado)
+      const fam = fontFamilyCSS(d.fuente);
       const cta = d.ctaTexto ? `<a href="${esc(d.ctaUrl||'#')}" target="_blank" rel="noopener">${esc(d.ctaTexto)}</a>` : "";
-      return wrap(d, `<div class="sbb-hero" style="height:${esc(d.alturaHero)}px;border-radius:${esc(d.radioImg)}px;overflow:hidden;"><img class="bg" src="${esc(d.imagenUrl)}" alt="" style="object-position:${esc(d.posImg||'center')};"><div class="veil" style="${veil}"></div><div class="content" style="height:${esc(d.alturaHero)}px;padding:${padV}px ${padH}px;"><h2 style="${cssH}">${esc(d.titulo)}</h2>${d.sub?`<p style="${cssP}">${escMultiline(d.sub)}</p>`:""}${cta}</div></div>`);
+      return wrap(d, `<div class="sbb-hero" style="height:${esc(d.alturaHero)}px;border-radius:${esc(d.radioImg)}px;overflow:hidden;${fam}"><img class="bg" src="${esc(d.imagenUrl)}" alt="" style="object-position:${esc(d.posImg||'center')};"><div class="veil" style="${veil}"></div><div class="content" style="height:${esc(d.alturaHero)}px;padding:${padV}px ${padH}px;text-align:${ta};"><h2 style="${cssH}">${esc(d.titulo)}</h2>${d.sub?`<p style="${cssP}">${escMultiline(d.sub)}</p>`:""}${cta}</div></div>`);
     }
   },
 
@@ -2654,16 +2670,27 @@ const BLOQUES = {
 
   features: {
     cat:"Contenido", nombre:"Lista de features", icono:"", sub:"Items con ícono + título + sub",
-    defaults: Object.assign({}, styleDefaults, { padTop:"6", padBottom:"6", titulo:"", colorIcono:"", items:[ {ico:"trending",t:"Velocidad",s:"Carga instantánea en cualquier dispositivo."}, {ico:"candado",t:"Seguridad",s:"Cifrado de extremo a extremo."}, {ico:"estrella",t:"Calidad",s:"Diseño premium en cada detalle."} ] }),
+    defaults: Object.assign({}, styleDefaults, { padTop:"6", padBottom:"6", titulo:"", colorIcono:"", orientacion:"horizontal", fuente:"", tamTitulo:"16", tamItemTitulo:"13.5", tamItemSub:"12", gapItems:"10", items:[ {ico:"trending",t:"Velocidad",s:"Carga instantánea en cualquier dispositivo."}, {ico:"candado",t:"Seguridad",s:"Cifrado de extremo a extremo."}, {ico:"estrella",t:"Calidad",s:"Diseño premium en cada detalle."} ] }),
     campos: [
       {key:"titulo",label:"Título superior (opcional)",tipo:"text"},
       {key:"colorIcono",label:"Color de íconos (vacío = tema)",tipo:"color"},
+      {grupo:"Disposición y tipografía"},
+      {key:"orientacion",label:"Ícono y texto",tipo:"select",opciones:[["horizontal","Ícono al lado del texto"],["vertical","Ícono arriba del texto"]]},
+      {key:"fuente",label:"Tipografía",tipo:"select",opciones:FUENTES},
+      {tipo:"row2", izq:{key:"tamTitulo",label:"Tamaño título superior (px)",tipo:"range",min:11,max:36,step:1}, der:{key:"gapItems",label:"Distancia entre ítems (px)",tipo:"range",min:0,max:48,step:1}},
+      {tipo:"row2", izq:{key:"tamItemTitulo",label:"Tamaño título de ítem (px)",tipo:"range",min:11,max:28,step:1}, der:{key:"tamItemSub",label:"Tamaño subtítulo de ítem (px)",tipo:"range",min:9,max:22,step:1}},
       {key:"items",label:"Features",tipo:"lista",itemTipos:[{valor:"feat",label:"Feature",camposItem:[{k:"ico",l:"Ícono",tipo:"icono"},{k:"t",l:"Título"},{k:"s",l:"Subtítulo"}]}]},
       ...styleFields()
     ],
     render: (d) => {
-      const items = (d.items||[]).map(it => `<li><div class="ico"${d.colorIcono?` style="color:${esc(d.colorIcono)}"`:""}>${it.ico?svgIcon(it.ico,{size:"22px"}):""}</div><div class="txt"><div class="t">${esc(it.t||"")}</div>${it.s?`<div class="s">${esc(it.s)}</div>`:""}</div></li>`).join("");
-      return wrap(d, `<div class="sbb-features">${d.titulo?`<h3>${esc(d.titulo)}</h3>`:""}<ul>${items}</ul></div>`);
+      const vert = d.orientacion === "vertical";
+      const g = (parseFloat(d.gapItems)!=null && d.gapItems!=="") ? parseFloat(d.gapItems) : 10;
+      const ta = textAlignDe(d.alinH);
+      const stT = `font-size:${esc(d.tamItemTitulo||"13.5")}px;`;
+      const stS = `font-size:${esc(d.tamItemSub||"12")}px;`;
+      const items = (d.items||[]).map(it => `<li style="padding:${g/2}px 0;"><div class="ico"${d.colorIcono?` style="color:${esc(d.colorIcono)}"`:""}>${it.ico?svgIcon(it.ico,{size:"22px"}):""}</div><div class="txt"><div class="t" style="${stT}">${esc(it.t||"")}</div>${it.s?`<div class="s" style="${stS}">${esc(it.s)}</div>`:""}</div></li>`).join("");
+      const fam = fontFamilyCSS(d.fuente);
+      return wrap(d, `<div class="sbb-features${vert?" vertical":""}" style="${fam}text-align:${ta};">${d.titulo?`<h3 style="font-size:${esc(d.tamTitulo||"16")}px;">${esc(d.titulo)}</h3>`:""}<ul>${items}</ul></div>`);
     }
   },
 
@@ -3271,7 +3298,7 @@ function renderCampoSimple(c, datos){
     return `<div class="form-row"><label>${esc(c.label)}</label><select onchange="actualizarDato('${c.key}',this.value)">${opts}</select></div>`;
   }
   if(c.tipo === "range") return `<div class="form-row"><label>${esc(c.label)}</label><div class="range-row"><input type="range" min="${c.min}" max="${c.max}" step="${c.step||1}" value="${esc(val)}" oninput="actualizarDato('${c.key}',this.value);var n=this.parentElement.querySelector('.rnum');if(n)n.value=this.value;"><input type="number" class="rnum" min="${c.min}" max="${c.max}" step="${c.step||1}" value="${esc(val)}" oninput="actualizarDato('${c.key}',this.value);var s=this.parentElement.querySelector('input[type=range]');if(s)s.value=this.value;"></div></div>`;
-  if(c.tipo === "alignH") return `<div class="form-row"><label>${esc(c.label)}</label><div class="align-picker"><button title="Izquierda" class="${val==="left"?"on":""}" onclick="actualizarDato('${c.key}','left');renderForm();">${ICONS.alignLeft}</button><button title="Centro" class="${val==="center"?"on":""}" onclick="actualizarDato('${c.key}','center');renderForm();">${ICONS.alignCenter}</button><button title="Derecha" class="${val==="right"?"on":""}" onclick="actualizarDato('${c.key}','right');renderForm();">${ICONS.alignRight}</button></div></div>`;
+  if(c.tipo === "alignH") return `<div class="form-row"><label>${esc(c.label)}</label><div class="align-picker"><button title="Izquierda" class="${val==="left"?"on":""}" onclick="actualizarDato('${c.key}','left');renderForm();">${ICONS.alignLeft}</button><button title="Centro" class="${val==="center"?"on":""}" onclick="actualizarDato('${c.key}','center');renderForm();">${ICONS.alignCenter}</button><button title="Derecha" class="${val==="right"?"on":""}" onclick="actualizarDato('${c.key}','right');renderForm();">${ICONS.alignRight}</button><button title="Justificado" class="${val==="justify"?"on":""}" onclick="actualizarDato('${c.key}','justify');renderForm();">${ICONS.alignJustify}</button></div></div>`;
   if(c.tipo === "alignV") return `<div class="form-row"><label>${esc(c.label)}</label><div class="align-picker"><button title="Arriba" class="${val==="top"?"on":""}" onclick="actualizarDato('${c.key}','top');renderForm();">${ICONS.alignTop}</button><button title="Centro" class="${val==="center"?"on":""}" onclick="actualizarDato('${c.key}','center');renderForm();">${ICONS.alignMiddle}</button><button title="Abajo" class="${val==="bottom"?"on":""}" onclick="actualizarDato('${c.key}','bottom');renderForm();">${ICONS.alignBottom}</button></div></div>`;
   if(c.tipo === "icono-picker"){
     const opts = Object.entries(ICONOS_SVG).map(([k,v]) =>
