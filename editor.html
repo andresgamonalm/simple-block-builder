@@ -4608,8 +4608,43 @@ function cerrarModal(c){ document.getElementById("modal-"+c).classList.remove("s
 // Los bloques son totalmente editables tras cargarse. Agregar plantilla =
 // añadir una entrada. 'grupo' las agrupa en el menú.
 const PLANTILLAS = {
-  // Email: plantillas RETIRADAS (usaban bloques viejos: header/footer genéricos,
-  // imgtext "escolar", etc.). Se rehacen desde cero con el set curado de email-ia.
+  // ── EMAIL · plantillas pro (secciones full-bleed + marca Gamonal: navy #040764, azul #1c73cb, amarillo #fce865) ──
+  "email-promo": { label:"Promoción / Oferta", grupo:"Email", formato:"email", nombre:"Promoción",
+    bloques:[
+      ["bandaHeader",{estilo:"solido",bg:"#040764",alto:"30"}],
+      ["seccion",{bg:"#040764",colorTexto:"#ffffff",colorEyebrow:"#fce865",eyebrow:"OFERTA EXCLUSIVA",titulo:"AHORRA EN GRANDE",fuenteTitulo:"Anton",tamTitulo:"46",subtitulo:"Aprovecha nuestra promoción por tiempo limitado y llévate lo mejor con un descuento que no se repite.",tamSub:"15",botonTexto:"Ver la oferta",botonVariante:"solido",botonColor:"#1c73cb",padV:"54"}],
+      ["imagen",{url:"https://placehold.co/1200x520/1c73cb/ffffff?text=Tu+imagen",anchoImg:"100",radio:"0",padTop:"0",padBottom:"0",padLeft:"0",padRight:"0"}],
+      ["seccion",{bg:"#fce865",colorTexto:"#040764",colorEyebrow:"#1c73cb",eyebrow:"SOLO POR HOY",titulo:"40% OFF",fuenteTitulo:"Anton",tamTitulo:"56",subtitulo:"Usa el código GAMONAL40 al finalizar tu compra. Válido hasta agotar stock.",tamSub:"15",botonTexto:"Comprar ahora",botonVariante:"solido",botonColor:"#040764",padV:"48"}],
+      ["features",{titulo:"¿Por qué elegirnos?",items:[{ico:"trending",t:"Rápido",s:"Recibe tu pedido en tiempo récord."},{ico:"candado",t:"Seguro",s:"Pago protegido de extremo a extremo."},{ico:"corazon",t:"Cercano",s:"Soporte real cuando lo necesitas."}]}],
+      ["seccion",{bg:"#1c73cb",colorTexto:"#ffffff",eyebrow:"",titulo:"¿Listo para empezar?",fuenteTitulo:"Montserrat",tamTitulo:"30",subtitulo:"Únete hoy y empieza a disfrutar de todos los beneficios.",tamSub:"15",botonTexto:"Crear cuenta",botonVariante:"outline",botonColor:"#ffffff",padV:"44"}],
+      ["bandaFooter",{estilo:"solido",bg:"#040764",textoSeguir:"Síguenos"}]
+    ] },
+  "email-newsletter": { label:"Newsletter / Artículos", grupo:"Email", formato:"email", nombre:"Newsletter",
+    bloques:[
+      ["bandaHeader",{estilo:"solido",bg:"#040764",alto:"30"}],
+      ["seccion",{bg:"#ffffff",colorTexto:"#1a1a1a",colorEyebrow:"#1c73cb",eyebrow:"NEWSLETTER",titulo:"Lo nuevo de este mes",fuenteTitulo:"Montserrat",tamTitulo:"30",subtitulo:"Las novedades, consejos y recursos que seleccionamos para ti.",tamSub:"15",botonTexto:"",padV:"36"}],
+      ["grid",{columnas:"2",gap:"18",alinearVert:"center",celdas:[
+        {tipo:"imagen",datos:{url:"https://placehold.co/600x440/1c73cb/ffffff?text=Foto",anchoImg:"100",radio:"10"}},
+        {tipo:"seccion",datos:{bg:"#ffffff",colorTexto:"#1a1a1a",colorEyebrow:"#1c73cb",eyebrow:"ARTÍCULO",titulo:"Un titular que engancha",fuenteTitulo:"Montserrat",tamTitulo:"19",subtitulo:"Resumen breve que invita a leer el contenido completo de esta nota.",tamSub:"13",alinH:"left",botonTexto:"Leer más",botonVariante:"outline",botonColor:"#1c73cb",padV:"4",padH:"2"}}
+      ]}],
+      ["divisor",{}],
+      ["grid",{columnas:"2",gap:"18",alinearVert:"center",celdas:[
+        {tipo:"seccion",datos:{bg:"#ffffff",colorTexto:"#1a1a1a",colorEyebrow:"#1c73cb",eyebrow:"ARTÍCULO",titulo:"Otra historia para ti",fuenteTitulo:"Montserrat",tamTitulo:"19",subtitulo:"Una segunda nota con su imagen al lado para alternar el ritmo visual.",tamSub:"13",alinH:"left",botonTexto:"Leer más",botonVariante:"outline",botonColor:"#1c73cb",padV:"4",padH:"2"}},
+        {tipo:"imagen",datos:{url:"https://placehold.co/600x440/040764/ffffff?text=Foto",anchoImg:"100",radio:"10"}}
+      ]}],
+      ["seccion",{bg:"#040764",colorTexto:"#ffffff",colorEyebrow:"#fce865",eyebrow:"NO TE PIERDAS NADA",titulo:"Síguenos en redes",fuenteTitulo:"Montserrat",tamTitulo:"28",subtitulo:"Recibe lo mejor cada semana, directo a tu correo.",tamSub:"15",botonTexto:"Suscribirme",botonVariante:"solido",botonColor:"#1c73cb",padV:"44"}],
+      ["bandaFooter",{estilo:"solido",bg:"#040764",textoSeguir:"Síguenos"}]
+    ] },
+  "email-bienvenida": { label:"Bienvenida / Informativa", grupo:"Email", formato:"email", nombre:"Bienvenida",
+    bloques:[
+      ["bandaHeader",{estilo:"solido",bg:"#040764",alto:"30"}],
+      ["seccion",{bg:"#040764",colorTexto:"#ffffff",colorEyebrow:"#fce865",eyebrow:"BIENVENIDO",titulo:"Nos alegra tenerte aquí",fuenteTitulo:"Montserrat",tamTitulo:"34",subtitulo:"Te acompañamos paso a paso para que aproveches todo desde el primer día.",tamSub:"15",botonTexto:"Empezar ahora",botonVariante:"solido",botonColor:"#1c73cb",padV:"54"}],
+      ["imagen",{url:"https://placehold.co/1200x460/1c73cb/ffffff?text=Tu+imagen",anchoImg:"100",radio:"0",padTop:"0",padBottom:"0",padLeft:"0",padRight:"0"}],
+      ["seccion",{bg:"#ffffff",colorTexto:"#1a1a1a",colorEyebrow:"#1c73cb",eyebrow:"CÓMO FUNCIONA",titulo:"En 3 simples pasos",fuenteTitulo:"Montserrat",tamTitulo:"28",subtitulo:"Empezar es muy fácil. Te lo explicamos en un momento.",tamSub:"15",botonTexto:"",padV:"36"}],
+      ["features",{titulo:"",items:[{ico:"usuario",t:"Crea tu cuenta",s:"Regístrate en menos de un minuto."},{ico:"check",t:"Configura tu perfil",s:"Personaliza tu experiencia."},{ico:"trending",t:"Empieza a crear",s:"Saca tu primera pieza hoy mismo."}]}],
+      ["seccion",{bg:"#1c73cb",colorTexto:"#ffffff",eyebrow:"",titulo:"¿Tienes dudas?",fuenteTitulo:"Montserrat",tamTitulo:"28",subtitulo:"Estamos para ayudarte cuando lo necesites.",tamSub:"15",botonTexto:"Contáctanos",botonVariante:"outline",botonColor:"#ffffff",padV:"44"}],
+      ["bandaFooter",{estilo:"solido",bg:"#040764",textoSeguir:"Síguenos"}]
+    ] },
   // LinkedIn
   "li-portada": { label:"Portada perfil 1584×396", grupo:"LinkedIn", formato:"linkedin", nombre:"LinkedIn Portada",
     bloques:[["header",{}]] },
@@ -4690,7 +4725,15 @@ function cargarPlantilla(tipo){
   const def = PLANTILLAS[tipo];
   if(!def){ toast("Plantilla no encontrada"); return; }
   const p = getOrCreate(def.formato, def.nombre);
-  p.canvas = def.bloques.filter(([t]) => BLOQUES[t]).map(([t,ov]) => mk(t, ov));
+  p.canvas = def.bloques.filter(([t]) => BLOQUES[t]).map(([t,ov]) => {
+    const item = mk(t, ov);
+    // Normaliza celdas de grid: cada celda = bloque completo (defaults + datos de la plantilla).
+    if(t==="grid" && Array.isArray(item.datos.celdas)){
+      item.datos.celdas = item.datos.celdas.map(c =>
+        (c && c.tipo && BLOQUES[c.tipo]) ? { tipo:c.tipo, datos:Object.assign(clone(BLOQUES[c.tipo].defaults), c.datos||{}) } : (c||{}));
+    }
+    return item;
+  });
   proyecto.activa = p.id;
   activarPieza(p.id);
   toast("Plantilla cargada: " + def.label);

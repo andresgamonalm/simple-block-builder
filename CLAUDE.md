@@ -124,7 +124,7 @@ Tras analizar 5 referencias (GoBrash + 4 zips: viajes, salud, chequeos, préstam
 - **CTA `variante`** = `solido`|`outline` (outline = transparente + borde del acento). Border 2px siempre para tamaño consistente.
 - **Fuentes display** en `FUENTES` + Google Fonts: **Oswald, Anton, Bebas Neue, Archivo Black** (titulares condensados).
 - `imgtext` NO está en email-ia (el usuario lo encontró "escolar"); las filas artículo se hacen con `grid` 2-col.
-- **Pendiente:** rehacer 2-3 plantillas de email con estos primitivos (promo, newsletter/artículos, informativa) — con marca Gamonal.
+- **3 plantillas de email nuevas (HECHO)** en `PLANTILLAS` (grupo Email): **`email-promo`** (Promoción/Oferta: hero navy + foto + banda amarilla "40% OFF" + features + CTA azul), **`email-newsletter`** (filas artículo con `grid` 2-col [imagen | seccion(transparente) con "Leer más" outline], alternadas), **`email-bienvenida`** (hero + foto + "Cómo funciona" + features 3 pasos + CTA). Todas con marca Gamonal (navy #040764 / azul #1c73cb / amarillo #fce865), titulares en Anton/Montserrat, bandas full-bleed alternadas. `cargarPlantilla` normaliza las celdas de grid (cada celda = bloque completo defaults+datos). Verificado con Playwright (estructura + capturas, sin errores).
 
 ## Roadmap / pendientes
 **Pendientes activos (jun-2026):** (1) confirmar/cerrar la **franja blanca en verticales** (esperando captura del caso exacto); (2) **bloques más ricos** para email (features con ícono en círculo de color, secciones con fondo, hero con degradado, tarjetas con sombra — SIN redondeo por defecto); (3) afinar, si se pide, qué tipografías/recursos extra muestran **/gdn-ia** y **/free**; (4) encender **/post-ia** y **/ads-ia** cuando toque.
