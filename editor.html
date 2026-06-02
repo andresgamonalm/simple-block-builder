@@ -4561,19 +4561,8 @@ function cerrarModal(c){ document.getElementById("modal-"+c).classList.remove("s
 // Los bloques son totalmente editables tras cargarse. Agregar plantilla =
 // añadir una entrada. 'grupo' las agrupa en el menú.
 const PLANTILLAS = {
-  // Email (varios tipos)
-  "email-newsletter": { label:"Newsletter", grupo:"Email", formato:"email", nombre:"Newsletter",
-    bloques:[["header",{}],["imagen",{}],["texto",{}],["cta",{}],["divisor",{}],["imgtext",{}],["social",{}],["footer",{}]] },
-  "email-promo": { label:"Promoción / Oferta", grupo:"Email", formato:"email", nombre:"Promo",
-    bloques:[["header",{titulo:"Oferta especial"}],["hero",{}],["texto",{}],["cta",{texto:"Comprar ahora"}],["pricing",{}],["footer",{}]] },
-  "email-bienvenida": { label:"Bienvenida", grupo:"Email", formato:"email", nombre:"Bienvenida",
-    bloques:[["header",{titulo:"¡Te damos la bienvenida!"}],["texto",{}],["features",{}],["cta",{texto:"Empezar"}],["social",{}],["footer",{}]] },
-  "email-evento": { label:"Invitación a evento", grupo:"Email", formato:"email", nombre:"Evento",
-    bloques:[["header",{}],["hero",{}],["fechaCard",{}],["texto",{}],["mapa",{}],["cta",{texto:"Confirmar asistencia"}],["footer",{}]] },
-  "email-anuncio": { label:"Anuncio / Aviso", grupo:"Email", formato:"email", nombre:"Anuncio",
-    bloques:[["header",{}],["alert",{}],["texto",{}],["cta",{}],["footer",{}]] },
-  "agenda": { label:"Agenda (invitación)", grupo:"Email", formato:"invitacion", nombre:"Agenda",
-    bloques:[["header",{}],["fechaCard",{}],["diadivisor",{}],["evento",{}],["evento",{}],["diadivisor",{}],["evento",{}],["footer",{}]] },
+  // Email: plantillas RETIRADAS (usaban bloques viejos: header/footer genéricos,
+  // imgtext "escolar", etc.). Se rehacen desde cero con el set curado de email-ia.
   // LinkedIn
   "li-portada": { label:"Portada perfil 1584×396", grupo:"LinkedIn", formato:"linkedin", nombre:"LinkedIn Portada",
     bloques:[["header",{}]] },
@@ -4621,7 +4610,7 @@ function renderPlantillasTab(){
     });
     html += `</div>`;
   });
-  cont.innerHTML = html || `<div style="padding:14px;color:#888;font-size:13px;">No hay plantillas para este formato. Cambia el formato arriba o usa los bloques.</div>`;
+  cont.innerHTML = html || `<div style="padding:18px 14px;color:var(--ink3);font-size:12.5px;line-height:1.6;">Estamos <b>preparando nuevas plantillas</b> de email.<br>Mientras, arma tu pieza con los <b>Bloques</b> de la izquierda o genérala con <b>✨ Char-B (IA)</b>.</div>`;
 }
 
 function cargarPlantilla(tipo){
