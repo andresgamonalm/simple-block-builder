@@ -1113,7 +1113,10 @@ button,input,select,textarea{font-family:inherit;}
 .sbb-grid-cta{display:inline-block;background:var(--sbb-primary,#040764);color:#fff;padding:10px 20px;border-radius:6px;text-decoration:none;font-size:13px;font-weight:600;text-align:center;font-family:inherit;}
 .sbb-grid-cell-text{font-size:13px;line-height:1.55;color:inherit;font-family:inherit;}
 .sbb-grid.stack-mobile{}
-@media(max-width:540px){.sbb-grid.stack-mobile{grid-template-columns:1fr!important;}}
+@media(max-width:540px){
+  .sbb-grid.stack-mobile{grid-template-columns:1fr!important;grid-template-rows:auto!important;}
+  .sbb-grid.stack-mobile > .sbb-grid-cell{grid-column:auto!important;grid-row:auto!important;}
+}
 
 /* AUDIO CARD */
 .sbb-audio{background:#0f172a;color:#fff;border-radius:14px;padding:14px;display:flex;align-items:center;gap:14px;font-family:inherit;}
@@ -1833,6 +1836,23 @@ const FUENTES = [["","Hereda del tema"],["Inter","Inter"],["Roboto","Roboto"],["
 function fontFamilyCSS(f){ return f ? `font-family:'${esc(f)}',Arial,Helvetica,sans-serif;` : ""; }
 // Mapea la Alineación H a text-align (incluye "justify" = justificado).
 function textAlignDe(v){ return v==="left"?"left":v==="right"?"right":v==="justify"?"justify":"center"; }
+// Disposición de un grid: nº de celdas, columnas y CSS (incluye 1×2, 1×3, 2×2, 3×3 y
+// proporción ajustable de la parte grande). Devuelve { cells, tpl, spans }.
+function gridSpec(d){
+  const disp = (d && d.disposicion) || "cols";
+  const prop = Math.max(20, Math.min(80, parseInt(d&&d.propGrid)||60));
+  const resto = 100 - prop;
+  if(disp==="2x2") return { cells:4, tpl:`grid-template-columns:repeat(2,minmax(0,1fr));`, spans:{} };
+  if(disp==="3x3") return { cells:9, tpl:`grid-template-columns:repeat(3,minmax(0,1fr));`, spans:{} };
+  if(disp==="1x2") return { cells:3, tpl:`grid-template-columns:${prop}% ${resto}%;grid-template-rows:repeat(2,minmax(0,1fr));`, spans:{0:"grid-row:1 / 3;"} };
+  if(disp==="1x3") return { cells:4, tpl:`grid-template-columns:${prop}% ${resto}%;grid-template-rows:repeat(3,minmax(0,1fr));`, spans:{0:"grid-row:1 / 4;"} };
+  // "cols": 1-4 columnas iguales (o proporción 2-col si se ajustó propGrid)
+  const c = parseInt(d&&d.columnas) || 3;
+  const tpl = (c===2 && d && d.propGrid && parseInt(d.propGrid)!==50)
+    ? `grid-template-columns:${prop}% ${resto}%;`
+    : `grid-template-columns:repeat(${c},minmax(0,1fr));`;
+  return { cells:c, tpl, spans:{} };
+}
 
 const ICONS = {
   alignLeft: '<svg viewBox="0 0 16 16" fill="currentColor"><rect x="1" y="2" width="14" height="2" rx="1"/><rect x="1" y="6" width="9" height="2" rx="1"/><rect x="1" y="10" width="14" height="2" rx="1"/><rect x="1" y="14" width="9" height="2" rx="1"/></svg>',
@@ -2484,33 +2504,35 @@ const BLOQUES = {
   },
 
   grid: {
-    cat:"Estructura", nombre:"Grid 1/2/3/4 columnas", icono:"", sub:"Columnas: mete cualquier bloque",
+    cat:"Estructura", nombre:"Grid (columnas y mosaicos)", icono:"", sub:"1-4 columnas · 1×2 · 1×3 · 2×2 · 3×3",
     defaults: Object.assign({}, styleDefaults, {
       padTop:"6", padBottom:"6",
-      columnas:"3", gap:"16", apilarMobile:true, alinearVert:"top",
+      disposicion:"cols", columnas:"3", propGrid:"60", gap:"16", apilarMobile:true, alinearVert:"top",
       celdas:[]   // arranca vacío: el usuario elige qué bloque va en cada columna
     }),
     campos: [
-      {tipo:"row2", izq:{key:"columnas",label:"Columnas",tipo:"select",opciones:[["1","1 columna"],["2","2 columnas"],["3","3 columnas"],["4","4 columnas"]]}, der:{key:"gap",label:"Gap (px)",tipo:"range",min:0,max:60,step:2}},
+      {key:"disposicion",label:"Disposición",tipo:"select",opciones:[["cols","Columnas (1-4 iguales)"],["1x2","1 grande + 2 al lado"],["1x3","1 grande + 3 al lado"],["2x2","Mosaico 2 × 2"],["3x3","Mosaico 3 × 3"]]},
+      {tipo:"row2", izq:{key:"columnas",label:"Columnas (modo Columnas)",tipo:"select",opciones:[["1","1 columna"],["2","2 columnas"],["3","3 columnas"],["4","4 columnas"]]}, der:{key:"gap",label:"Gap (px)",tipo:"range",min:0,max:60,step:2}},
+      {key:"propGrid",label:"Ancho de la parte grande / 1ª columna (%)",tipo:"range",min:30,max:80,step:5},
       {tipo:"row2", izq:{key:"alinearVert",label:"Alineación vertical",tipo:"select",opciones:[["top","Arriba"],["center","Centro"],["bottom","Abajo"]]}, der:{key:"apilarMobile",label:"Apilar en móvil",tipo:"check"}},
       {tipo:"gridCeldas"},
       ...styleFields()
     ],
     render: (d) => {
-      const cols = parseInt(d.columnas) || 3;
       const gap = parseInt(d.gap) || 16;
       const arr = d.celdas || [];
       const align = d.alinearVert==="center"?"center":d.alinearVert==="bottom"?"end":"start";
-      // Muestra 'cols' columnas; si hay MÁS celdas con contenido, las deja crecer.
-      // Las celdas vacías sobrantes (más allá de cols) NO se pintan → 1 columna = 1 celda.
+      const spec = gridSpec(d);
+      // Muestra las celdas de la disposición; si hay MÁS con contenido, deja crecer.
       let ultLlena = -1; for(let i=0;i<arr.length;i++){ if(arr[i] && arr[i].tipo) ultLlena = i; }
-      const n = Math.max(cols, ultLlena+1);
+      const n = Math.max(spec.cells, ultLlena+1);
       let html = "";
       for (let i = 0; i < n; i++) {
-        html += `<div class="sbb-grid-cell" style="display:flex;flex-direction:column;justify-content:${align};">${renderCeldaContenido(arr[i])}</div>`;
+        const span = (spec.spans && spec.spans[i]) || "";
+        html += `<div class="sbb-grid-cell" style="display:flex;flex-direction:column;justify-content:${align};${span}">${renderCeldaContenido(arr[i])}</div>`;
       }
       const stackCls = d.apilarMobile ? "stack-mobile" : "";
-      return wrap(d, `<div class="sbb-grid ${stackCls}" style="grid-template-columns:repeat(${cols},minmax(0,1fr));gap:${gap}px;">${html}</div>`);
+      return wrap(d, `<div class="sbb-grid ${stackCls}" style="${spec.tpl}gap:${gap}px;">${html}</div>`);
     }
   },
 
@@ -3402,9 +3424,9 @@ function renderCampo(c, datos){
 // Editor de las columnas del grid: por cada columna, eliges qué BLOQUE va dentro
 // (cualquiera de la biblioteca) y lo editas con sus propios campos.
 function renderGridCeldasCampo(datos){
-  // Sincroniza el nº de columnas-editables con el selector "Columnas" (así el
-  // formulario muestra los mismos huecos que se ven en el lienzo).
-  const cols = parseInt(datos.columnas) || 3;
+  // Sincroniza el nº de celdas-editables con la DISPOSICIÓN (columnas o mosaico),
+  // así el formulario muestra los mismos huecos que se ven en el lienzo.
+  const cols = (typeof gridSpec==="function") ? gridSpec(datos).cells : (parseInt(datos.columnas)||3);
   if(!Array.isArray(datos.celdas)) datos.celdas = [];
   // Muestra max(cols, últimaCeldaConContenido+1): recorta vacías sobrantes y rellena hasta cols.
   let ultLlena=-1; for(let i=0;i<datos.celdas.length;i++){ if(datos.celdas[i] && datos.celdas[i].tipo) ultLlena=i; }
@@ -3412,14 +3434,14 @@ function renderGridCeldasCampo(datos){
   datos.celdas = datos.celdas.slice(0, n);
   while(datos.celdas.length < n) datos.celdas.push({});
   const cells = datos.celdas;
-  let h = `<div class="form-row"><label>Columnas — elige el bloque de cada una <small>(o haz clic en una columna del lienzo)</small></label><div class="gcells">`;
+  let h = `<div class="form-row"><label>Celdas — elige el bloque de cada una <small>(o haz clic en una celda del lienzo)</small></label><div class="gcells">`;
   cells.forEach((cell, idx) => {
     const tipo = (cell && cell.tipo) || "";
-    h += `<div class="gcell"><div class="gcell-top"><span class="gcell-n">Columna ${idx+1}</span><span class="gcell-acc"><button class="si-btn" onclick="moverCelda(${idx},-1)" title="Subir">↑</button><button class="si-btn" onclick="moverCelda(${idx},1)" title="Bajar">↓</button><button class="si-btn del" onclick="eliminarCelda(${idx})" title="Quitar">×</button></span></div>
+    h += `<div class="gcell"><div class="gcell-top"><span class="gcell-n">Celda ${idx+1}</span><span class="gcell-acc"><button class="si-btn" onclick="moverCelda(${idx},-1)" title="Subir">↑</button><button class="si-btn" onclick="moverCelda(${idx},1)" title="Bajar">↓</button><button class="si-btn del" onclick="eliminarCelda(${idx})" title="Quitar">×</button></span></div>
       <select class="gcell-sel" onchange="cambiarTipoCelda(${idx},this.value)">${tiposCeldaOptions(tipo)}</select>
       ${tipo && BLOQUES[tipo] ? `<button class="gcell-edit" onclick="editarCelda(${idx})">${svgIcon("editar",{size:"12px"})} Editar contenido</button>` : ``}</div>`;
   });
-  h += `<button class="add-subitem" onclick="agregarCelda()">+ Agregar columna</button></div></div>`;
+  h += `<button class="add-subitem" onclick="agregarCelda()">+ Agregar celda</button></div></div>`;
   return h;
 }
 function tiposCeldaOptions(sel){
