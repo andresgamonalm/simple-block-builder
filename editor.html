@@ -2466,14 +2466,14 @@ const BLOQUES = {
   },
 
   grid: {
-    cat:"Estructura", nombre:"Grid 2/3/4 columnas", icono:"", sub:"Columnas: mete cualquier bloque",
+    cat:"Estructura", nombre:"Grid 1/2/3/4 columnas", icono:"", sub:"Columnas: mete cualquier bloque",
     defaults: Object.assign({}, styleDefaults, {
       padTop:"6", padBottom:"6",
       columnas:"3", gap:"16", apilarMobile:true, alinearVert:"top",
       celdas:[]   // arranca vacío: el usuario elige qué bloque va en cada columna
     }),
     campos: [
-      {tipo:"row2", izq:{key:"columnas",label:"Columnas",tipo:"select",opciones:[["2","2 columnas"],["3","3 columnas"],["4","4 columnas"]]}, der:{key:"gap",label:"Gap (px)",tipo:"range",min:0,max:60,step:2}},
+      {tipo:"row2", izq:{key:"columnas",label:"Columnas",tipo:"select",opciones:[["1","1 columna"],["2","2 columnas"],["3","3 columnas"],["4","4 columnas"]]}, der:{key:"gap",label:"Gap (px)",tipo:"range",min:0,max:60,step:2}},
       {tipo:"row2", izq:{key:"alinearVert",label:"Alineación vertical",tipo:"select",opciones:[["top","Arriba"],["center","Centro"],["bottom","Abajo"]]}, der:{key:"apilarMobile",label:"Apilar en móvil",tipo:"check"}},
       {tipo:"gridCeldas"},
       ...styleFields()
@@ -2483,7 +2483,10 @@ const BLOQUES = {
       const gap = parseInt(d.gap) || 16;
       const arr = d.celdas || [];
       const align = d.alinearVert==="center"?"center":d.alinearVert==="bottom"?"end":"start";
-      const n = Math.max(cols, arr.length);   // muestra columnas vacías y deja crecer si hay más celdas
+      // Muestra 'cols' columnas; si hay MÁS celdas con contenido, las deja crecer.
+      // Las celdas vacías sobrantes (más allá de cols) NO se pintan → 1 columna = 1 celda.
+      let ultLlena = -1; for(let i=0;i<arr.length;i++){ if(arr[i] && arr[i].tipo) ultLlena = i; }
+      const n = Math.max(cols, ultLlena+1);
       let html = "";
       for (let i = 0; i < n; i++) {
         html += `<div class="sbb-grid-cell" style="display:flex;flex-direction:column;justify-content:${align};">${renderCeldaContenido(arr[i])}</div>`;
@@ -3343,7 +3346,11 @@ function renderGridCeldasCampo(datos){
   // formulario muestra los mismos huecos que se ven en el lienzo).
   const cols = parseInt(datos.columnas) || 3;
   if(!Array.isArray(datos.celdas)) datos.celdas = [];
-  while(datos.celdas.length < cols) datos.celdas.push({});
+  // Muestra max(cols, últimaCeldaConContenido+1): recorta vacías sobrantes y rellena hasta cols.
+  let ultLlena=-1; for(let i=0;i<datos.celdas.length;i++){ if(datos.celdas[i] && datos.celdas[i].tipo) ultLlena=i; }
+  const n = Math.max(cols, ultLlena+1);
+  datos.celdas = datos.celdas.slice(0, n);
+  while(datos.celdas.length < n) datos.celdas.push({});
   const cells = datos.celdas;
   let h = `<div class="form-row"><label>Columnas — elige el bloque de cada una <small>(o haz clic en una columna del lienzo)</small></label><div class="gcells">`;
   cells.forEach((cell, idx) => {
