@@ -1768,10 +1768,14 @@ async function sincronizarConNube(){
       // Reanclar el proyecto activo a la nueva referencia (o soltarlo si ya no existe).
       proyecto = proyecto ? proyectoPorId(proyecto.id) : null;
       const editando = !document.getElementById("galeria").classList.contains("show");
-      if(editando && proyecto){
+      const rutaSec = (typeof RUTAS_PRODUCTO!=="undefined") ? RUTAS_PRODUCTO[normRuta(location.pathname)] : null;
+      if(editando && proyecto && pieza()){
         const p0 = pieza();
-        if(p0){ document.getElementById("fmt").value = p0.formato; cambiarFormato(p0.formato); aplicarTema(); }
+        document.getElementById("fmt").value = p0.formato; cambiarFormato(p0.formato); aplicarTema();
         renderTabsPiezas(); renderCanvas(); renderForm();
+      } else if(rutaSec && !rutaSec.pronto){
+        // Estás en una sección (p. ej. recargaste /email-ia) → reabre su pieza, NO te botes al home.
+        restaurarSeccion(normRuta(location.pathname));
       } else {
         renderMarcaSelector();
         renderGaleria();
@@ -3082,6 +3086,8 @@ function activarPieza(id){
   cambiarFormato(p.formato);
   aplicarTema(); renderCanvas(); renderForm(); renderTabsPiezas();
   actualizarUISet();
+  // Recuerda la última pieza abierta para que RECARGAR la página la reabra (no te bote al home).
+  try{ localStorage.setItem("sbb-ultima", JSON.stringify({ pr: proyecto.id, p: id })); }catch(_){}
   persistir();
 }
 function eliminarPieza(id){
@@ -5722,7 +5728,27 @@ function aplicarRutaInicial(){
   if(RUTAS_MENU[ruta]){ RUTAS_MENU[ruta](); return; }
   const cfg = RUTAS_PRODUCTO[ruta];
   if(cfg && cfg.pronto){ toast(cfg.nombre + ": próximamente 🚧"); return; }
-  if(cfg){ _rutaActual = ruta; crearDesde(cfg.tipo); }
+  if(cfg) restaurarSeccion(ruta);
+}
+// Entra a una sección REABRIENDO la última pieza que tenías ahí (no crea una nueva
+// en cada recarga). Si no existe ninguna de esa sección, recién entonces crea una.
+function restaurarSeccion(ruta){
+  const cfg = RUTAS_PRODUCTO[ruta]; if(!cfg || cfg.pronto) return false;
+  _rutaActual = ruta;
+  let pr=null, p=null;
+  // 1) la última pieza abierta, si coincide con la sección
+  try{ const u=JSON.parse(localStorage.getItem("sbb-ultima")||"null"); if(u){ pr=proyectoPorId(u.pr); p=pr&&(pr.piezas||[]).find(x=>x.id===u.p); if(!(p && rutaDeProducto(p)===ruta)){ pr=null; p=null; } } }catch(_){}
+  // 2) si no, cualquier pieza de esa sección (la última encontrada)
+  if(!p){ for(const PR of (workspace.proyectos||[])){ for(const P of (PR.piezas||[])){ if(rutaDeProducto(P)===ruta){ pr=PR; p=P; } } } }
+  if(p && pr){
+    proyecto = pr; proyectoVistoId = pr.id;
+    document.getElementById("galeria").classList.remove("show");
+    activarPieza(p.id);
+    return true;
+  }
+  // 3) ninguna existe → crea una de esta sección
+  crearDesde(cfg.tipo);
+  return true;
 }
 // La URL al editar refleja la SECCIÓN de la pieza (no existe un "/editor" genérico).
 function rutaDeProducto(p){
