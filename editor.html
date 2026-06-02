@@ -41,7 +41,7 @@ document.addEventListener("click", (e) => {
 </script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600;700&family=Lato:wght@300;400;700&family=Montserrat:wght@300;400;500;600;700&family=Poppins:wght@300;400;500;600;700&family=Playfair+Display:wght@400;600;700&family=Open+Sans:wght@300;400;500;600;700&family=Merriweather:wght@300;400;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600;700&family=Lato:wght@300;400;700&family=Montserrat:wght@300;400;500;600;700;800&family=Poppins:wght@300;400;500;600;700&family=Playfair+Display:wght@400;600;700&family=Open+Sans:wght@300;400;500;600;700&family=Merriweather:wght@300;400;700&family=Oswald:wght@400;500;600;700&family=Anton&family=Bebas+Neue&family=Archivo+Black&display=swap" rel="stylesheet">
 <style>
 /* ─── Design tokens (alineado con Easy Web Builder) ─── */
 :root{
@@ -1829,7 +1829,7 @@ function paddings(d){ const t=d.padTop??"14",r=d.padRight??"24",b=d.padBottom??"
 function justifyH(v){ return v==="left"?"flex-start":v==="right"?"flex-end":v==="justify"?"stretch":"center"; }
 function justifyV(v){ return v==="top"?"flex-start":v==="bottom"?"flex-end":"center"; }
 // Tipografías disponibles (todas precargadas arriba vía Google Fonts). "" = hereda del tema.
-const FUENTES = [["","Hereda del tema"],["Inter","Inter"],["Roboto","Roboto"],["Open Sans","Open Sans"],["Lato","Lato"],["Montserrat","Montserrat"],["Poppins","Poppins"],["Playfair Display","Playfair (serif)"],["Merriweather","Merriweather (serif)"],["Arial","Arial"],["Georgia","Georgia"]];
+const FUENTES = [["","Hereda del tema"],["Inter","Inter"],["Roboto","Roboto"],["Open Sans","Open Sans"],["Lato","Lato"],["Montserrat","Montserrat"],["Poppins","Poppins"],["Oswald","Oswald (condensada)"],["Anton","Anton (display)"],["Bebas Neue","Bebas Neue (display)"],["Archivo Black","Archivo Black (display)"],["Playfair Display","Playfair (serif)"],["Merriweather","Merriweather (serif)"],["Arial","Arial"],["Georgia","Georgia"]];
 function fontFamilyCSS(f){ return f ? `font-family:'${esc(f)}',Arial,Helvetica,sans-serif;` : ""; }
 // Mapea la Alineación H a text-align (incluye "justify" = justificado).
 function textAlignDe(v){ return v==="left"?"left":v==="right"?"right":v==="justify"?"justify":"center"; }
@@ -2072,10 +2072,11 @@ const BLOQUES = {
   },
   cta: {
     cat:"Acción", nombre:"Botón CTA", icono:"", sub:"Botón con tamaño y hover",
-    defaults: Object.assign({}, styleDefaults, { alinH:"center", padTop:"18", padBottom:"18", texto:"Botón", url:"", colorFondo:"", colorTexto:"#ffffff", colorHover:"", anchoBoton:"auto", altoBoton:"auto", tamano:"14", padX:"28", padY:"13", radio:"0" }),
+    defaults: Object.assign({}, styleDefaults, { alinH:"center", padTop:"18", padBottom:"18", texto:"Botón", url:"", variante:"solido", colorFondo:"", colorTexto:"#ffffff", colorHover:"", anchoBoton:"auto", altoBoton:"auto", tamano:"14", padX:"28", padY:"13", radio:"0" }),
     campos: [
       {key:"texto",label:"Texto del botón",tipo:"text"},
       {key:"url",label:"URL de destino",tipo:"text"},
+      {key:"variante",label:"Estilo del botón",tipo:"select",opciones:[["solido","Sólido (relleno)"],["outline","Outline (solo borde)"]]},
       {grupo:"Tamaño del botón"},
       {tipo:"row2", izq:{key:"anchoBoton",label:"Ancho",tipo:"text",placeholder:"auto"}, der:{key:"altoBoton",label:"Alto",tipo:"text",placeholder:"auto"}},
       {key:"tamano",label:"Tamaño de fuente (px)",tipo:"range",min:11,max:32,step:1},
@@ -2087,11 +2088,15 @@ const BLOQUES = {
       ...styleFields()
     ],
     render: (d) => {
-      const fondo = d.colorFondo || getTema().ctaColor || getTema().primary;
-      const hover = d.colorHover || fondo;
+      const acento = d.colorFondo || getTema().ctaColor || getTema().primary;
+      const outline = d.variante === "outline";
+      const bg = outline ? "transparent" : acento;
+      const col = outline ? acento : (d.colorTexto || "#ffffff");
+      const hoverBg = outline ? acento : (d.colorHover || acento);
+      const hoverCol = outline ? (d.colorTexto || "#ffffff") : col;
       const w = d.anchoBoton && d.anchoBoton !== "auto" ? `width:${esc(d.anchoBoton)};` : "";
       const h = d.altoBoton && d.altoBoton !== "auto" ? `min-height:${esc(d.altoBoton)};display:inline-flex;align-items:center;justify-content:center;` : "";
-      return wrap(d, `<div class="sbb-cta" style="text-align:${esc(d.alinH||"center")};"><a href="${esc(d.url||"#")}" target="_blank" rel="noopener" style="${w}${h}background:${esc(fondo)};color:${esc(d.colorTexto)};font-size:${esc(d.tamano)}px;padding:${esc(d.padY)}px ${esc(d.padX)}px;border-radius:${esc(d.radio)}px;transition:background .15s ease;" onmouseover="this.style.background='${escAttr(hover)}'" onmouseout="this.style.background='${escAttr(fondo)}'">${esc(d.texto)}</a></div>`);
+      return wrap(d, `<div class="sbb-cta" style="text-align:${esc(d.alinH||"center")};"><a href="${esc(d.url||"#")}" target="_blank" rel="noopener" style="${w}${h}background:${esc(bg)};color:${esc(col)};border:2px solid ${esc(acento)};font-size:${esc(d.tamano)}px;padding:${esc(d.padY)}px ${esc(d.padX)}px;border-radius:${esc(d.radio)}px;transition:background .15s ease,color .15s ease;" onmouseover="this.style.background='${escAttr(hoverBg)}';this.style.color='${escAttr(hoverCol)}'" onmouseout="this.style.background='${escAttr(bg)}';this.style.color='${escAttr(col)}'">${esc(d.texto)}</a></div>`);
     }
   },
   imgtext: {
@@ -2861,6 +2866,48 @@ const BLOQUES = {
     ],
     render: (d) => wrap(d, `<footer class="sbb-footer">${d.logoUrl?`<img src="${esc(d.logoUrl)}" alt="logo" style="width:${esc(d.logoAncho||120)}px;max-width:100%;display:block;margin:0 auto 12px;">`:""}${d.empresa?`<div class="empresa">${esc(d.empresa)}</div>`:""}${d.direccion?`<div>${esc(d.direccion)}</div>`:""}${d.copyright?`<div style="margin-top:6px;">${esc(d.copyright)}</div>`:""}${d.mostrarUnsub?`<div style="margin-top:10px;"><a href="${esc(d.unsubUrl)}">${esc(d.unsubTexto)}</a></div>`:""}</footer>`)
   },
+  // Sección con fondo: banda full-width (eyebrow + título + texto + botón). El primitivo
+  // clave para emails "editoriales" de secciones de color alternadas.
+  seccion: {
+    cat:"Estructura", nombre:"Sección con fondo", icono:"", sub:"Banda full-width: eyebrow + título + texto + botón",
+    defaults: Object.assign({}, styleDefaults, { padTop:"0", padBottom:"0", padLeft:"0", padRight:"0", radioBloque:"0", alinH:"center",
+      bg:"#0e2748", colorTexto:"#ffffff", colorEyebrow:"", eyebrow:"ETIQUETA", titulo:"Título de la sección", subtitulo:"Texto de apoyo breve para acompañar el título de esta sección.",
+      fuenteTitulo:"", tamTitulo:"30", tamSub:"15", padV:"44", padH:"32",
+      botonTexto:"Saber más", botonUrl:"", botonVariante:"solido", botonColor:"", radioBoton:"6" }),
+    campos: [
+      {key:"eyebrow",label:"Eyebrow (etiqueta superior · vacío = sin)",tipo:"text"},
+      {key:"titulo",label:"Título",tipo:"text"},
+      {key:"subtitulo",label:"Texto de apoyo",tipo:"textarea"},
+      {grupo:"Botón (opcional · vacío = sin botón)"},
+      {tipo:"row2", izq:{key:"botonTexto",label:"Texto del botón",tipo:"text"}, der:{key:"botonUrl",label:"URL",tipo:"text"}},
+      {tipo:"row2", izq:{key:"botonVariante",label:"Estilo",tipo:"select",opciones:[["solido","Sólido"],["outline","Outline"]]}, der:{key:"botonColor",label:"Color (vacío = tema)",tipo:"color"}},
+      {grupo:"Estilo de la banda"},
+      {tipo:"row2", izq:{key:"bg",label:"Fondo de la sección",tipo:"color"}, der:{key:"colorTexto",label:"Color del texto",tipo:"color"}},
+      {key:"colorEyebrow",label:"Color del eyebrow (vacío = acento/texto)",tipo:"color"},
+      {key:"fuenteTitulo",label:"Tipografía del título",tipo:"select",opciones:FUENTES},
+      {tipo:"row2", izq:{key:"tamTitulo",label:"Tamaño título (px)",tipo:"range",min:16,max:64,step:1}, der:{key:"tamSub",label:"Tamaño texto (px)",tipo:"range",min:11,max:24,step:1}},
+      {tipo:"row2", izq:{key:"padV",label:"Padding vertical (px)",tipo:"range",min:0,max:120,step:2}, der:{key:"padH",label:"Padding lateral (px)",tipo:"range",min:0,max:80,step:2}},
+      {key:"alinH",label:"Alineación",tipo:"alignH"},
+      ...styleFields({h:false,v:false})
+    ],
+    render: (d) => {
+      const ta = textAlignDe(d.alinH);
+      const fam = fontFamilyCSS(d.fuenteTitulo);
+      const cTxt = d.colorTexto || "#ffffff";
+      const acc = d.botonColor || getTema().ctaColor || getTema().primary;
+      const ey = d.eyebrow ? `<div style="font-size:11px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:${esc(d.colorEyebrow||acc)};margin-bottom:10px;">${esc(d.eyebrow)}</div>` : "";
+      const tit = d.titulo ? `<div style="margin:0 0 10px;font-size:${esc(d.tamTitulo||30)}px;line-height:1.15;font-weight:700;color:${esc(cTxt)};${fam}">${esc(d.titulo)}</div>` : "";
+      const cen = (ta==="center") ? "margin-left:auto;margin-right:auto;" : "";
+      const sub = d.subtitulo ? `<div style="font-size:${esc(d.tamSub||15)}px;line-height:1.6;color:${esc(cTxt)};opacity:.92;max-width:520px;${cen}">${escMultiline(d.subtitulo)}</div>` : "";
+      let boton = "";
+      if(d.botonTexto){
+        const out = d.botonVariante==="outline";
+        boton = `<div style="margin-top:20px;"><a href="${esc(d.botonUrl||'#')}" target="_blank" rel="noopener" style="display:inline-block;background:${out?'transparent':esc(acc)};color:${out?esc(acc):'#ffffff'};border:2px solid ${esc(acc)};padding:12px 26px;border-radius:${esc(d.radioBoton||'6')}px;font-size:14px;font-weight:600;text-decoration:none;">${esc(d.botonTexto)}</a></div>`;
+      }
+      const inner = `<div style="background:${esc(d.bg||'#0e2748')};padding:${esc(d.padV||44)}px ${esc(d.padH||32)}px;text-align:${ta};box-sizing:border-box;">${ey}${tit}${sub}${boton}</div>`;
+      return wrap(d, inner);
+    }
+  },
   // Header de marca: banda full-width con logo (email). Dos estilos: sólido (logo claro) o blanco (logo a color).
   bandaHeader: {
     cat:"Estructura", nombre:"Header de marca · azul", icono:"", sub:"Banda sólida con logo (email)",
@@ -3166,7 +3213,7 @@ const BLOQUE_ICONO = {
   tabla:"tablaico", grid:"grid", kpi:"barchart", ring:"ring", statGrid:"grid",
   spark:"trending", rating:"estrella", product:"carrito", profileCard:"usuario",
   testimonial:"chat", article:"documento", pricing:"tag", hero:"imagen", alert:"alerta",
-  features:"checklist", audio:"audioico", footer:"footerico",
+  features:"checklist", audio:"audioico", footer:"footerico", seccion:"heading",
   bandaHeader:"heading", bandaHeaderBlanco:"heading", bandaFooter:"footerico", bandaFooterBlanco:"footerico"
 };
 // Bloques de documento/agenda que no tienen sentido en un banner de tamaño fijo
@@ -3174,7 +3221,7 @@ const BLOQUE_ICONO = {
 const BLOQUES_SOLO_DOC = new Set(["footer","bandaHeader","bandaHeaderBlanco","bandaFooter","bandaFooterBlanco","diadivisor","fechaCard","evento","formulario","tabla"]);
 // Curación por sección: en /email-ia la biblioteca muestra SOLO los bloques de email
 // (los del mockup + header/footer de marca + estructura básica). En /free van todos.
-const BLOQUES_EMAIL_IA = new Set(["bandaHeader","bandaHeaderBlanco","bandaFooter","bandaFooterBlanco","grid","hero","texto","imagen","cta","divisor","espaciador","features","kpi","audio","formulario","social","icono"]);
+const BLOQUES_EMAIL_IA = new Set(["bandaHeader","bandaHeaderBlanco","bandaFooter","bandaFooterBlanco","seccion","grid","hero","texto","imagen","cta","divisor","espaciador","features","kpi","audio","formulario","social","icono"]);
 function renderBiblioteca(){
   const cont = document.getElementById("biblioteca");
   if(!cont) return;
