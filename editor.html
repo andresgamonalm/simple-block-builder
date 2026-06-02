@@ -5621,11 +5621,21 @@ function irARuta(ruta){
 // Deep-link: al cargar el SPA en una ruta concreta, entra a esa sección.
 function aplicarRutaInicial(){
   const ruta = normRuta(location.pathname);
-  if(ruta==="/" || ruta==="/home" || ruta==="/editor") return;   // comportamiento normal
+  if(ruta==="/" || ruta==="/home") return;   // comportamiento normal
   if(RUTAS_MENU[ruta]){ RUTAS_MENU[ruta](); return; }
   const cfg = RUTAS_PRODUCTO[ruta];
   if(cfg && cfg.pronto){ toast(cfg.nombre + ": próximamente 🚧"); return; }
   if(cfg){ _rutaActual = ruta; crearDesde(cfg.tipo); }
+}
+// La URL al editar refleja la SECCIÓN de la pieza (no existe un "/editor" genérico).
+function rutaDeProducto(p){
+  if(!p) return null;
+  if(esComposicion(p) || esSetPieza(p)) return "/gdn-ia";
+  const f = p.formato;
+  if(f==="email") return "/email-ia";
+  if(f==="libre") return "/free";
+  if(/^display|^linkedin|^fb-/.test(String(f||""))) return "/gdn-ia";
+  return "/free";   // invitación y otros documentos → lienzo abierto
 }
 
 renderFormatoSelect();
@@ -5688,15 +5698,15 @@ document.getElementById("canvas-area").addEventListener("click", (e) => {
     const enHome = gal.classList.contains("show");
     let destino;
     if(enHome){ destino = "/home"; _rutaActual = "/home"; }
-    // Editando: mantiene la ruta de la sección de producto si la hay; si no, /editor.
-    else { destino = (RUTAS_PRODUCTO[_rutaActual] && !RUTAS_PRODUCTO[_rutaActual].pronto) ? _rutaActual : "/editor"; }
+    // Editando: la URL es SIEMPRE la sección de la pieza (email-ia/gdn-ia/free).
+    else { destino = rutaDeProducto(pieza()) || _rutaActual || "/home"; _rutaActual = destino; }
     if(location.pathname !== destino){ try{ history.replaceState(null, "", destino); }catch(_){} }
   }
   new MutationObserver(sincronizarRuta).observe(gal, { attributes:true, attributeFilter:["class"] });
   window.addEventListener("popstate", () => {
     const ruta = (location.pathname||"").replace(/\/+$/,"") || "/";
-    // Si vuelves a una ruta de edición (/editor o una sección de producto), no salgas.
-    if(ruta === "/editor" || RUTAS_PRODUCTO[ruta]) return;
+    // Si vuelves a una sección de producto, sigues editando (no salgas).
+    if(RUTAS_PRODUCTO[ruta]) return;
     if(!gal.classList.contains("show")) volverAProyectos();
   });
   sincronizarRuta();

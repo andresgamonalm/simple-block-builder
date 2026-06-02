@@ -1,4 +1,6 @@
-# Cloudflare Pages sirve el mismo SPA (editor.html) en todas las rutas de la app.
+# Cloudflare Pages sirve el mismo SPA (el archivo editor.html) en todas las rutas.
+# "editor.html" es solo el ARCHIVO físico del app (no una ruta visible). El usuario
+# siempre navega por SECCIONES; ya no existe una ruta "/editor" genérica.
 # El SPA lee location.pathname y entra a la sección correspondiente (ver irARuta()).
 #   /home        → dashboard (lanzador + proyectos)
 #   /email-ia    → Email (con Char-B)
@@ -6,10 +8,8 @@
 #   /free        → Estilo Libre
 #   /post-ia     → Post RRSS (pronto)
 #   /ads-ia      → Google Search Ads (pronto)
-#   /editor      → editando una creatividad
 #   /marcas /papelera /permisos /configuracion → menú (abren su panel sobre el dashboard)
 /home          /editor.html 200
-/editor        /editor.html 200
 /email-ia      /editor.html 200
 /gdn-ia        /editor.html 200
 /free          /editor.html 200
