@@ -202,6 +202,9 @@ button,input,select,textarea{font-family:inherit;}
 .dz-sel:focus,.dz-inp:focus{border-color:var(--primary);}
 .dz-range{width:100%;accent-color:var(--primary);cursor:pointer;}
 .dz-val{float:right;font-weight:400;font-size:11px;color:var(--ink3);}
+.dz-margenes{display:flex;gap:6px;}
+.dz-margenes input{width:100%;min-width:0;height:34px;border:1px solid var(--bdr);border-radius:8px;padding:0 8px;font-family:var(--f);font-size:12px;color:var(--ink);background:var(--white);outline:none;text-align:center;}
+.dz-margenes input:focus{border-color:var(--primary);}
 .dz-colors{display:flex;flex-direction:column;gap:12px;}
 .dz-color .tb-color{width:100%;height:38px;}
 
@@ -1152,6 +1155,7 @@ button,input,select,textarea{font-family:inherit;}
           <div class="dz-color"><label>Principal</label><div class="tb-color"><input type="color" id="tema-primary" onchange="cambiarTema('primary',this.value)"><span class="hex" id="hex-primary">#000000</span></div></div>
           <div class="dz-color"><label>Texto</label><div class="tb-color"><input type="color" id="tema-text" onchange="cambiarTema('text',this.value)"><span class="hex" id="hex-text">#000000</span></div></div>
           <div class="dz-color"><label>Fondo</label><div class="tb-color"><input type="color" id="tema-bg" onchange="cambiarTema('bg',this.value)"><span class="hex" id="hex-bg">#000000</span></div></div>
+          <div class="dz-color"><label>Color CTA</label><div class="tb-color"><input type="color" id="tema-cta" onchange="cambiarTema('ctaColor',this.value)"><span class="hex" id="hex-cta">#000000</span></div></div>
           <div class="dz-color"><label>Fondo de página</label><input type="text" id="tema-bgpagina" class="dz-inp" onchange="cambiarTema('bgPagina',this.value)" placeholder="igual al contenido"></div>
         </div>
         <div class="dz-sec">Dimensiones</div>
@@ -1160,6 +1164,14 @@ button,input,select,textarea{font-family:inherit;}
         <div class="dz-sec">Espaciado y bordes</div>
         <div class="dz-field"><label>Distancia entre bloques <span class="dz-val" id="val-gap">0 px</span></label><input type="range" min="0" max="48" step="2" id="tema-gap" class="dz-range" oninput="cambiarTema('gap',this.value)"></div>
         <div class="dz-field"><label>Radio de los bordes <span class="dz-val" id="val-radio">natural</span></label><input type="range" min="0" max="32" step="1" id="tema-radio" class="dz-range" oninput="cambiarTema('radio',this.value)"></div>
+        <div class="dz-field"><label>Margen del lienzo (px) <small style="font-weight:400;color:var(--ink3)">arriba · der · abajo · izq</small></label>
+          <div class="dz-margenes">
+            <input type="number" id="tema-mt" min="0" max="200" placeholder="0" title="Arriba" oninput="cambiarMargen('t',this.value)">
+            <input type="number" id="tema-mr" min="0" max="200" placeholder="0" title="Derecha" oninput="cambiarMargen('r',this.value)">
+            <input type="number" id="tema-mb" min="0" max="200" placeholder="0" title="Abajo" oninput="cambiarMargen('b',this.value)">
+            <input type="number" id="tema-ml" min="0" max="200" placeholder="0" title="Izquierda" oninput="cambiarMargen('l',this.value)">
+          </div>
+        </div>
         </div>
       </div>
 
@@ -1953,7 +1965,7 @@ const BLOQUES = {
       ...styleFields()
     ],
     render: (d) => {
-      const fondo = d.colorFondo || getTema().primary;
+      const fondo = d.colorFondo || getTema().ctaColor || getTema().primary;
       const hover = d.colorHover || fondo;
       const w = d.anchoBoton && d.anchoBoton !== "auto" ? `width:${esc(d.anchoBoton)};` : "";
       const h = d.altoBoton && d.altoBoton !== "auto" ? `min-height:${esc(d.altoBoton)};display:inline-flex;align-items:center;justify-content:center;` : "";
@@ -2951,13 +2963,23 @@ function aplicarTema(){
   if(gapInput){ const g=parseInt(t.gap)||0; gapInput.value=g; const lbl=document.getElementById("val-gap"); if(lbl) lbl.textContent=g+" px"; }
   const radioInput = document.getElementById("tema-radio");
   if(radioInput){ const r=(t.radio!=null && /^\d+$/.test(String(t.radio)))?parseInt(t.radio):""; radioInput.value=r===""?0:r; const lbl=document.getElementById("val-radio"); if(lbl) lbl.textContent = r===""?"natural":(r+" px"); }
+  // Color CTA propio (vacío = usa el principal) y margen del lienzo (4 lados).
+  const ctaInput = document.getElementById("tema-cta");
+  if(ctaInput) ctaInput.value = t.ctaColor || t.primary;
+  const m = t.margen || {};
+  ["t","r","b","l"].forEach(s => { const el = document.getElementById("tema-m"+s); if(el) el.value = (m[s]!=null && parseInt(m[s])>0) ? parseInt(m[s]) : ""; });
   // refresca los hex visibles
   const setHex = (id, v) => { const el = document.getElementById(id); if(el) el.textContent = (v||"").toUpperCase(); };
   setHex("hex-primary", t.primary);
   setHex("hex-text", t.text);
   setHex("hex-bg", t.bg);
+  setHex("hex-cta", t.ctaColor || t.primary);
 }
 function cambiarTema(key, valor){ const p = pieza(); if(!p) return; p.tema[key] = valor; aplicarTema(); renderCanvas(); persistir(); }
+// Margen del lienzo (4 lados) — padding alrededor de TODO el contenido de la pieza.
+function cambiarMargen(side, valor){ const p = pieza(); if(!p) return; if(!p.tema.margen || typeof p.tema.margen !== "object") p.tema.margen = {t:0,r:0,b:0,l:0}; p.tema.margen[side] = (valor==="" ? 0 : (parseInt(valor)||0)); aplicarTema(); renderCanvas(); persistir(); }
+// CSS de padding de la página según el margen del tema (vacío si todo es 0).
+function paddingPaginaCSS(t){ const m=(t&&t.margen)||{}; const T=parseInt(m.t)||0,Rr=parseInt(m.r)||0,B=parseInt(m.b)||0,L=parseInt(m.l)||0; return (T||Rr||B||L) ? `padding:${T}px ${Rr}px ${B}px ${L}px;` : ""; }
 
 function crearPieza(formato, nombre){
   const p = { id:uid(), nombre: nombre || `Pieza ${proyecto.piezas.length+1}`, campana:"General", formato: formato||"email", canvas:[], tema: { font:"Inter", primary:"#1c73cb", text:"#1a1a1a", bg:"#ffffff", bgPagina:"", ancho:"", radio:"", gap:"0" } };
@@ -3062,7 +3084,7 @@ function renderCanvas(){
   // Las imágenes son arrastrables por defecto y secuestran el gesto: al desactivar
   // su drag nativo, arrastrar sobre la foto mueve el BLOQUE (reordenar).
   temaRenderCtx(getTema());
-  c.innerHTML = `<div class="sbb-page">${cv.map(bwHTML).join("")}</div>`;
+  c.innerHTML = `<div class="sbb-page" style="${paddingPaginaCSS(getTema())}">${cv.map(bwHTML).join("")}</div>`;
   attachBwListeners(c);
   iniciarLivePreview();
 }
@@ -3561,7 +3583,7 @@ ${css}
 .sbb-hero img.bg{width:100%!important;height:100%!important;object-fit:cover;}
 </style></head><body>
 ${meta}
-<div class="sbb-container"><div class="sbb-page">
+<div class="sbb-container"><div class="sbb-page" style="${paddingPaginaCSS(p.tema)}">
 ${cuerpo}
 </div></div>
 ${liveScript}
@@ -3608,7 +3630,7 @@ ${meta}
 <tr><td align="center" style="padding:0;">
 <!--[if mso]><table role="presentation" width="${ancho}" cellpadding="0" cellspacing="0" border="0" align="center"><tr><td><![endif]-->
 <table role="presentation" class="sbb-container" width="${ancho}" cellpadding="0" cellspacing="0" border="0" style="width:${ancho}px;max-width:${ancho}px;margin:0 auto;background:${p.tema.bg};">
-<tr><td class="sbb-page" style="padding:0;">
+<tr><td class="sbb-page" style="${paddingPaginaCSS(p.tema)||'padding:0;'}">
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
 ${filas}
 </table>
