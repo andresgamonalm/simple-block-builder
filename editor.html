@@ -2502,26 +2502,21 @@ const BLOQUES = {
   },
 
   codigo: {
-    cat:"Avanzado", nombre:"Código HTML/CSS/JS", icono:"", sub:"HTML, CSS y JS por separado",
-    defaults: Object.assign({}, styleDefaults, { codigoHtml:"", codigoCss:"", codigoJs:"", codigo:"", padTop:"0", padBottom:"0", padLeft:"0", padRight:"0" }),
+    cat:"Avanzado", nombre:"Código HTML/CSS/JS", icono:"", sub:"Pega todo el código junto (HTML, CSS y JS)",
+    defaults: Object.assign({}, styleDefaults, { codigo:"", padTop:"0", padBottom:"0", padLeft:"0", padRight:"0" }),
     campos: [
-      {key:"codigoHtml",label:"HTML",tipo:"codigo-textarea"},
-      {key:"codigoCss",label:"CSS",tipo:"codigo-textarea"},
-      {key:"codigoJs",label:"JavaScript",tipo:"codigo-textarea"},
+      {key:"codigo",label:"Pega aquí tu código (HTML con su <style> y <script>)",tipo:"codigo-textarea"},
       ...styleFields()
     ],
     render: (d) => {
-      // Compatibilidad: piezas viejas guardaban todo junto en d.codigo.
-      const html = (d.codigoHtml||"").trim();
-      const css  = (d.codigoCss||"").trim();
-      const js   = (d.codigoJs||"").trim();
-      const legacy = (d.codigo||"").trim();
-      if(!html && !css && !js && !legacy){
-        return wrap(d, `<div class="sbb-codigo-vacio">${svgIcon("codigoico",{size:"15px"})} Bloque de código vacío. Escribe tu HTML, CSS y JS en el panel.</div>`);
+      // Un solo campo: se pega todo junto (HTML + <style> + <script>) y se lee tal cual.
+      // Se conservan los campos antiguos (codigoHtml/Css/Js) por si una pieza los tuviera.
+      const partes = [(d.codigo||""), (d.codigoCss?`<style>${d.codigoCss}</style>`:""), (d.codigoHtml||""), (d.codigoJs?`<script>${d.codigoJs}<\/script>`:"")];
+      const cuerpo = partes.join("").trim();
+      if(!cuerpo){
+        return wrap(d, `<div class="sbb-codigo-vacio">${svgIcon("codigoico",{size:"15px"})} Bloque de código vacío. Pega tu HTML (con su CSS y JS) en el panel.</div>`);
       }
-      const cssTag = css ? `<style>${css}</style>` : "";
-      const jsTag  = js  ? `<script>${js}<\/script>` : "";
-      return wrap(d, `<div class="sbb-codigo">${cssTag}${legacy}${html}${jsTag}</div>`);
+      return wrap(d, `<div class="sbb-codigo">${cuerpo}</div>`);
     }
   },
 
