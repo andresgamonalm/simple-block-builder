@@ -942,6 +942,10 @@ button,input,select,textarea{font-family:inherit;}
 
 .sbb-codigo{font-family:inherit;}
 .sbb-codigo-vacio{border:2px dashed #cfd2d8;padding:32px;text-align:center;color:#9ca3af;border-radius:10px;font-size:13px;}
+/* Modo edición del HTML pegado: texto editable + fotos cambiables con un clic. */
+.sbb-codigo[contenteditable="true"]{outline:2px dashed var(--primary);outline-offset:4px;border-radius:4px;cursor:text;}
+.sbb-codigo[contenteditable="true"] img{cursor:pointer;transition:outline .12s;}
+.sbb-codigo[contenteditable="true"] img:hover{outline:3px solid var(--primary);outline-offset:1px;}
 
 /* ESPACIADOR */
 .sbb-spacer{display:block;}
@@ -3582,6 +3586,32 @@ function attachCeldasDeGrid(bw){
     });
   });
 }
+// Hace editable EN EL LIENZO el HTML pegado en un bloque de código:
+// al seleccionar el bloque, su texto se edita en línea y sus <img> se pueden
+// cambiar con un clic. Los cambios se guardan de vuelta en datos.codigo.
+function attachCodigoEditable(bw){
+  const item = getCanvas().find(x => x.id === bw.dataset.id);
+  if(!item || item.tipo !== "codigo") return;
+  const cont = bw.querySelector(".sbb-codigo");
+  if(!cont) return;   // bloque vacío: nada que editar todavía
+  const editable = () => seleccionado === item.id;
+  cont.setAttribute("contenteditable", editable() ? "true" : "false");
+  // Guarda el HTML editado de vuelta en el dato (sin re-render, para no perder el cursor).
+  const guardar = () => {
+    const html = cont.innerHTML;
+    if(item.datos.codigo !== html){ item.datos.codigo = html; persistir(); }
+  };
+  cont.addEventListener("blur", guardar, true);
+  cont.addEventListener("input", () => { clearTimeout(cont._guardarT); cont._guardarT = setTimeout(guardar, 600); });
+  // Clic en una imagen → elegir otra de la biblioteca (solo en modo edición).
+  cont.querySelectorAll("img").forEach(img => {
+    img.addEventListener("click", (e) => {
+      if(!editable()) return;
+      e.preventDefault(); e.stopPropagation();
+      abrirImagenes((url) => { img.setAttribute("src", url); guardar(); });
+    });
+  });
+}
 // Popover para elegir qué bloque va en una columna (mismo catálogo que el desplegable).
 let _pickerCelda = null;
 function cerrarPickerCelda(){ if(_pickerCelda){ _pickerCelda.remove(); _pickerCelda=null; document.removeEventListener("click", _cerrarPickerFuera, true); document.removeEventListener("keydown", _cerrarPickerEsc, true); } }
@@ -3719,6 +3749,7 @@ function renderBloqueSeleccionado(){
   while(tmp.firstChild) bw.appendChild(tmp.firstChild);
   bw.querySelectorAll("img").forEach(im => { im.draggable = false; });
   if(item.tipo === "grid") attachCeldasDeGrid(bw);   // reengancha el clic de las columnas
+  if(item.tipo === "codigo") attachCodigoEditable(bw);   // texto/fotos editables en el HTML pegado
   iniciarLivePreview();
 }
 
@@ -3755,8 +3786,16 @@ function seleccionarBloque(id){
   editandoCelda = null;
   seleccionado = id;
   document.querySelectorAll(".bw").forEach(b => b.classList.toggle("selected", b.dataset.id===id));
+  sincronizarCodigoEditable();
   renderForm();
   cambiarPanelTab("editar");   // al seleccionar, abre la pestaña de edición
+}
+// Activa el contenteditable del bloque de código seleccionado (y lo apaga en los demás).
+function sincronizarCodigoEditable(){
+  document.querySelectorAll(".bw .sbb-codigo").forEach(el => {
+    const bw = el.closest(".bw");
+    el.setAttribute("contenteditable", (bw && bw.dataset.id===seleccionado) ? "true" : "false");
+  });
 }
 function actualizarDato(key, valor){
   const item = bloqueCtx(); if(!item) return;
@@ -4092,10 +4131,12 @@ function attachBwListeners(c){
       // de grid (ahí el clic edita la celda; el grid se mueve con el handle "Mover").
       if(e.target.closest("input,textarea,select,button,a")) { e.preventDefault(); return; }
       if(e.target.closest(".sbb-grid-cell")) { e.preventDefault(); return; }
+      if(e.target.closest('.sbb-codigo[contenteditable="true"]')) { e.preventDefault(); return; }
       dragBlockId = bw.dataset.id; bw.classList.add("drag-source"); e.dataTransfer.effectAllowed = "move"; try{e.dataTransfer.setData("text/plain",bw.dataset.id);}catch(_){}
     });
     bw.addEventListener("dragend", () => { bw.classList.remove("drag-source"); limpiarDropLines(); dragBlockId=null; });
     attachCeldasDeGrid(bw);   // si es grid, hace clicables sus columnas
+    attachCodigoEditable(bw); // si es código, hace editable su texto/fotos
   });
 }
 function ajustarFrameParaSet(es){
@@ -6067,6 +6108,7 @@ document.getElementById("canvas-area").addEventListener("click", (e) => {
   if(e.target.id==="canvas-area" || e.target.id==="canvas-frame" || e.target.id==="canvas"){
     seleccionado = null; editandoCelda = null;
     document.querySelectorAll(".bw.selected").forEach(b => b.classList.remove("selected"));
+    sincronizarCodigoEditable();
     renderForm();
   }
 });
