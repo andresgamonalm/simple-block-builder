@@ -580,8 +580,11 @@ button,input,select,textarea{font-family:inherit;}
 .bw-btn{width:27px;height:27px;border:none;border-radius:5px;background:rgba(4,7,100,.72);color:var(--white);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:13px;line-height:1;transition:background .12s;}
 .bw-btn:hover{background:var(--primary);}
 .bw-btn.del:hover{background:var(--err);}
-.bw-handle{position:absolute;top:8px;left:8px;background:rgba(4,7,100,.72);color:var(--white);font-size:10.5px;padding:3px 8px;border-radius:5px;display:none;z-index:10;cursor:grab;font-weight:500;user-select:none;letter-spacing:.02em;}
+/* Indicador "Mover": solo visual, NO captura clics (el bloque entero ya es arrastrable). */
+.bw-handle{position:absolute;top:8px;left:8px;background:rgba(4,7,100,.72);color:var(--white);font-size:10px;padding:2px 7px;border-radius:5px;display:none;z-index:10;font-weight:500;user-select:none;letter-spacing:.02em;pointer-events:none;}
 .bw:hover .bw-handle,.bw.selected .bw-handle{display:block;}
+.bw{cursor:grab;}
+.bw:active{cursor:grabbing;}
 .drop-line{height:3px;background:var(--sel);border-radius:2px;margin:1px 0;animation:pulse 1s infinite;pointer-events:none;}
 @keyframes pulse{0%,100%{opacity:1;}50%{opacity:.5;}}
 /* ── Set de banners adaptables (Display) ── */
