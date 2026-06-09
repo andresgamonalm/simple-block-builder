@@ -2454,6 +2454,53 @@ const BLOQUES = {
     }
   },
 
+  seccionlibre: {
+    cat:"Estructura", nombre:"Sección (libre)", icono:"", sub:"Contenedor: agrega texto, foto, botón, formas",
+    defaults: Object.assign({}, styleDefaults, { padTop:"24", padBottom:"24", bgBloque:"", nombreSec:"Sección", alinElem:"center", elementos:[
+      { tipo:"texto", texto:"Tu texto aquí", tam:"16", color:"" },
+      { tipo:"cta", texto:"Botón", url:"", colorFondo:"", colorTexto:"#ffffff" }
+    ] }),
+    campos: [
+      {key:"nombreSec",label:"Nombre / identificador de la sección",tipo:"text"},
+      {key:"alinElem",label:"Alineación de los elementos",tipo:"alignH"},
+      {key:"elementos",label:"Elementos dentro de la sección",tipo:"lista",itemTipos:[
+        {valor:"texto", label:"Texto", camposItem:[{k:"texto",l:"Texto",tipo:"textarea"},{k:"tam",l:"Tamaño (px)"},{k:"color",l:"Color (vacío=tema)"}]},
+        {valor:"imagen", label:"Imagen", camposItem:[{k:"url",l:"URL de la imagen"},{k:"ancho",l:"Ancho (ej. 100%, 320px)"}]},
+        {valor:"cta", label:"Botón (CTA)", camposItem:[{k:"texto",l:"Texto del botón"},{k:"url",l:"URL"},{k:"colorFondo",l:"Color fondo (vacío=tema)"},{k:"colorTexto",l:"Color texto"}]},
+        {valor:"divisor", label:"Forma / divisor", camposItem:[{k:"color",l:"Color (vacío=tema)"},{k:"grosor",l:"Grosor (px)"}]},
+        {valor:"espacio", label:"Espacio", camposItem:[{k:"alto",l:"Alto (px)"}]}
+      ]},
+      ...styleFields()
+    ],
+    render: (d) => {
+      const ta = textAlignDe(d.alinElem);
+      const items = (d.elementos||[]).map(it => {
+        if(it.tipo === "texto"){
+          const col = it.color ? `color:${esc(it.color)};` : "";
+          return `<div style="font-size:${esc(it.tam||"16")}px;${col}margin:8px 0;">${escMultiline(it.texto||"")}</div>`;
+        }
+        if(it.tipo === "imagen"){
+          const w = it.ancho ? `width:${esc(it.ancho)};` : "max-width:100%;";
+          return `<div style="margin:8px 0;"><img src="${esc(it.url||"https://placehold.co/600x300/e5e7ea/9ca3af?text=Imagen")}" alt="" style="${w}max-width:100%;border-radius:8px;display:inline-block;"></div>`;
+        }
+        if(it.tipo === "cta"){
+          const bg = it.colorFondo || (getTema().primary || "#1c73cb");
+          const cl = it.colorTexto || "#ffffff";
+          return `<div style="margin:12px 0;"><a href="${esc(it.url||"#")}" target="_blank" rel="noopener" style="display:inline-block;background:${esc(bg)};color:${esc(cl)};padding:12px 26px;border-radius:8px;font-weight:600;text-decoration:none;">${esc(it.texto||"Botón")}</a></div>`;
+        }
+        if(it.tipo === "divisor"){
+          const col = it.color || "#e5e7ea";
+          return `<hr style="border:none;border-top:${esc(it.grosor||"1")}px solid ${esc(col)};margin:14px 0;">`;
+        }
+        if(it.tipo === "espacio"){
+          return `<div style="height:${esc(it.alto||"20")}px;"></div>`;
+        }
+        return "";
+      }).join("");
+      return wrap(d, `<div class="sbb-seccion" style="text-align:${ta};">${items || '<div style="color:#aaa;font-size:12px;">Agrega elementos en el panel de la derecha.</div>'}</div>`);
+    }
+  },
+
   codigo: {
     cat:"Avanzado", nombre:"Código HTML/CSS/JS", icono:"", sub:"Pega código de cualquier lado",
     defaults: Object.assign({}, styleDefaults, { codigo:"", padTop:"0", padBottom:"0", padLeft:"0", padRight:"0" }),
@@ -3251,7 +3298,7 @@ const BLOQUE_ICONO = {
   tabla:"tablaico", grid:"grid", kpi:"barchart", ring:"ring", statGrid:"grid",
   spark:"trending", rating:"estrella", product:"carrito", profileCard:"usuario",
   testimonial:"chat", article:"documento", pricing:"tag", hero:"imagen", alert:"alerta",
-  features:"checklist", audio:"audioico", footer:"footerico", seccion:"heading",
+  features:"checklist", audio:"audioico", footer:"footerico", seccion:"heading", seccionlibre:"grid",
   bandaHeader:"heading", bandaHeaderBlanco:"heading", bandaFooter:"footerico", bandaFooterBlanco:"footerico"
 };
 // Bloques de documento/agenda que no tienen sentido en un banner de tamaño fijo
@@ -3584,6 +3631,8 @@ function renderCampoSimple(c, datos){
             `<button class="ic-pick ${k===it[ci.k]?'on':''}" title="${esc(v.nombre)}" onclick="actualizarItemLista('${c.key}',${idx},'${ci.k}','${k}');renderForm();"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${v.svg}</svg></button>`
           ).join("");
           h += `<div><label>${esc(ci.l)} (elige uno)</label><div class="icon-grid">${grid}</div></div>`;
+        } else if(ci.tipo === "textarea"){
+          h += `<div><label>${esc(ci.l)}</label><textarea rows="2" oninput="actualizarItemLista('${c.key}',${idx},'${ci.k}',this.value)">${esc(it[ci.k]||"")}</textarea></div>`;
         } else {
           h += `<div><label>${esc(ci.l)}</label><input type="text" value="${esc(it[ci.k]||"")}" oninput="actualizarItemLista('${c.key}',${idx},'${ci.k}',this.value)"></div>`;
         }
