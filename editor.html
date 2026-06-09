@@ -2502,17 +2502,26 @@ const BLOQUES = {
   },
 
   codigo: {
-    cat:"Avanzado", nombre:"Código HTML/CSS/JS", icono:"", sub:"Pega código de cualquier lado",
-    defaults: Object.assign({}, styleDefaults, { codigo:"", padTop:"0", padBottom:"0", padLeft:"0", padRight:"0" }),
+    cat:"Avanzado", nombre:"Código HTML/CSS/JS", icono:"", sub:"HTML, CSS y JS por separado",
+    defaults: Object.assign({}, styleDefaults, { codigoHtml:"", codigoCss:"", codigoJs:"", codigo:"", padTop:"0", padBottom:"0", padLeft:"0", padRight:"0" }),
     campos: [
-      {key:"codigo",label:"HTML, CSS y JS — pega aquí",tipo:"codigo-textarea"},
+      {key:"codigoHtml",label:"HTML",tipo:"codigo-textarea"},
+      {key:"codigoCss",label:"CSS",tipo:"codigo-textarea"},
+      {key:"codigoJs",label:"JavaScript",tipo:"codigo-textarea"},
       ...styleFields()
     ],
     render: (d) => {
-      if (!d.codigo || !d.codigo.trim()){
-        return wrap(d, `<div class="sbb-codigo-vacio">${svgIcon("codigoico",{size:"15px"})} Bloque de código vacío. Pega HTML/CSS/JS en el panel derecho.</div>`);
+      // Compatibilidad: piezas viejas guardaban todo junto en d.codigo.
+      const html = (d.codigoHtml||"").trim();
+      const css  = (d.codigoCss||"").trim();
+      const js   = (d.codigoJs||"").trim();
+      const legacy = (d.codigo||"").trim();
+      if(!html && !css && !js && !legacy){
+        return wrap(d, `<div class="sbb-codigo-vacio">${svgIcon("codigoico",{size:"15px"})} Bloque de código vacío. Escribe tu HTML, CSS y JS en el panel.</div>`);
       }
-      return wrap(d, `<div class="sbb-codigo">${d.codigo}</div>`);
+      const cssTag = css ? `<style>${css}</style>` : "";
+      const jsTag  = js  ? `<script>${js}<\/script>` : "";
+      return wrap(d, `<div class="sbb-codigo">${cssTag}${legacy}${html}${jsTag}</div>`);
     }
   },
 
