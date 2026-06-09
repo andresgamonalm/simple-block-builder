@@ -4069,7 +4069,13 @@ function attachBwListeners(c){
   c.querySelectorAll(".bw img").forEach(im => { im.draggable = false; });
   c.querySelectorAll(".bw").forEach(bw => {
     bw.addEventListener("click", (e) => { e.stopPropagation(); seleccionarBloque(bw.dataset.id); });
-    bw.addEventListener("dragstart", (e) => { if(e.target.closest("input,textarea,select,button")) { e.preventDefault(); return; } dragBlockId = bw.dataset.id; bw.classList.add("drag-source"); e.dataTransfer.effectAllowed = "move"; try{e.dataTransfer.setData("text/plain",bw.dataset.id);}catch(_){} });
+    bw.addEventListener("dragstart", (e) => {
+      // No iniciar arrastre del bloque desde campos, ni desde DENTRO de una celda
+      // de grid (ahí el clic edita la celda; el grid se mueve con el handle "Mover").
+      if(e.target.closest("input,textarea,select,button,a")) { e.preventDefault(); return; }
+      if(e.target.closest(".sbb-grid-cell")) { e.preventDefault(); return; }
+      dragBlockId = bw.dataset.id; bw.classList.add("drag-source"); e.dataTransfer.effectAllowed = "move"; try{e.dataTransfer.setData("text/plain",bw.dataset.id);}catch(_){}
+    });
     bw.addEventListener("dragend", () => { bw.classList.remove("drag-source"); limpiarDropLines(); dragBlockId=null; });
     attachCeldasDeGrid(bw);   // si es grid, hace clicables sus columnas
   });
