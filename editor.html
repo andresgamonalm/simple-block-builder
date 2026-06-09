@@ -6038,9 +6038,11 @@ document.addEventListener("keydown", (e) => {
     if(!editando){ e.preventDefault(); deshacer(); }
     return;
   }
-  // Borrar el bloque seleccionado con Supr o Backspace (fuera de campos de texto)
-  if((e.key==="Delete" || e.key==="Backspace") && seleccionado && !editando){
-    e.preventDefault(); eliminarBloque(seleccionado);
+  // Borrar con Supr o Backspace (fuera de campos de texto).
+  if((e.key==="Delete" || e.key==="Backspace") && !editando){
+    // Si estás editando una celda del grid, borra SOLO esa celda (no el grid entero).
+    if(editandoCelda){ e.preventDefault(); eliminarCelda(editandoCelda.idx); return; }
+    if(seleccionado){ e.preventDefault(); eliminarBloque(seleccionado); }
   }
 });
 document.getElementById("canvas-area").addEventListener("click", (e) => {
