@@ -1996,6 +1996,8 @@ function formatearFecha(iso, formato){
 
 function styleFields(opts={}){
   const f = [];
+  f.push({grupo:"Identificador"});
+  f.push({key:"compId", label:"Nombre / id del componente (para reconocerlo)", tipo:"text", placeholder:"ej. hero-principal"});
   if(opts.h !== false || opts.v !== false){
     f.push({grupo:"Posición y tamaño"});
     f.push({tipo:"row2", izq:{key:"alinH", label:"Alineación H", tipo:"alignH"}, der:{key:"alinV", label:"Alineación V", tipo:"alignV"}});
@@ -2029,7 +2031,10 @@ function wrap(d, inner){
   const rb = (rbVal!=="" && parseInt(rbVal)>0) ? `border-radius:${rbVal}px;overflow:hidden;` : "";
   // Fondo propio del bloque (vacío = sin fondo, se ve el de la página).
   const bg = (d.bgBloque && /^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/.test(String(d.bgBloque).trim())) ? `background:${esc(String(d.bgBloque).trim())};` : "";
-  return `<div style="${pad}${gap}${bg}${rb}display:flex;flex-direction:column;justify-content:${jV};align-items:${jH};box-sizing:border-box;width:100%;height:100%;">
+  // Identificador del componente: id + data-id en el HTML (para reconocerlo en consola/export).
+  const cid = (d.compId||"").trim();
+  const idAttr = cid ? ` id="${escAttr(cid)}" data-comp="${escAttr(cid)}"` : "";
+  return `<div${idAttr} style="${pad}${gap}${bg}${rb}display:flex;flex-direction:column;justify-content:${jV};align-items:${jH};box-sizing:border-box;width:100%;height:100%;">
     <div style="${w}${h}max-width:100%;box-sizing:border-box;">${inner}</div>
   </div>`;
 }
