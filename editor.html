@@ -1073,6 +1073,10 @@ button,input,select,textarea{font-family:inherit;}
 .sbb-features.vertical li{flex-direction:column;align-items:center;}
 .sbb-features.vertical .ico{margin-bottom:2px;}
 .sbb-features.vertical .txt{width:100%;}
+/* En fila: ítems lado a lado (grilla), sin la línea separadora de la lista. */
+.sbb-features.en-fila li{padding:0;border-bottom:none;}
+.sbb-features.en-fila.vertical li{align-items:center;text-align:center;}
+@media(max-width:540px){.sbb-features.en-fila ul{grid-template-columns:1fr!important;}}
 .sbb-features .ico{width:36px;height:36px;border-radius:8px;background:#f0f0f4;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0;color:var(--sbb-primary,#040764);}
 .sbb-features .txt .t{font-size:13.5px;font-weight:600;color:inherit;}
 .sbb-features .txt .s{font-size:12px;color:#888;margin-top:2px;line-height:1.45;}
@@ -2901,11 +2905,12 @@ const BLOQUES = {
 
   features: {
     cat:"Contenido", nombre:"Lista de features", icono:"", sub:"Items con ícono + título + sub",
-    defaults: Object.assign({}, styleDefaults, { padTop:"6", padBottom:"6", titulo:"", colorIcono:"", orientacion:"horizontal", fuente:"", tamTitulo:"16", tamItemTitulo:"13.5", tamItemSub:"12", gapItems:"10", items:[ {ico:"trending",t:"Velocidad",s:"Carga instantánea en cualquier dispositivo."}, {ico:"candado",t:"Seguridad",s:"Cifrado de extremo a extremo."}, {ico:"estrella",t:"Calidad",s:"Diseño premium en cada detalle."} ] }),
+    defaults: Object.assign({}, styleDefaults, { padTop:"6", padBottom:"6", titulo:"", colorIcono:"", disposicion:"lista", porFila:"3", orientacion:"horizontal", fuente:"", tamTitulo:"16", tamItemTitulo:"13.5", tamItemSub:"12", gapItems:"10", items:[ {ico:"trending",t:"Velocidad",s:"Carga instantánea en cualquier dispositivo."}, {ico:"candado",t:"Seguridad",s:"Cifrado de extremo a extremo."}, {ico:"estrella",t:"Calidad",s:"Diseño premium en cada detalle."} ] }),
     campos: [
       {key:"titulo",label:"Título superior (opcional)",tipo:"text"},
       {key:"colorIcono",label:"Color de íconos (vacío = tema)",tipo:"color"},
       {grupo:"Disposición y tipografía"},
+      {tipo:"row2", izq:{key:"disposicion",label:"Disposición",tipo:"select",opciones:[["lista","En lista (uno bajo otro)"],["fila","En fila (lado a lado)"]]}, der:{key:"porFila",label:"Cuántos por fila",tipo:"select",opciones:[["2","2"],["3","3"],["4","4"]]}},
       {key:"orientacion",label:"Ícono y texto",tipo:"select",opciones:[["horizontal","Ícono al lado del texto"],["vertical","Ícono arriba del texto"]]},
       {key:"fuente",label:"Tipografía",tipo:"select",opciones:FUENTES},
       {tipo:"row2", izq:{key:"tamTitulo",label:"Tamaño título superior (px)",tipo:"range",min:11,max:36,step:1}, der:{key:"gapItems",label:"Distancia entre ítems (px)",tipo:"range",min:0,max:48,step:1}},
@@ -2921,7 +2926,14 @@ const BLOQUES = {
       const stS = `font-size:${esc(d.tamItemSub||"12")}px;`;
       const items = (d.items||[]).map(it => `<li style="padding:${g/2}px 0;"><div class="ico"${d.colorIcono?` style="color:${esc(d.colorIcono)}"`:""}>${it.ico?svgIcon(it.ico,{size:"22px"}):""}</div><div class="txt"><div class="t" style="${stT}">${esc(it.t||"")}</div>${it.s?`<div class="s" style="${stS}">${esc(it.s)}</div>`:""}</div></li>`).join("");
       const fam = fontFamilyCSS(d.fuente);
-      return wrap(d, `<div class="sbb-features${vert?" vertical":""}" style="${fam}text-align:${ta};">${d.titulo?`<h3 style="font-size:${esc(d.tamTitulo||"16")}px;">${esc(d.titulo)}</h3>`:""}<ul>${items}</ul></div>`);
+      // Disposición: en fila (grilla de N columnas, lado a lado) o en lista (apilados).
+      const enFila = d.disposicion === "fila";
+      const cols = Math.max(2, Math.min(4, parseInt(d.porFila)||3));
+      const ulStyle = enFila
+        ? `display:grid;grid-template-columns:repeat(${cols},minmax(0,1fr));gap:${g}px;`
+        : "";
+      const filaCls = enFila ? " en-fila" : "";
+      return wrap(d, `<div class="sbb-features${vert?" vertical":""}${filaCls}" style="${fam}text-align:${ta};">${d.titulo?`<h3 style="font-size:${esc(d.tamTitulo||"16")}px;">${esc(d.titulo)}</h3>`:""}<ul style="${ulStyle}">${items}</ul></div>`);
     }
   },
 
