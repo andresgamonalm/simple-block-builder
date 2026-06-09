@@ -2515,6 +2515,7 @@ const BLOQUES = {
     defaults: Object.assign({}, styleDefaults, { codigo:"", padTop:"0", padBottom:"0", padLeft:"0", padRight:"0" }),
     campos: [
       {key:"codigo",label:"Pega aquí tu código (HTML con su <style> y <script>)",tipo:"codigo-textarea"},
+      {key:"alto",label:"Alto del bloque (opcional · ej. 400px — útil para embeds/iframes)",tipo:"text",placeholder:"auto / 400px / 60vh"},
       ...styleFields()
     ],
     render: (d) => {
