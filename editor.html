@@ -1666,7 +1666,7 @@ async function enviarPrueba(){
   try{
     const r = await fetch("/api/test-send", {
       method:"POST", credentials:"include", headers:{ "Content-Type":"application/json" },
-      body: JSON.stringify({ destinatarios, asunto:`[Prueba] ${p.nombre}`, html: generarHTMLDePieza(p) })
+      body: JSON.stringify({ destinatarios, asunto:`[Prueba] ${p.nombre}`, html: limpiarMetaComentarios(generarHTMLDePieza(p)) })
     });
     const data = await r.json().catch(() => ({}));
     if(r.ok && data.ok){ a.className = "prueba-alert ok"; a.textContent = "Enviado. Revisa tu bandeja (y spam)."; toast("Prueba enviada"); }
@@ -1682,6 +1682,16 @@ function getTema(){ return pieza()?.tema || { font:"Inter", primary:"#1c73cb", t
 
 function esc(s){ if(s==null) return ""; return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;"); }
 function escMultiline(s){ return esc(s||"").replace(/\n/g,"<br>"); }
+// Quita los comentarios de metadatos (<!--SBB:…-->) que el editor incrusta para
+// poder re-importar un HTML. El destinatario de un email NO los necesita y algunos
+// clientes (Gmail) los filtran como texto visible (los "\n" que se ven en el correo).
+function limpiarMetaComentarios(html){
+  return String(html||"")
+    .replace(/<!--SBB-PIECE:[\s\S]*?:SBB-PIECE-->/g, "")
+    .replace(/<!--SBB:[\s\S]*?:SBB-->/g, "")
+    .replace(/<!--\/SBB-->/g, "")
+    .replace(/\n{3,}/g, "\n\n");
+}
 function escAttr(s){ return esc(s).replace(/'/g,"&#39;"); }
 function hexRgba(hex, a){
   let h = String(hex||"#000000").replace("#","");
