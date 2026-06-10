@@ -2756,7 +2756,7 @@ const BLOQUES = {
     cat:"Cards", nombre:"Tarjeta de producto", icono:"", sub:"Imagen + nombre + precio + CTA",
     defaults: Object.assign({}, styleDefaults, {
       padTop:"6", padBottom:"6",
-      imagenUrl:"https://placehold.co/600x400/e5e7ea/9ca3af?text=Producto", radioImg:"0",
+      imagenUrl:"https://placehold.co/600x400/e5e7ea/9ca3af?text=Producto", radioImg:"0", aspectoImg:"", focoImg:"center", zoomImg:"100",
       nombre:"Producto", descripcion:"Descripción corta", precio:"$0.00",
       ctaTexto:"Comprar", ctaUrl:"",
       alineacionTexto:"left", tamanoNombre:"15", tamanoPrecio:"15",
@@ -2772,13 +2772,14 @@ const BLOQUES = {
       {key:"alineacionTexto",label:"Alineación texto",tipo:"alignH"},
       {tipo:"row2", izq:{key:"tamanoNombre",label:"Tamaño nombre (px)",tipo:"range",min:12,max:24,step:1}, der:{key:"tamanoPrecio",label:"Tamaño precio (px)",tipo:"range",min:12,max:30,step:1}},
       {key:"radioImg",label:"Radio de la imagen (px)",tipo:"range",min:0,max:40,step:1},
+      ...camposProporcion(),
       {tipo:"row2", izq:{key:"colorFondo",label:"Fondo",tipo:"color"}, der:{key:"colorTexto",label:"Texto",tipo:"color"}},
       {key:"colorPrecio",label:"Color del precio (vacío=tema)",tipo:"color"},
       ...styleFields()
     ],
     render: (d) => {
       const colorPrecio = d.colorPrecio || getTema().primary;
-      return wrap(d, `<div class="sbb-product" style="background:${esc(d.colorFondo)};color:${esc(d.colorTexto||"inherit")};text-align:${esc(d.alineacionTexto)};"><img src="${esc(d.imagenUrl)}" alt="" style="border-radius:${esc(d.radioImg)}px;"><div class="body"><div class="head" style="justify-content:${d.alineacionTexto==="center"?"center":d.alineacionTexto==="right"?"flex-end":"space-between"};"><div class="name" style="font-size:${esc(d.tamanoNombre)}px;">${esc(d.nombre)}</div><div class="price" style="font-size:${esc(d.tamanoPrecio)}px;color:${esc(colorPrecio)};">${esc(d.precio)}</div></div>${d.descripcion?`<div class="desc">${esc(d.descripcion)}</div>`:""}${d.ctaTexto&&d.ctaUrl?`<a class="cta" href="${esc(d.ctaUrl)}" target="_blank" rel="noopener">${esc(d.ctaTexto)}</a>`:""}</div></div>`);
+      return wrap(d, `<div class="sbb-product" style="background:${esc(d.colorFondo)};color:${esc(d.colorTexto||"inherit")};text-align:${esc(d.alineacionTexto)};">${imgProporcion({url:d.imagenUrl,ancho:"100",aspecto:d.aspectoImg,zoom:d.zoomImg,foco:d.focoImg,radio:d.radioImg,editKey:"imagenUrl"})}<div class="body"><div class="head" style="justify-content:${d.alineacionTexto==="center"?"center":d.alineacionTexto==="right"?"flex-end":"space-between"};"><div class="name" style="font-size:${esc(d.tamanoNombre)}px;">${esc(d.nombre)}</div><div class="price" style="font-size:${esc(d.tamanoPrecio)}px;color:${esc(colorPrecio)};">${esc(d.precio)}</div></div>${d.descripcion?`<div class="desc">${esc(d.descripcion)}</div>`:""}${d.ctaTexto&&d.ctaUrl?`<a class="cta" href="${esc(d.ctaUrl)}" target="_blank" rel="noopener">${esc(d.ctaTexto)}</a>`:""}</div></div>`);
     }
   },
 
@@ -2834,7 +2835,7 @@ const BLOQUES = {
     cat:"Cards", nombre:"Artículo / Post", icono:"", sub:"Imagen + título + lead + link",
     defaults: Object.assign({}, styleDefaults, {
       padTop:"6", padBottom:"6",
-      imagenUrl:"https://placehold.co/600x320/e5e7ea/9ca3af?text=Imagen", radioImg:"0",
+      imagenUrl:"https://placehold.co/600x320/e5e7ea/9ca3af?text=Imagen", radioImg:"0", aspectoImg:"", focoImg:"center", zoomImg:"100",
       categoria:"Categoría", titulo:"Título del artículo",
       lead:"Lead del artículo en una o dos líneas para generar interés.",
       linkTexto:"Leer más", linkUrl:"",
@@ -2851,6 +2852,7 @@ const BLOQUES = {
       {key:"alineacionTexto",label:"Alineación",tipo:"alignH"},
       {tipo:"row2", izq:{key:"tamanoTitulo",label:"Tamaño título (px)",tipo:"range",min:14,max:36,step:1}, der:{key:"tamanoLead",label:"Tamaño lead (px)",tipo:"range",min:11,max:18,step:1}},
       {key:"radioImg",label:"Radio de la imagen (px)",tipo:"range",min:0,max:40,step:1},
+      ...camposProporcion(),
       {tipo:"row2", izq:{key:"colorFondo",label:"Fondo",tipo:"color"}, der:{key:"colorTexto",label:"Texto",tipo:"color"}},
       {tipo:"row2", izq:{key:"colorCategoria",label:"Categoría (vacío=tema)",tipo:"color"}, der:{key:"colorEnlace",label:"Enlace (vacío=tema)",tipo:"color"}},
       ...styleFields()
@@ -2858,7 +2860,7 @@ const BLOQUES = {
     render: (d) => {
       const colorCat = d.colorCategoria || getTema().primary;
       const colorLink = d.colorEnlace || getTema().primary;
-      return wrap(d, `<div class="sbb-article" style="background:${esc(d.colorFondo)};color:${esc(d.colorTexto||"inherit")};text-align:${esc(d.alineacionTexto)};"><img src="${esc(d.imagenUrl)}" alt="" style="border-radius:${esc(d.radioImg)}px;"><div class="body">${d.categoria?`<div class="cat" style="color:${esc(colorCat)};">${esc(d.categoria)}</div>`:""}<h3 class="title" style="font-size:${esc(d.tamanoTitulo)}px;">${esc(d.titulo)}</h3>${d.lead?`<div class="lead" style="font-size:${esc(d.tamanoLead)}px;">${escMultiline(d.lead)}</div>`:""}${d.linkTexto&&d.linkUrl?`<a class="more" href="${esc(d.linkUrl)}" target="_blank" rel="noopener" style="color:${esc(colorLink)};">${esc(d.linkTexto)}</a>`:""}</div></div>`);
+      return wrap(d, `<div class="sbb-article" style="background:${esc(d.colorFondo)};color:${esc(d.colorTexto||"inherit")};text-align:${esc(d.alineacionTexto)};">${imgProporcion({url:d.imagenUrl,ancho:"100",aspecto:d.aspectoImg,zoom:d.zoomImg,foco:d.focoImg,radio:d.radioImg,editKey:"imagenUrl"})}<div class="body">${d.categoria?`<div class="cat" style="color:${esc(colorCat)};">${esc(d.categoria)}</div>`:""}<h3 class="title" style="font-size:${esc(d.tamanoTitulo)}px;">${esc(d.titulo)}</h3>${d.lead?`<div class="lead" style="font-size:${esc(d.tamanoLead)}px;">${escMultiline(d.lead)}</div>`:""}${d.linkTexto&&d.linkUrl?`<a class="more" href="${esc(d.linkUrl)}" target="_blank" rel="noopener" style="color:${esc(colorLink)};">${esc(d.linkTexto)}</a>`:""}</div></div>`);
     }
   },
 
