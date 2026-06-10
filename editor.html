@@ -2058,6 +2058,30 @@ function wrap(d, inner){
     <div style="${w}${h}max-width:100%;box-sizing:border-box;">${inner}</div>
   </div>`;
 }
+// Imagen recortada a proporción (apaisada, cuadrada, vertical…), reutilizable por
+// los bloques con foto. opts: {url, alt, ancho(%), aspecto("16/9"…), zoom, foco, radio(px), alto, editKey}
+function imgProporcion(o){
+  const foco = o.foco || "center";
+  const zoom = Math.max(100, Math.min(400, parseFloat(o.zoom)||100))/100;
+  const radio = `border-radius:${esc(o.radio||0)}px;`;
+  const ratio = (o.aspecto && /^\d+\/\d+$/.test(o.aspecto)) ? o.aspecto : "";
+  const ancho = (o.ancho!=null && o.ancho!=="") ? o.ancho : "100";
+  const edit = o.editKey ? ` data-edit-img="${esc(o.editKey)}" title="Clic para cambiar la imagen"` : "";
+  const imgIn = `<img src="${esc(o.url)}" alt="${esc(o.alt||"")}"${edit} style="width:100%;height:100%;object-fit:cover;object-position:${esc(foco)};transform:scale(${zoom});transform-origin:${esc(foco)};display:block;">`;
+  if(ratio)
+    return `<div style="width:${esc(ancho)}%;aspect-ratio:${ratio};overflow:hidden;${radio}display:inline-block;line-height:0;vertical-align:top;max-width:100%;">${imgIn}</div>`;
+  if(o.alto && o.alto!=="auto")
+    return `<div style="width:${esc(ancho)}%;height:${esc(o.alto)};overflow:hidden;${radio}display:inline-block;line-height:0;vertical-align:top;max-width:100%;">${imgIn}</div>`;
+  return `<img src="${esc(o.url)}" alt="${esc(o.alt||"")}"${edit} style="width:${esc(ancho)}%;${radio}display:inline-block;">`;
+}
+// Campos de proporción reutilizables (proporción + foco + zoom) para bloques con foto.
+function camposProporcion(keys){
+  const k = Object.assign({aspecto:"aspectoImg", foco:"focoImg", zoom:"zoomImg"}, keys||{});
+  return [
+    {key:k.aspecto,label:"Forma / proporción de la foto",tipo:"select",opciones:[["","Original (sin recorte)"],["16/9","Apaisado 16:9"],["3/2","Foto 3:2"],["4/3","Clásico 4:3"],["1/1","Cuadrado 1:1"],["4/5","Vertical 4:5"],["9/16","Alto (story) 9:16"]]},
+    {tipo:"row2", izq:{key:k.zoom,label:"Acercar / Zoom (%)",tipo:"range",min:100,max:300,step:5}, der:{key:k.foco,label:"Qué parte se ve (foco)",tipo:"select",opciones:[["center","Centro"],["top","Arriba"],["bottom","Abajo"],["left","Izquierda"],["right","Derecha"],["top left","Arriba-izq"],["top right","Arriba-der"],["bottom left","Abajo-izq"],["bottom right","Abajo-der"]]}}
+  ];
+}
 
 /* ═══════════════════════════════════════════════════════════════
    BLOCKS
@@ -2166,12 +2190,13 @@ const BLOQUES = {
   },
   imgtext: {
     cat:"Contenido", nombre:"Imagen + Texto", icono:"", sub:"Dos columnas",
-    defaults: Object.assign({}, styleDefaults, { imagenUrl:"https://placehold.co/300x300/e5e7ea/9ca3af?text=Imagen", lado:"left", titulo:"Título", texto:"Texto", linkTexto:"", linkUrl:"", proporcionImg:"40", gapCol:"18", altoImg:"auto", radioImg:"0", alineacionTexto:"left", alineacionVertCol:"center", tamTitulo:"18", colorTitulo:"", tamTexto:"14", colorTexto:"" }),
+    defaults: Object.assign({}, styleDefaults, { imagenUrl:"https://placehold.co/300x300/e5e7ea/9ca3af?text=Imagen", lado:"left", titulo:"Título", texto:"Texto", linkTexto:"", linkUrl:"", proporcionImg:"40", gapCol:"18", altoImg:"auto", radioImg:"0", aspectoImg:"", focoImg:"center", zoomImg:"100", alineacionTexto:"left", alineacionVertCol:"center", tamTitulo:"18", colorTitulo:"", tamTexto:"14", colorTexto:"" }),
     campos: [
       {key:"imagenUrl",label:"URL de la imagen",tipo:"text"},
       {tipo:"row2", izq:{key:"lado",label:"Posición imagen",tipo:"select",opciones:[["left","Izquierda"],["right","Derecha"]]}, der:{key:"proporcionImg",label:"Ancho col img (%)",tipo:"range",min:20,max:60,step:5}},
       {tipo:"row2", izq:{key:"altoImg",label:"Alto imagen",tipo:"text",placeholder:"auto"}, der:{key:"gapCol",label:"Espacio (px)",tipo:"range",min:0,max:60,step:2}},
       {key:"radioImg",label:"Radio de la imagen (px)",tipo:"range",min:0,max:40,step:1},
+      ...camposProporcion(),
       {grupo:"Contenido"},
       {key:"titulo",label:"Título",tipo:"text"},
       {tipo:"row2", izq:{key:"tamTitulo",label:"Tamaño título (px)",tipo:"range",min:12,max:40,step:1}, der:{key:"colorTitulo",label:"Color título (vacío=tema)",tipo:"color"}},
@@ -2184,11 +2209,11 @@ const BLOQUES = {
       ...styleFields()
     ],
     render: (d) => {
-      const altoImg = d.altoImg && d.altoImg !== "auto" ? `height:${esc(d.altoImg)};object-fit:cover;` : "";
       const gap = d.gapCol ? `gap:${esc(d.gapCol)}px;` : "";
       const stT = `font-size:${esc(d.tamTitulo||18)}px;${d.colorTitulo?`color:${esc(d.colorTitulo)};`:""}`;
       const stP = `font-size:${esc(d.tamTexto||14)}px;${d.colorTexto?`color:${esc(d.colorTexto)};`:""}`;
-      return wrap(d, `<div class="sbb-img-text${d.lado==="right"?" right":""}" style="align-items:${justifyV(d.alineacionVertCol||d.alinV)};${gap}"><div class="col-img" style="flex:0 0 ${esc(d.proporcionImg)}%;"><img src="${esc(d.imagenUrl)}" alt="" data-edit-img="imagenUrl" title="Clic para cambiar la imagen" style="${altoImg}border-radius:${esc(d.radioImg)}px;"></div><div class="col-text" style="text-align:${esc(d.alineacionTexto||"left")};">${d.titulo?`<h3 data-edit="titulo" data-linea="1" style="${stT}">${esc(d.titulo)}</h3>`:""}${d.texto?`<p data-edit="texto" style="${stP}">${escMultiline(d.texto)}</p>`:""}${d.linkTexto && d.linkUrl?`<a href="${esc(d.linkUrl)}" target="_blank" rel="noopener" data-edit="linkTexto" data-linea="1" data-edit-link="linkUrl" title="Doble clic para editar el enlace">${esc(d.linkTexto)}</a>`:""}</div></div>`);
+      const media = imgProporcion({ url:d.imagenUrl, alt:"", ancho:"100", aspecto:d.aspectoImg, zoom:d.zoomImg, foco:d.focoImg, radio:d.radioImg, alto:(d.altoImg&&d.altoImg!=="auto"?d.altoImg:""), editKey:"imagenUrl" });
+      return wrap(d, `<div class="sbb-img-text${d.lado==="right"?" right":""}" style="align-items:${justifyV(d.alineacionVertCol||d.alinV)};${gap}"><div class="col-img" style="flex:0 0 ${esc(d.proporcionImg)}%;">${media}</div><div class="col-text" style="text-align:${esc(d.alineacionTexto||"left")};">${d.titulo?`<h3 data-edit="titulo" data-linea="1" style="${stT}">${esc(d.titulo)}</h3>`:""}${d.texto?`<p data-edit="texto" style="${stP}">${escMultiline(d.texto)}</p>`:""}${d.linkTexto && d.linkUrl?`<a href="${esc(d.linkUrl)}" target="_blank" rel="noopener" data-edit="linkTexto" data-linea="1" data-edit-link="linkUrl" title="Doble clic para editar el enlace">${esc(d.linkTexto)}</a>`:""}</div></div>`);
     }
   },
   divisor: {
