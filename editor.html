@@ -2122,14 +2122,14 @@ const BLOQUES = {
       const zoom = Math.max(100, Math.min(400, parseFloat(d.zoom)||100))/100;
       const radio = `border-radius:${esc(d.radio)}px;`;
       const ratio = (d.aspecto && /^\d+\/\d+$/.test(d.aspecto)) ? d.aspecto : "";
-      const imgIn = `<img src="${esc(d.url)}" alt="${esc(d.alt)}" style="width:100%;height:100%;object-fit:cover;object-position:${esc(foco)};transform:scale(${zoom});transform-origin:${esc(foco)};display:block;">`;
+      const imgIn = `<img src="${esc(d.url)}" alt="${esc(d.alt)}" data-edit-img="url" title="Clic para cambiar la imagen" style="width:100%;height:100%;object-fit:cover;object-position:${esc(foco)};transform:scale(${zoom});transform-origin:${esc(foco)};display:block;">`;
       let media;
       if(ratio){
         media = `<div style="width:${esc(d.anchoImg)}%;aspect-ratio:${ratio};overflow:hidden;${radio}display:inline-block;line-height:0;vertical-align:top;">${imgIn}</div>`;
       } else if(d.altoImg){
         media = `<div style="width:${esc(d.anchoImg)}%;height:${esc(d.altoImg)}px;overflow:hidden;${radio}display:inline-block;line-height:0;vertical-align:top;">${imgIn}</div>`;
       } else {
-        media = `<img src="${esc(d.url)}" alt="${esc(d.alt)}" style="width:${esc(d.anchoImg)}%;${radio}display:inline-block;">`;
+        media = `<img src="${esc(d.url)}" alt="${esc(d.alt)}" data-edit-img="url" title="Clic para cambiar la imagen" style="width:${esc(d.anchoImg)}%;${radio}display:inline-block;">`;
       }
       const wrapped = d.link ? `<a href="${esc(d.link)}" target="_blank" rel="noopener">${media}</a>` : media;
       return wrap(d, `<div class="sbb-imagen" style="text-align:${esc(d.alinH||"center")};">${wrapped}${d.caption?`<div class="caption">${esc(d.caption)}</div>`:""}</div>`);
@@ -2161,7 +2161,7 @@ const BLOQUES = {
       const hoverCol = outline ? (d.colorTexto || "#ffffff") : col;
       const w = d.anchoBoton && d.anchoBoton !== "auto" ? `width:${esc(d.anchoBoton)};` : "";
       const h = d.altoBoton && d.altoBoton !== "auto" ? `min-height:${esc(d.altoBoton)};display:inline-flex;align-items:center;justify-content:center;` : "";
-      return wrap(d, `<div class="sbb-cta" style="text-align:${esc(d.alinH||"center")};"><a href="${esc(d.url||"#")}" target="_blank" rel="noopener" style="${w}${h}background:${esc(bg)};color:${esc(col)};border:2px solid ${esc(acento)};font-size:${esc(d.tamano)}px;padding:${esc(d.padY)}px ${esc(d.padX)}px;border-radius:${esc(d.radio)}px;transition:background .15s ease,color .15s ease;" onmouseover="this.style.background='${escAttr(hoverBg)}';this.style.color='${escAttr(hoverCol)}'" onmouseout="this.style.background='${escAttr(bg)}';this.style.color='${escAttr(col)}'">${esc(d.texto)}</a></div>`);
+      return wrap(d, `<div class="sbb-cta" style="text-align:${esc(d.alinH||"center")};"><a href="${esc(d.url||"#")}" target="_blank" rel="noopener" data-edit="texto" data-linea="1" data-edit-link="url" title="Doble clic para editar el enlace" style="${w}${h}background:${esc(bg)};color:${esc(col)};border:2px solid ${esc(acento)};font-size:${esc(d.tamano)}px;padding:${esc(d.padY)}px ${esc(d.padX)}px;border-radius:${esc(d.radio)}px;transition:background .15s ease,color .15s ease;" onmouseover="this.style.background='${escAttr(hoverBg)}';this.style.color='${escAttr(hoverCol)}'" onmouseout="this.style.background='${escAttr(bg)}';this.style.color='${escAttr(col)}'">${esc(d.texto)}</a></div>`);
     }
   },
   imgtext: {
@@ -3022,14 +3022,14 @@ const BLOQUES = {
       const fam = fontFamilyCSS(d.fuenteTitulo);
       const cTxt = d.colorTexto || "#ffffff";
       const acc = d.botonColor || getTema().ctaColor || getTema().primary;
-      const ey = d.eyebrow ? `<div style="font-size:11px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:${esc(d.colorEyebrow||acc)};margin-bottom:10px;">${esc(d.eyebrow)}</div>` : "";
-      const tit = d.titulo ? `<div style="margin:0 0 10px;font-size:${esc(d.tamTitulo||30)}px;line-height:1.15;font-weight:700;color:${esc(cTxt)};${fam}">${esc(d.titulo)}</div>` : "";
+      const ey = d.eyebrow ? `<div data-edit="eyebrow" data-linea="1" style="font-size:11px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:${esc(d.colorEyebrow||acc)};margin-bottom:10px;">${esc(d.eyebrow)}</div>` : "";
+      const tit = d.titulo ? `<div data-edit="titulo" data-linea="1" style="margin:0 0 10px;font-size:${esc(d.tamTitulo||30)}px;line-height:1.15;font-weight:700;color:${esc(cTxt)};${fam}">${esc(d.titulo)}</div>` : "";
       const cen = (ta==="center") ? "margin-left:auto;margin-right:auto;" : "";
-      const sub = d.subtitulo ? `<div style="font-size:${esc(d.tamSub||15)}px;line-height:1.6;color:${esc(cTxt)};opacity:.92;max-width:520px;${cen}">${escMultiline(d.subtitulo)}</div>` : "";
+      const sub = d.subtitulo ? `<div data-edit="subtitulo" style="font-size:${esc(d.tamSub||15)}px;line-height:1.6;color:${esc(cTxt)};opacity:.92;max-width:520px;${cen}">${escMultiline(d.subtitulo)}</div>` : "";
       let boton = "";
       if(d.botonTexto){
         const out = d.botonVariante==="outline";
-        boton = `<div style="margin-top:20px;"><a href="${esc(d.botonUrl||'#')}" target="_blank" rel="noopener" style="display:inline-block;background:${out?'transparent':esc(acc)};color:${out?esc(acc):'#ffffff'};border:2px solid ${esc(acc)};padding:12px 26px;border-radius:${esc(d.radioBoton||'6')}px;font-size:14px;font-weight:600;text-decoration:none;">${esc(d.botonTexto)}</a></div>`;
+        boton = `<div style="margin-top:20px;"><a href="${esc(d.botonUrl||'#')}" target="_blank" rel="noopener" data-edit="botonTexto" data-linea="1" data-edit-link="botonUrl" title="Doble clic para editar el enlace" style="display:inline-block;background:${out?'transparent':esc(acc)};color:${out?esc(acc):'#ffffff'};border:2px solid ${esc(acc)};padding:12px 26px;border-radius:${esc(d.radioBoton||'6')}px;font-size:14px;font-weight:600;text-decoration:none;">${esc(d.botonTexto)}</a></div>`;
       }
       const inner = `<div style="background:${esc(d.bg||'#0e2748')};padding:${esc(d.padV||44)}px ${esc(d.padH||32)}px;text-align:${ta};box-sizing:border-box;">${ey}${tit}${sub}${boton}</div>`;
       return wrap(d, inner);
