@@ -2188,7 +2188,7 @@ const BLOQUES = {
       const gap = d.gapCol ? `gap:${esc(d.gapCol)}px;` : "";
       const stT = `font-size:${esc(d.tamTitulo||18)}px;${d.colorTitulo?`color:${esc(d.colorTitulo)};`:""}`;
       const stP = `font-size:${esc(d.tamTexto||14)}px;${d.colorTexto?`color:${esc(d.colorTexto)};`:""}`;
-      return wrap(d, `<div class="sbb-img-text${d.lado==="right"?" right":""}" style="align-items:${justifyV(d.alineacionVertCol||d.alinV)};${gap}"><div class="col-img" style="flex:0 0 ${esc(d.proporcionImg)}%;"><img src="${esc(d.imagenUrl)}" alt="" style="${altoImg}border-radius:${esc(d.radioImg)}px;"></div><div class="col-text" style="text-align:${esc(d.alineacionTexto||"left")};">${d.titulo?`<h3 style="${stT}">${esc(d.titulo)}</h3>`:""}${d.texto?`<p style="${stP}">${escMultiline(d.texto)}</p>`:""}${d.linkTexto && d.linkUrl?`<a href="${esc(d.linkUrl)}" target="_blank" rel="noopener">${esc(d.linkTexto)}</a>`:""}</div></div>`);
+      return wrap(d, `<div class="sbb-img-text${d.lado==="right"?" right":""}" style="align-items:${justifyV(d.alineacionVertCol||d.alinV)};${gap}"><div class="col-img" style="flex:0 0 ${esc(d.proporcionImg)}%;"><img src="${esc(d.imagenUrl)}" alt="" data-edit-img="imagenUrl" title="Clic para cambiar la imagen" style="${altoImg}border-radius:${esc(d.radioImg)}px;"></div><div class="col-text" style="text-align:${esc(d.alineacionTexto||"left")};">${d.titulo?`<h3 data-edit="titulo" data-linea="1" style="${stT}">${esc(d.titulo)}</h3>`:""}${d.texto?`<p data-edit="texto" style="${stP}">${escMultiline(d.texto)}</p>`:""}${d.linkTexto && d.linkUrl?`<a href="${esc(d.linkUrl)}" target="_blank" rel="noopener" data-edit="linkTexto" data-linea="1" data-edit-link="linkUrl" title="Doble clic para editar el enlace">${esc(d.linkTexto)}</a>`:""}</div></div>`);
     }
   },
   divisor: {
@@ -3054,7 +3054,8 @@ const BLOQUES = {
       const borde = solido ? "none" : "1px solid #e3e6ec";
       const logo = solido ? (d.logoClaro||d.logoColor||"") : (d.logoColor||d.logoClaro||"");
       const ta = d.alinH || "left";
-      const inner = `<div style="background:${esc(band)};border:${borde};text-align:${ta};padding:22px 28px;box-sizing:border-box;">${logo?`<img src="${esc(logo)}" alt="logo" style="height:${esc(d.alto||30)}px;width:auto;display:inline-block;vertical-align:middle;">`:`<span style="color:#bbb;font-size:12px;">Logo de la marca</span>`}</div>`;
+      const logoField = solido ? "logoClaro" : "logoColor";
+      const inner = `<div style="background:${esc(band)};border:${borde};text-align:${ta};padding:22px 28px;box-sizing:border-box;">${logo?`<img src="${esc(logo)}" alt="logo" data-edit-img="${logoField}" title="Clic para cambiar el logo" style="height:${esc(d.alto||30)}px;width:auto;display:inline-block;vertical-align:middle;">`:`<span style="color:#bbb;font-size:12px;">Logo de la marca</span>`}</div>`;
       return wrap(d, inner);
     }
   },
