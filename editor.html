@@ -2950,7 +2950,7 @@ const BLOQUES = {
       const ta = textAlignDe(d.alinH);
       const stT = `font-size:${esc(d.tamItemTitulo||"13.5")}px;`;
       const stS = `font-size:${esc(d.tamItemSub||"12")}px;`;
-      const items = (d.items||[]).map(it => `<li style="padding:${g/2}px 0;"><div class="ico"${d.colorIcono?` style="color:${esc(d.colorIcono)}"`:""}>${it.ico?svgIcon(it.ico,{size:"22px"}):""}</div><div class="txt"><div class="t" style="${stT}">${esc(it.t||"")}</div>${it.s?`<div class="s" style="${stS}">${esc(it.s)}</div>`:""}</div></li>`).join("");
+      const items = (d.items||[]).map((it, idx) => `<li style="padding:${g/2}px 0;"><div class="ico"${d.colorIcono?` style="color:${esc(d.colorIcono)}"`:""}>${it.ico?svgIcon(it.ico,{size:"22px"}):""}</div><div class="txt"><div class="t" data-edit="items.${idx}.t" data-linea="1" style="${stT}">${esc(it.t||"")}</div><div class="s" data-edit="items.${idx}.s" style="${stS}">${esc(it.s||"")}</div></div></li>`).join("");
       const fam = fontFamilyCSS(d.fuente);
       // Disposición: en fila (grilla de N columnas, lado a lado) o en lista (apilados).
       const enFila = d.disposicion === "fila";
@@ -3633,6 +3633,13 @@ function attachCodigoEditable(bw){
 //   data-edit="campo"      → texto editable en línea (se guarda en datos[campo])
 //   data-edit-img="campo"  → clic abre la biblioteca y cambia la imagen
 //   data-edit-link="campo" → clic en el botón pide/edita su enlace (URL)
+// El "campo" admite rutas anidadas para ítems de lista, p. ej. "items.0.t".
+function _leerRuta(obj, ruta){ return ruta.split(".").reduce((o,k)=> (o==null?undefined:o[k]), obj); }
+function _escribirRuta(obj, ruta, val){
+  const ks = ruta.split("."); const last = ks.pop();
+  let o = obj; for(const k of ks){ if(o[k]==null) o[k] = /^\d+$/.test(ks[ks.indexOf(k)+1]||last) ? [] : {}; o = o[k]; }
+  o[last] = val;
+}
 function attachInlineEdit(bw){
   const item = getCanvas().find(x => x.id === bw.dataset.id);
   if(!item || !BLOQUES[item.tipo]) return;
@@ -3645,7 +3652,7 @@ function attachInlineEdit(bw){
     const key = el.getAttribute("data-edit");
     const guardar = () => {
       const txt = el.innerText.replace(/ /g, " ").replace(/\n$/, "");
-      if(item.datos[key] !== txt){ item.datos[key] = txt; persistir(); }
+      if(_leerRuta(item.datos, key) !== txt){ _escribirRuta(item.datos, key, txt); persistir(); }
     };
     el.addEventListener("blur", guardar);
     el.addEventListener("input", () => { clearTimeout(el._t); el._t = setTimeout(guardar, 600); });
