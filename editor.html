@@ -946,6 +946,12 @@ button,input,select,textarea{font-family:inherit;}
 .sbb-codigo[contenteditable="true"]{outline:2px dashed var(--primary);outline-offset:4px;border-radius:4px;cursor:text;}
 .sbb-codigo[contenteditable="true"] img{cursor:pointer;transition:outline .12s;}
 .sbb-codigo[contenteditable="true"] img:hover{outline:3px solid var(--primary);outline-offset:1px;}
+/* Edición directa: resaltado sutil al pasar sobre texto/imagen editable del bloque seleccionado. */
+.bw.selected [data-edit]{outline:1px dashed transparent;outline-offset:2px;border-radius:3px;transition:outline-color .12s,background .12s;}
+.bw.selected [data-edit][contenteditable="true"]:hover{outline-color:var(--primary);background:rgba(28,115,203,.04);cursor:text;}
+.bw.selected [data-edit][contenteditable="true"]:focus{outline:2px solid var(--primary);background:rgba(28,115,203,.06);}
+.bw.selected [data-edit-img]{cursor:pointer;transition:outline .12s;}
+.bw.selected [data-edit-img]:hover{outline:3px solid var(--primary);outline-offset:1px;}
 
 /* ESPACIADOR */
 .sbb-spacer{display:block;}
@@ -2095,7 +2101,7 @@ const BLOQUES = {
       {tipo:"row2", izq:{key:"negrita",label:"Negrita",tipo:"check"}, der:{key:"italica",label:"Itálica",tipo:"check"}},
       ...styleFields()
     ],
-    render: (d) => wrap(d, `<div class="sbb-texto" style="font-size:${esc(d.tamano)}px;text-align:${esc(d.alinH)};${d.color?`color:${esc(d.color)};`:""}${d.negrita?"font-weight:600;":""}${d.italica?"font-style:italic;":""}">${d.titulo?`<h2>${esc(d.titulo)}</h2>`:""}<div>${escMultiline(d.contenido)}</div></div>`)
+    render: (d) => wrap(d, `<div class="sbb-texto" style="font-size:${esc(d.tamano)}px;text-align:${esc(d.alinH)};${d.color?`color:${esc(d.color)};`:""}${d.negrita?"font-weight:600;":""}${d.italica?"font-style:italic;":""}">${d.titulo?`<h2 data-edit="titulo" data-linea="1">${esc(d.titulo)}</h2>`:""}<div data-edit="contenido">${escMultiline(d.contenido)}</div></div>`)
   },
   imagen: {
     cat:"Contenido", nombre:"Imagen", icono:"", sub:"Imagen ajustable",
@@ -3622,6 +3628,57 @@ function attachCodigoEditable(bw){
     });
   });
 }
+// ── EDICIÓN DIRECTA EN EL LIENZO ──────────────────────────────────────────────
+// Al seleccionar un bloque, sus elementos marcados se editan in situ:
+//   data-edit="campo"      → texto editable en línea (se guarda en datos[campo])
+//   data-edit-img="campo"  → clic abre la biblioteca y cambia la imagen
+//   data-edit-link="campo" → clic en el botón pide/edita su enlace (URL)
+function attachInlineEdit(bw){
+  const item = getCanvas().find(x => x.id === bw.dataset.id);
+  if(!item || !BLOQUES[item.tipo]) return;
+  const activo = () => seleccionado === item.id;
+  // Texto editable
+  bw.querySelectorAll("[data-edit]").forEach(el => {
+    el.setAttribute("contenteditable", activo() ? "true" : "false");
+    if(el._inlineBound) return; el._inlineBound = true;
+    el.classList.add("inline-edit");
+    const key = el.getAttribute("data-edit");
+    const guardar = () => {
+      const txt = el.innerText.replace(/ /g, " ").replace(/\n$/, "");
+      if(item.datos[key] !== txt){ item.datos[key] = txt; persistir(); }
+    };
+    el.addEventListener("blur", guardar);
+    el.addEventListener("input", () => { clearTimeout(el._t); el._t = setTimeout(guardar, 600); });
+    // Enter no debe meter saltos en campos de una línea (títulos, botones).
+    el.addEventListener("keydown", (e) => { if(e.key==="Enter" && el.dataset.linea==="1"){ e.preventDefault(); el.blur(); } });
+  });
+  // Imágenes editables
+  bw.querySelectorAll("[data-edit-img]").forEach(img => {
+    if(img._inlineImgBound) return; img._inlineImgBound = true;
+    img.style.cursor = "pointer";
+    img.addEventListener("click", (e) => {
+      if(!activo()) return;
+      e.preventDefault(); e.stopPropagation();
+      abrirImagenes((url) => { item.datos[img.getAttribute("data-edit-img")] = url; persistir(); renderBloqueSeleccionado(); });
+    });
+  });
+  // Enlaces de botones editables
+  bw.querySelectorAll("[data-edit-link]").forEach(btn => {
+    if(btn._inlineLinkBound) return; btn._inlineLinkBound = true;
+    btn.addEventListener("click", (e) => {
+      if(!activo()) return;
+      e.preventDefault();   // no navegar al editar
+    });
+    btn.addEventListener("dblclick", (e) => {
+      if(!activo()) return;
+      e.preventDefault(); e.stopPropagation();
+      const key = btn.getAttribute("data-edit-link");
+      const actual = item.datos[key] || "";
+      const url = window.prompt("Enlace del botón (URL):", actual);
+      if(url !== null){ item.datos[key] = url.trim(); persistir(); toast("Enlace guardado"); }
+    });
+  });
+}
 // Popover para elegir qué bloque va en una columna (mismo catálogo que el desplegable).
 let _pickerCelda = null;
 function cerrarPickerCelda(){ if(_pickerCelda){ _pickerCelda.remove(); _pickerCelda=null; document.removeEventListener("click", _cerrarPickerFuera, true); document.removeEventListener("keydown", _cerrarPickerEsc, true); } }
@@ -3760,6 +3817,7 @@ function renderBloqueSeleccionado(){
   bw.querySelectorAll("img").forEach(im => { im.draggable = false; });
   if(item.tipo === "grid") attachCeldasDeGrid(bw);   // reengancha el clic de las columnas
   if(item.tipo === "codigo") attachCodigoEditable(bw);   // texto/fotos editables en el HTML pegado
+  attachInlineEdit(bw);   // edición directa: texto/fotos/enlaces en el lienzo
   iniciarLivePreview();
 }
 
@@ -3800,9 +3858,9 @@ function seleccionarBloque(id){
   renderForm();
   cambiarPanelTab("editar");   // al seleccionar, abre la pestaña de edición
 }
-// Activa el contenteditable del bloque de código seleccionado (y lo apaga en los demás).
+// Activa la edición directa (código + texto en línea) del bloque seleccionado y la apaga en los demás.
 function sincronizarCodigoEditable(){
-  document.querySelectorAll(".bw .sbb-codigo").forEach(el => {
+  document.querySelectorAll(".bw .sbb-codigo, .bw [data-edit]").forEach(el => {
     const bw = el.closest(".bw");
     el.setAttribute("contenteditable", (bw && bw.dataset.id===seleccionado) ? "true" : "false");
   });
@@ -4142,11 +4200,13 @@ function attachBwListeners(c){
       if(e.target.closest("input,textarea,select,button,a")) { e.preventDefault(); return; }
       if(e.target.closest(".sbb-grid-cell")) { e.preventDefault(); return; }
       if(e.target.closest('.sbb-codigo[contenteditable="true"]')) { e.preventDefault(); return; }
+      if(e.target.closest('[contenteditable="true"],[data-edit-img],[data-edit-link]')) { e.preventDefault(); return; }
       dragBlockId = bw.dataset.id; bw.classList.add("drag-source"); e.dataTransfer.effectAllowed = "move"; try{e.dataTransfer.setData("text/plain",bw.dataset.id);}catch(_){}
     });
     bw.addEventListener("dragend", () => { bw.classList.remove("drag-source"); limpiarDropLines(); dragBlockId=null; });
     attachCeldasDeGrid(bw);   // si es grid, hace clicables sus columnas
     attachCodigoEditable(bw); // si es código, hace editable su texto/fotos
+    attachInlineEdit(bw);     // edición directa: texto/fotos/enlaces en el lienzo
   });
 }
 function ajustarFrameParaSet(es){
