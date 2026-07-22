@@ -4639,6 +4639,28 @@ async function sugerirTextosIA(){
     toast("Textos sugeridos por Char-B");
   }catch(e){ toast("Sin conexión: "+(e.message||e),4000); }
 }
+// Genera una FOTOGRAFÍA de fondo con IA (Imagen, misma API) y la aplica al banner.
+async function generarFondoIA(){
+  const p=pieza(); if(!esComposicion(p)) return;
+  const que = prompt("¿Qué debe mostrar la fotografía de fondo? (una frase):", getPath(p.composicion,'zonas.texto.titular.texto')||"");
+  if(que===null || !que.trim()) return;
+  const mid = p.tema && p.tema.marcaId;
+  const marcaRaw = mid ? (workspace.marcas||[]).find(x=>x.id===mid) : null;
+  const M = marcaRaw ? normalizarMarca(marcaRaw) : null;
+  toast("Generando la fotografía con IA… (puede tardar hasta un minuto)", 12000);
+  try{
+    const r=await fetch('/api/ia',{method:'POST',credentials:'include',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({modo:'imagen',brief:{que:que.trim()},marca:M?{nombre:M.nombre,negocio:M.negocio}:null})});
+    const raw=await r.text(); let d={}; try{ d=JSON.parse(raw); }catch(_){}
+    if(!r.ok||!d.ok||!d.url){ toast(d.error||raw.slice(0,140)||('Error '+r.status),6000); return; }
+    workspace.imagenes = workspace.imagenes || [];
+    workspace.imagenes.push({ id:"img"+Math.random().toString(36).slice(2,9), url:d.url, nombre:d.nombre||("IA · "+que.trim()), creado:Date.now(), enR2:true });
+    setComp('fondo.tipo','imagen');
+    setComp('fondo.imagen.url',d.url);
+    persistir(); renderTablero(); renderComposicionEditor();
+    toast("Fotografía generada y aplicada como fondo (quedó también en tu biblioteca)");
+  }catch(e){ toast("Sin conexión: "+(e.message||e),4000); }
+}
 // Editor de composición (3 zonas). fmt=null → Diseño global; fmt → ajuste por tamaño.
 // El MÁSTER edita el Diseño global (no un override): así "editar el máster" se
 // propaga a todos los que heredan, y el máster nunca queda tapado por un override.
@@ -4727,7 +4749,7 @@ function renderComposicionEditor(){
     `<option value="">${marcas.length?'— Aplicar marca —':'— Sin marcas (crea una) —'}</option>`+
     marcas.map(m=>`<option value="${m.id}" ${p.tema&&p.tema.marcaId===m.id?'selected':''}>${esc(m.nombre)}</option>`).join('')+
     `</select><button class="cmp-bib" onclick="abrirMarcas()" title="Gestionar marcas">${svgIcon("paleta",{size:"12px"})}</button></div>`;
-  cont.innerHTML=`<div class="cmp-ed">${marcaSel}<div class="dz-sec">Diseño global · 3 zonas</div><button class="ia-sugerir" onclick="sugerirTextosIA()">${svgIcon("estrella",{size:"13px"})} Sugerir textos con Char-B</button>${compEditorHTML(p,null,'diseno')}</div>`;
+  cont.innerHTML=`<div class="cmp-ed">${marcaSel}<div class="dz-sec">Diseño global · 3 zonas</div><button class="ia-sugerir" onclick="sugerirTextosIA()">${svgIcon("estrella",{size:"13px"})} Sugerir textos con Char-B</button><button class="ia-sugerir" onclick="generarFondoIA()">${svgIcon("imagen",{size:"13px"})} Generar fondo con IA</button>${compEditorHTML(p,null,'diseno')}</div>`;
 }
 // Panel "Ajustar este tamaño" (overrides sobre el global) en la pestaña Editar.
 function renderFormTamaño(f){
@@ -6204,6 +6226,22 @@ async function generarConIA(){
         dd.objects.forEach(o=>{ const nombre=String(o.key||"").split("/").pop().replace(/\.[a-z0-9]+$/i,""); const cand={url:o.url,nombre}; if(!urls.has(o.url) && !esLogoOIcono(cand)) imagenes.push(cand); });
       }}
     }catch(e){}
+  }
+  // Sin fotos en la biblioteca → genera una fotografía de fondo con IA (Imagen).
+  if(producto==="banner" && imagenes.length===0){
+    est.textContent = "No hay fotos en tu biblioteca: generando una con IA…";
+    try{
+      const rf = await fetch("/api/ia", { method:"POST", credentials:"include", headers:{ "Content-Type":"application/json" },
+        body: JSON.stringify({ modo:"imagen", brief:{ que }, marca: M ? { nombre:M.nombre, negocio:M.negocio } : null }) });
+      const df = await rf.json().catch(()=>null);
+      if(df && df.ok && df.url){
+        imagenes.push({ url: df.url, nombre: df.nombre || "Fondo IA" });
+        workspace.imagenes = workspace.imagenes || [];
+        workspace.imagenes.push({ id:"img"+Math.random().toString(36).slice(2,9), url:df.url, nombre:df.nombre||"Fondo IA", creado:Date.now(), enR2:true });
+        persistir();
+      }
+    }catch(_){}
+    est.textContent = "Generando con Char-B…";
   }
   if(producto==="banner" && imagenes.length){
     est.textContent = "Mirando tus imágenes…";

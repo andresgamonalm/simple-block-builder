@@ -23,7 +23,7 @@ export async function onRequestGet({ request, env }) {
     out.autenticado = !!email;
     out.tieneKey = !!env.GEMINI_API_KEY;
     out.largoKey = (env.GEMINI_API_KEY || '').length;
-    out.modelo = env.GEMINI_MODEL || 'gemini-2.5-flash-lite';
+    out.modelo = env.GEMINI_MODEL || 'gemini-2.5-flash';
 
     if (u.searchParams.get('gemini') !== '1') {
       out.nota = 'Función viva y deploy actualizado. Para probar Gemini abre /api/ia?gemini=1';
@@ -95,7 +95,7 @@ async function generar({ request, env }) {
       `Tono: ${brief.tono || (mk && mk.tono) || "profesional y cercano"}.`,
       `Tema/brief: ${brief.que || "(general)"}.`
     ].filter(Boolean).join("\n");
-    const model = env.GEMINI_MODEL || "gemini-2.5-flash-lite";
+    const model = env.GEMINI_MODEL || "gemini-2.5-flash";
     const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${encodeURIComponent(env.GEMINI_API_KEY)}`;
     const ctl = new AbortController(); const t = setTimeout(() => ctl.abort(), 30000);
     let res;
@@ -111,6 +111,52 @@ async function generar({ request, env }) {
     const parsed = extraerJSON(texto);
     if(!parsed) return json({ ok:false, error:"No se pudo interpretar la respuesta de la IA. Inicio: "+String(texto).slice(0,160) }, 500);
     return json({ ok:true, titular:String(parsed.titular||"").slice(0,120), cuerpo:String(parsed.cuerpo||"").slice(0,240), cta:String(parsed.cta||"").slice(0,40) });
+  }
+
+  // Modo "imagen": genera una FOTOGRAFÍA de fondo con Imagen (misma API key de
+  // Google) y la guarda en el bucket R2 de la biblioteca. Devuelve { ok, url, nombre }.
+  // Sin texto ni logos dentro de la foto: el texto lo pone el editor por zonas.
+  if (body.modo === "imagen") {
+    if (!env.IMAGENES) return json({ ok: false, error: "Falta el bucket de imágenes (binding IMAGENES) para guardar la foto." }, 500);
+    const mk = body.marca || null;
+    const que = String((brief && brief.que) || body.prompt || "").trim();
+    if (!que) return json({ ok: false, error: "Dime qué debe mostrar la imagen." }, 400);
+    const prompt = [
+      "Professional advertising background photograph for a digital display banner.",
+      "Subject / context: " + que + ".",
+      mk && mk.negocio ? "Brand context: " + mk.negocio + "." : "",
+      "Photorealistic, high quality, natural light, commercial style, clean composition with generous empty copy space for overlay text.",
+      "STRICTLY NO text, NO letters, NO numbers, NO logos, NO watermarks."
+    ].filter(Boolean).join(" ");
+    // Modelo con reintento: el override manda; si un modelo no existe (404), prueba el siguiente.
+    const modelos = [env.GEMINI_IMAGEN_MODEL, "imagen-4.0-generate-001", "imagen-3.0-generate-002"].filter(Boolean);
+    let data = null, ultimoError = "";
+    for (const model of modelos) {
+      const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:predict?key=${encodeURIComponent(env.GEMINI_API_KEY)}`;
+      const ctl = new AbortController(); const t = setTimeout(() => ctl.abort(), 55000);
+      let res;
+      try {
+        res = await fetch(url, { method: "POST", headers: { "Content-Type": "application/json" }, signal: ctl.signal,
+          body: JSON.stringify({ instances: [{ prompt }], parameters: { sampleCount: 1, aspectRatio: String(body.aspecto || "4:3") } }) });
+      } catch (e) {
+        clearTimeout(t);
+        return json({ ok: false, error: (e && e.name === "AbortError") ? "La generación de la imagen tardó demasiado; inténtalo de nuevo." : "No se pudo contactar al generador de imágenes: " + (e.message || e) }, 500);
+      }
+      clearTimeout(t);
+      if (res.status === 404) { ultimoError = `El modelo ${model} no está disponible en esta cuenta.`; continue; }
+      if (!res.ok) { const tx = await res.text().catch(() => ""); return json({ ok: false, error: `El generador de imágenes (${model}) respondió ${res.status}. ${tx.slice(0, 300)}` }, 500); }
+      try { data = await res.json(); } catch { return json({ ok: false, error: "Respuesta del generador de imágenes no es JSON." }, 500); }
+      break;
+    }
+    if (!data) return json({ ok: false, error: ultimoError || "No hay un modelo de imágenes disponible." }, 500);
+    const pred = data.predictions && data.predictions[0];
+    const b64 = pred && (pred.bytesBase64Encoded || (pred.image && pred.image.bytesBase64Encoded));
+    if (!b64) return json({ ok: false, error: "El generador no devolvió imagen. " + JSON.stringify(data).slice(0, 200) }, 500);
+    const bin = Uint8Array.from(atob(b64), c => c.charCodeAt(0));
+    const slug = que.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "").slice(0, 40) || "fondo";
+    const key = `ia/${Date.now()}-${slug}.png`;
+    await env.IMAGENES.put(key, bin, { httpMetadata: { contentType: "image/png" } });
+    return json({ ok: true, url: "/api/upload?k=" + encodeURIComponent(key), nombre: "IA · " + slug.replace(/-/g, " ") });
   }
 
   if (!brief.que || !String(brief.que).trim()) {
@@ -243,7 +289,7 @@ function extraerJSON(texto) {
   return undefined;
 }
 async function llamarGemini(env, promptOrParts, maxTokens) {
-  const model = env.GEMINI_MODEL || 'gemini-2.5-flash-lite';
+  const model = env.GEMINI_MODEL || 'gemini-2.5-flash';
   const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${encodeURIComponent(env.GEMINI_API_KEY)}`;
   const ctl = new AbortController(); const timer = setTimeout(() => ctl.abort(), 40000);
   // Acepta un prompt de texto o un array de "parts" (texto + imágenes inlineData).
