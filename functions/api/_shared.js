@@ -126,7 +126,13 @@ export function isEmailAllowed(email, env) {
 export async function getUserEmail(request, env) {
   const token = readCookie(request, SESSION_COOKIE);
   if (!token) {
-    if (env.DEV_USER_EMAIL) return env.DEV_USER_EMAIL.toLowerCase();
+    // DEV_USER_EMAIL es SOLO para desarrollo local (wrangler pages dev).
+    // En producción nunca inicia sesión sola, aunque la variable exista.
+    if (env.DEV_USER_EMAIL) {
+      let host = '';
+      try { host = new URL(request.url).hostname; } catch {}
+      if (host === 'localhost' || host === '127.0.0.1') return env.DEV_USER_EMAIL.toLowerCase();
+    }
     return null;
   }
   const payload = await verifyJWT(token, env.JWT_SECRET || 'dev-only-secret');
