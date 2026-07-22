@@ -358,11 +358,13 @@ async function generarBanner({ env, brief, marca, imagenes, refsTxt }) {
     enfoqueDe(brief.tipo),
     '',
     'Devuelve EXCLUSIVAMENTE este JSON (sin texto extra):',
-    '{ "nombre": "nombre corto de la campaña", "zonas": { "titular": "...", "cuerpo": "...", "cta": "..." }, "imagen": "<URL exacta de la biblioteca o \\"\\"> " }',
+    '{ "nombre": "nombre corto de la campaña", "zonas": { "etiqueta": "<nombre corto del PRODUCTO en 1-3 palabras (ej. \\"Seguro Auto\\") o \\"\\">", "titular": "...", "cuerpo": "...", "cta": "..." }, "burbuja": "<la OFERTA en 2-4 palabras para el círculo de promo (ej. \\"2 Cuotas Gratis\\", \\"60% dcto.\\") — SOLO si el brief trae gancho/oferta, si no \\"\\">", "imagen": "<URL exacta de la biblioteca o \\"\\"> " }',
     '',
     'REGLAS DURAS:',
     '- Español de Chile, claro y persuasivo. Nada de placeholders ni texto de relleno.',
     '- LÍMITES: titular ≤ 6 palabras; cuerpo ≤ 14 palabras; cta ≤ 3 palabras.',
+    '- "burbuja": usa el gancho EXACTO del brief abreviado (empieza con el número si lo hay: "2 Cuotas Gratis"). NUNCA inventes una oferta: sin gancho va "".',
+    '- "etiqueta": el nombre del producto, NO la marca (la marca ya está en el logo).',
     '- El "cta" debe reflejar la ACCIÓN del brief.',
     '- "imagen": elige la URL EXACTA de la biblioteca cuya descripción mejor calce con el brief; si ninguna calza, deja "".',
     '- NUNCA uses un logo ni un ícono como "imagen" (esos van en su propia zona, no como foto del banner).',
@@ -399,7 +401,9 @@ async function generarBanner({ env, brief, marca, imagenes, refsTxt }) {
   const out = {
     ok: true,
     nombre: String((parsed && parsed.nombre) || brief.que).slice(0, 80),
-    zonas: { titular: limpia(z.titular, 8), cuerpo: limpia(z.cuerpo, 18), cta: limpia(z.cta, 4) },
+    zonas: { etiqueta: limpia(z.etiqueta, 3), titular: limpia(z.titular, 8), cuerpo: limpia(z.cuerpo, 18), cta: limpia(z.cta, 4) },
+    // La burbuja solo existe si el brief traía gancho (no se inventan ofertas).
+    burbuja: brief.gancho ? limpia(parsed.burbuja, 5) : '',
     imagen: (typeof parsed.imagen === 'string' && /^https?:\/\//.test(parsed.imagen)) ? parsed.imagen : ''
   };
   if (!out.zonas.titular && !out.zonas.cuerpo) return json({ ok: false, error: 'La IA no produjo textos. Reformula el brief.' }, 500);

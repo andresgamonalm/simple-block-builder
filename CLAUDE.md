@@ -221,6 +221,38 @@ modelo **campaña-primero**: la unidad de trabajo es LA CAMPAÑA, no el formato.
 - Verificado con Playwright: veri-campana.js 17/17 + veri-ads.js 30/30 (mocks de
   concepto/email/banner/ads en el server de prueba).
 
+## Estilo "campaña digital" Zurich en el compositor — jul-2026 (ESTADO ACTUAL — no rehacer)
+El usuario pegó capturas de los anuncios display REALES de Zurich Chile (Ads Transparency;
+el sandbox no puede abrir ese sitio — bloqueo de red hacia google.com). Análisis del sistema
+gráfico: fondo plano navy (o foto con velo) · logo arriba-izq (blanco en oscuro) · etiqueta
+chica "Seguro" sobre el nombre del producto · LA OFERTA EN UN CÍRCULO sólido de color con el
+número grande ("2 Cuotas Gratis", "60% dcto.") · burbujas decorativas de color asomando por
+los bordes · CTA sobrio. Se llevó al compositor como CAPACIDADES GENÉRICAS (sirven a
+cualquier marca):
+- **`comp.burbuja`** = burbuja de OFERTA: `{visible(default off), texto, color, colorTexto,
+  tamano(40-220), pos(tr/cr/br/tl/bl)}` → `burbujaHTML()` (clase `.cmp-burbuja`, absoluta,
+  z2, diámetro escala con `escF` y se acota a 80% del alto — no se come las franjas). Si el
+  texto parte con número, el número sale GRANDE (`.bnum`/`.btxt`).
+- **`comp.deco`** = burbujas decorativas: `{visible(default off), color1, color2}` →
+  `decoBurbujasHTML()` (SVG determinista de 4 círculos que asoman por los bordes, z0
+  bajo las zonas).
+- **`zonas.texto.etiqueta`** = píldora de producto sobre el titular: `{texto, color,
+  colorTexto, tamano}` (`.cmp-etq`; default fondo translúcido blanco).
+- Editor (`compEditorHTML`): secciones "Burbujas decorativas" (tras Fondo) y "Burbuja de
+  oferta" (tras CTA) con **`toggleExtraComp(path,fmt)`** (toggle para elementos default-OFF
+  — toggleCompVis asume default-ON, no sirve aquí); campo Etiqueta en zona Texto. Swatches
+  de marca en burbuja/deco. Overrides por tamaño funcionan (probado apagar burbuja en un
+  tamaño). CSS dentro de COMPONENT STYLES → viaja al export/rasterizado.
+- **`aplicarMarca`** (composición): accent1→color burbuja (+texto según contraste) y
+  deco.color1; accent2→deco.color2 (solo defaults; no enciende nada).
+- **IA banner** (`generarBanner`): el JSON suma `zonas.etiqueta` (producto, 1-3 palabras) y
+  `burbuja` (el GANCHO exacto abreviado; se fuerza "" si el brief no trae gancho — no se
+  inventan ofertas). `insertarBannerIA` los aplica con los acentos de la marca.
+- **Marca Zurich**: plantilla y D1 actualizadas a la paleta de campaña: secondary=#1d2e7a
+  (navy fondo banner), accent1=#d9e05f (lima oferta), accent2=#72ccfd (celeste burbujas);
+  primary #2167ae y CTA #e71313 se mantienen. (D1 via MCP con bump de _ts.)
+- Verificado con Playwright: veri-zurich.js 14/14 + regresión campana 17/17 + ads 32/32.
+
 ## Roadmap / pendientes
 **Pendientes activos (jun-2026):** (1) confirmar/cerrar la **franja blanca en verticales** (esperando captura del caso exacto); (2) **bloques más ricos** para email (features con ícono en círculo de color, secciones con fondo, hero con degradado, tarjetas con sombra — SIN redondeo por defecto); (3) afinar, si se pide, qué tipografías/recursos extra muestran **/gdn-ia** y **/free**; (4) encender **/post-ia** y **/ads-ia** cuando toque.
 0. ✅ **(a) PLANTILLAS POR TIPO DE EMAIL — HECHO.** El nuevo `generarEmail` (ia.js) pide a la IA **solo el copy estructurado** `{ nombre, titular, intro, oferta, beneficios:[{icono,titulo,texto}]×3, cierre, cta, imagen }` y el **código arma el esqueleto** según `brief.tipo`: **comercial** = hero(titular sobre foto) → alert(oferta) → texto(intro) → features → espaciador → cta; **corporativo/informativo** = hero → texto(intro) → features → divisor → texto(cierre) → cta (sin alert agresivo); sin foto → título de texto en vez de hero. Íconos validados/distintos (lista `ICONOS_VALIDOS`), titulares sin punto (`sinPuntoFinal`), **un solo CTA al final**. Más rápido (maxTokens 2048, sin pedir maquetación). El cliente (`generarConIA`) ya no duplica fotos (la red de seguridad solo inserta hero si NO hay ningún bloque visual). Verificado con Playwright (10/10 PASS). **Pendiente (b):** bloques más ricos (features con ícono en círculo de color, secciones con fondo, hero con degradado, tarjetas con sombra) — SIN redondeo por defecto. Idea futura: pedir 1-2 emails "bien diseñados" como referencia para clonar el estándar.

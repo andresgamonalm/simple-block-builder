@@ -924,6 +924,14 @@ button,input,select,textarea{font-family:inherit;}
 .cmp .cmp-tit{font-weight:800;line-height:1.12;letter-spacing:-.01em;word-break:break-word;}
 .cmp .cmp-cue{line-height:1.3;opacity:.95;word-break:break-word;}
 .cmp .cmp-cta{display:inline-block;font-weight:700;text-decoration:none;white-space:nowrap;}
+/* Estilo "campaña digital" (análisis de anuncios reales): burbujas decorativas de
+   color detrás de las zonas, burbuja circular de OFERTA sobre todo, y etiqueta
+   de producto (píldora chica) sobre el titular. */
+.cmp .cmp-deco{position:absolute;inset:0;z-index:0;pointer-events:none;}
+.cmp .cmp-burbuja{position:absolute;z-index:2;border-radius:50%;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;line-height:1.05;box-sizing:border-box;overflow:hidden;}
+.cmp .cmp-burbuja .bnum{font-weight:800;line-height:.95;}
+.cmp .cmp-burbuja .btxt{font-weight:700;word-break:break-word;}
+.cmp .cmp-etq{display:inline-block;font-weight:600;letter-spacing:.05em;border-radius:999px;line-height:1;}
 .sbb-header h1{font-weight:600;line-height:1.18;margin:0;font-family:inherit;}
 .sbb-header p{line-height:1.5;margin:6px 0 0;font-family:inherit;color:inherit;opacity:.78;}
 .sbb-header .eyebrow{font-size:11px;text-transform:uppercase;letter-spacing:.1em;font-weight:600;color:var(--sbb-primary,#040764);margin:0 0 8px;}
@@ -4545,12 +4553,14 @@ function zonaContenido(zk, z, px){
     return `<img class="cmp-logo" src="${esc(z.url)}" style="height:${px(z.alto,48)}px;max-width:${maxw}%;">`;
   }
   if(zk==="texto"){
-    const ti=z.titular||{}, cu=z.cuerpo||{};
+    const ti=z.titular||{}, cu=z.cuerpo||{}, et=z.etiqueta||{};
     const fam = z.fuente ? `font-family:'${esc(z.fuente)}',Arial,sans-serif;` : "";
     const est = (o)=> `${o.negrita?'font-weight:700;':''}${o.italica?'font-style:italic;':''}`;
+    // Etiqueta de producto (píldora chica sobre el titular, ej. "Seguro").
+    const etEl = et.texto ? `<div><span class="cmp-etq" style="font-size:${px(et.tamano,11)}px;padding:${px(4,4)}px ${px(10,10)}px;background:${esc(et.color||'rgba(255,255,255,.18)')};color:${esc(et.colorTexto||ti.color||'#fff')};${fam}">${esc(et.texto)}</span></div>` : "";
     const tiEl = ti.texto ? `<div class="cmp-tit" style="font-size:${px(ti.tamano,26)}px;color:${esc(ti.color||'#fff')};text-align:${alinText(z.alinH)};${fam}${est(ti)}">${esc(ti.texto)}</div>` : "";
     const cuEl = cu.texto ? `<div class="cmp-cue" style="font-size:${px(cu.tamano,13)}px;color:${esc(cu.color||'#fff')};text-align:${alinText(z.alinH)};${fam}${est(cu)}">${escMultiline(cu.texto)}</div>` : "";
-    return tiEl+cuEl;
+    return etEl+tiEl+cuEl;
   }
   if(zk==="cta"){
     if(!z.texto) return "";
@@ -4561,6 +4571,38 @@ function zonaContenido(zk, z, px){
     return `<a class="cmp-cta" href="${esc(z.url||'#')}" target="_blank" rel="noopener" style="font-size:${px(z.tamano,13)}px;background:${esc(z.colorFondo||'#2f80ed')};color:${esc(z.colorTexto||'#fff')};border-radius:${px(z.radio,8)}px;padding:${px(pY,pY)}px ${px(pX,pX)}px;${fam}${est}">${esc(z.texto)}</a>`;
   }
   return "";
+}
+// Burbujas decorativas de fondo (círculos sólidos que asoman por los bordes,
+// composición fija y determinista — misma en editor y export).
+function decoBurbujasHTML(deco, W, H){
+  const c1 = deco.color1 || "#72CCFD", c2 = deco.color2 || "#2F80ED";
+  const R = Math.min(W, H);
+  const cs = [
+    { x:0.06*W, y:0.96*H, r:0.15*R, f:c1, o:.95 },
+    { x:0.17*W, y:1.04*H, r:0.08*R, f:c2, o:.9 },
+    { x:0.99*W, y:0.26*H, r:0.09*R, f:c2, o:.9 },
+    { x:1.03*W, y:0.80*H, r:0.16*R, f:c1, o:.85 }
+  ];
+  const circles = cs.map(c=>`<circle cx="${c.x.toFixed(0)}" cy="${c.y.toFixed(0)}" r="${c.r.toFixed(0)}" fill="${esc(c.f)}" opacity="${c.o}"/>`).join("");
+  return `<svg class="cmp-deco" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg">${circles}</svg>`;
+}
+// Burbuja circular de OFERTA (el círculo de promo). Si el texto parte con un
+// número ("2 Cuotas Gratis", "60% dcto."), el número se pinta GRANDE.
+function burbujaHTML(bu, px, W, H){
+  let dia = Math.max(34, px(bu.tamano, 96));
+  dia = Math.min(dia, Math.round(H*0.8), Math.round(W*0.5));
+  const bg = bu.color || "#D9E05F", fg = bu.colorTexto || "#0E2748";
+  const t = String(bu.texto||"").trim();
+  const m = t.match(/^(\$?\d[\d.,]*%?)\s+([\s\S]+)$/);
+  const inner = m
+    ? `<span class="bnum" style="font-size:${Math.round(dia*0.36)}px;">${esc(m[1])}</span><span class="btxt" style="font-size:${Math.round(dia*0.14)}px;">${esc(m[2])}</span>`
+    : `<span class="btxt" style="font-size:${Math.round(dia*0.16)}px;">${esc(t)}</span>`;
+  const off = Math.max(4, Math.round(dia*0.09));
+  const pos = bu.pos || "tr";
+  const P = pos==="tl" ? `top:${off}px;left:${off}px;` : pos==="bl" ? `bottom:${off}px;left:${off}px;`
+        : pos==="br" ? `bottom:${off}px;right:${off}px;` : pos==="cr" ? `top:50%;margin-top:${-Math.round(dia/2)}px;right:${off}px;`
+        : `top:${off}px;right:${off}px;`;
+  return `<div class="cmp-burbuja" style="width:${dia}px;height:${dia}px;background:${esc(bg)};color:${esc(fg)};padding:${Math.round(dia*0.1)}px;${P}">${inner}</div>`;
 }
 // Renderiza la composición (3 zonas) a un tamaño concreto.
 function renderComposicion(comp, fmt){
@@ -4583,7 +4625,9 @@ function renderComposicion(comp, fmt){
   const zonas = ["logo","texto","cta"].map((zk,i)=>zonaHTML(zk,i)).join("");
   const mg=c.margen||{};
   const mpad=`${px(mg.t,0)}px ${px(mg.r,0)}px ${px(mg.b,0)}px ${px(mg.l,0)}px`;
-  return `<div class="cmp" style="width:${W}px;height:${H}px;background:${esc(bgColor)};">${fondoLayer}<div class="cmp-zonas ${fila?'row':'col'}" style="padding:${mpad};box-sizing:border-box;">${zonas}</div></div>`;
+  const deco = (c.deco && c.deco.visible===true) ? decoBurbujasHTML(c.deco, W, H) : "";
+  const burbuja = (c.burbuja && c.burbuja.visible===true && c.burbuja.texto) ? burbujaHTML(c.burbuja, px, W, H) : "";
+  return `<div class="cmp" style="width:${W}px;height:${H}px;background:${esc(bgColor)};">${fondoLayer}${deco}<div class="cmp-zonas ${fila?'row':'col'}" style="padding:${mpad};box-sizing:border-box;">${zonas}</div>${burbuja}</div>`;
 }
 // ── Custom por tamaño (overrides sobre el Diseño global) ──
 function ovDeFmt(p, fmt){ const ab=(p.artboards||[]).find(a=>a.fmt===fmt); if(!ab) return {}; ab.ov=ab.ov||{}; return ab.ov; }
@@ -4738,6 +4782,14 @@ async function generarFondoIA(){
     toast("Fotografía generada y aplicada como fondo (quedó también en tu biblioteca)");
   }catch(e){ toast("Sin conexión: "+(e.message||e),4000); }
 }
+// Toggle de elementos APAGADOS por defecto (burbuja de oferta / burbujas deco):
+// visible solo cuando es exactamente true, así que el toggle escribe true/false explícito.
+function toggleExtraComp(path, fmt){
+  const p=pieza(); if(!esComposicion(p)) return;
+  if(fmt){ const ef=composicionEfectiva(p,fmt); setCompOv(fmt, path, getPath(ef,path)===true ? false : true); }
+  else setComp(path, getPath(p.composicion,path)===true ? false : true);
+  renderForm(); renderComposicionEditor();
+}
 // Editor de composición (3 zonas). fmt=null → Diseño global; fmt → ajuste por tamaño.
 // El MÁSTER edita el Diseño global (no un override): así "editar el máster" se
 // propaga a todos los que heredan, y el máster nunca queda tapado por un override.
@@ -4789,6 +4841,14 @@ function compEditorHTML(p, fmt, ctx){
   h+=`<div class="cmp-row"><label>Tipo</label><select onchange="${S('fondo.tipo','this.value')};${RE}">${[['color','Color'],['imagen','Imagen']].map(([v,l])=>`<option value="${v}" ${fondoTipo===v?'selected':''}>${l}</option>`).join('')}</select></div>`;
   if(fondoTipo==='color') h+=`<div class="cmp-row">${colorInp('fondo.color','#0e2748')}${hexInp('fondo.color')}</div><div class="cmp-row"><div class="cmp-sw-row" title="Colores de tu marca (solo marca)">${swatchesColor('fondo.color',isOv?fmt:null)}</div></div>`;
   else h+=imgBlock('fondo.imagen');
+  // Burbujas decorativas (círculos de color que asoman por los bordes, estilo campaña digital).
+  const decoVis = getPath(C,'deco.visible')===true;
+  h+=`<div class="cmp-zona-sec"><span class="zlbl">${svgIcon("paleta",{size:"14px"})} Burbujas decorativas</span><button class="cmp-eye${decoVis?'':' off'}" onclick="toggleExtraComp('deco.visible',${isOv?`'${fmt}'`:'null'})" title="Mostrar/ocultar burbujas de color">${svgIcon("ojo",{size:"13px"})}</button></div>`;
+  if(decoVis){
+    h+=`<div class="cmp-row"><label>Color 1</label>${colorInp('deco.color1','#72ccfd')}${hexInp('deco.color1')}</div>`;
+    h+=`<div class="cmp-row"><label>Color 2</label>${colorInp('deco.color2','#2f80ed')}${hexInp('deco.color2')}</div>`;
+    h+=`<div class="cmp-row"><div class="cmp-sw-row">${swatchesColor('deco.color1',isOv?fmt:null)}</div></div>`;
+  }
   const prop=getPath(C,'prop')||[25,50,25];
   h+=`<div class="dz-sec">Espacio de cada zona · escribe el %</div><div class="cmp-prop">`+['Logo','Texto','CTA'].map((l,i)=>`<div class="pcol"><span>${l}</span><div class="pnum"><input type="number" min="0" max="100" value="${parseInt(prop[i])||0}" oninput="${NUM('prop.'+i,0,100)}" onchange="${NUM('prop.'+i,0,100)};${RE}"><i>%</i></div></div>`).join('')+`</div>`;
   h+=`<div class="dz-sec">Márgenes del banner (px)</div>`;
@@ -4801,6 +4861,8 @@ function compEditorHTML(p, fmt, ctx){
   h+=`<div class="cmp-row"><label>Alto</label>${rng('zonas.logo.alto',16,160,48)}</div><div class="cmp-row"><label>Ancho máx</label>${rng('zonas.logo.maxw',15,100,70)}</div>`;
   h+=zonaSec('texto','Texto','documento')+alinRow('texto')+zonaBg('texto');
   h+=`<div class="cmp-row"><label>Tipografía</label>${selFuente('zonas.texto.fuente')}</div>`;
+  h+=`<div class="cmp-row"><label>Etiqueta</label><input type="text" placeholder="Píldora sobre el titular (ej. Seguro)" value="${escAttr(getPath(C,'zonas.texto.etiqueta.texto')||'')}" oninput="${S('zonas.texto.etiqueta.texto','this.value')}"></div>`;
+  h+=`<div class="cmp-row"><label>Etq. color</label>${colorInp('zonas.texto.etiqueta.color','#3d55a8')}${colorInp('zonas.texto.etiqueta.colorTexto','#ffffff')}<label style="min-width:auto;margin-left:10px">Tam.</label>${rng('zonas.texto.etiqueta.tamano',8,20,11)}</div>`;
   h+=`<div class="cmp-row"><input type="text" placeholder="Tu titular aquí" value="${escAttr(getPath(C,'zonas.texto.titular.texto')||'')}" oninput="${S('zonas.texto.titular.texto','this.value')}"></div>`;
   h+=`<div class="cmp-row"><label>Tít. tam.</label>${rng('zonas.texto.titular.tamano',12,60,26)}${colorInp('zonas.texto.titular.color','#ffffff')}<label style="min-width:auto;margin-left:10px">Estilo</label>${togBtns('zonas.texto.titular')}</div>`;
   h+=`<div class="cmp-row"><textarea placeholder="Texto de apoyo breve" oninput="${S('zonas.texto.cuerpo.texto','this.value')}">${esc(getPath(C,'zonas.texto.cuerpo.texto')||'')}</textarea></div>`;
@@ -4811,6 +4873,16 @@ function compEditorHTML(p, fmt, ctx){
   h+=`<div class="cmp-row"><input type="text" placeholder="Link (https://…)" value="${escAttr(getPath(C,'zonas.cta.url')||'')}" onchange="${S('zonas.cta.url','this.value')}"></div>`;
   h+=`<div class="cmp-row"><label>Colores</label>${colorInp('zonas.cta.colorFondo','#2f80ed')}${colorInp('zonas.cta.colorTexto','#ffffff')}<label style="min-width:auto;margin-left:10px">Estilo</label>${togBtns('zonas.cta')}</div>`;
   h+=`<div class="cmp-row"><label>Tamaño</label>${rng('zonas.cta.tamano',11,40,13)}<span class="cmp-unit">px</span><label style="min-width:auto;margin-left:12px">Radio</label>${rng('zonas.cta.radio',0,30,8)}</div>`;
+  // Burbuja de OFERTA (círculo de promo sobre el banner, estilo campaña digital).
+  const buVis = getPath(C,'burbuja.visible')===true;
+  h+=`<div class="cmp-zona-sec"><span class="zlbl">${svgIcon("estrella",{size:"14px"})} Burbuja de oferta (círculo)</span><button class="cmp-eye${buVis?'':' off'}" onclick="toggleExtraComp('burbuja.visible',${isOv?`'${fmt}'`:'null'})" title="Mostrar/ocultar el círculo de oferta">${svgIcon("ojo",{size:"13px"})}</button></div>`;
+  if(buVis){
+    h+=`<div class="cmp-row"><input type="text" placeholder="La oferta (ej. 2 Cuotas Gratis · 60% dcto.)" value="${escAttr(getPath(C,'burbuja.texto')||'')}" oninput="${S('burbuja.texto','this.value')}"></div>`;
+    h+=`<div class="cmp-row"><label>Colores</label>${colorInp('burbuja.color','#d9e05f')}${colorInp('burbuja.colorTexto','#0e2748')}</div>`;
+    h+=`<div class="cmp-row"><div class="cmp-sw-row">${swatchesColor('burbuja.color',isOv?fmt:null)}</div></div>`;
+    h+=`<div class="cmp-row"><label>Tamaño</label>${rng('burbuja.tamano',40,220,96)}<label style="min-width:auto;margin-left:10px">Posición</label><select onchange="${S('burbuja.pos','this.value')};${RE}">${[['tr','Arriba der.'],['cr','Centro der.'],['br','Abajo der.'],['tl','Arriba izq.'],['bl','Abajo izq.']].map(([v,l])=>`<option value="${v}" ${(getPath(C,'burbuja.pos')||'tr')===v?'selected':''}>${l}</option>`).join('')}</select></div>`;
+    h+=`<p style="font-size:11px;color:#8890a8;margin:4px 0 0;line-height:1.5;">Si el texto parte con un número («2 Cuotas Gratis», «60% dcto.»), el número sale grande.</p>`;
+  }
   return h;
 }
 // Editor del Diseño global (3 zonas con controles por zona).
@@ -5972,10 +6044,12 @@ function guardarMarca(){
 function rellenarMarcaZurich(){
   const set=(i,v)=>{ const e=document.getElementById(i); if(e) e.value=v; };
   set("marca-nombre","Zurich"); set("marca-empresa","Zurich Chile");
-  // Paleta del manual: principal #2167ae, secundario #72ccfd, CTA #e71313, terciario #fc7899, fondos #2167ae/#F7F7F7.
-  set("marca-primary","#2167AE"); set("marca-secondary","#72CCFD"); set("marca-cta","#E71313");
+  // Paleta del manual + campaña digital real (anuncios display 2026): principal
+  // #2167ae, fondo de banner navy profundo #1D2E7A, oferta en círculo lima
+  // #D9E05F, burbujas celestes #72CCFD. CTA rojo #e71313 del manual.
+  set("marca-primary","#2167AE"); set("marca-secondary","#1D2E7A"); set("marca-cta","#E71313");
   set("marca-ctaText","#ffffff"); set("marca-text","#1a1a1a"); set("marca-bg","#ffffff"); set("marca-bgpagina","#F7F7F7");
-  set("marca-accent1","#72CCFD"); set("marca-accent2","#FC7899");
+  set("marca-accent1","#D9E05F"); set("marca-accent2","#72CCFD");
   set("marca-fontTitulo","Montserrat"); set("marca-fontCuerpo","Inter");
   // Logos oficiales subidos a R2 (color para fondo blanco, blanco para banda sólida); solo si no hay uno ya.
   const zColor="https://simple-block-builder.gamonal.app/api/upload?k=zurich/Logo-Zurich.png";
@@ -6038,6 +6112,14 @@ function aplicarMarca(id){
     setPath(C,"zonas.texto.titular.color", txtColor);
     setPath(C,"zonas.texto.cuerpo.color", txtColor);
     if(m.eslogan && !getPath(C,"zonas.texto.titular.texto")) setPath(C,"zonas.texto.titular.texto", m.eslogan);
+    // Acentos de la marca → colores por defecto de la burbuja de oferta y las
+    // burbujas decorativas (no se encienden solas; solo quedan listas).
+    if(m.accent1){
+      if(getPath(C,"burbuja.color")==null) setPath(C,"burbuja.color", m.accent1);
+      if(getPath(C,"burbuja.colorTexto")==null) setPath(C,"burbuja.colorTexto", esColorOscuro(m.accent1) ? "#ffffff" : (esColorOscuro(m.secondary) ? m.secondary : "#0e2748"));
+      if(getPath(C,"deco.color1")==null) setPath(C,"deco.color1", m.accent1);
+    }
+    if(m.accent2 && getPath(C,"deco.color2")==null) setPath(C,"deco.color2", m.accent2);
     renderTablero(); renderComposicionEditor();
   } else {
     const bandBg = m.primary || m.secondary || "#2167ae";
@@ -6620,6 +6702,19 @@ function insertarBannerIA(data, marca){
   if(z.titular) setPath(comp,"zonas.texto.titular.texto", String(z.titular).slice(0,80));
   if(z.cuerpo) setPath(comp,"zonas.texto.cuerpo.texto", String(z.cuerpo).slice(0,160));
   if(z.cta) setPath(comp,"zonas.cta.texto", String(z.cta).slice(0,40));
+  // Estilo campaña digital: etiqueta de producto sobre el titular y la OFERTA
+  // en su burbuja circular (colores desde los acentos de la marca).
+  if(z.etiqueta) setPath(comp,"zonas.texto.etiqueta.texto", String(z.etiqueta).slice(0,30));
+  if(data.burbuja){
+    setPath(comp,"burbuja.visible", true);
+    setPath(comp,"burbuja.texto", String(data.burbuja).slice(0,40));
+    if(M && M.accent1){
+      setPath(comp,"burbuja.color", M.accent1);
+      setPath(comp,"burbuja.colorTexto", esColorOscuro(M.accent1) ? "#ffffff" : (esColorOscuro(M.secondary) ? M.secondary : "#0e2748"));
+    }
+  }
+  if(M && M.accent1 && getPath(comp,"deco.color1")==null) setPath(comp,"deco.color1", M.accent1);
+  if(M && M.accent2 && getPath(comp,"deco.color2")==null) setPath(comp,"deco.color2", M.accent2);
   const cfg = COLECCIONES["display-desktop"];
   const p = crearPieza(cfg.master, data.nombre||"Banners IA");
   p.tema = tema;
