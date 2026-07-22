@@ -278,9 +278,9 @@ button,input,select,textarea{font-family:inherit;}
 .img-acc button.primary{flex:1;background:var(--primary);color:#fff;border-color:var(--primary);}
 .img-biblio-btn{font-family:var(--f);font-size:11px;border:1px solid var(--primary);background:var(--navy-l,#eef2ff);color:var(--primary);border-radius:6px;padding:4px 8px;cursor:pointer;margin-top:4px;display:inline-flex;align-items:center;gap:4px;}
 /* ── Generar con IA ── */
-.tb-btn.ia-btn{background:linear-gradient(135deg,#6d4bff,#9b5cff);color:#fff;border:none;font-weight:600;}
+.tb-btn.ia-btn{background:var(--white);color:var(--magenta);border:1px solid var(--bdr);font-weight:600;}
 .tb-btn.ia-btn:hover{filter:brightness(1.07);}
-.nav-ia{color:#6d4bff;font-weight:600;}
+.nav-ia{color:var(--magenta);font-weight:600;}
 .ia-label{display:block;font-size:12.5px;font-weight:600;color:var(--ink);margin:14px 0 6px;}
 .modal-body .ia-que{width:100%;min-height:60px;height:60px;font-family:var(--f);font-size:13.5px;border:1px solid var(--bdr);border-radius:9px;padding:11px 12px;resize:vertical;line-height:1.45;}
 /* El último textarea (Indicaciones) debe ganar a la regla genérica .modal-body textarea{min-height:300px} para no forzar scroll desde el inicio. */
@@ -288,13 +288,13 @@ button,input,select,textarea{font-family:inherit;}
 .ia-row{display:flex;gap:14px;margin-top:14px;flex-wrap:wrap;}
 .ia-col{flex:1;min-width:160px;display:flex;flex-direction:column;gap:5px;font-size:12px;color:var(--ink2,#444);font-weight:500;}
 .ia-col select,.ia-col input{font-family:var(--f);font-size:13px;border:1px solid var(--bdr);border-radius:7px;padding:8px 9px;background:#fff;margin-top:auto;}
-.ia-req{font-size:10.5px;font-weight:600;color:#6d4bff;text-transform:uppercase;letter-spacing:.04em;}
+.ia-req{font-size:10.5px;font-weight:600;color:var(--magenta);text-transform:uppercase;letter-spacing:.04em;}
 .ia-label small{font-weight:400;color:var(--ink3);font-size:11px;}
 .ia-col small{font-weight:400;color:var(--ink3);font-size:10.5px;}
 .ia-seg{display:flex;border:1px solid var(--bdr);border-radius:8px;overflow:hidden;}
 .ia-seg button{flex:1;border:none;background:var(--white);padding:9px 6px;font-family:var(--f);font-size:12.5px;font-weight:500;color:var(--ink2);cursor:pointer;border-right:1px solid var(--bdr);display:inline-flex;align-items:center;justify-content:center;gap:6px;}
 .ia-seg button:last-child{border-right:none;}
-.ia-seg button.on{background:#6d4bff;color:#fff;}
+.ia-seg button.on{background:var(--navy);color:#fff;}
 .ia-seg button .ico{width:15px;height:15px;}
 .ia-fotos{display:flex;flex-wrap:wrap;gap:6px;margin:4px 0 6px;}
 .ia-fotos .ia-foto{position:relative;}
@@ -302,8 +302,17 @@ button,input,select,textarea{font-family:inherit;}
 .ia-fotos .ia-foto button{position:absolute;top:-6px;right:-6px;width:17px;height:17px;border-radius:50%;border:none;background:#e23;color:#fff;font-size:12px;line-height:1;cursor:pointer;padding:0;}
 .ia-refs{width:100%;min-height:54px;font-family:var(--f);font-size:13px;border:1px solid var(--bdr);border-radius:9px;padding:9px 11px;resize:vertical;line-height:1.5;margin-top:5px;}
 .ia-estado{margin-top:12px;font-size:12.5px;min-height:18px;}
-.ia-estado.loading{color:#6d4bff;}
-.ia-estado.err{color:#c0392b;}
+.ia-estado.loading{color:var(--navy);}
+.ia-estado.err{color:var(--magenta);}
+/* Pasos del Asistente IA */
+.ia-spark{color:var(--magenta);margin-right:2px;vertical-align:-2px;}
+.ia-pasos{display:flex;justify-content:center;align-items:center;gap:8px;margin:2px 0 18px;}
+.ia-paso-tag{display:flex;align-items:center;gap:8px;font-size:13px;font-weight:600;color:var(--ink4);}
+.ia-paso-tag.on{color:var(--navy);}
+.ia-paso-tag i{font-style:normal;width:24px;height:24px;border-radius:50%;background:#e6e8ef;color:var(--ink4);display:flex;align-items:center;justify-content:center;font-size:12px;}
+.ia-paso-tag.on i{background:var(--navy);color:#fff;}
+.ia-paso-linea{width:30px;height:1px;background:var(--bdr2);}
+.ia-resultado-hint{font-size:13px;color:var(--ink3);line-height:1.55;margin-bottom:12px;}
 .mf-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
 .mf-full{grid-column:1 / -1;}
 .marca-form .mf-sec{grid-column:1 / -1;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--ink3);margin:10px 0 -2px;}
@@ -726,7 +735,7 @@ button,input,select,textarea{font-family:inherit;}
 .cmp-ed select{font-family:var(--f);font-size:12.5px;border:1px solid var(--bdr);border-radius:6px;padding:5px 7px;background:#fff;color:var(--ink);flex:1;min-width:0;}
 .cmp-ed .cmp-estilo button{font-size:13px;line-height:1;min-width:28px;justify-content:center;}
 .cmp-ed .cmp-estilo button b{font-weight:800;}
-.cmp-ed .ia-sugerir{width:100%;margin:2px 0 6px;border:none;border-radius:8px;padding:9px;cursor:pointer;font-family:var(--f);font-size:12.5px;font-weight:700;color:#fff;background:linear-gradient(135deg,#6d4bff,#9b5cff);}
+.cmp-ed .ia-sugerir{width:100%;margin:2px 0 6px;border:none;border-radius:8px;padding:9px;cursor:pointer;font-family:var(--f);font-size:12.5px;font-weight:700;color:#fff;background:var(--navy);}
 .cmp-ed .ia-sugerir:hover{filter:brightness(1.07);}
 
 /* ─── FORM (RIGHT PANEL) ─── */
@@ -1186,38 +1195,55 @@ button,input,select,textarea{font-family:inherit;}
 .sbb-footer{text-align:center;font-size:12px;color:#888;line-height:1.6;border-top:1px solid #f0f0f4;font-family:inherit;}
 .sbb-footer .empresa{font-weight:600;color:#555;}
 .sbb-footer a{color:#888;text-decoration:underline;}
+
+/* ─── Editor Propuesta C: cabecera de una fila + paneles flotantes ─── */
+.topbar{display:flex;align-items:center;justify-content:space-between;gap:14px;height:58px;padding:0 18px;}
+.ed-left{display:flex;align-items:center;gap:7px;min-width:0;overflow:hidden;}
+.ed-right{display:flex;align-items:center;gap:7px;flex-shrink:0;}
+.ed-back{border:none;background:none;padding:0;cursor:pointer;display:flex;margin-right:4px;flex-shrink:0;}
+.ed-logo{width:30px;height:30px;display:block;}
+.ed-crumb-root{border:none;background:transparent;color:var(--ink4);font-size:13px;cursor:pointer;font-family:var(--f);padding:0;flex-shrink:0;}
+.ed-crumb-root:hover{color:var(--blue);}
+#ed-chip{flex-shrink:0;display:inline-flex;margin-left:2px;}
+.topbar .user-chip{margin-left:8px;}
+.layout{gap:16px;padding:16px;background:#f5f5f5;}
+.panel-izq{border:1px solid var(--bdr);border-radius:10px;}
+.canvas-area{background:transparent;}
+.tb-btn{height:34px;border-radius:9px;font-size:12.5px;padding:6px 13px;}
+.tb-btn.icon-only{padding:6px 0;width:34px;justify-content:center;}
+.tb-btn.ia-btn{background:var(--white);color:var(--magenta);border:1px solid var(--bdr);font-weight:600;}
+.tb-btn.ia-btn:hover{border-color:var(--magenta);filter:none;background:var(--magenta-l);color:var(--magenta);}
+.sync-status{font-size:12px;}
+.ed-left{flex:1 1 auto;}
+.topbar .tb-label{display:none;}
+.topbar .crumb-camp{max-width:150px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex-shrink:1;}
+.topbar .crumb-pieza{flex-shrink:0;}
+@media(max-width:1560px){ .topbar .tb-txt{display:none;} .tb-btn{gap:0;} }
 </style>
 </head>
 <body>
 <div class="app">
+  <!-- Cabecera del editor (Propuesta C): una sola fila, breadcrumb + acciones. -->
   <header class="topbar">
-    <div class="topbar-row primary">
-      <a class="brand" href="#" onclick="abrirGaleria();return false;" title="Ir a la Biblioteca">
-        <svg class="brand-logo" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg">
-          <rect width="512" height="512" rx="96" fill="#1c73cb"/>
-          <rect x="100" y="100" width="312" height="312" rx="26" fill="#fce865"/>
-          <circle cx="178" cy="178" r="44" fill="#c9b525"/><circle cx="178" cy="178" r="38" fill="#FFFFFF"/>
-          <circle cx="334" cy="178" r="44" fill="#c9b525"/><circle cx="334" cy="178" r="38" fill="#FFFFFF"/>
-          <circle cx="178" cy="334" r="44" fill="#c9b525"/><circle cx="178" cy="334" r="38" fill="#FFFFFF"/>
-          <circle cx="334" cy="334" r="44" fill="#c9b525"/><circle cx="334" cy="334" r="38" fill="#FFFFFF"/>
-        </svg>
-        <div class="brand-text"><div class="n">Simple Block Builder</div><div class="s">By Andrés Gamonal</div></div>
-      </a>
-      <div class="spacer"></div>
+    <div class="ed-left">
+      <button class="ed-back" onclick="abrirGaleria()" title="Volver a Proyectos">
+        <svg class="ed-logo" viewBox="0 0 40 40"><rect width="40" height="40" rx="10" fill="#040764"/><rect x="9" y="10" width="22" height="5" rx="2.5" fill="#FCE865"/><rect x="9" y="19" width="9.5" height="11" rx="2.4" fill="#1C73CB"/><rect x="21.5" y="19" width="9.5" height="11" rx="2.4" fill="#20B6B6"/></svg>
+      </button>
+      <button class="ed-crumb-root" onclick="abrirGaleria()">Proyectos</button>
+      <span class="ico crumb-sep" data-ic="chevright" data-icsize="13px"></span>
+      <span class="crumb-camp crumb-edit" id="crumb-proyecto" onclick="renombrarProyectoDesdeEditor()" title="Clic para renombrar el proyecto">Proyecto</span>
+      <span class="ico crumb-sep" data-ic="chevright" data-icsize="13px"></span>
+      <span class="crumb-pieza crumb-edit" id="crumb-pieza" onclick="renombrarPiezaActual()" title="Clic para renombrar la creatividad">Creatividad</span>
+      <span id="ed-chip"></span>
+      <button class="tb-btn icon-only" onclick="nuevaPiezaPrompt()" title="Nueva creatividad en este proyecto"><span class="ico" data-ic="mas"></span></button>
       <div class="user-chip" id="user-chip" style="display:none;">
         <span class="em" id="user-email"></span>
         <button onclick="cerrarSesion()" title="Cerrar sesión"><span class="ico" data-ic="salir"></span></button>
       </div>
     </div>
-    <div class="topbar-row secondary">
-      <button class="tb-btn" onclick="abrirGaleria()" title="Volver al proyecto"><span class="ico" data-ic="chevleft"></span> Proyecto</button>
-      <div class="crumb">
-        <span class="crumb-camp crumb-edit" id="crumb-proyecto" onclick="renombrarProyectoDesdeEditor()" title="Clic para renombrar el proyecto">Proyecto</span>
-        <span class="ico crumb-sep" data-ic="chevright" data-icsize="13px"></span>
-        <span class="crumb-pieza crumb-edit" id="crumb-pieza" onclick="renombrarPiezaActual()" title="Clic para renombrar la creatividad">Creatividad</span>
-      </div>
-      <button class="tb-btn icon-only" onclick="nuevaPiezaPrompt()" title="Nueva creatividad en este proyecto"><span class="ico" data-ic="mas"></span></button>
-      <div class="spacer"></div>
+    <div class="ed-right">
+      <span class="sync-status" id="sync-status" title="Estado de guardado en la nube">—</span>
+      <button class="tb-btn icon-only" onclick="deshacer()" title="Deshacer (Ctrl+Z)"><span class="ico" data-ic="deshacer"></span></button>
       <div class="tb-group" id="tb-formato">
         <span class="tb-label">Formato</span>
         <select id="fmt" onchange="cambiarFormato(this.value)"></select>
@@ -1232,14 +1258,13 @@ button,input,select,textarea{font-family:inherit;}
         <button data-dev="tablet" onclick="setDispositivo('tablet')" title="Tablet"><span class="ico" data-ic="tablet"></span></button>
         <button data-dev="movil" onclick="setDispositivo('movil')" title="Móvil"><span class="ico" data-ic="movilico"></span></button>
       </div>
-      <button class="tb-btn" onclick="abrirPreviewActual()" title="Vista previa"><span class="ico" data-ic="ojo"></span> Vista previa</button>
-      <button class="tb-btn" onclick="abrirEnvioPrueba()" title="Enviar prueba por correo"><span class="ico" data-ic="enviar"></span> Enviar prueba</button>
-      <button class="tb-btn ia-btn" onclick="abrirIA()" title="Generar con Char-B (IA)">✨ Char-B</button>
+      <button class="tb-btn" onclick="abrirPreviewActual()" title="Vista previa"><span class="ico" data-ic="ojo"></span><span class="tb-txt"> Vista previa</span></button>
+      <button class="tb-btn" onclick="abrirEnvioPrueba()" title="Enviar prueba por correo"><span class="ico" data-ic="enviar"></span><span class="tb-txt"> Enviar prueba</span></button>
+      <button class="tb-btn ia-btn" onclick="abrirIA()" title="Generar con Char-B (IA)"><span class="ico" data-ic="estrella"></span><span class="tb-txt"> Char-B</span></button>
       <button class="tb-btn icon-only" onclick="abrirImagenes()" title="Biblioteca de imágenes"><span class="ico" data-ic="imagen"></span></button>
       <button class="tb-btn icon-only" onclick="abrirImportar()" title="Importar HTML"><span class="ico" data-ic="subir"></span></button>
       <button class="tb-btn danger icon-only" onclick="eliminarPiezaActual()" title="Eliminar esta creatividad"><span class="ico" data-ic="basura"></span></button>
       <button class="tb-btn primary" onclick="abrirExportar()"><span class="ico" data-ic="exportar"></span> Exportar</button>
-      <span class="sync-status" id="sync-status" title="Estado de guardado en la nube">—</span>
     </div>
   </header>
 
@@ -1440,43 +1465,62 @@ button,input,select,textarea{font-family:inherit;}
   </div>
 </div></div>
 <div class="modal-bg" id="modal-ia"><div class="modal">
-  <div class="modal-head"><h3>✨ Generar con Char-B (IA)</h3><button class="modal-close" onclick="cerrarModal('ia')">×</button></div>
+  <div class="modal-head"><h3><span class="ia-spark ico" data-ic="estrella" data-icsize="16px"></span> Asistente IA · Char-B</h3><button class="modal-close" onclick="cerrarModal('ia')">×</button></div>
   <div class="modal-body">
-    <p>Elige tu marca, di qué necesitas y Char-B (IA) crea la pieza en la <b>voz de tu marca</b> (colores, logo, tono), lista para ajustar.</p>
-    <div class="ia-row">
-      <label class="ia-col">Marca<select id="ia-marca"></select></label>
-      <label class="ia-col">¿Qué producto?<div class="ia-seg" id="ia-formato-seg">
+    <div class="ia-pasos" id="ia-pasos">
+      <span class="ia-paso-tag on" data-p="1"><i>1</i> Producto</span><span class="ia-paso-linea"></span>
+      <span class="ia-paso-tag" data-p="2"><i>2</i> Brief</span><span class="ia-paso-linea"></span>
+      <span class="ia-paso-tag" data-p="3"><i>3</i> Resultado</span>
+    </div>
+    <div id="ia-paso-1">
+      <p>Elige tu marca y el producto: Char-B crea la pieza en la <b>voz de tu marca</b> (colores, logo, tono), lista para ajustar.</p>
+      <label class="ia-label">Marca <span class="ia-req">·obligatoria</span></label>
+      <select id="ia-marca" class="dz-inp"></select>
+      <label class="ia-label">¿Qué quieres crear?</label>
+      <div class="ia-seg" id="ia-formato-seg">
         <button type="button" data-fmt="email" class="on" onclick="iaSetFormato('email')"><span class="ico" data-ic="email"></span> Email Marketing</button>
         <button type="button" data-fmt="banner" onclick="iaSetFormato('banner')"><span class="ico" data-ic="grid"></span> Banners Display</button>
-      </div><input type="hidden" id="ia-formato" value="email"></label>
+      </div><input type="hidden" id="ia-formato" value="email">
+      <div id="ia-tono-wrap">
+        <label class="ia-label">Tipo de email</label>
+        <div class="ia-seg" id="ia-tono-seg">
+          <button type="button" data-tono="comercial" class="on" onclick="iaSetTono('comercial')">Comercial</button>
+          <button type="button" data-tono="corporativo" onclick="iaSetTono('corporativo')">Corporativo</button>
+          <button type="button" data-tono="informativo" onclick="iaSetTono('informativo')">Informativo</button>
+          <button type="button" data-tono="newsletter" onclick="iaSetTono('newsletter')">Newsletter</button>
+        </div><input type="hidden" id="ia-tono" value="comercial">
+      </div>
     </div>
-    <label class="ia-label">Tipo de email</label>
-    <div class="ia-seg" id="ia-tono-seg">
-      <button type="button" data-tono="comercial" class="on" onclick="iaSetTono('comercial')">🔥 Comercial</button>
-      <button type="button" data-tono="corporativo" onclick="iaSetTono('corporativo')">🏛️ Corporativo</button>
-      <button type="button" data-tono="informativo" onclick="iaSetTono('informativo')">ℹ️ Informativo</button>
-      <button type="button" data-tono="newsletter" onclick="iaSetTono('newsletter')">📰 Newsletter</button>
-    </div><input type="hidden" id="ia-tono" value="comercial">
-    <label class="ia-label">¿Qué necesitas? <span class="ia-req">·obligatorio</span></label>
-    <textarea id="ia-que" class="ia-que" placeholder="Ej: Promocionar el producto de pago automatizado"></textarea>
-    <div class="ia-row">
-      <label class="ia-col">Acción (el CTA)<input type="text" id="ia-objetivo" placeholder="Probar / Registrarse / Comprar / Saber más" list="ia-acciones"><datalist id="ia-acciones"><option>Probar gratis</option><option>Registrarse</option><option>Comprar</option><option>Suscribirse</option><option>Reservar</option><option>Saber más</option><option>Descargar</option><option>Contactar</option></datalist></label>
-      <label class="ia-col">Gancho / oferta <small>(dato exacto; la IA no lo inventa)</small><input type="text" id="ia-gancho" placeholder="Ej: Demo gratis por 30 días"></label>
+    <div id="ia-paso-2" style="display:none">
+      <label class="ia-label">¿Qué necesitas? <span class="ia-req">·obligatorio</span></label>
+      <textarea id="ia-que" class="ia-que" placeholder="Ej: Promocionar el producto de pago automatizado"></textarea>
+      <div class="ia-row">
+        <label class="ia-col">Acción (el CTA)<input type="text" id="ia-objetivo" placeholder="Probar / Registrarse / Comprar / Saber más" list="ia-acciones"><datalist id="ia-acciones"><option>Probar gratis</option><option>Registrarse</option><option>Comprar</option><option>Suscribirse</option><option>Reservar</option><option>Saber más</option><option>Descargar</option><option>Contactar</option></datalist></label>
+        <label class="ia-col">Gancho / oferta <small>(dato exacto; la IA no lo inventa)</small><input type="text" id="ia-gancho" placeholder="Ej: Demo gratis por 30 días"></label>
+      </div>
+      <label class="ia-label">Destino del CTA <small>(el link al que lleva el botón)</small></label>
+      <input type="text" id="ia-ctaurl" class="dz-inp" placeholder="https://tuproducto.com/registro">
+      <div class="ia-row">
+        <label class="ia-col">URL referencia 1 <small>(opcional)</small><input type="text" id="ia-ref1" placeholder="https://… página de un producto"></label>
+        <label class="ia-col">URL referencia 2 <small>(opcional)</small><input type="text" id="ia-ref2" placeholder="https://… una promo, un post"></label>
+      </div>
+      <label class="ia-label">Fotos a usar <small>(opcional · elígelas de tu biblioteca; la IA usará SOLO estas)</small></label>
+      <div id="ia-fotos" class="ia-fotos"></div>
+      <button type="button" class="img-biblio-btn" onclick="elegirFotosIA()"><span class="ico" data-ic="imagen" data-icsize="12px"></span> Elegir foto de la biblioteca</button>
+      <label class="ia-label">Indicaciones generales <small>(opcional · detalles, restricciones, lo que quieras pedir)</small></label>
+      <textarea id="ia-notas" class="ia-refs" placeholder="Ej: tono cercano y claro, destacar la facilidad de uso, sin tecnicismos…"></textarea>
     </div>
-    <label class="ia-label">Destino del CTA <small>(el link al que lleva el botón)</small></label>
-    <input type="text" id="ia-ctaurl" class="dz-inp" placeholder="https://tuproducto.com/registro">
-    <div class="ia-row">
-      <label class="ia-col">URL referencia 1 <small>(opcional)</small><input type="text" id="ia-ref1" placeholder="https://… página de un producto"></label>
-      <label class="ia-col">URL referencia 2 <small>(opcional)</small><input type="text" id="ia-ref2" placeholder="https://… una promo, un post"></label>
+    <div id="ia-paso-3" style="display:none">
+      <p class="ia-resultado-hint">Char-B está armando tu pieza con la identidad de la marca. Al terminar se abre directo en el editor.</p>
+      <div id="ia-estado" class="ia-estado"></div>
     </div>
-    <label class="ia-label">Fotos a usar <small>(opcional · elígelas de tu biblioteca; la IA usará SOLO estas)</small></label>
-    <div id="ia-fotos" class="ia-fotos"></div>
-    <button type="button" class="img-biblio-btn" onclick="elegirFotosIA()"><span class="ico" data-ic="imagen" data-icsize="12px"></span> Elegir foto de la biblioteca</button>
-    <label class="ia-label">Indicaciones generales <small>(opcional · detalles, restricciones, lo que quieras pedir)</small></label>
-    <textarea id="ia-notas" class="ia-refs" placeholder="Ej: tono cercano y claro, destacar la facilidad de uso, sin tecnicismos…"></textarea>
-    <div id="ia-estado" class="ia-estado"></div>
   </div>
-  <div class="modal-foot"><button onclick="cerrarModal('ia')">Cancelar</button><button class="primary" id="ia-btn" onclick="generarConIA()">✨ Generar</button></div>
+  <div class="modal-foot">
+    <button id="ia-atras" onclick="iaAtras()" style="display:none;margin-right:auto">Atrás</button>
+    <button id="ia-cancelar" onclick="cerrarModal('ia')">Cancelar</button>
+    <button class="primary" id="ia-sig" onclick="iaIrPaso(2)">Siguiente · brief</button>
+    <button class="primary" id="ia-btn" onclick="iaGenerar()" style="display:none">Generar</button>
+  </div>
 </div></div>
 <div class="modal-bg" id="modal-imagenes"><div class="modal modal-lg">
   <div class="modal-head"><h3>Biblioteca de imágenes</h3><button class="modal-close" onclick="cerrarModal('imagenes')">×</button></div>
@@ -2075,6 +2119,7 @@ const ICONOS_SVG = {
   chevup:       { nombre:"Arriba",          svg:'<path d="m18 15-6-6-6 6"/>' },
   chevdown:     { nombre:"Abajo",           svg:'<path d="m6 9 6 6 6-6"/>' },
   chevleft:     { nombre:"Izquierda",       svg:'<path d="m15 18-6-6 6-6"/>' },
+  deshacer:     { nombre:"Deshacer",        svg:'<path d="M9 7 4 12l5 5"/><path d="M4 12h11a5 5 0 0 1 0 10h-1"/>' },
   chevright:    { nombre:"Derecha",         svg:'<path d="m9 18 6-6-6-6"/>' },
   tablet:       { nombre:"Tablet",          svg:'<rect width="16" height="20" x="4" y="2" rx="2"/><path d="M12 18h.01"/>' },
   sol:          { nombre:"Sol",             svg:'<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/>' },
@@ -3456,6 +3501,8 @@ function renderTabsPiezas(){
   if(span && p) span.textContent = p.nombre;
   const sp = document.getElementById("crumb-proyecto");
   if(sp && proyecto) sp.textContent = proyecto.nombre || "Proyecto";
+  const chip = document.getElementById("ed-chip");
+  if(chip && p) chip.innerHTML = chipDe(categoriaDe(p.formato));
 }
 function editarNombre(span, id){
   span.contentEditable = "true"; span.focus();
@@ -4584,7 +4631,7 @@ async function sugerirTextosIA(){
   // URL a revisar OPCIONAL (vacío por defecto → más rápido; pega una si quieres que la lea).
   const refsIn = prompt("URL a revisar (opcional, máx. 2, separa con espacios).\nDéjalo vacío para que sea más rápido; pega una URL solo si quieres que la IA la lea:", "");
   const refs = (refsIn||"").split(/[\s,]+/).map(s=>s.trim()).filter(s=>/^https?:\/\//.test(s)).slice(0,2);
-  toast("✨ Pensando textos…", 8000);
+  toast("Char-B está pensando los textos…", 8000);
   try{
     const r=await fetch('/api/ia',{method:'POST',credentials:'include',headers:{'Content-Type':'application/json'},body:JSON.stringify({modo:'textos',marca,brief:{que,tono:(marca&&marca.tono)||'profesional y cercano',refs}})});
     const raw=await r.text(); let d={}; try{ d=JSON.parse(raw); }catch(_){}
@@ -4593,7 +4640,7 @@ async function sugerirTextosIA(){
     if(d.cuerpo) setComp('zonas.texto.cuerpo.texto',d.cuerpo);
     if(d.cta) setComp('zonas.cta.texto',d.cta);
     renderComposicionEditor();
-    toast("Textos sugeridos por Char-B ✨");
+    toast("Textos sugeridos por Char-B");
   }catch(e){ toast("Sin conexión: "+(e.message||e),4000); }
 }
 // Editor de composición (3 zonas). fmt=null → Diseño global; fmt → ajuste por tamaño.
@@ -4684,7 +4731,7 @@ function renderComposicionEditor(){
     `<option value="">${marcas.length?'— Aplicar marca —':'— Sin marcas (crea una) —'}</option>`+
     marcas.map(m=>`<option value="${m.id}" ${p.tema&&p.tema.marcaId===m.id?'selected':''}>${esc(m.nombre)}</option>`).join('')+
     `</select><button class="cmp-bib" onclick="abrirMarcas()" title="Gestionar marcas">${svgIcon("paleta",{size:"12px"})}</button></div>`;
-  cont.innerHTML=`<div class="cmp-ed">${marcaSel}<div class="dz-sec">Diseño global · 3 zonas</div><button class="ia-sugerir" onclick="sugerirTextosIA()">✨ Sugerir textos con Char-B</button>${compEditorHTML(p,null,'diseno')}</div>`;
+  cont.innerHTML=`<div class="cmp-ed">${marcaSel}<div class="dz-sec">Diseño global · 3 zonas</div><button class="ia-sugerir" onclick="sugerirTextosIA()">${svgIcon("estrella",{size:"13px"})} Sugerir textos con Char-B</button>${compEditorHTML(p,null,'diseno')}</div>`;
 }
 // Panel "Ajustar este tamaño" (overrides sobre el global) en la pestaña Editar.
 function renderFormTamaño(f){
@@ -4918,7 +4965,7 @@ function abrirExportar(){
     const tag = esActual ? ` <span style="color:#1c73cb;font-weight:600;">· actual</span>` : "";
     html += `<div class="export-row"><label><input type="checkbox" data-id="${p.id}" ${esActual?"checked":""}><div><div class="pn">${esc(p.nombre)}${tag}</div><div class="pf">${esc(fmtBadge)} · ${p.canvas.length} bloque${p.canvas.length!==1?"s":""}</div></div></label><button class="download" onclick="descargarPieza('${p.id}')">${svgIcon("exportar",{size:"13px"})} Descargar</button></div>`;
   });
-  html += `</div><div class="modal-foot" style="margin-top:18px;border-top:1px solid #e5e7ea;padding-top:14px;"><button onclick="cerrarModal('export')">Cerrar</button><button onclick="copiarPiezaActual()">${svgIcon("copiar",{size:"14px"})} Copiar HTML actual</button><button class="primary" onclick="descargarSeleccionadas()">${svgIcon("exportar",{size:"13px"})} Descargar seleccionadas</button></div>`;
+  html += `</div><div class="modal-foot" style="margin-top:18px;border-top:1px solid #e5e7ea;padding-top:14px;"><button onclick="cerrarModal('export')">Cerrar</button><button onclick="cerrarModal('export');abrirEnvioPrueba()">${svgIcon("enviar",{size:"13px"})} Enviar prueba</button><button onclick="copiarPiezaActual()">${svgIcon("copiar",{size:"14px"})} Copiar HTML actual</button><button class="primary" onclick="descargarSeleccionadas()">${svgIcon("exportar",{size:"13px"})} Descargar seleccionadas</button></div>`;
   body.innerHTML = html;
   document.getElementById("modal-export").classList.add("show");
 }
@@ -5058,7 +5105,7 @@ function renderPlantillasTab(){
     });
     html += `</div>`;
   });
-  cont.innerHTML = html || `<div style="padding:18px 14px;color:var(--ink3);font-size:12.5px;line-height:1.6;">Estamos <b>preparando nuevas plantillas</b> de email.<br>Mientras, arma tu pieza con los <b>Bloques</b> de la izquierda o genérala con <b>✨ Char-B (IA)</b>.</div>`;
+  cont.innerHTML = html || `<div style="padding:18px 14px;color:var(--ink3);font-size:12.5px;line-height:1.6;">Estamos <b>preparando nuevas plantillas</b> de email.<br>Mientras, arma tu pieza con los <b>Bloques</b> de la izquierda o genérala con <b>Char-B (IA)</b>.</div>`;
 }
 
 function cargarPlantilla(tipo){
@@ -6106,6 +6153,28 @@ function iaSetFormato(f){
   iaFormato = (f==="banner") ? "banner" : "email";
   document.getElementById("ia-formato").value = iaFormato;
   document.querySelectorAll("#ia-formato-seg button").forEach(b => b.classList.toggle("on", b.dataset.fmt===iaFormato));
+  const tw = document.getElementById("ia-tono-wrap"); if(tw) tw.style.display = (iaFormato==="email") ? "" : "none";
+}
+/* Flujo por pasos del Asistente IA (1 Producto · 2 Brief · 3 Resultado). */
+let iaPaso = 1;
+function iaIrPaso(n){
+  iaPaso = Math.max(1, Math.min(3, n));
+  ["1","2","3"].forEach(k => { const p=document.getElementById("ia-paso-"+k); if(p) p.style.display = (String(iaPaso)===k) ? "" : "none"; });
+  document.querySelectorAll("#ia-pasos .ia-paso-tag").forEach(t => t.classList.toggle("on", Number(t.dataset.p)<=iaPaso));
+  const atras=document.getElementById("ia-atras"), sig=document.getElementById("ia-sig"),
+        gen=document.getElementById("ia-btn"), can=document.getElementById("ia-cancelar");
+  if(atras) atras.style.display = iaPaso>1 ? "" : "none";
+  if(can) can.style.display = iaPaso===1 ? "" : "none";
+  if(sig) sig.style.display = iaPaso===1 ? "" : "none";
+  if(gen) gen.style.display = iaPaso===2 ? "" : "none";
+  if(iaPaso===2) setTimeout(()=>{ const q=document.getElementById("ia-que"); if(q) q.focus(); }, 60);
+}
+function iaAtras(){ iaIrPaso(iaPaso-1); }
+function iaGenerar(){
+  const que = (document.getElementById("ia-que").value || "").trim();
+  if(!que){ toast("Cuéntame qué necesitas"); return; }
+  iaIrPaso(3);
+  generarConIA();
 }
 let _iaFotos = [];   // fotos elegidas de la biblioteca para la IA
 function elegirFotosIA(){ abrirImagenes(url => { if(url && !_iaFotos.includes(url)){ _iaFotos.push(url); } renderIaFotos(); }); }
@@ -6132,8 +6201,9 @@ function abrirIA(){
   if(aplicada && marcas.some(m=>m.id===aplicada)) ms.value = aplicada;
   _iaFotos = []; renderIaFotos();
   const est = document.getElementById("ia-estado"); est.textContent = ""; est.className = "ia-estado";
+  iaIrPaso(1);
   document.getElementById("modal-ia").classList.add("show");
-  setTimeout(() => { const q = document.getElementById("ia-que"); if(q) q.focus(); }, 60);
+  pintarIconos();
 }
 async function generarConIA(){
   const que = (document.getElementById("ia-que").value || "").trim();
@@ -6410,7 +6480,7 @@ function irARuta(ruta){
   ruta = normRuta(ruta);
   if(RUTAS_MENU[ruta]){ setURL(ruta); RUTAS_MENU[ruta](); return; }
   const cfg = RUTAS_PRODUCTO[ruta];
-  if(cfg && cfg.pronto){ toast(cfg.nombre + ": próximamente 🚧"); return; }
+  if(cfg && cfg.pronto){ toast(cfg.nombre + ": próximamente"); return; }
   if(cfg){ _rutaActual = ruta; setURL(ruta); crearDesde(cfg.tipo); return; }
   _rutaActual = "/home"; setURL("/home"); volverAProyectos();
 }
@@ -6420,7 +6490,7 @@ function aplicarRutaInicial(){
   if(ruta==="/" || ruta==="/home") return;   // comportamiento normal
   if(RUTAS_MENU[ruta]){ RUTAS_MENU[ruta](); return; }
   const cfg = RUTAS_PRODUCTO[ruta];
-  if(cfg && cfg.pronto){ toast(cfg.nombre + ": próximamente 🚧"); return; }
+  if(cfg && cfg.pronto){ toast(cfg.nombre + ": próximamente"); return; }
   if(cfg) restaurarSeccion(ruta);
 }
 // Entra a una sección REABRIENDO la última pieza que tenías ahí (no crea una nueva
