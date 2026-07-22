@@ -1452,7 +1452,7 @@ button,input,select,textarea{font-family:inherit;}
       <input type="hidden" id="marca-logoClaro-data">
       <input type="hidden" id="marca-edit-id">
       <div class="mf-actions">
-        <span class="mf-plantillas">Plantillas rápidas: <button onclick="rellenarMarcaRadar()" title="Rellena con la identidad de RADAR">RADAR</button><button onclick="rellenarMarcaZurich()" title="Rellena con la identidad de Zurich">Zurich</button></span>
+        <span class="mf-plantillas">Plantilla rápida: <button onclick="rellenarMarcaZurich()" title="Rellena con la identidad de Zurich">Zurich</button></span>
         <button onclick="cerrarMarcaForm()">Cancelar</button>
         <button class="primary" onclick="guardarMarca()">Guardar marca</button>
       </div>
@@ -5831,40 +5831,10 @@ function rellenarMarcaZurich(){
   const body=document.getElementById("modal-marcas").querySelector(".modal-body"); if(body) body.scrollTop=99999;
   toast("Plantilla Zurich cargada — header/footer de marca listos (2 estilos: sólido y blanco)");
 }
-// Logos RADAR incrustados (placeholder del wordmark; el usuario puede re-subir los oficiales).
-const RADAR_LOGO_AZUL="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIzMjAiIGhlaWdodD0iODAiIHZpZXdCb3g9IjAgMCAzMjAgODAiPjx0ZXh0IHg9IjUwJSIgeT0iNTAlIiBkb21pbmFudC1iYXNlbGluZT0iY2VudHJhbCIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZm9udC1mYW1pbHk9IkFyaWFsLEhlbHZldGljYSxzYW5zLXNlcmlmIiBmb250LXdlaWdodD0iODAwIiBmb250LXNpemU9IjU2IiBsZXR0ZXItc3BhY2luZz0iMiIgZmlsbD0iIzIyMkY0NyI+UkFEQVI8L3RleHQ+PC9zdmc+";
-const RADAR_LOGO_BLANCO="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIzMjAiIGhlaWdodD0iODAiIHZpZXdCb3g9IjAgMCAzMjAgODAiPjx0ZXh0IHg9IjUwJSIgeT0iNTAlIiBkb21pbmFudC1iYXNlbGluZT0iY2VudHJhbCIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZm9udC1mYW1pbHk9IkFyaWFsLEhlbHZldGljYSxzYW5zLXNlcmlmIiBmb250LXdlaWdodD0iODAwIiBmb250LXNpemU9IjU2IiBsZXR0ZXItc3BhY2luZz0iMiIgZmlsbD0iI0ZGRkZGRiI+UkFEQVI8L3RleHQ+PC9zdmc+";
 // Logos Zurich recreados en SVG (placeholder de marca; reemplazables subiendo el oficial).
 const svgURL = s => "data:image/svg+xml,"+encodeURIComponent(s);
 const ZURICH_LOGO_BLANCO = svgURL(`<svg xmlns='http://www.w3.org/2000/svg' width='210' height='52' viewBox='0 0 210 52'><circle cx='24' cy='26' r='22' fill='#ffffff'/><text x='24' y='27' font-family='Arial,Helvetica,sans-serif' font-weight='900' font-size='27' fill='#2167ae' text-anchor='middle' dominant-baseline='central'>Z</text><text x='55' y='26' font-family='Arial,Helvetica,sans-serif' font-weight='800' font-size='25' letter-spacing='1.5' fill='#ffffff' dominant-baseline='central'>ZURICH</text></svg>`);
 const ZURICH_LOGO_AZUL = svgURL(`<svg xmlns='http://www.w3.org/2000/svg' width='210' height='52' viewBox='0 0 210 52'><circle cx='24' cy='26' r='22' fill='#2167ae'/><text x='24' y='27' font-family='Arial,Helvetica,sans-serif' font-weight='900' font-size='27' fill='#ffffff' text-anchor='middle' dominant-baseline='central'>Z</text><text x='55' y='26' font-family='Arial,Helvetica,sans-serif' font-weight='800' font-size='25' letter-spacing='1.5' fill='#2167ae' dominant-baseline='central'>ZURICH</text></svg>`);
-// Rellena el formulario con la identidad de RADAR (logos azul/blanco; paleta sin negro; Roboto).
-function rellenarMarcaRadar(){
-  const set=(i,v)=>{ const e=document.getElementById(i); if(e) e.value=v; };
-  set("marca-nombre","RADAR"); set("marca-empresa","RADAR");
-  // Paleta del manual (omitimos el negro #1D1D1D): navy 534C, beige 4685C, celeste 551C, crema, blanco.
-  set("marca-primary","#222F47"); set("marca-secondary","#222F47"); set("marca-cta","#222F47");
-  set("marca-ctaText","#ffffff"); set("marca-text","#222F47"); set("marca-bg","#ffffff"); set("marca-bgpagina","#F3F3E7");
-  set("marca-accent1","#D9C6B1"); set("marca-accent2","#A3BDCB");
-  set("marca-fontTitulo","Roboto"); set("marca-fontCuerpo","Roboto");
-  // Logos: azul para fondos claros, blanco para fondos oscuros (solo si no subiste uno).
-  const yaLogo = id => { const e=document.getElementById(id); return e && e.value; };
-  if(!yaLogo("marca-logo-data")){ set("marca-logo-data",RADAR_LOGO_AZUL); pintarLogoPrev("logo",RADAR_LOGO_AZUL); }
-  if(!yaLogo("marca-logoClaro-data")){ set("marca-logoClaro-data",RADAR_LOGO_BLANCO); pintarLogoPrev("logoClaro",RADAR_LOGO_BLANCO); }
-  set("marca-negocio",""); set("marca-tono",""); set("marca-eslogan","");
-  set("marca-publico",""); set("marca-productos",""); set("marca-usar",""); set("marca-evitar","");
-  set("marca-headerTagline",""); set("marca-direccion","");
-  set("marca-copyright","© "+new Date().getFullYear()+" RADAR"); set("marca-unsubTexto","Darme de baja"); set("marca-disclaimer","");
-  set("marca-web","https://www.somosradar.com");
-  set("marca-facebook",""); set("marca-instagram","");
-  set("marca-linkedin","https://www.linkedin.com/company/justradar/");
-  set("marca-youtube","https://www.youtube.com/channel/UC4qznw8--sMMQg6ym8J2kTA");
-  set("marca-spotify","");
-  set("marca-gap","16"); set("marca-radio","0");
-  document.getElementById("marca-form-titulo").textContent="Nueva marca · RADAR (logos, colores y redes cargados)";
-  const body=document.getElementById("modal-marcas").querySelector(".modal-body"); if(body) body.scrollTop=99999;
-  toast("Plantilla RADAR cargada — logos y colores listos. Completa la voz de marca si quieres");
-}
 function eliminarMarca(id){
   if(!confirm("¿Eliminar esta marca?")) return;
   workspace.marcas=(workspace.marcas||[]).filter(x=>x.id!==id);
