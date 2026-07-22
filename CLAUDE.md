@@ -128,6 +128,62 @@ Tras analizar 5 referencias (GoBrash + 4 zips: viajes, salud, chequeos, préstam
 
 - **Grid (disposiciones jun-2026):** `gridSpec(d)` define el layout: **cols** (1-4 iguales), **1x2** (1 grande + 2 al lado, la grande ocupa 2 filas vía `grid-row`), **1x3** (1 grande + 3), **2x2** y **3x3** (mosaicos). **Proporción ajustable** (`propGrid` %, ancho de la parte grande / 1ª columna) sin romper la otra (`minmax(0,1fr)`). **Responsive**: `apilarMobile` + media query `max-width:540px` resetea columnas/filas/spans (apila). Las celdas siguen clicables y aceptan drop en todas las disposiciones.
 
+## Rediseño "Portal" (Propuesta C) — jul-2026 (ESTADO ACTUAL DE LA UI)
+Rediseño integral de la interfaz según el handoff aprobado (Propuesta C · "Portal", estilo
+Microsoft/Salesforce). **Solo re-vestido de UI + reorganización de navegación: funciones,
+datos y contratos de API intactos** (una sola extensión aditiva en `/api/whoami`).
+- **Tokens**: Roboto 300–600 (nunca 700 ni itálica en UI), texto `#12173d`, fondo app `#eef1f6`,
+  líneas `#e4e8f0`, navy `#040764` = primario, azul `#1C73CB` acento/links/selección, turquesa,
+  amarillo SOLO CTA sobre navy, magenta puntual (IA, destructivo). Radio 10px del **chrome**
+  (el contenido de las piezas sigue SIN radio por defecto — decisión del usuario). Sin degradados.
+  Chips por tipo: EMAIL azul · DISPLAY turquesa · LIBRE magenta. Ver `DECISIONES-VISUALES.md`.
+- **Logo nuevo** (barra amarilla + 2 bloques sobre navy): `brand/logo_simple_block_builder.svg/.png`,
+  `brand/icono_simple_block_builder.ico` (16/32/48/256, PNG embebido), `…_1000x1000.png`;
+  favicon = `brand/simple-block-builder.svg` (actualizado al mark nuevo).
+- **Shell del dashboard** (`#galeria`): barra superior `.cnav` (logo · Inicio·Proyectos·Marcas·Imágenes
+  con subrayado navy activo · buscar (enfoca la búsqueda de Proyectos) · sparkle IA magenta ·
+  botón **+ Nueva** (menú Email/Banner/Libre/Proyecto) · **avatar** con menú (rol real de whoami,
+  Permisos/Configuración/Papelera/Cerrar sesión en magenta)). **FAB "Crear con IA"** en todo el
+  dashboard (no en el editor). Controlador: `dashView` + `dashIr(v)`/`dashVista(v)`; páginas
+  `pg-home/pg-proyectos/pg-marcas/pg-imagenes/pg-papelera/pg-permisos/pg-config`.
+- **Home**: "Hola, {perfil.nombre}" + fecha; bloque navy "¿Qué vas a crear hoy?" (eyebrow EMPIEZA
+  AQUÍ, input de idea → `generarDesdeIdea()` prellena `#ia-que` y abre el Asistente; título/sub
+  editables vía `workspace.banner` con `editarBanner()`); lanzadores Email/Banner/Libre + Pronto;
+  "Tus creatividades": total, filtros pill, "Ver las N →", grid de 6 tarjetas por TIPO (tinte +
+  ícono + chip + nombre + "Editado hace…" (`p._mod`, se sella en `persistir()` solo al editar) +
+  estado Listo/Borrador). Tarjeta → `abrirPiezaDesdeDash(prId,pId)`.
+- **Proyectos** (`/proyectos`, ruta nueva): filtros + búsqueda + grupos por proyecto (renombrar
+  inline, eliminar, popover "Nueva creatividad" por proyecto) con filas Creatividad·Tipo·Piezas·
+  Estado·acciones (editar/preview/duplicar/eliminar). `renderProyectosPage()`; los renders viejos
+  (`renderProyectos/renderCreatividades`) son shims. La dona/stats del dashboard viejo se retiró.
+- **Marcas/Imágenes/Papelera = páginas** del dashboard. El MISMO contenido (`#marcas-cont`,
+  `#imagenes-cont`, `#papelera-cont`) se **reparenta** entre página y modal (`montarEn`): desde el
+  editor, `abrirMarcas()`/`abrirImagenes(pick)` siguen siendo modales (picker intacto); al cerrar
+  un modal con el dashboard visible se re-monta en la página (`_remountTrasModal`).
+- **Permisos/Configuración = páginas reales** (antes toasts "próximamente"). `/api/whoami` ahora
+  (solo super admin, aditivo) devuelve `allowed[]`, `superAdmin` y `config{resendFrom,siteUrl,
+  integraciones{gemini,resend,d1,r2}}` → tabla de correos autorizados (rol real; alta de correos
+  se explica: var `ALLOWED_EMAILS`) y tarjetas Cuenta (Nombre editable → `workspace.perfil.nombre`,
+  usado en el saludo)/Envío/Integraciones con badges Conectado reales.
+- **Editor a pantalla completa**: cabecera de UNA fila — logo-mark → `abrirGaleria()`, breadcrumb
+  `Proyectos › proyecto › pieza` (renombrables) + **chip de tipo** (`#ed-chip`, se pinta en
+  `renderTabsPiezas`), y a la derecha sync "Guardado", deshacer, Formato, set-tools, dev-seg,
+  Vista previa, Enviar prueba, Char-B, imágenes/importar/eliminar (íconos), **Exportar** navy.
+  A <1560px los textos de botones colapsan a íconos (`.tb-txt`). Paneles flotantes sobre #f5f5f5.
+- **Asistente IA en 3 pasos** (Producto+Marca / Brief / Resultado): `iaIrPaso()`/`iaGenerar()`;
+  los campos e IDs y `generarConIA()` no cambiaron; "Tipo de email" se oculta si producto=banner.
+  Exportar: mismo motor; el modal de documentos suma botón "Enviar prueba".
+- **Login** (`index.html`): panel formulario + área visual con **foto Envato FOTO-001 (DGQZAQM)**
+  — registro y flujo en `ENVATO_ASSETS.md`; hasta que exista
+  `assets/login/foto_login_simple_block_builder.jpg` (descarga del usuario) se muestra un panel
+  editorial navy con eslogan (nunca imagen rota). JS del magic-link intacto. Ruta `/login` añadida.
+- **Móvil** (≤820px): barra inferior de pestañas (Inicio · Proyectos · **+** amarillo · Marcas ·
+  Cuenta), top bar reducida (logo + avatar), Home/Proyectos/Config adaptados; editores en desktop.
+- **Rutas**: `_redirects` suma `/login /proyectos /imagenes`. `RUTAS_MENU` ahora abre páginas
+  (`dashVista`). La URL del dashboard refleja la vista (`urlDeVista`), la del editor su sección.
+- **Verificación**: Playwright (server local + mocks `/api/*`) — 21/21 PASS, 0 errores de consola,
+  desktop + móvil. Capturas y portada 1920×1080 en `entregables/`.
+
 ## Roadmap / pendientes
 **Pendientes activos (jun-2026):** (1) confirmar/cerrar la **franja blanca en verticales** (esperando captura del caso exacto); (2) **bloques más ricos** para email (features con ícono en círculo de color, secciones con fondo, hero con degradado, tarjetas con sombra — SIN redondeo por defecto); (3) afinar, si se pide, qué tipografías/recursos extra muestran **/gdn-ia** y **/free**; (4) encender **/post-ia** y **/ads-ia** cuando toque.
 0. ✅ **(a) PLANTILLAS POR TIPO DE EMAIL — HECHO.** El nuevo `generarEmail` (ia.js) pide a la IA **solo el copy estructurado** `{ nombre, titular, intro, oferta, beneficios:[{icono,titulo,texto}]×3, cierre, cta, imagen }` y el **código arma el esqueleto** según `brief.tipo`: **comercial** = hero(titular sobre foto) → alert(oferta) → texto(intro) → features → espaciador → cta; **corporativo/informativo** = hero → texto(intro) → features → divisor → texto(cierre) → cta (sin alert agresivo); sin foto → título de texto en vez de hero. Íconos validados/distintos (lista `ICONOS_VALIDOS`), titulares sin punto (`sinPuntoFinal`), **un solo CTA al final**. Más rápido (maxTokens 2048, sin pedir maquetación). El cliente (`generarConIA`) ya no duplica fotos (la red de seguridad solo inserta hero si NO hay ningún bloque visual). Verificado con Playwright (10/10 PASS). **Pendiente (b):** bloques más ricos (features con ícono en círculo de color, secciones con fondo, hero con degradado, tarjetas con sombra) — SIN redondeo por defecto. Idea futura: pedir 1-2 emails "bien diseñados" como referencia para clonar el estándar.
