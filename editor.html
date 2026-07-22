@@ -435,6 +435,7 @@ button,input,select,textarea{font-family:inherit;}
 .chip.display{background:#e4f6f6;color:#149a9a;}
 .chip.libre{background:#f7e6f4;color:#b318a3;}
 .chip.post{background:#eef1fb;color:#040764;}
+.chip.ads{background:#eef1fb;color:#040764;}
 .hg-meta{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:11px 4px 0;}
 .hg-nom{font-size:13.5px;font-weight:500;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 .hg-fecha{font-size:12px;color:var(--ink3);margin-top:2px;}
@@ -1476,6 +1477,7 @@ button,input,select,textarea{font-family:inherit;}
       <div class="ia-seg" id="ia-formato-seg">
         <button type="button" data-fmt="email" class="on" onclick="iaSetFormato('email')"><span class="ico" data-ic="email"></span> Email Marketing</button>
         <button type="button" data-fmt="banner" onclick="iaSetFormato('banner')"><span class="ico" data-ic="grid"></span> Banners Display</button>
+        <button type="button" data-fmt="ads" onclick="iaSetFormato('ads')"><span class="ico" data-ic="buscar"></span> Google Search Ads</button>
       </div><input type="hidden" id="ia-formato" value="email">
       <div id="ia-tono-wrap">
         <label class="ia-label">Tipo de email</label>
@@ -1500,9 +1502,11 @@ button,input,select,textarea{font-family:inherit;}
         <label class="ia-col">URL referencia 1 <small>(opcional)</small><input type="text" id="ia-ref1" placeholder="https://… página de un producto"></label>
         <label class="ia-col">URL referencia 2 <small>(opcional)</small><input type="text" id="ia-ref2" placeholder="https://… una promo, un post"></label>
       </div>
+      <div id="ia-fotos-wrap">
       <label class="ia-label">Fotos a usar <small>(opcional · elígelas de tu biblioteca; la IA usará SOLO estas)</small></label>
       <div id="ia-fotos" class="ia-fotos"></div>
       <button type="button" class="img-biblio-btn" onclick="elegirFotosIA()"><span class="ico" data-ic="imagen" data-icsize="12px"></span> Elegir foto de la biblioteca</button>
+      </div>
       <label class="ia-label">Indicaciones generales <small>(opcional · detalles, restricciones, lo que quieras pedir)</small></label>
       <textarea id="ia-notas" class="ia-refs" placeholder="Ej: tono cercano y claro, destacar la facilidad de uso, sin tecnicismos…"></textarea>
     </div>
@@ -1574,6 +1578,7 @@ button,input,select,textarea{font-family:inherit;}
           <button onclick="irARuta('/email-ia')"><span class="ico" data-ic="email" data-icsize="15px"></span> Email</button>
           <button onclick="irARuta('/gdn-ia')"><span class="ico" data-ic="grid" data-icsize="15px"></span> Banner Display</button>
           <button onclick="irARuta('/free')"><span class="ico" data-ic="documento" data-icsize="15px"></span> Formato libre</button>
+          <button onclick="irARuta('/ads-ia')"><span class="ico" data-ic="buscar" data-icsize="15px"></span> Google Search Ads</button>
           <div class="cnav-menu-sep"></div>
           <button onclick="crearProyecto()"><span class="ico" data-ic="biblioteca" data-icsize="15px"></span> Nuevo proyecto</button>
         </div>
@@ -1613,9 +1618,9 @@ button,input,select,textarea{font-family:inherit;}
             <button class="cb-lz" onclick="irARuta('/email-ia')"><span class="cb-lz-ico"><span class="ico" data-ic="email" data-icsize="17px"></span></span>Email</button>
             <button class="cb-lz" onclick="irARuta('/gdn-ia')"><span class="cb-lz-ico"><span class="ico" data-ic="grid" data-icsize="17px"></span></span>Banner Display</button>
             <button class="cb-lz" onclick="irARuta('/free')"><span class="cb-lz-ico"><span class="ico" data-ic="documento" data-icsize="17px"></span></span>Formato libre</button>
+            <button class="cb-lz" onclick="irARuta('/ads-ia')"><span class="cb-lz-ico"><span class="ico" data-ic="buscar" data-icsize="17px"></span></span>Google Search</button>
             <span class="cb-pronto-lbl">Pronto</span>
             <button class="cb-pronto" onclick="irARuta('/post-ia')">Post RRSS</button>
-            <button class="cb-pronto" onclick="irARuta('/ads-ia')">Google Search</button>
           </div>
         </section>
         <section class="home-galeria">
@@ -1625,6 +1630,7 @@ button,input,select,textarea{font-family:inherit;}
               <button class="pillf on" data-f="todas" onclick="filtrarHome('todas')">Todas</button>
               <button class="pillf" data-f="Email" onclick="filtrarHome('Email')">Email</button>
               <button class="pillf" data-f="Banners" onclick="filtrarHome('Banners')">Display</button>
+              <button class="pillf" data-f="Ads" onclick="filtrarHome('Ads')">Search</button>
               <button class="pillf" data-f="Formato Libre" onclick="filtrarHome('Formato Libre')">Libre</button>
               <a class="hg-ver" id="hg-ver" onclick="dashIr('proyectos')">Ver todas →</a>
             </div>
@@ -1646,6 +1652,7 @@ button,input,select,textarea{font-family:inherit;}
           <button class="pillf on" data-f="todas" onclick="filtrarProy('todas')">Todos</button>
           <button class="pillf" data-f="Email" onclick="filtrarProy('Email')">Email</button>
           <button class="pillf" data-f="Banners" onclick="filtrarProy('Banners')">Display</button>
+          <button class="pillf" data-f="Ads" onclick="filtrarProy('Ads')">Search</button>
           <button class="pillf" data-f="Formato Libre" onclick="filtrarProy('Formato Libre')">Libre</button>
           <input class="py-buscar" id="py-buscar" placeholder="Buscar…" oninput="buscaProy=this.value;renderProyectosPage()">
         </div>
@@ -1707,6 +1714,7 @@ button,input,select,textarea{font-family:inherit;}
     <button onclick="irARuta('/email-ia')"><span class="ico" data-ic="email" data-icsize="15px"></span> Email</button>
     <button onclick="irARuta('/gdn-ia')"><span class="ico" data-ic="grid" data-icsize="15px"></span> Banner Display</button>
     <button onclick="irARuta('/free')"><span class="ico" data-ic="documento" data-icsize="15px"></span> Formato libre</button>
+    <button onclick="irARuta('/ads-ia')"><span class="ico" data-ic="buscar" data-icsize="15px"></span> Google Search Ads</button>
     <div class="cnav-menu-sep"></div>
     <button onclick="crearProyecto()"><span class="ico" data-ic="biblioteca" data-icsize="15px"></span> Nuevo proyecto</button>
   </div>
@@ -3314,6 +3322,8 @@ const FORMATOS = {
   // Email / documento
   "email":           { label:"Email · 600px",            badge:"Email",     ancho:600,  alto:0,    txt:"600px de ancho. Gmail, Outlook, HubSpot." },
   "invitacion":      { label:"Invitación · 920px",        badge:"Email",     ancho:920,  alto:0,    txt:"920px responsive. Invitaciones digitales." },
+  // Google Search: la "pieza" es la CAMPAÑA (grupos + keywords + anuncios), no un visual.
+  "ads":             { label:"Campaña Google Search",     badge:"Ads",       ancho:680,  alto:0,    txt:"Grupos de anuncios, keywords (exacta/frase) y anuncios RSA. Exporta CSV para Google Ads." },
   // LinkedIn (tamaños oficiales)
   "linkedin":        { label:"Portada perfil · 1584×396", badge:"LinkedIn",  ancho:1584, alto:396,  txt:"Banner/portada de perfil 1584×396." },
   "linkedin-post":   { label:"Post cuadrado · 1200×1200", badge:"LinkedIn",  ancho:1200, alto:1200, txt:"Post cuadrado del feed 1200×1200." },
@@ -3360,7 +3370,8 @@ function renderFormatoSelect(){
   // + Colecciones. Los formatos visuales fijos (Display/Social) son Colecciones (capas).
   const sec = (typeof rutaDeProducto==="function") ? rutaDeProducto(pieza()) : null;
   const soloEmail = sec === "/email-ia";
-  const DOC = soloEmail ? ["email"] : ["libre","email","invitacion"];
+  const soloAds = sec === "/ads-ia";
+  const DOC = soloAds ? ["ads"] : soloEmail ? ["email"] : ["libre","email","invitacion"];
   const grupos = {};
   DOC.forEach(k => { const v=FORMATOS[k]; if(v){ (grupos[v.badge]=grupos[v.badge]||[]).push([k,v]); } });
   let html = "";
@@ -3369,8 +3380,8 @@ function renderFormatoSelect(){
     arr.forEach(([k,v]) => { html += `<option value="${k}">${esc(v.label)}</option>`; });
     html += `</optgroup>`;
   });
-  // Colecciones solo fuera de email-ia (en /free / universal).
-  if(!soloEmail) html += `<optgroup label="Colecciones"><option value="__coleccion:display-desktop">Google Display · Desktop</option><option value="__coleccion:social">Social (LinkedIn / Facebook)</option></optgroup>`;
+  // Colecciones solo fuera de email-ia y ads (en /free / universal).
+  if(!soloEmail && !soloAds) html += `<optgroup label="Colecciones"><option value="__coleccion:display-desktop">Google Display · Desktop</option><option value="__coleccion:social">Social (LinkedIn / Facebook)</option></optgroup>`;
   document.getElementById("fmt").innerHTML = html;
 }
 function cambiarFormato(f){
@@ -3525,13 +3536,15 @@ const BLOQUES_SOLO_DOC = new Set(["footer","bandaHeader","bandaHeaderBlanco","ba
 // Curación por sección: en /email-ia la biblioteca muestra SOLO los bloques de email
 // (los del mockup + header/footer de marca + estructura básica). En /free van todos.
 const BLOQUES_EMAIL_IA = new Set(["bandaHeader","bandaHeaderBlanco","bandaFooter","bandaFooterBlanco","seccion","grid","hero","texto","imagen","cta","divisor","espaciador","features","kpi","audio","formulario","social","icono"]);
+// En /ads-ia la pieza es una CAMPAÑA de texto: solo bloques de texto/datos.
+const BLOQUES_ADS_IA = new Set(["texto","tabla","divisor","espaciador","alert"]);
 function renderBiblioteca(){
   const cont = document.getElementById("biblioteca");
   if(!cont) return;
   const fmt = FORMATOS[getFormato()] || {};
   const esBannerFijo = fmt.alto > 0;   // display/social fijos → sin bloques de email/agenda
   const sec = (typeof rutaDeProducto==="function") ? rutaDeProducto(pieza()) : null;
-  const permitido = (tipo) => !(esBannerFijo && BLOQUES_SOLO_DOC.has(tipo)) && (sec!=="/email-ia" || BLOQUES_EMAIL_IA.has(tipo));
+  const permitido = (tipo) => !(esBannerFijo && BLOQUES_SOLO_DOC.has(tipo)) && (sec!=="/email-ia" || BLOQUES_EMAIL_IA.has(tipo)) && (sec!=="/ads-ia" || BLOQUES_ADS_IA.has(tipo));
   const cats = {};
   Object.entries(BLOQUES).forEach(([tipo,b]) => { if(!permitido(tipo)) return; const c=b.cat||"Otros"; if(!cats[c])cats[c]=[]; cats[c].push([tipo,b]); });
   const orden = ["Estructura","Contenido","Acción","Agenda","Datos","Cards","Multimedia","Widgets","Decoración","Avanzado"];
@@ -4953,6 +4966,29 @@ function abrirExportar(){
   if(!proyecto || proyecto.piezas.length === 0) return;
   const actual = pieza();
   const body = document.getElementById("export-body");
+  // Campaña de Google Search: se exporta como CSV para importar en Google Ads
+  // (Editor o la interfaz web), no como HTML visual.
+  if(actual && actual.formato === "ads"){
+    const d = actual.adsData;
+    if(!d || !(d.grupos||[]).length){
+      body.innerHTML = `<p>Esta campaña aún no tiene datos generados. Créala con <b>Char-B (IA)</b> (el botón de la estrella) para obtener los grupos, keywords y anuncios; entonces podrás exportar el CSV.</p><div class="modal-foot" style="margin-top:18px;border-top:1px solid #e5e7ea;padding-top:14px;"><button onclick="cerrarModal('export')">Cerrar</button></div>`;
+      document.getElementById("modal-export").classList.add("show");
+      return;
+    }
+    const nKw = d.grupos.reduce((a,g)=>a+(g.keywords||[]).length,0);
+    const nNeg = (d.negativas||[]).length + d.grupos.reduce((a,g)=>a+(g.negativas||[]).length,0);
+    const nTit = d.grupos.reduce((a,g)=>a+(g.titulares||[]).length,0);
+    let h = `<p>Descarga los <b>CSV listos para Google Ads</b> (se importan en Google Ads Editor o en la interfaz web con "importar"). Solo concordancia <b>exacta</b> y de <b>frase</b>; las negativas van incluidas.</p>
+      <div class="export-list">
+        <div class="export-row"><label><div><div class="pn">Keywords + negativas</div><div class="pf">${d.grupos.length} grupo${d.grupos.length!==1?"s":""} · ${nKw} keywords · ${nNeg} negativas</div></div></label><button class="download" onclick="descargarCSVKeywords()">${svgIcon("exportar",{size:"13px"})} CSV</button></div>
+        <div class="export-row"><label><div><div class="pn">Anuncios (RSA)</div><div class="pf">${nTit} titulares · rutas y URL final incluidas</div></div></label><button class="download" onclick="descargarCSVAnuncios()">${svgIcon("exportar",{size:"13px"})} CSV</button></div>
+        <div class="export-row"><label><div><div class="pn">Resumen legible</div><div class="pf">La campaña completa en un HTML para revisar o compartir</div></div></label><button class="download" onclick="descargarPieza('${actual.id}')">${svgIcon("exportar",{size:"13px"})} HTML</button></div>
+      </div>
+      <div class="modal-foot" style="margin-top:18px;border-top:1px solid #e5e7ea;padding-top:14px;"><button onclick="cerrarModal('export')">Cerrar</button></div>`;
+    body.innerHTML = h;
+    document.getElementById("modal-export").classList.add("show");
+    return;
+  }
   // Colección por capas: exportar cada tamaño del set (no bloques).
   if(esComposicion(actual)){
     const sizes = (actual.artboards||[]).map(a=>a.fmt);
@@ -5011,6 +5047,54 @@ function copiarPiezaActual(){
   navigator.clipboard.writeText(generarHTMLDePieza(p)).then(()=>toast("HTML copiado"));
 }
 function slugify(s){ return String(s).toLowerCase().replace(/[^a-z0-9]+/g,"-").replace(/^-|-$/g,"") || "pieza"; }
+
+// ── CSV de campaña Google Search (import directo en Google Ads Editor) ──
+// Cabeceras en inglés porque son las que Ads Editor reconoce automáticamente
+// (con cabeceras en español pide mapear columnas a mano).
+function _csvCelda(v){ v = String(v==null?"":v); return /[",\n]/.test(v) ? '"'+v.replace(/"/g,'""')+'"' : v; }
+function _descargarCSV(nombre, filas){
+  const txt = "\ufeff" + filas.map(r => r.map(_csvCelda).join(",")).join("\r\n");
+  const blob = new Blob([txt], {type:"text/csv;charset=utf-8"});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url; a.download = nombre;
+  document.body.appendChild(a); a.click(); a.remove();
+  URL.revokeObjectURL(url);
+}
+function descargarCSVKeywords(){
+  const p = pieza(); const d = p && p.adsData; if(!d){ toast("Sin campaña generada"); return; }
+  const camp = d.nombre || p.nombre || "Campaña";
+  const filas = [["Campaign","Ad Group","Keyword","Criterion Type"]];
+  (d.grupos||[]).forEach(g => {
+    (g.keywords||[]).forEach(k => filas.push([camp, g.nombre, k.t, k.tipo==="frase" ? "Phrase" : "Exact"]));
+    // Negativas del grupo: en frase, para bloquear cualquier búsqueda que las contenga.
+    (g.negativas||[]).forEach(n => filas.push([camp, g.nombre, n, "Negative Phrase"]));
+  });
+  // Negativas de campaña (sin grupo): protegen toda la campaña.
+  (d.negativas||[]).forEach(n => filas.push([camp, "", n, "Negative Phrase"]));
+  _descargarCSV(slugify(camp)+"-keywords.csv", filas);
+  toast("CSV de keywords descargado");
+}
+function descargarCSVAnuncios(){
+  const p = pieza(); const d = p && p.adsData; if(!d){ toast("Sin campaña generada"); return; }
+  const camp = d.nombre || p.nombre || "Campaña";
+  const maxT = Math.min(15, Math.max(...(d.grupos||[]).map(g => (g.titulares||[]).length), 0));
+  const maxD = Math.min(4, Math.max(...(d.grupos||[]).map(g => (g.descripciones||[]).length), 0));
+  const cab = ["Campaign","Ad Group"];
+  for(let i=1;i<=maxT;i++) cab.push("Headline "+i);
+  for(let i=1;i<=maxD;i++) cab.push("Description "+i);
+  cab.push("Path 1","Path 2","Final URL");
+  const filas = [cab];
+  (d.grupos||[]).forEach(g => {
+    const f = [camp, g.nombre];
+    for(let i=0;i<maxT;i++) f.push((g.titulares||[])[i]||"");
+    for(let i=0;i<maxD;i++) f.push((g.descripciones||[])[i]||"");
+    f.push(g.path1||"", g.path2||"", d.urlFinal||"");
+    filas.push(f);
+  });
+  _descargarCSV(slugify(camp)+"-anuncios.csv", filas);
+  toast("CSV de anuncios descargado");
+}
 
 function abrirImportar(){ document.getElementById("import-html").value=""; document.getElementById("modal-import").classList.add("show"); }
 function ejecutarImportar(){
@@ -5101,6 +5185,7 @@ const PLANTILLAS = {
 // Formato Universal (libre) muestra todas. Así las plantillas SIEMPRE concuerdan
 // con el formato elegido arriba (Email→Email, Banner→Display, Post→LinkedIn/Facebook).
 const GRUPOS_PLANTILLA_POR_CAT = {
+  "Ads":            [],
   "Email":          ["Email"],
   "Banners":        ["Google Display"],
   "Post":           ["LinkedIn", "Facebook"],
@@ -5201,6 +5286,7 @@ const CAT_COLOR = { "Email":"#1c73cb", "Banners":"#149a9a", "Formato Libre":"#b3
 // Categoría de una pieza según su formato (para stats y la columna Tipo).
 function categoriaDe(formato){
   if(formato==="email"||formato==="invitacion") return "Email";
+  if(formato==="ads") return "Ads";
   if(formato==="libre") return "Formato Libre";
   if(formato && formato.indexOf("display-")===0) return "Banners";
   if(formato==="linkedin" || (formato && (formato.indexOf("linkedin-")===0 || formato.indexOf("fb-")===0))) return "Post";
@@ -5248,7 +5334,7 @@ function tiempoRel(ts){
   const w=Math.floor(d/7); if(w<5) return "hace "+w+" semana"+(w!==1?"s":"");
   return new Date(ts).toLocaleDateString("es-CL",{day:"2-digit",month:"short"});
 }
-const CHIP_CLASE = { "Email":"email", "Banners":"display", "Post":"post", "Formato Libre":"libre", "Ads":"post", "Otro":"libre" };
+const CHIP_CLASE = { "Email":"email", "Banners":"display", "Post":"post", "Formato Libre":"libre", "Ads":"ads", "Otro":"libre" };
 const CHIP_TXT   = { "Email":"EMAIL", "Banners":"DISPLAY", "Post":"POST", "Formato Libre":"LIBRE", "Ads":"ADS", "Otro":"LIBRE" };
 const CAT_ICO    = { "Email":"email", "Banners":"grid", "Post":"compartir", "Formato Libre":"documento", "Ads":"buscar", "Otro":"documento" };
 const CAT_TINTE  = { "Email":"#e7f0fb", "Banners":"#e4f6f6", "Post":"#eef1fb", "Formato Libre":"#f7e6f4", "Ads":"#eef1fb", "Otro":"#eef1fb" };
@@ -5402,6 +5488,7 @@ function nuevaCreatividadMenu(ev, prId){
     m.innerHTML = `<button onclick="crearDesde('email')">${svgIcon("email",{size:"15px"})} Email</button>
       <button onclick="crearDesde('display-300x250')">${svgIcon("grid",{size:"15px"})} Banner Display</button>
       <button onclick="crearDesde('linkedin-post')">${svgIcon("compartir",{size:"15px"})} Post RRSS</button>
+      <button onclick="crearDesde('ads')">${svgIcon("buscar",{size:"15px"})} Google Search Ads</button>
       <button onclick="crearDesde('libre')">${svgIcon("documento",{size:"15px"})} Formato libre</button>`;
     document.body.appendChild(m);
   }
@@ -5598,7 +5685,7 @@ function crearDesde(formato){
   // Formatos visuales de tamaño fijo → modelo de capas (colección). Documentos → bloques.
   if(cat === "Banners"){ crearComposicion("display-desktop"); return; }
   if(cat === "Post"){ crearComposicion("social"); return; }
-  crearPieza(formato, `${cat} ${pr.piezas.length+1}`);
+  crearPieza(formato, `${cat==="Ads" ? "Campaña Search" : cat} ${pr.piezas.length+1}`);
   document.getElementById("galeria").classList.remove("show");
   activarPieza(proyecto.activa);
 }
@@ -6138,13 +6225,16 @@ function catalogoBloquesParaIA(){
     return { tipo, nombre: def.nombre, campos };
   }).filter(Boolean);
 }
-// Dos productos: 'email' (bloques) y 'banner' (colección Display por zonas).
+// Tres productos: 'email' (bloques), 'banner' (colección Display por zonas)
+// y 'ads' (campaña de Google Search: grupos + keywords + anuncios RSA).
 let iaFormato = "email";
 function iaSetFormato(f){
-  iaFormato = (f==="banner") ? "banner" : "email";
+  iaFormato = (f==="banner") ? "banner" : (f==="ads") ? "ads" : "email";
   document.getElementById("ia-formato").value = iaFormato;
   document.querySelectorAll("#ia-formato-seg button").forEach(b => b.classList.toggle("on", b.dataset.fmt===iaFormato));
   const tw = document.getElementById("ia-tono-wrap"); if(tw) tw.style.display = (iaFormato==="email") ? "" : "none";
+  // En Search no hay fotos: la campaña es 100% texto.
+  const fw = document.getElementById("ia-fotos-wrap"); if(fw) fw.style.display = (iaFormato==="ads") ? "none" : "";
 }
 /* Flujo por pasos del Asistente IA (1 Producto · 2 Brief · 3 Resultado). */
 let iaPaso = 1;
@@ -6182,7 +6272,10 @@ function iaSetTono(t){
   document.querySelectorAll("#ia-tono-seg button").forEach(b => b.classList.toggle("on", b.dataset.tono===tono));
 }
 function abrirIA(){
-  iaSetFormato("email");
+  // Preselecciona el producto según dónde estés (en /ads-ia propone Search, etc.).
+  const enEditor = !document.getElementById("galeria").classList.contains("show");
+  const sec = enEditor && (typeof rutaDeProducto==="function") ? rutaDeProducto(pieza()) : null;
+  iaSetFormato(sec==="/ads-ia" ? "ads" : sec==="/gdn-ia" ? "banner" : "email");
   const ms = document.getElementById("ia-marca");
   const marcas = workspace.marcas||[];
   ms.innerHTML = (marcas.length ? "" : `<option value="">— Sin marca (crea una en Marcas) —</option>`) +
@@ -6211,11 +6304,13 @@ async function generarConIA(){
   const marca = (workspace.marcas||[]).find(m => m.id === document.getElementById("ia-marca").value) || null;
   const M = marca ? normalizarMarca(marca) : null;
   const btn = document.getElementById("ia-btn"); const est = document.getElementById("ia-estado");
-  btn.disabled = true; est.textContent = `Generando ${producto==='banner'?'banner':'email'} para «${M ? M.nombre : 'sin marca'}»…`; est.className = "ia-estado loading";
+  btn.disabled = true; est.textContent = `Generando ${producto==='banner'?'banner':producto==='ads'?'campaña de Google Search':'email'} para «${M ? M.nombre : 'sin marca'}»…`; est.className = "ia-estado loading";
   // Candidatas para la IA. Si elegiste fotos a mano, se usan SOLO esas; si no, toda la biblioteca + las del bucket R2 (sin logos/íconos).
   const fotosElegidas = _iaFotos.length > 0;
   let imagenes;
-  if(fotosElegidas){
+  if(producto==="ads"){
+    imagenes = [];   // una campaña Search es 100% texto: sin fotos
+  } else if(fotosElegidas){
     imagenes = _iaFotos.map(u => { const im=(workspace.imagenes||[]).find(x=>x.url===u); return { url:u, nombre: im?im.nombre:"" }; });
   } else {
     imagenes = (workspace.imagenes||[]).filter(i => !esLogoOIcono(i)).map(i => ({ url:i.url, nombre:i.nombre }));
@@ -6261,7 +6356,7 @@ async function generarConIA(){
       body: JSON.stringify({
         producto,
         brief: { que, accion, gancho, refs, ctaUrl, tipo, notas },
-        formato: producto==="email" ? "email" : "display-300x250",
+        formato: producto==="email" ? "email" : producto==="ads" ? "ads" : "display-300x250",
         marca: M ? { nombre:M.nombre, empresa:M.empresa, primary:M.primary, secondary:M.secondary, cta:M.cta, ctaText:M.ctaText, text:M.text, bg:M.bg, accent1:M.accent1, accent2:M.accent2, fontTitulo:M.fontTitulo, fontCuerpo:M.fontCuerpo, logoUrl:M.logo, negocio:M.negocio, tono:M.tono, eslogan:M.eslogan, publico:M.publico, productos:M.productos, usar:M.usar, evitar:M.evitar, disclaimer:M.disclaimer } : null,
         imagenes,
         catalogo: producto==="email" ? catalogoBloquesParaIA() : null
@@ -6274,6 +6369,7 @@ async function generarConIA(){
       est.className = "ia-estado err"; btn.disabled = false; return;
     }
     if(producto==="banner") insertarBannerIA(data, marca);
+    else if(producto==="ads") insertarAdsIA(data, marca);
     else insertarPiezaIA(data, "email", marca);
     const pz=pieza();
     if(pz && producto==="email" && Array.isArray(pz.canvas)){
@@ -6326,7 +6422,7 @@ async function generarConIA(){
     }
     persistir(); if(esComposicion(pz)) renderTablero(); else renderCanvas();
     cerrarModal("ia");
-    toast("Pieza generada por Char-B (IA) — edítala a tu gusto");
+    toast(producto==="ads" ? "Campaña de Search lista — revísala y exporta el CSV" : "Pieza generada por Char-B (IA) — edítala a tu gusto");
   }catch(e){ est.textContent = "Sin conexión: " + (e.message||e); est.className = "ia-estado err"; }
   finally{ btn.disabled = false; }
 }
@@ -6413,6 +6509,38 @@ function insertarBannerIA(data, marca){
   cambiarPanelTab("diseno");
   persistir();
 }
+// Google Search: la IA devuelve la campaña estructurada (grupos por intención,
+// keywords exacta/frase, negativas y anuncios RSA). Se guarda ÍNTEGRA en
+// p.adsData (fuente de verdad del CSV de exportación) y además se pinta en el
+// lienzo como bloques legibles para revisarla y retocar el copy visualmente.
+const kwVisible = k => k.tipo === "frase" ? `"${k.t}"` : `[${k.t}]`;
+function insertarAdsIA(data, marca){
+  asegurarProyectoIA();
+  const M = marca ? normalizarMarca(marca) : null;
+  const tema = M
+    ? { font:M.fontCuerpo||"Inter", fontTitulo:M.fontTitulo||"Inter", primary:M.primary, text:M.text, bg:"#ffffff", bgPagina:"", ancho:"", radio:"0", gap:"0", marcaId:M.id }
+    : { font:"Inter", primary:"#1c73cb", text:"#1a1a1a", bg:"#ffffff", bgPagina:"", ancho:"", radio:"0", gap:"0" };
+  const canvas = [];
+  const add = (tipo, datos) => canvas.push(mk(tipo, datos));
+  const grupos = data.grupos || [];
+  add("texto", { titulo:String(data.nombre||"Campaña Google Search"), contenido:`Campaña de Google Search · ${grupos.length} grupo${grupos.length!==1?"s":""} de anuncios · solo concordancia exacta [ ] y de frase " " (nada de amplia).${data.urlFinal?` Landing: ${data.urlFinal}`:""}`, tamano:"24", negrita:true });
+  grupos.forEach((g, i) => {
+    add("texto", { titulo:`Grupo ${i+1} · ${g.nombre}`, contenido:[g.intencion?`Intención: ${g.intencion}`:"", g.razonamiento||""].filter(Boolean).join(" — "), tamano:"18", negrita:true });
+    add("tabla", { filasTexto: "Keyword | Concordancia\n" + (g.keywords||[]).map(k=>`${kwVisible(k)} | ${k.tipo==="frase"?"Frase":"Exacta"}`).join("\n"), primeraFilaHeader:true, bordes:true, radio:"0" });
+    add("tabla", { filasTexto: "Titulares (máx 30 caract.) | Largo\n" + (g.titulares||[]).map(t=>`${t} | ${t.length}`).join("\n"), primeraFilaHeader:true, bordes:true, radio:"0" });
+    add("tabla", { filasTexto: "Descripciones (máx 90 caract.) | Largo\n" + (g.descripciones||[]).map(d=>`${d} | ${d.length}`).join("\n"), primeraFilaHeader:true, bordes:true, radio:"0" });
+    if((g.negativas||[]).length) add("texto", { titulo:"Negativas del grupo", contenido:g.negativas.join(" · "), tamano:"14" });
+    if(g.path1||g.path2) add("texto", { contenido:`Ruta visible: ${(data.urlFinal||"tusitio.cl").replace(/^https?:\/\//,"").split("/")[0]}/${g.path1||""}${g.path2?"/"+g.path2:""}` });
+    add("divisor", {});
+  });
+  if((data.negativas||[]).length) add("alert", { tipo:"warning", titulo:"Negativas de campaña (impórtalas también)", mensaje:data.negativas.join(" · ") });
+  const p = { id:uid(), nombre:String(data.nombre||"Campaña Search"), campana:"General", formato:"ads", canvas, tema,
+    adsData: { nombre:data.nombre, urlFinal:data.urlFinal||"", grupos, negativas:data.negativas||[] } };
+  proyecto.piezas.push(p); proyecto.activa = p.id;
+  document.getElementById("galeria").classList.remove("show");
+  activarPieza(p.id);
+  persistir();
+}
 function renderMarcaSelector(){
   const sel=document.getElementById("dz-marca"); if(!sel) return;
   const ms=workspace.marcas||[];
@@ -6470,7 +6598,7 @@ const RUTAS_PRODUCTO = {
   "/gdn-ia":   { tipo:"display-300x250",   nombre:"Banner Display · Char-B" },
   "/free":     { tipo:"libre",             nombre:"Estilo Libre" },
   "/post-ia":  { pronto:true,              nombre:"Post RRSS" },
-  "/ads-ia":   { pronto:true,              nombre:"Google Search Ads" },
+  "/ads-ia":   { tipo:"ads",               nombre:"Google Search Ads" },
 };
 const RUTAS_MENU = {
   "/proyectos":     () => dashVista("proyectos"),
@@ -6526,6 +6654,7 @@ function rutaDeProducto(p){
   if(esComposicion(p) || esSetPieza(p)) return "/gdn-ia";
   const f = p.formato;
   if(f==="email") return "/email-ia";
+  if(f==="ads") return "/ads-ia";
   if(f==="libre") return "/free";
   if(/^display|^linkedin|^fb-/.test(String(f||""))) return "/gdn-ia";
   return "/free";   // invitación y otros documentos → lienzo abierto
