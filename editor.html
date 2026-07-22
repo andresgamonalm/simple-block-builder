@@ -1236,10 +1236,6 @@ button,input,select,textarea{font-family:inherit;}
       <span class="crumb-pieza crumb-edit" id="crumb-pieza" onclick="renombrarPiezaActual()" title="Clic para renombrar la creatividad">Creatividad</span>
       <span id="ed-chip"></span>
       <button class="tb-btn icon-only" onclick="nuevaPiezaPrompt()" title="Nueva creatividad en este proyecto"><span class="ico" data-ic="mas"></span></button>
-      <div class="user-chip" id="user-chip" style="display:none;">
-        <span class="em" id="user-email"></span>
-        <button onclick="cerrarSesion()" title="Cerrar sesión"><span class="ico" data-ic="salir"></span></button>
-      </div>
     </div>
     <div class="ed-right">
       <span class="sync-status" id="sync-status" title="Estado de guardado en la nube">—</span>
@@ -5014,7 +5010,10 @@ function ejecutarImportar(){
   activarPieza(p.id);
   toast(`Importados ${nuevos.length} bloque${nuevos.length>1?"s":""}`);
 }
-function cerrarModal(c){ document.getElementById("modal-"+c).classList.remove("show"); }
+function cerrarModal(c){ document.getElementById("modal-"+c).classList.remove("show"); _remountTrasModal(); }
+// Si un contenido compartido (marcas/imágenes) estaba en un modal y el dashboard
+// sigue visible, re-móntalo en su página al cerrar.
+function _remountTrasModal(){ const g=document.getElementById("galeria"); if(g && g.classList.contains("show")) renderGaleria(); }
 
 // ── Plantillas editables (registro) ─────────────────────────────────────
 // Cada plantilla define un formato + una lista de bloques [tipo, overrides].
@@ -6541,8 +6540,8 @@ aplicarModoDispositivo();
 sincronizarConNube();   // carga/sube la copia durable en D1 sin bloquear la UI
 window.matchMedia("(max-width:820px)").addEventListener("change", aplicarModoDispositivo);
 
-document.querySelectorAll(".modal-bg").forEach(m => { m.addEventListener("click", (e) => { if(e.target===m) m.classList.remove("show"); }); });
-document.addEventListener("keydown", (e) => { if(e.key==="Escape") document.querySelectorAll(".modal-bg.show").forEach(m => m.classList.remove("show")); });
+document.querySelectorAll(".modal-bg").forEach(m => { m.addEventListener("click", (e) => { if(e.target===m){ m.classList.remove("show"); _remountTrasModal(); } }); });
+document.addEventListener("keydown", (e) => { if(e.key==="Escape"){ const abiertos=document.querySelectorAll(".modal-bg.show"); if(abiertos.length){ abiertos.forEach(m => m.classList.remove("show")); _remountTrasModal(); } } });
 
 // Atajos del editor: deshacer/rehacer y borrar el bloque seleccionado.
 document.addEventListener("keydown", (e) => {
