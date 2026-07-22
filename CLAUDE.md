@@ -196,6 +196,30 @@ PROHIBIDA), negativas razonadas** y anuncios RSA con límites reales.
 - Nota: si el usuario edita los bloques del lienzo, el CSV sigue saliendo de `p.adsData` (la campaña generada); regenerar con Char-B actualiza ambos.
 - Verificado con Playwright (30/30 PASS, mock `producto:'ads'` en el server de prueba).
 
+## Asistente CAMPAÑA-PRIMERO — jul-2026 (ESTADO ACTUAL — no rehacer)
+Decisión (razonada con el usuario, a raíz de "réplica de AdWords / MAX"): NO se replica
+AdWords (sin presupuestos/pujas — la app no publica en Google); lo que se adopta es el
+modelo **campaña-primero**: la unidad de trabajo es LA CAMPAÑA, no el formato.
+- **Asistente IA paso 1**: ya no hay selector de UN producto — hay **checks multi**
+  (`#ia-piezas-seg`, estado `iaPiezas={email,banner,ads}`, `iaTogglePieza`/`iaPintaPiezas`;
+  nunca 0 marcadas). `iaSetFormato(f)` queda como compat de selección única (la usan los
+  deep-links). `abrirIA()`: en sección → SU pieza sola; desde dashboard/free → las 3 marcadas.
+  Tipo-de-email visible si email✓; fotos visibles si email✓ o banner✓. Se eliminó el hidden
+  `#ia-formato`.
+- **Backend `modo:'concepto'`** (`ia.js`): `{ modo:'concepto', brief, marca }` →
+  `{ nombre, concepto:{idea, titular(sin punto, ≤7 palabras), mensajes[≤4]} }`. Director
+  creativo define UNA idea multicanal; gancho exacto; usa `voorMarca`+`reglasBrief`+refs.
+- **`generarConIA` = orquestador**: con 2+ piezas pide primero el CONCEPTO, lo inyecta en
+  `brief.notas` ("CONCEPTO DE CAMPAÑA...") de CADA generador (email/banner/ads sin cambios),
+  y **crea un proyecto propio** `"Campaña · <nombre>"` (proyecto = campaña) donde caen todas
+  las piezas. Genera en orden email→banner→ads; si una falla, sigue con las demás y avisa
+  (`fallas[]`); solo aborta si fallan todas. Biblioteca de fotos se junta UNA vez (no por pieza).
+- **Tamaños MAX**: FORMATOS suma `display-1200x628` (1.91:1) y `display-1200x1200`
+  (recursos de imagen de Performance Max / Demand Gen) y `SET_DISPLAY_DESKTOP` los incluye
+  (11 tamaños; sets viejos no se tocan, los nuevos los traen).
+- Verificado con Playwright: veri-campana.js 17/17 + veri-ads.js 30/30 (mocks de
+  concepto/email/banner/ads en el server de prueba).
+
 ## Roadmap / pendientes
 **Pendientes activos (jun-2026):** (1) confirmar/cerrar la **franja blanca en verticales** (esperando captura del caso exacto); (2) **bloques más ricos** para email (features con ícono en círculo de color, secciones con fondo, hero con degradado, tarjetas con sombra — SIN redondeo por defecto); (3) afinar, si se pide, qué tipografías/recursos extra muestran **/gdn-ia** y **/free**; (4) encender **/post-ia** y **/ads-ia** cuando toque.
 0. ✅ **(a) PLANTILLAS POR TIPO DE EMAIL — HECHO.** El nuevo `generarEmail` (ia.js) pide a la IA **solo el copy estructurado** `{ nombre, titular, intro, oferta, beneficios:[{icono,titulo,texto}]×3, cierre, cta, imagen }` y el **código arma el esqueleto** según `brief.tipo`: **comercial** = hero(titular sobre foto) → alert(oferta) → texto(intro) → features → espaciador → cta; **corporativo/informativo** = hero → texto(intro) → features → divisor → texto(cierre) → cta (sin alert agresivo); sin foto → título de texto en vez de hero. Íconos validados/distintos (lista `ICONOS_VALIDOS`), titulares sin punto (`sinPuntoFinal`), **un solo CTA al final**. Más rápido (maxTokens 2048, sin pedir maquetación). El cliente (`generarConIA`) ya no duplica fotos (la red de seguridad solo inserta hero si NO hay ningún bloque visual). Verificado con Playwright (10/10 PASS). **Pendiente (b):** bloques más ricos (features con ícono en círculo de color, secciones con fondo, hero con degradado, tarjetas con sombra) — SIN redondeo por defecto. Idea futura: pedir 1-2 emails "bien diseñados" como referencia para clonar el estándar.

@@ -163,6 +163,37 @@ async function generar({ request, env }) {
     return json({ ok: false, error: 'Dime qué necesitas (el brief está vacío).' }, 400);
   }
 
+  // Modo "concepto": define UNA idea de campaña (nombre, titular maestro, mensajes
+  // clave) que después guía la generación de cada pieza (email + banners + search),
+  // para que toda la campaña diga lo mismo con el mismo vocabulario (campaña-primero).
+  if (body.modo === 'concepto') {
+    const mk = body.marca || null;
+    const refsTxt2 = await leerReferencias(brief.refs);
+    const prompt = [
+      `Eres director creativo de ${mk ? (mk.nombre || mk.empresa) : 'la marca'}. Define el CONCEPTO de una campaña multicanal (email + banners display + anuncios de Google Search).`,
+      'Devuelve EXCLUSIVAMENTE este JSON (sin texto extra):',
+      '{ "nombre": "nombre corto de la campaña (máx 5 palabras)", "idea": "la idea central en 1 frase", "titular": "titular maestro, máx 7 palabras, SIN punto final", "mensajes": [ "3 mensajes clave, máx 10 palabras cada uno" ] }',
+      'Reglas: español de Chile; el concepto debe funcionar igual de bien en un email, un banner chico y un anuncio de texto; respeta el gancho EXACTO si existe (no inventes cifras ni fechas).',
+      'VOZ DE MARCA:',
+      voorMarca(mk),
+      refsTxt2 ? 'CONTEXTO de las URLs de referencia (úsalo para el vocabulario y la propuesta de valor):\n' + refsTxt2 : '',
+      'BRIEF:',
+      reglasBrief(brief)
+    ].filter(Boolean).join('\n');
+    const { parsed, error } = await llamarGemini(env, prompt, 1024);
+    if (error) return json({ ok: false, error }, 500);
+    const c = parsed || {};
+    return json({
+      ok: true,
+      nombre: String(c.nombre || brief.que).replace(/\s+/g, ' ').trim().slice(0, 60),
+      concepto: {
+        idea: String(c.idea || '').replace(/\s+/g, ' ').trim().slice(0, 200),
+        titular: String(c.titular || '').replace(/\s*[.。]+\s*$/, '').replace(/\s+/g, ' ').trim().slice(0, 80),
+        mensajes: (Array.isArray(c.mensajes) ? c.mensajes : []).map(m => String(m).replace(/\s+/g, ' ').trim().slice(0, 120)).filter(Boolean).slice(0, 4)
+      }
+    });
+  }
+
   const producto = (body.producto === 'banner') ? 'banner' : (body.producto === 'ads') ? 'ads' : 'email';
   const marca = body.marca || null;
   const imagenes = Array.isArray(body.imagenes) ? body.imagenes.slice(0, 40) : [];

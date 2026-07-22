@@ -1470,15 +1470,16 @@ button,input,select,textarea{font-family:inherit;}
       <span class="ia-paso-tag" data-p="3"><i>3</i> Resultado</span>
     </div>
     <div id="ia-paso-1">
-      <p>Elige tu marca y el producto: Char-B crea la pieza en la <b>voz de tu marca</b> (colores, logo, tono), lista para ajustar.</p>
+      <p>Elige tu marca y marca las piezas: con <b>un solo brief</b>, Char-B genera toda la campaña en la <b>voz de tu marca</b>, con el mismo mensaje en cada pieza.</p>
       <label class="ia-label">Marca <span class="ia-req">·obligatoria</span></label>
       <select id="ia-marca" class="dz-inp"></select>
-      <label class="ia-label">¿Qué quieres crear?</label>
-      <div class="ia-seg" id="ia-formato-seg">
-        <button type="button" data-fmt="email" class="on" onclick="iaSetFormato('email')"><span class="ico" data-ic="email"></span> Email Marketing</button>
-        <button type="button" data-fmt="banner" onclick="iaSetFormato('banner')"><span class="ico" data-ic="grid"></span> Banners Display</button>
-        <button type="button" data-fmt="ads" onclick="iaSetFormato('ads')"><span class="ico" data-ic="buscar"></span> Google Search Ads</button>
-      </div><input type="hidden" id="ia-formato" value="email">
+      <label class="ia-label">¿Qué piezas necesita tu campaña? <small>(marca una o varias)</small></label>
+      <div class="ia-seg" id="ia-piezas-seg">
+        <button type="button" data-p="email" class="on" onclick="iaTogglePieza('email')"><span class="ico" data-ic="email"></span> Email</button>
+        <button type="button" data-p="banner" onclick="iaTogglePieza('banner')"><span class="ico" data-ic="grid"></span> Banners Display</button>
+        <button type="button" data-p="ads" onclick="iaTogglePieza('ads')"><span class="ico" data-ic="buscar"></span> Google Search</button>
+      </div>
+      <p id="ia-piezas-hint" style="font-size:12px;color:#8890a8;margin:6px 0 0;">Con 2 o más piezas, Char-B define primero <b>un concepto de campaña</b> y todas siguen la misma idea.</p>
       <div id="ia-tono-wrap">
         <label class="ia-label">Tipo de email</label>
         <div class="ia-seg" id="ia-tono-seg">
@@ -3345,7 +3346,10 @@ const FORMATOS = {
   "display-970x90":  { label:"970×90 Large Leaderboard",  badge:"Display",   ancho:970,  alto:90,   txt:"Large Leaderboard 970×90." },
   "display-468x60":  { label:"468×60 Banner",             badge:"Display",   ancho:468,  alto:60,   txt:"Banner 468×60." },
   "display-250x250": { label:"250×250 Square",            badge:"Display",   ancho:250,  alto:250,  txt:"Square 250×250." },
-  "display-200x200": { label:"200×200 Small Square",      badge:"Display",   ancho:200,  alto:200,  txt:"Small Square 200×200." }
+  "display-200x200": { label:"200×200 Small Square",      badge:"Display",   ancho:200,  alto:200,  txt:"Small Square 200×200." },
+  // Tamaños de imagen que pide Performance Max / Demand Gen (recursos de campaña MAX).
+  "display-1200x628": { label:"1200×628 MAX Apaisado",    badge:"Display",   ancho:1200, alto:628,  txt:"Imagen apaisada 1.91:1 para Performance Max / Demand Gen." },
+  "display-1200x1200":{ label:"1200×1200 MAX Cuadrado",   badge:"Display",   ancho:1200, alto:1200, txt:"Imagen cuadrada para Performance Max / Demand Gen." }
 };
 function esFormatoFijo(f){ const x = FORMATOS[f]; return !!(x && x.alto > 0); }
 // HINTS derivado (compatibilidad con código existente: badge + txt).
@@ -4264,7 +4268,7 @@ ${liveScript}
    proporción: anchos→fila, el resto→columna; un auto-ajuste (scale) evita
    que nada se desborde. Se exporta uno o todos.
    ═══════════════════════════════════════════════════════════════ */
-const SET_DISPLAY_DESKTOP = ["display-300x250","display-336x280","display-728x90","display-970x90","display-300x600","display-160x600","display-250x250","display-200x200","display-468x60"];
+const SET_DISPLAY_DESKTOP = ["display-300x250","display-336x280","display-728x90","display-970x90","display-300x600","display-160x600","display-250x250","display-200x200","display-468x60","display-1200x628","display-1200x1200"];
 const SET_SOCIAL = ["linkedin-post","fb-square","linkedin-link","fb-post","fb-story","linkedin"];
 const COLECCIONES = {
   "display-desktop": { fmts: SET_DISPLAY_DESKTOP, master: "display-300x250", nombre: "Display Desktop" },
@@ -6225,16 +6229,31 @@ function catalogoBloquesParaIA(){
     return { tipo, nombre: def.nombre, campos };
   }).filter(Boolean);
 }
-// Tres productos: 'email' (bloques), 'banner' (colección Display por zonas)
-// y 'ads' (campaña de Google Search: grupos + keywords + anuncios RSA).
-let iaFormato = "email";
+// Campaña-primero: el asistente ya no elige UN formato sino que marca con checks
+// qué PIEZAS genera de un mismo brief — 'email' (bloques), 'banner' (colección
+// Display por zonas) y 'ads' (Google Search: grupos + keywords + anuncios RSA).
+// Con 2+ piezas se pide antes un CONCEPTO de campaña que guía a todas.
+let iaPiezas = { email:true, banner:false, ads:false };
+function iaTogglePieza(p){
+  if(!(p in iaPiezas)) return;
+  iaPiezas[p] = !iaPiezas[p];
+  if(!iaPiezas.email && !iaPiezas.banner && !iaPiezas.ads) iaPiezas[p] = true;   // al menos una
+  iaPintaPiezas();
+}
+// Compat: selección única (la usan los deep-links por sección).
 function iaSetFormato(f){
-  iaFormato = (f==="banner") ? "banner" : (f==="ads") ? "ads" : "email";
-  document.getElementById("ia-formato").value = iaFormato;
-  document.querySelectorAll("#ia-formato-seg button").forEach(b => b.classList.toggle("on", b.dataset.fmt===iaFormato));
-  const tw = document.getElementById("ia-tono-wrap"); if(tw) tw.style.display = (iaFormato==="email") ? "" : "none";
-  // En Search no hay fotos: la campaña es 100% texto.
-  const fw = document.getElementById("ia-fotos-wrap"); if(fw) fw.style.display = (iaFormato==="ads") ? "none" : "";
+  iaPiezas = { email:f==="email", banner:f==="banner", ads:f==="ads" };
+  if(!iaPiezas.email && !iaPiezas.banner && !iaPiezas.ads) iaPiezas.email = true;
+  iaPintaPiezas();
+}
+function iaPintaPiezas(){
+  document.querySelectorAll("#ia-piezas-seg button").forEach(b => b.classList.toggle("on", !!iaPiezas[b.dataset.p]));
+  const tw = document.getElementById("ia-tono-wrap"); if(tw) tw.style.display = iaPiezas.email ? "" : "none";
+  // Search es 100% texto: el campo de fotos solo aplica si hay email o banner.
+  const fw = document.getElementById("ia-fotos-wrap"); if(fw) fw.style.display = (iaPiezas.email || iaPiezas.banner) ? "" : "none";
+  const n = ["email","banner","ads"].filter(k=>iaPiezas[k]).length;
+  const h = document.getElementById("ia-piezas-hint");
+  if(h) h.innerHTML = n>1 ? `Char-B definirá primero <b>un concepto de campaña</b> y las ${n} piezas seguirán la misma idea, en su propio proyecto.` : `Con 2 o más piezas, Char-B define primero <b>un concepto de campaña</b> y todas siguen la misma idea.`;
 }
 /* Flujo por pasos del Asistente IA (1 Producto · 2 Brief · 3 Resultado). */
 let iaPaso = 1;
@@ -6272,10 +6291,14 @@ function iaSetTono(t){
   document.querySelectorAll("#ia-tono-seg button").forEach(b => b.classList.toggle("on", b.dataset.tono===tono));
 }
 function abrirIA(){
-  // Preselecciona el producto según dónde estés (en /ads-ia propone Search, etc.).
+  // Preselección según dónde estés: dentro de una sección propone SU pieza;
+  // desde el dashboard propone la campaña completa (email + banners + search).
   const enEditor = !document.getElementById("galeria").classList.contains("show");
   const sec = enEditor && (typeof rutaDeProducto==="function") ? rutaDeProducto(pieza()) : null;
-  iaSetFormato(sec==="/ads-ia" ? "ads" : sec==="/gdn-ia" ? "banner" : "email");
+  if(sec==="/ads-ia") iaSetFormato("ads");
+  else if(sec==="/gdn-ia") iaSetFormato("banner");
+  else if(sec==="/email-ia") iaSetFormato("email");
+  else { iaPiezas = { email:true, banner:true, ads:true }; iaPintaPiezas(); }
   const ms = document.getElementById("ia-marca");
   const marcas = workspace.marcas||[];
   ms.innerHTML = (marcas.length ? "" : `<option value="">— Sin marca (crea una en Marcas) —</option>`) +
@@ -6292,72 +6315,102 @@ function abrirIA(){
 async function generarConIA(){
   const que = (document.getElementById("ia-que").value || "").trim();
   if(!que){ toast("Cuéntame qué necesitas"); return; }
-  const producto = document.getElementById("ia-formato").value;   // email | banner
+  const sel = ["email","banner","ads"].filter(k => iaPiezas[k]);
+  if(!sel.length){ toast("Marca al menos una pieza"); return; }
   const accion = (document.getElementById("ia-objetivo").value || "").trim();
   const gancho = (document.getElementById("ia-gancho").value || "").trim();
   const ctaUrl = (document.getElementById("ia-ctaurl").value || "").trim();
   const tipo = (document.getElementById("ia-tono") || {}).value || "comercial";
-  const notas = (document.getElementById("ia-notas").value || "").trim();
+  let notas = (document.getElementById("ia-notas").value || "").trim();
   // Dos URLs de referencia (opcionales) → solo se leen las que pegues.
   const refs = [document.getElementById("ia-ref1").value, document.getElementById("ia-ref2").value]
     .map(s => (s||"").trim()).filter(s => /^https?:\/\//.test(s)).slice(0,2);
   const marca = (workspace.marcas||[]).find(m => m.id === document.getElementById("ia-marca").value) || null;
   const M = marca ? normalizarMarca(marca) : null;
+  const marcaAPI = M ? { nombre:M.nombre, empresa:M.empresa, primary:M.primary, secondary:M.secondary, cta:M.cta, ctaText:M.ctaText, text:M.text, bg:M.bg, accent1:M.accent1, accent2:M.accent2, fontTitulo:M.fontTitulo, fontCuerpo:M.fontCuerpo, logoUrl:M.logo, negocio:M.negocio, tono:M.tono, eslogan:M.eslogan, publico:M.publico, productos:M.productos, usar:M.usar, evitar:M.evitar, disclaimer:M.disclaimer } : null;
   const btn = document.getElementById("ia-btn"); const est = document.getElementById("ia-estado");
-  btn.disabled = true; est.textContent = `Generando ${producto==='banner'?'banner':producto==='ads'?'campaña de Google Search':'email'} para «${M ? M.nombre : 'sin marca'}»…`; est.className = "ia-estado loading";
-  // Candidatas para la IA. Si elegiste fotos a mano, se usan SOLO esas; si no, toda la biblioteca + las del bucket R2 (sin logos/íconos).
+  const esCampana = sel.length > 1;
+  btn.disabled = true; est.className = "ia-estado loading";
+  est.textContent = esCampana ? `Armando la campaña (${sel.length} piezas) para «${M ? M.nombre : 'sin marca'}»…` : `Generando para «${M ? M.nombre : 'sin marca'}»…`;
+  // Biblioteca candidata (solo si hay email/banner). Fotos elegidas a mano mandan;
+  // si no, toda la biblioteca + el bucket R2 (sin logos/íconos).
   const fotosElegidas = _iaFotos.length > 0;
-  let imagenes;
-  if(producto==="ads"){
-    imagenes = [];   // una campaña Search es 100% texto: sin fotos
-  } else if(fotosElegidas){
-    imagenes = _iaFotos.map(u => { const im=(workspace.imagenes||[]).find(x=>x.url===u); return { url:u, nombre: im?im.nombre:"" }; });
-  } else {
-    imagenes = (workspace.imagenes||[]).filter(i => !esLogoOIcono(i)).map(i => ({ url:i.url, nombre:i.nombre }));
-    try{
-      const rr = await fetch("/api/upload?list=1",{credentials:"include"});
-      if(rr.ok){ const dd=await rr.json(); if(dd&&dd.ok&&Array.isArray(dd.objects)){
-        const urls=new Set(imagenes.map(i=>i.url));
-        dd.objects.forEach(o=>{ const nombre=String(o.key||"").split("/").pop().replace(/\.[a-z0-9]+$/i,""); const cand={url:o.url,nombre}; if(!urls.has(o.url) && !esLogoOIcono(cand)) imagenes.push(cand); });
-      }}
-    }catch(e){}
-  }
-  // Sin fotos en la biblioteca → genera una fotografía de fondo con IA (Imagen).
-  if(producto==="banner" && imagenes.length===0){
-    est.textContent = "No hay fotos en tu biblioteca: generando una con IA…";
-    try{
-      const rf = await fetch("/api/ia", { method:"POST", credentials:"include", headers:{ "Content-Type":"application/json" },
-        body: JSON.stringify({ modo:"imagen", brief:{ que }, marca: M ? { nombre:M.nombre, negocio:M.negocio } : null }) });
-      const df = await rf.json().catch(()=>null);
-      if(df && df.ok && df.url){
-        imagenes.push({ url: df.url, nombre: df.nombre || "Fondo IA" });
-        workspace.imagenes = workspace.imagenes || [];
-        workspace.imagenes.push({ id:"img"+Math.random().toString(36).slice(2,9), url:df.url, nombre:df.nombre||"Fondo IA", creado:Date.now(), enR2:true });
-        persistir();
-      }
-    }catch(_){}
-    est.textContent = "Generando con Char-B…";
-  }
-  if(producto==="banner" && imagenes.length){
-    est.textContent = "Mirando tus imágenes…";
-    for(const it of imagenes.slice(0,3)){ const th = await miniaturaIA(it.url, 224); if(th) it.thumb = th; }
-    est.textContent = "Generando con Char-B…";
-  } else if(producto==="email" && imagenes.length && !fotosElegidas){
-    // En email, descarta imágenes muy pequeñas (lado < 300px → suelen ser íconos).
-    est.textContent = "Revisando imágenes…";
-    const lista = imagenes.slice(0,20);
-    const dims = await Promise.all(lista.map(it => dimsImagen(it.url)));
-    imagenes = lista.filter((it,i) => !dims[i] || Math.min(dims[i].w, dims[i].h) >= 300).concat(imagenes.slice(20));
-    est.textContent = "Generando con Char-B…";
+  let biblioteca = [];
+  if(sel.includes("email") || sel.includes("banner")){
+    if(fotosElegidas){
+      biblioteca = _iaFotos.map(u => { const im=(workspace.imagenes||[]).find(x=>x.url===u); return { url:u, nombre: im?im.nombre:"" }; });
+    } else {
+      biblioteca = (workspace.imagenes||[]).filter(i => !esLogoOIcono(i)).map(i => ({ url:i.url, nombre:i.nombre }));
+      try{
+        const rr = await fetch("/api/upload?list=1",{credentials:"include"});
+        if(rr.ok){ const dd=await rr.json(); if(dd&&dd.ok&&Array.isArray(dd.objects)){
+          const urls=new Set(biblioteca.map(i=>i.url));
+          dd.objects.forEach(o=>{ const nombre=String(o.key||"").split("/").pop().replace(/\.[a-z0-9]+$/i,""); const cand={url:o.url,nombre}; if(!urls.has(o.url) && !esLogoOIcono(cand)) biblioteca.push(cand); });
+        }}
+      }catch(e){}
+    }
   }
   try{
+    // 1) Con 2+ piezas: CONCEPTO de campaña primero (una idea que guía todo),
+    //    y la campaña vive en SU propio proyecto (proyecto = campaña).
+    if(esCampana){
+      est.textContent = "Definiendo el concepto de la campaña…";
+      let nombreCampana = "";
+      try{
+        const rc = await fetch("/api/ia", { method:"POST", credentials:"include", headers:{ "Content-Type":"application/json" },
+          body: JSON.stringify({ modo:"concepto", brief:{ que, accion, gancho, refs, notas }, marca: marcaAPI }) });
+        const dc = await rc.json().catch(()=>null);
+        if(dc && dc.ok && dc.concepto){
+          nombreCampana = dc.nombre || "";
+          notas = (notas ? notas + "\n" : "") +
+            `CONCEPTO DE CAMPAÑA (esta pieza es parte de una campaña multicanal: sigue ESTA idea y vocabulario): ` +
+            `Idea: ${dc.concepto.idea}. Titular maestro: "${dc.concepto.titular}". Mensajes clave: ${(dc.concepto.mensajes||[]).join(" · ")}.`;
+        }
+      }catch(_){ /* sin concepto se sigue igual: el brief compartido ya da coherencia */ }
+      const pr = { id:uid(), nombre: "Campaña · " + (nombreCampana || que.split(" ").slice(0,5).join(" ")), creado:Date.now(), piezas:[], activa:null };
+      workspace.proyectos.push(pr); proyecto = pr; proyectoVistoId = pr.id;
+    }
+    // 2) Cada pieza marcada, en orden, con el MISMO brief (+ concepto).
+    const fallas = [];
+    for(const producto of sel){
+    let imagenes = [];
+    if(producto !== "ads"){   // una campaña Search es 100% texto: sin fotos
+      imagenes = biblioteca.map(i => ({ url:i.url, nombre:i.nombre }));
+      // Sin fotos en la biblioteca → genera una fotografía de fondo con IA (Imagen).
+      if(producto==="banner" && imagenes.length===0){
+        est.textContent = "No hay fotos en tu biblioteca: generando una con IA…";
+        try{
+          const rf = await fetch("/api/ia", { method:"POST", credentials:"include", headers:{ "Content-Type":"application/json" },
+            body: JSON.stringify({ modo:"imagen", brief:{ que }, marca: M ? { nombre:M.nombre, negocio:M.negocio } : null }) });
+          const df = await rf.json().catch(()=>null);
+          if(df && df.ok && df.url){
+            imagenes.push({ url: df.url, nombre: df.nombre || "Fondo IA" });
+            biblioteca.push({ url: df.url, nombre: df.nombre || "Fondo IA" });
+            workspace.imagenes = workspace.imagenes || [];
+            workspace.imagenes.push({ id:"img"+Math.random().toString(36).slice(2,9), url:df.url, nombre:df.nombre||"Fondo IA", creado:Date.now(), enR2:true });
+            persistir();
+          }
+        }catch(_){}
+      }
+      if(producto==="banner" && imagenes.length){
+        est.textContent = "Mirando tus imágenes…";
+        for(const it of imagenes.slice(0,3)){ const th = await miniaturaIA(it.url, 224); if(th) it.thumb = th; }
+      } else if(producto==="email" && imagenes.length && !fotosElegidas){
+        // En email, descarta imágenes muy pequeñas (lado < 300px → suelen ser íconos).
+        est.textContent = "Revisando imágenes…";
+        const lista = imagenes.slice(0,20);
+        const dims = await Promise.all(lista.map(it => dimsImagen(it.url)));
+        imagenes = lista.filter((it,i) => !dims[i] || Math.min(dims[i].w, dims[i].h) >= 300).concat(imagenes.slice(20));
+      }
+    }
+    est.textContent = `Generando ${producto==="banner"?"los banners":producto==="ads"?"la campaña de Search":"el email"}…`;
     const r = await fetch("/api/ia", {
       method:"POST", credentials:"include", headers:{ "Content-Type":"application/json" },
       body: JSON.stringify({
         producto,
         brief: { que, accion, gancho, refs, ctaUrl, tipo, notas },
         formato: producto==="email" ? "email" : producto==="ads" ? "ads" : "display-300x250",
-        marca: M ? { nombre:M.nombre, empresa:M.empresa, primary:M.primary, secondary:M.secondary, cta:M.cta, ctaText:M.ctaText, text:M.text, bg:M.bg, accent1:M.accent1, accent2:M.accent2, fontTitulo:M.fontTitulo, fontCuerpo:M.fontCuerpo, logoUrl:M.logo, negocio:M.negocio, tono:M.tono, eslogan:M.eslogan, publico:M.publico, productos:M.productos, usar:M.usar, evitar:M.evitar, disclaimer:M.disclaimer } : null,
+        marca: marcaAPI,
         imagenes,
         catalogo: producto==="email" ? catalogoBloquesParaIA() : null
       })
@@ -6365,8 +6418,8 @@ async function generarConIA(){
     const raw = await r.text();
     let data = {}; try{ data = JSON.parse(raw); }catch(_){}
     if(!r.ok || !data.ok){
-      est.textContent = data.error || (raw ? raw.slice(0,400) : ("Error " + r.status));
-      est.className = "ia-estado err"; btn.disabled = false; return;
+      fallas.push(`${producto}: ${data.error || (raw ? raw.slice(0,200) : "Error " + r.status)}`);
+      continue;   // la campaña sigue con las demás piezas
     }
     if(producto==="banner") insertarBannerIA(data, marca);
     else if(producto==="ads") insertarAdsIA(data, marca);
@@ -6421,8 +6474,15 @@ async function generarConIA(){
       else { (pz.canvas||[]).forEach(b=>{ if(b.tipo==="cta") b.datos.url=ctaUrl; if(b.tipo==="hero"&&b.datos.ctaTexto) b.datos.ctaUrl=ctaUrl; }); }
     }
     persistir(); if(esComposicion(pz)) renderTablero(); else renderCanvas();
+    }   // fin del for por pieza
+    if(fallas.length === sel.length){
+      est.textContent = "No se pudo generar: " + fallas.join(" · ");
+      est.className = "ia-estado err"; btn.disabled = false; return;
+    }
     cerrarModal("ia");
-    toast(producto==="ads" ? "Campaña de Search lista — revísala y exporta el CSV" : "Pieza generada por Char-B (IA) — edítala a tu gusto");
+    if(fallas.length) toast(`Campaña generada con avisos — falló ${fallas.join(" · ")}`);
+    else if(esCampana) toast(`Campaña completa: ${sel.length} piezas con el mismo concepto, en su propio proyecto`);
+    else toast(sel[0]==="ads" ? "Campaña de Search lista — revísala y exporta el CSV" : "Pieza generada por Char-B (IA) — edítala a tu gusto");
   }catch(e){ est.textContent = "Sin conexión: " + (e.message||e); est.className = "ia-estado err"; }
   finally{ btn.disabled = false; }
 }
