@@ -533,8 +533,10 @@ async function generarAds({ env, brief, marca, refsTxt }) {
     '}',
     '',
     'REGLAS DURAS (violarlas invalida la respuesta):',
+    '- "nombre" de la campaña y de cada grupo: LEGIBLES para humanos, con espacios y tildes (ej. "Cotizar seguro auto"), NUNCA-en-formato-slug-con-guiones.',
     '- 2 a 4 grupos de anuncios. Cada grupo = UNA sola intención de búsqueda (no mezcles "cotizar" con "qué es").',
-    '- Por grupo: 5 a 10 keywords. "tipo" SOLO puede ser "exacta" o "frase". La concordancia AMPLIA está PROHIBIDA.',
+    '- Por grupo: 12 a 20 keywords. "tipo" SOLO puede ser "exacta" o "frase". La concordancia AMPLIA está PROHIBIDA.',
+    '- CUBRE las variantes reales de cómo busca la gente dentro de esa MISMA intención: singular/plural, sinónimos, orden distinto, con "online"/"precio"/"chile" cuando aplique. Cantidad con criterio: variantes que alguien escribiría de verdad, no relleno.',
     '- Keywords en minúsculas, sin corchetes ni comillas (el tipo va en "tipo"), 2 a 5 palabras, como la gente busca de verdad (media/larga cola). Nada de keywords de 1 palabra genérica.',
     '- RAZONA las negativas: qué búsquedas parecidas NO queremos pagar (informativas si el grupo es transaccional, "gratis", "empleo", competidores si aplica...). Mínimo 5 negativas de campaña.',
     '- Por grupo: 8 a 12 titulares ÚNICOS de MÁXIMO 30 CARACTERES (cuenta espacios) y 4 descripciones ÚNICAS de MÁXIMO 90 CARACTERES. Incluye la keyword principal en 2-3 titulares, beneficios en otros y llamada a la acción en otros. SIN punto final en titulares. Sin signos de exclamación dobles.',
@@ -550,11 +552,13 @@ async function generarAds({ env, brief, marca, refsTxt }) {
     brief.ctaUrl ? `URL FINAL de los anuncios (landing): ${brief.ctaUrl}` : ''
   ].filter(Boolean).join('\n');
 
-  const { parsed, error } = await llamarGemini(env, prompt, 6144);
+  const { parsed, error } = await llamarGemini(env, prompt, 8192);
   if (error) return json({ ok: false, error }, 500);
 
   // ── Validación dura del lado del servidor ──────────────────────────────
   const clean = s => String(s == null ? '' : s).replace(/\s+/g, ' ').trim();
+  // Si la IA devolvió un nombre-en-slug (sin espacios, con guiones), se hace legible.
+  const legible = s => { s = clean(s); return (!/\s/.test(s) && /-/.test(s)) ? s.replace(/-+/g, ' ') : s; };
   const dedup = arr => { const seen = new Set(); return arr.filter(x => { const k = x.toLowerCase(); if (!k || seen.has(k)) return false; seen.add(k); return true; }); };
   const kwLimpia = s => clean(s).toLowerCase().replace(/^[\[\"'+]+|[\]\"']+$/g, '').trim();
   const path = s => clean(s).toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9-]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 15);
@@ -566,11 +570,11 @@ async function generarAds({ env, brief, marca, refsTxt }) {
       tipo: (k && k.tipo === 'frase') ? 'frase' : 'exacta'   // amplia jamás: cualquier otra cosa cae a exacta
     })).filter(k => k.t);
     const seenK = new Set();
-    const keywords = kws.filter(k => { const key = k.t; if (seenK.has(key)) return false; seenK.add(key); return true; }).slice(0, 12);
+    const keywords = kws.filter(k => { const key = k.t; if (seenK.has(key)) return false; seenK.add(key); return true; }).slice(0, 25);
     const titulares = dedup((Array.isArray(g.titulares) ? g.titulares : []).map(t => sinPuntoFinal(clean(t)).slice(0, 30)).filter(Boolean)).slice(0, 15);
     const descripciones = dedup((Array.isArray(g.descripciones) ? g.descripciones : []).map(d => clean(d).slice(0, 90)).filter(Boolean)).slice(0, 4);
     return {
-      nombre: clean(g.nombre).slice(0, 60) || 'Grupo',
+      nombre: legible(g.nombre).slice(0, 60) || 'Grupo',
       intencion: clean(g.intencion).slice(0, 200),
       razonamiento: clean(g.razonamiento).slice(0, 300),
       keywords, titulares, descripciones,
@@ -583,7 +587,7 @@ async function generarAds({ env, brief, marca, refsTxt }) {
 
   return json({
     ok: true,
-    nombre: clean(parsed.nombre || brief.que).slice(0, 80),
+    nombre: legible(parsed.nombre || brief.que).slice(0, 80),
     urlFinal: clean(brief.ctaUrl || ''),
     grupos,
     negativas: dedup((Array.isArray(parsed.negativas) ? parsed.negativas : []).map(kwLimpia).filter(Boolean)).slice(0, 25)

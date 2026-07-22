@@ -436,6 +436,61 @@ button,input,select,textarea{font-family:inherit;}
 .chip.libre{background:#f7e6f4;color:#b318a3;}
 .chip.post{background:#eef1fb;color:#040764;}
 .chip.ads{background:#eef1fb;color:#040764;}
+/* ── Consola de campaña Google Search (formato ads) ──
+   Diagramación de referencia: la consola de Google Ads (vista general → un tab
+   por grupo de anuncios) + Google Ads Editor (inventarios con contador). */
+.adsc{font-family:"Roboto",Arial,sans-serif;color:#12173d;padding:24px 28px 44px;text-align:left;}
+.adsc-head{display:flex;align-items:flex-start;justify-content:space-between;gap:18px;flex-wrap:wrap;margin-bottom:12px;}
+.adsc-head h1{font-size:22px;font-weight:600;margin:0 0 6px;color:#040764;}
+.adsc-eyebrow{font-size:11px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:#1c73cb;margin-bottom:4px;}
+.adsc-stats{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end;}
+.adsc-stat{background:#eef1f6;border:1px solid #e4e8f0;border-radius:8px;padding:7px 12px;font-size:12.5px;white-space:nowrap;}
+.adsc-stat b{font-weight:600;color:#040764;}
+.adsc-url{font-size:12.5px;color:#5b6178;max-width:560px;display:flex;gap:6px;align-items:baseline;}
+.adsc-url .u{color:#1c73cb;overflow-wrap:anywhere;outline:none;border-radius:4px;padding:0 3px;}
+.adsc-url .u:focus{background:#eef4fb;box-shadow:0 0 0 1px #1c73cb;}
+.adsc-pills{position:sticky;top:0;z-index:6;display:flex;gap:6px;flex-wrap:wrap;background:#fff;padding:10px 0;border-bottom:1px solid #e4e8f0;margin-bottom:18px;}
+.adsc-pill{border:1px solid #e4e8f0;background:#fff;border-radius:999px;padding:7px 14px;font-size:12.5px;font-weight:500;cursor:pointer;color:#12173d;font-family:inherit;}
+.adsc-pill:hover{border-color:#1c73cb;}
+.adsc-pill.on{background:#040764;border-color:#040764;color:#fff;}
+.adsc-pill .n{opacity:.65;font-weight:400;}
+.adsc-grid{display:grid;grid-template-columns:1fr 1fr;gap:18px;align-items:start;}
+@media(max-width:980px){.adsc-grid{grid-template-columns:1fr;}}
+.adsc-card{background:#fff;border:1px solid #e4e8f0;border-radius:10px;padding:16px 18px;}
+.adsc-card h3{margin:0 0 10px;font-size:13px;font-weight:600;color:#040764;display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
+.adsc-card h3 .lim{font-weight:400;color:#5b6178;font-size:11.5px;}
+.adsc-card h3 .adsc-copy{margin-left:auto;}
+.adsc-copy{border:1px solid #e4e8f0;background:#fff;border-radius:7px;padding:4px 10px;font-size:11.5px;cursor:pointer;color:#1c73cb;font-family:inherit;font-weight:500;}
+.adsc-copy:hover{background:#eef1f6;}
+.adsc-intent{background:#eef4fb;border:1px solid #d7e5f6;border-radius:10px;padding:14px 18px;margin-bottom:18px;}
+.adsc-intent .gnm{font-size:17px;font-weight:600;color:#040764;margin:2px 0 4px;}
+.adsc-intent .t{font-size:14px;font-weight:500;color:#12173d;margin:0 0 4px;}
+.adsc-intent .r{font-size:12.5px;color:#5b6178;line-height:1.55;}
+.adsc-kw{display:flex;align-items:center;gap:10px;padding:8px 2px;border-bottom:1px solid #eef1f6;font-size:13.5px;}
+.adsc-kw:last-child{border-bottom:0;}
+.adsc-kw .k{flex:1;min-width:0;overflow-wrap:anywhere;}
+.adsc-tipo{border:0;border-radius:999px;padding:4px 11px;font-size:11px;font-weight:600;cursor:pointer;font-family:inherit;white-space:nowrap;}
+.adsc-tipo.exacta{background:#e7f0fb;color:#1c73cb;}
+.adsc-tipo.frase{background:#e4f6f6;color:#149a9a;}
+.adsc-chips{display:flex;gap:6px;flex-wrap:wrap;}
+.adsc-neg{background:#f7e6f4;color:#b318a3;border-radius:999px;padding:5px 11px;font-size:12px;font-weight:500;}
+.adsc-serp{border:1px solid #e4e8f0;border-radius:10px;padding:14px 16px;margin-bottom:18px;background:#fff;}
+.adsc-serp .tag{font-size:11px;font-weight:600;color:#5b6178;letter-spacing:.06em;text-transform:uppercase;margin-bottom:8px;}
+.adsc-serp .pat{font-size:12px;font-weight:600;color:#12173d;}
+.adsc-serp .ruta{font-size:12.5px;color:#5b6178;margin:2px 0;overflow-wrap:anywhere;}
+.adsc-serp .tit{font-size:17px;color:#1c73cb;font-weight:500;line-height:1.35;margin-bottom:3px;}
+.adsc-serp .desc{font-size:12.5px;color:#4a5069;line-height:1.5;}
+.adsc-item{display:flex;align-items:flex-start;gap:10px;padding:7px 2px;border-bottom:1px solid #eef1f6;font-size:13px;line-height:1.45;}
+.adsc-item:last-child{border-bottom:0;}
+.adsc .tx{outline:none;border-radius:4px;padding:1px 4px;}
+.adsc .tx:focus{background:#eef4fb;box-shadow:0 0 0 1px #1c73cb;}
+.adsc-item .tx{flex:1;min-width:0;overflow-wrap:anywhere;}
+.adsc-cnt{font-size:11px;font-weight:600;border-radius:6px;padding:3px 7px;background:#eef1f6;color:#5b6178;white-space:nowrap;margin-top:1px;}
+.adsc-cnt.mal{background:#f7e6f4;color:#b318a3;}
+.adsc-resumen{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:16px;margin-bottom:18px;}
+.adsc-gcard:hover{border-color:#1c73cb;}
+.adsc-vac{padding:70px 20px;text-align:center;color:#5b6178;}
+.adsc-nota{font-size:11.5px;color:#5b6178;margin:10px 0 0;line-height:1.5;}
 .hg-meta{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:11px 4px 0;}
 .hg-nom{font-size:13.5px;font-weight:500;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 .hg-fecha{font-size:12px;color:var(--ink3);margin-top:2px;}
@@ -3323,8 +3378,9 @@ const FORMATOS = {
   // Email / documento
   "email":           { label:"Email · 600px",            badge:"Email",     ancho:600,  alto:0,    txt:"600px de ancho. Gmail, Outlook, HubSpot." },
   "invitacion":      { label:"Invitación · 920px",        badge:"Email",     ancho:920,  alto:0,    txt:"920px responsive. Invitaciones digitales." },
-  // Google Search: la "pieza" es la CAMPAÑA (grupos + keywords + anuncios), no un visual.
-  "ads":             { label:"Campaña Google Search",     badge:"Ads",       ancho:680,  alto:0,    txt:"Grupos de anuncios, keywords (exacta/frase) y anuncios RSA. Exporta CSV para Google Ads." },
+  // Google Search: la "pieza" es la CAMPAÑA (grupos + keywords + anuncios), no un
+  // visual. Ancho grande: la consola de campaña usa el espacio como una plataforma.
+  "ads":             { label:"Campaña Google Search",     badge:"Ads",       ancho:1180, alto:0,   txt:"Grupos de anuncios, keywords (exacta/frase) y anuncios RSA. Exporta CSV para Google Ads." },
   // LinkedIn (tamaños oficiales)
   "linkedin":        { label:"Portada perfil · 1584×396", badge:"LinkedIn",  ancho:1584, alto:396,  txt:"Banner/portada de perfil 1584×396." },
   "linkedin-post":   { label:"Post cuadrado · 1200×1200", badge:"LinkedIn",  ancho:1200, alto:1200, txt:"Post cuadrado del feed 1200×1200." },
@@ -3573,6 +3629,7 @@ function renderCanvas(){
   livePreviewIntervals.forEach(i => clearInterval(i));
   livePreviewIntervals = [];
   if(esSetPieza(pieza())){ renderTablero(); return; }   // los sets se pintan como tablero
+  if(pieza() && pieza().formato==="ads"){ renderAdsCampana(); return; }   // la campaña Search tiene consola propia
   const c = document.getElementById("canvas");
   ajustarFrameParaSet(false);
   const cv = getCanvas();
@@ -4024,6 +4081,7 @@ function renderBloqueSeleccionado(){
 function agregarBloque(tipo, datos, insertAt){
   if(!BLOQUES[tipo]) return;
   if(esComposicion(pieza())){ toast("En colecciones se editan las CAPAS (Diseño / Ajustar tamaño), no bloques sueltos"); return; }
+  if(pieza() && pieza().formato==="ads"){ toast("La campaña Search se edita en su propia vista (clic en los textos) o se regenera con Char-B"); return; }
   editandoCelda = null;   // si venías editando una celda de grid, salimos al añadir un bloque suelto
   const item = { id:uid(), tipo:tipo, datos: datos || clone(BLOQUES[tipo].defaults) };
   const arr = getCanvas();
@@ -4143,6 +4201,8 @@ frameEl.addEventListener("drop", (e) => {
 
 /* EXPORT */
 function generarHTMLDePieza(p){
+  // Campaña Search: su resumen HTML sale de adsData (no de bloques).
+  if(p && p.formato==="ads" && p.adsData) return generarHTMLDeAds(p);
   const fmt = FORMATOS[p.formato] || FORMATOS.email;
   const altoFijo = fmt.alto ? String(fmt.alto) : "";
   const ancho = (!altoFijo && p.tema.ancho && /^\d+$/.test(p.tema.ancho)) ? p.tema.ancho : String(fmt.ancho);
@@ -4957,11 +5017,12 @@ function actualizarUISet(){
   const dev = document.getElementById("dev-seg"); if(dev) dev.style.display = es ? "none" : "";
   if(typeof renderComposicionEditor === "function") renderComposicionEditor();
   // Bloqueos coherentes: en colecciones no se editan bloques sueltos ni plantillas.
+  const esAds = pieza() && pieza().formato==="ads";
   const setTab = (id, bloq, titulo) => { const t=document.getElementById(id); if(t){ t.disabled=bloq; t.classList.toggle("disabled",bloq); t.title=bloq?titulo:""; } };
-  setTab("ptab-plantillas", es, "No aplica en colecciones (edita cada banner del tablero)");
-  setTab("ptab-bloques", esCap, "En colecciones edita las CAPAS (Diseño global / Ajustar tamaño)");
+  setTab("ptab-plantillas", es || esAds, esAds ? "La campaña Search se genera con Char-B y se edita en su consola" : "No aplica en colecciones (edita cada banner del tablero)");
+  setTab("ptab-bloques", esCap || esAds, esAds ? "La campaña Search se edita directo en su consola (clic en los textos)" : "En colecciones edita las CAPAS (Diseño global / Ajustar tamaño)");
   // Si la pestaña activa quedó bloqueada, mover a una válida.
-  if(esCap && (panelTab==="bloques" || panelTab==="plantillas")) cambiarPanelTab("diseno");
+  if((esCap || esAds) && (panelTab==="bloques" || panelTab==="plantillas")) cambiarPanelTab("diseno");
 }
 // (compat) el set ya no usa ventana; el tablero vive en el lienzo.
 function refrescarSetSiAbierto(){}
@@ -5029,7 +5090,7 @@ function abrirExportar(){
 }
 function descargarPieza(id){
   const p = proyecto.piezas.find(x => x.id===id);
-  if(!p || p.canvas.length===0){ toast("Pieza vacía"); return; }
+  if(!p || (p.canvas.length===0 && !p.adsData)){ toast("Pieza vacía"); return; }
   const html = generarHTMLDePieza(p);
   const blob = new Blob([html], {type:"text/html"});
   const url = URL.createObjectURL(blob);
@@ -5091,9 +5152,10 @@ function descargarCSVAnuncios(){
   const filas = [cab];
   (d.grupos||[]).forEach(g => {
     const f = [camp, g.nombre];
-    for(let i=0;i<maxT;i++) f.push((g.titulares||[])[i]||"");
-    for(let i=0;i<maxD;i++) f.push((g.descripciones||[])[i]||"");
-    f.push(g.path1||"", g.path2||"", d.urlFinal||"");
+    // Límites de Google garantizados aunque el usuario haya alargado un texto al editarlo.
+    for(let i=0;i<maxT;i++) f.push(String((g.titulares||[])[i]||"").slice(0,30));
+    for(let i=0;i<maxD;i++) f.push(String((g.descripciones||[])[i]||"").slice(0,90));
+    f.push(String(g.path1||"").slice(0,15), String(g.path2||"").slice(0,15), d.urlFinal||"");
     filas.push(f);
   });
   _descargarCSV(slugify(camp)+"-anuncios.csv", filas);
@@ -5344,7 +5406,7 @@ const CAT_ICO    = { "Email":"email", "Banners":"grid", "Post":"compartir", "For
 const CAT_TINTE  = { "Email":"#e7f0fb", "Banners":"#e4f6f6", "Post":"#eef1fb", "Formato Libre":"#f7e6f4", "Ads":"#eef1fb", "Otro":"#eef1fb" };
 function chipDe(cat){ return `<span class="chip ${CHIP_CLASE[cat]||"libre"}">${CHIP_TXT[cat]||"LIBRE"}</span>`; }
 function estadoDe(p){
-  const listo = (p.canvas||[]).length>0 || !!p.composicion || !!p.esSet;
+  const listo = (p.canvas||[]).length>0 || !!p.composicion || !!p.esSet || !!(p.adsData && (p.adsData.grupos||[]).length);
   return listo ? {txt:"Listo", color:"#1c973b"} : {txt:"Borrador", color:"#c2c7d4"};
 }
 function todasLasPiezas(){
@@ -6571,35 +6633,193 @@ function insertarBannerIA(data, marca){
 }
 // Google Search: la IA devuelve la campaña estructurada (grupos por intención,
 // keywords exacta/frase, negativas y anuncios RSA). Se guarda ÍNTEGRA en
-// p.adsData (fuente de verdad del CSV de exportación) y además se pinta en el
-// lienzo como bloques legibles para revisarla y retocar el copy visualmente.
+// p.adsData — ÚNICA fuente de verdad: la consola la pinta, la edición inline
+// la modifica y el CSV sale de ella (siempre en sincronía).
 const kwVisible = k => k.tipo === "frase" ? `"${k.t}"` : `[${k.t}]`;
+const _deslug = s => { s = String(s||"").trim(); return (!/\s/.test(s) && /-/.test(s)) ? s.replace(/-+/g," ") : s; };
 function insertarAdsIA(data, marca){
   asegurarProyectoIA();
-  const M = marca ? normalizarMarca(marca) : null;
-  const tema = M
-    ? { font:M.fontCuerpo||"Inter", fontTitulo:M.fontTitulo||"Inter", primary:M.primary, text:M.text, bg:"#ffffff", bgPagina:"", ancho:"", radio:"0", gap:"0", marcaId:M.id }
-    : { font:"Inter", primary:"#1c73cb", text:"#1a1a1a", bg:"#ffffff", bgPagina:"", ancho:"", radio:"0", gap:"0" };
-  const canvas = [];
-  const add = (tipo, datos) => canvas.push(mk(tipo, datos));
-  const grupos = data.grupos || [];
-  add("texto", { titulo:String(data.nombre||"Campaña Google Search"), contenido:`Campaña de Google Search · ${grupos.length} grupo${grupos.length!==1?"s":""} de anuncios · solo concordancia exacta [ ] y de frase " " (nada de amplia).${data.urlFinal?` Landing: ${data.urlFinal}`:""}`, tamano:"24", negrita:true });
-  grupos.forEach((g, i) => {
-    add("texto", { titulo:`Grupo ${i+1} · ${g.nombre}`, contenido:[g.intencion?`Intención: ${g.intencion}`:"", g.razonamiento||""].filter(Boolean).join(" — "), tamano:"18", negrita:true });
-    add("tabla", { filasTexto: "Keyword | Concordancia\n" + (g.keywords||[]).map(k=>`${kwVisible(k)} | ${k.tipo==="frase"?"Frase":"Exacta"}`).join("\n"), primeraFilaHeader:true, bordes:true, radio:"0" });
-    add("tabla", { filasTexto: "Titulares (máx 30 caract.) | Largo\n" + (g.titulares||[]).map(t=>`${t} | ${t.length}`).join("\n"), primeraFilaHeader:true, bordes:true, radio:"0" });
-    add("tabla", { filasTexto: "Descripciones (máx 90 caract.) | Largo\n" + (g.descripciones||[]).map(d=>`${d} | ${d.length}`).join("\n"), primeraFilaHeader:true, bordes:true, radio:"0" });
-    if((g.negativas||[]).length) add("texto", { titulo:"Negativas del grupo", contenido:g.negativas.join(" · "), tamano:"14" });
-    if(g.path1||g.path2) add("texto", { contenido:`Ruta visible: ${(data.urlFinal||"tusitio.cl").replace(/^https?:\/\//,"").split("/")[0]}/${g.path1||""}${g.path2?"/"+g.path2:""}` });
-    add("divisor", {});
-  });
-  if((data.negativas||[]).length) add("alert", { tipo:"warning", titulo:"Negativas de campaña (impórtalas también)", mensaje:data.negativas.join(" · ") });
-  const p = { id:uid(), nombre:String(data.nombre||"Campaña Search"), campana:"General", formato:"ads", canvas, tema,
-    adsData: { nombre:data.nombre, urlFinal:data.urlFinal||"", grupos, negativas:data.negativas||[] } };
+  const p = { id:uid(), nombre:_deslug(String(data.nombre||"Campaña Search")), campana:"General", formato:"ads", canvas:[],
+    tema: { font:"Roboto", primary:"#1c73cb", text:"#12173d", bg:"#ffffff", bgPagina:"", ancho:"", radio:"0", gap:"0" },
+    adsData: { nombre:_deslug(data.nombre||""), urlFinal:data.urlFinal||"", grupos:data.grupos||[], negativas:data.negativas||[] } };
   proyecto.piezas.push(p); proyecto.activa = p.id;
+  adsVista = "res";
   document.getElementById("galeria").classList.remove("show");
   activarPieza(p.id);
   persistir();
+}
+
+// ── Consola de campaña (vista propia del formato ads) ─────────────────────
+// Diagramación de referencia: la consola de Google Ads (vista general → un tab
+// por grupo; keywords con concordancia; el anuncio previsualizado como en el
+// buscador; negativas aparte) + los inventarios con contador de Ads Editor.
+let adsVista = "res";
+function adsIrVista(v){ adsVista = String(v); renderAdsCampana(); }
+function renderAdsCampana(){
+  const c = document.getElementById("canvas");
+  ajustarFrameParaSet(false);
+  const p = pieza(); const d = p && p.adsData;
+  if(!d || !(d.grupos||[]).length){
+    c.innerHTML = `<div class="adsc"><div class="adsc-vac"><span style="color:#1c73cb;">${svgIcon("buscar",{size:"40px"})}</span>
+      <h2 style="margin:14px 0 6px;font-size:17px;color:#040764;font-weight:600;">Tu campaña de Google Search parte aquí</h2>
+      <p style="margin:0 0 18px;font-size:13px;line-height:1.6;">Char-B arma los grupos por intención de búsqueda, las keywords<br>(solo exacta y frase, nada de amplia), las negativas y los anuncios.</p>
+      <button class="primary" onclick="abrirIA()" style="cursor:pointer;">Generar campaña con Char-B</button></div></div>`;
+    return;
+  }
+  const G = d.grupos;
+  if(adsVista!=="res"){ const gi = parseInt(adsVista,10); if(!(gi>=0 && gi<G.length)) adsVista = "res"; }
+  const nKw = G.reduce((a,g)=>a+(g.keywords||[]).length,0);
+  const nTit = G.reduce((a,g)=>a+(g.titulares||[]).length,0);
+  const nNeg = (d.negativas||[]).length + G.reduce((a,g)=>a+(g.negativas||[]).length,0);
+  const head = `
+    <div class="adsc-head">
+      <div style="min-width:0;flex:1;">
+        <div class="adsc-eyebrow">Campaña Google Search</div>
+        <h1>${esc(_deslug(d.nombre) || p.nombre)}</h1>
+        <div class="adsc-url"><span style="white-space:nowrap;">Landing:</span> <span class="u tx" contenteditable="true" data-p="urlFinal" onblur="adsEditar(this)" spellcheck="false">${esc(d.urlFinal||"(pega aquí la URL de destino)")}</span></div>
+      </div>
+      <div class="adsc-stats">
+        <span class="adsc-stat"><b>${G.length}</b> grupos</span>
+        <span class="adsc-stat"><b>${nKw}</b> keywords</span>
+        <span class="adsc-stat"><b>${nTit}</b> titulares</span>
+        <span class="adsc-stat"><b>${nNeg}</b> negativas</span>
+        <span class="adsc-stat">Solo <b>exacta</b> y <b>frase</b></span>
+      </div>
+    </div>`;
+  const pills = `<div class="adsc-pills">
+      <button class="adsc-pill ${adsVista==="res"?"on":""}" onclick="adsIrVista('res')">Vista general</button>
+      ${G.map((g,i)=>`<button class="adsc-pill ${String(i)===String(adsVista)?"on":""}" onclick="adsIrVista('${i}')">${esc(_deslug(g.nombre).slice(0,28))} <span class="n">· ${(g.keywords||[]).length} kw</span></button>`).join("")}
+    </div>`;
+  c.innerHTML = `<div class="adsc">${head}${pills}${adsVista==="res" ? adsVistaResumen(d) : adsVistaGrupo(d, parseInt(adsVista,10))}</div>`;
+}
+function adsVistaResumen(d){
+  const cards = d.grupos.map((g,i)=>`
+    <div class="adsc-card adsc-gcard" onclick="adsIrVista('${i}')" style="cursor:pointer;">
+      <div class="adsc-eyebrow">Grupo ${i+1} · ${(g.keywords||[]).length} keywords</div>
+      <div style="font-size:15.5px;font-weight:600;color:#040764;margin-bottom:6px;">${esc(_deslug(g.nombre))}</div>
+      <div style="font-size:12.5px;color:#5b6178;line-height:1.55;margin-bottom:12px;">${esc(g.intencion||"")}</div>
+      <div class="adsc-chips" style="margin-bottom:12px;">
+        ${(g.keywords||[]).slice(0,3).map(k=>`<span class="adsc-tipo ${k.tipo==="frase"?"frase":"exacta"}" style="cursor:default;">${esc(kwVisible(k))}</span>`).join("")}
+        ${(g.keywords||[]).length>3?`<span class="adsc-tipo" style="background:#eef1f6;color:#5b6178;cursor:default;">+${g.keywords.length-3} más</span>`:""}
+      </div>
+      <div style="font-size:12px;color:#1c73cb;font-weight:500;">Ver grupo completo →</div>
+    </div>`).join("");
+  const negs = d.negativas||[];
+  return `
+    <div class="adsc-resumen">${cards}</div>
+    <div class="adsc-card">
+      <h3>Negativas de campaña · búsquedas por las que NO quieres pagar <button class="adsc-copy" onclick="adsCopiar('negativas')">Copiar</button></h3>
+      ${negs.length ? `<div class="adsc-chips">${negs.map(n=>`<span class="adsc-neg">${esc(n)}</span>`).join("")}</div>` : `<div style="font-size:12.5px;color:#5b6178;">Sin negativas de campaña.</div>`}
+      <p class="adsc-nota">Van incluidas en el CSV de keywords como concordancia de frase negativa: bloquean cualquier búsqueda que las contenga.</p>
+    </div>`;
+}
+function adsVistaGrupo(d, gi){
+  const g = d.grupos[gi]; if(!g) return "";
+  const host = String(d.urlFinal||"").replace(/^https?:\/\//,"").split("/")[0] || "tusitio.cl";
+  const badge = (len,max)=>`<span class="adsc-cnt ${len>max?"mal":""}" title="caracteres usados / máximo de Google">${len}/${max}</span>`;
+  const kws = (g.keywords||[]).map((k,ki)=>`
+    <div class="adsc-kw">
+      <span class="k tx" contenteditable="true" data-p="grupos.${gi}.keywords.${ki}.t" onblur="adsEditar(this)" spellcheck="false">${esc(k.t)}</span>
+      <button class="adsc-tipo ${k.tipo==="frase"?"frase":"exacta"}" onclick="adsToggleKw(${gi},${ki})" title="Clic para alternar la concordancia">${k.tipo==="frase"?'"Frase"':"[Exacta]"}</button>
+    </div>`).join("");
+  const tits = (g.titulares||[]).map((t,i)=>`
+    <div class="adsc-item"><span class="tx" contenteditable="true" data-p="grupos.${gi}.titulares.${i}" onblur="adsEditar(this)" spellcheck="false">${esc(t)}</span>${badge(t.length,30)}</div>`).join("");
+  const descs = (g.descripciones||[]).map((t,i)=>`
+    <div class="adsc-item"><span class="tx" contenteditable="true" data-p="grupos.${gi}.descripciones.${i}" onblur="adsEditar(this)" spellcheck="false">${esc(t)}</span>${badge(t.length,90)}</div>`).join("");
+  const ruta = host + (g.path1?" › "+g.path1:"") + (g.path2?" › "+g.path2:"");
+  return `
+    <div class="adsc-intent">
+      <div class="adsc-eyebrow">Grupo ${gi+1} de ${d.grupos.length}</div>
+      <div class="gnm"><span class="tx" contenteditable="true" data-p="grupos.${gi}.nombre" onblur="adsEditar(this)" spellcheck="false">${esc(_deslug(g.nombre))}</span></div>
+      <div class="t">Intención: <span class="tx" contenteditable="true" data-p="grupos.${gi}.intencion" onblur="adsEditar(this)" spellcheck="false">${esc(g.intencion||"")}</span></div>
+      ${g.razonamiento?`<div class="r">${esc(g.razonamiento)}</div>`:""}
+    </div>
+    <div class="adsc-grid">
+      <div>
+        <div class="adsc-card">
+          <h3>Keywords · ${(g.keywords||[]).length} <button class="adsc-copy" onclick="adsCopiar('keywords',${gi})">Copiar</button></h3>
+          ${kws}
+          <p class="adsc-nota">Clic en la etiqueta para alternar [Exacta] ↔ "Frase". La concordancia amplia no existe aquí. Los textos se editan con un clic.</p>
+        </div>
+        ${(g.negativas||[]).length?`
+        <div class="adsc-card" style="margin-top:18px;">
+          <h3>Negativas del grupo <button class="adsc-copy" onclick="adsCopiar('negativasGrupo',${gi})">Copiar</button></h3>
+          <div class="adsc-chips">${g.negativas.map(n=>`<span class="adsc-neg">${esc(n)}</span>`).join("")}</div>
+        </div>`:""}
+      </div>
+      <div>
+        <div class="adsc-serp">
+          <div class="tag">Así se vería tu anuncio en Google</div>
+          <div class="pat">Patrocinado</div>
+          <div class="ruta">${esc(ruta)}</div>
+          <div class="tit">${esc((g.titulares||[]).slice(0,3).join(" | "))}</div>
+          <div class="desc">${esc((g.descripciones||[])[0]||"")}</div>
+        </div>
+        <div class="adsc-card">
+          <h3>Titulares · ${(g.titulares||[]).length} <span class="lim">máx 30 caracteres</span> <button class="adsc-copy" onclick="adsCopiar('titulares',${gi})">Copiar</button></h3>
+          ${tits}
+          <p class="adsc-nota">Google combina y rota estos titulares (anuncio adaptable RSA). El contador en rojo marca los que exceden el límite.</p>
+        </div>
+        <div class="adsc-card" style="margin-top:18px;">
+          <h3>Descripciones · ${(g.descripciones||[]).length} <span class="lim">máx 90</span> <button class="adsc-copy" onclick="adsCopiar('descripciones',${gi})">Copiar</button></h3>
+          ${descs}
+        </div>
+      </div>
+    </div>`;
+}
+// Edición inline: cada texto editable guarda directo en p.adsData por ruta.
+function adsEditar(el){
+  const p = pieza(); if(!p || !p.adsData || !el.dataset.p) return;
+  setPath(p.adsData, el.dataset.p, String(el.textContent||"").replace(/\s+/g," ").trim());
+  persistir(); renderAdsCampana();
+}
+function adsToggleKw(gi, ki){
+  const p = pieza(); if(!p || !p.adsData) return;
+  const k = ((p.adsData.grupos||[])[gi]||{}).keywords; if(!k || !k[ki]) return;
+  k[ki].tipo = k[ki].tipo==="frase" ? "exacta" : "frase";
+  persistir(); renderAdsCampana();
+}
+function adsCopiar(que, gi){
+  const p = pieza(); const d = p && p.adsData; if(!d) return;
+  let txt = "";
+  if(que==="negativas") txt = (d.negativas||[]).join("\n");
+  else {
+    const g = (d.grupos||[])[gi] || {};
+    if(que==="keywords") txt = (g.keywords||[]).map(kwVisible).join("\n");
+    else if(que==="negativasGrupo") txt = (g.negativas||[]).join("\n");
+    else if(que==="titulares") txt = (g.titulares||[]).join("\n");
+    else if(que==="descripciones") txt = (g.descripciones||[]).join("\n");
+  }
+  if(!txt){ toast("Nada que copiar"); return; }
+  navigator.clipboard.writeText(txt).then(()=>toast("Copiado al portapapeles"));
+}
+// Resumen HTML descargable de la campaña (para revisar o compartir).
+function generarHTMLDeAds(p){
+  const d = p.adsData || { grupos:[], negativas:[] };
+  const host = String(d.urlFinal||"").replace(/^https?:\/\//,"").split("/")[0];
+  const grupos = (d.grupos||[]).map((g,i)=>`
+  <section>
+    <h2>Grupo ${i+1} · ${esc(_deslug(g.nombre))}</h2>
+    <p class="int"><b>Intención:</b> ${esc(g.intencion||"")}${g.razonamiento?` — ${esc(g.razonamiento)}`:""}</p>
+    <table><tr><th>Keyword</th><th>Concordancia</th></tr>${(g.keywords||[]).map(k=>`<tr><td>${esc(kwVisible(k))}</td><td>${k.tipo==="frase"?"Frase":"Exacta"}</td></tr>`).join("")}</table>
+    <h3>Titulares (máx 30 caracteres)</h3><ol>${(g.titulares||[]).map(t=>`<li>${esc(t)} <span class="c">(${t.length})</span></li>`).join("")}</ol>
+    <h3>Descripciones (máx 90 caracteres)</h3><ol>${(g.descripciones||[]).map(t=>`<li>${esc(t)} <span class="c">(${t.length})</span></li>`).join("")}</ol>
+    ${(g.negativas||[]).length?`<h3>Negativas del grupo</h3><p>${g.negativas.map(esc).join(" · ")}</p>`:""}
+    ${(g.path1||g.path2)?`<p class="c">Ruta visible: ${esc(host)}/${esc(g.path1||"")}${g.path2?"/"+esc(g.path2):""}</p>`:""}
+  </section>`).join("");
+  return `<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${esc(_deslug(d.nombre)||p.nombre)}</title><style>
+  body{font-family:Roboto,Arial,sans-serif;color:#12173d;max-width:880px;margin:34px auto;padding:0 22px;line-height:1.55;}
+  h1{color:#040764;font-size:25px;margin:0 0 4px;} h2{color:#040764;font-size:18px;margin:36px 0 6px;} h3{font-size:14px;margin:18px 0 6px;}
+  .sub{color:#5b6178;font-size:13px;margin:0 0 6px;} .int{background:#eef4fb;padding:10px 14px;font-size:13px;}
+  table{border-collapse:collapse;width:100%;font-size:13px;} th,td{border:1px solid #e4e8f0;padding:6px 10px;text-align:left;} th{background:#eef1f6;color:#040764;}
+  ol{font-size:13px;padding-left:22px;} ol li{margin:3px 0;} .c{color:#5b6178;font-size:11.5px;} a{color:#1c73cb;}
+  </style></head><body>
+  <h1>${esc(_deslug(d.nombre)||p.nombre)}</h1>
+  <p class="sub">Campaña de Google Search · ${(d.grupos||[]).length} grupos de anuncios · solo concordancia exacta [ ] y de frase " "</p>
+  ${d.urlFinal?`<p class="sub">Landing: <a href="${escAttr(d.urlFinal)}">${esc(d.urlFinal)}</a></p>`:""}
+  ${grupos}
+  <h2>Negativas de campaña</h2><p>${(d.negativas||[]).map(esc).join(" · ")||"—"}</p>
+  </body></html>`;
 }
 function renderMarcaSelector(){
   const sel=document.getElementById("dz-marca"); if(!sel) return;
