@@ -9,7 +9,10 @@
 #   /post-ia     → Post RRSS (pronto)
 #   /ads-ia      → Google Search Ads (pronto)
 #   /marcas /papelera /permisos /configuracion → menú (abren su panel sobre el dashboard)
+/login         /index.html  200
 /home          /editor.html 200
+/proyectos     /editor.html 200
+/imagenes      /editor.html 200
 /email-ia      /editor.html 200
 /gdn-ia        /editor.html 200
 /free          /editor.html 200
