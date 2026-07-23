@@ -1361,7 +1361,28 @@ button,input,select,textarea{font-family:inherit;}
 .sbb-footer a{color:#888;text-decoration:underline;}
 
 /* ─── Editor Propuesta C: cabecera de una fila + paneles flotantes ─── */
-.topbar{display:flex;align-items:center;justify-content:space-between;gap:14px;height:58px;padding:0 18px;}
+/* Barra del editor en DOS niveles: identidad+acciones / herramientas. */
+.topbar{display:flex;flex-direction:column;align-items:stretch;gap:0;height:auto;padding:0;}
+.tb-r1{display:flex;align-items:center;gap:10px;padding:9px 18px;min-width:0;}
+.tb-r2{display:flex;align-items:center;gap:8px;padding:7px 18px;background:#f5f6fa;min-width:0;overflow-x:auto;}
+.tb-spacer{flex:1 1 auto;min-width:8px;}
+/* Acciones principales (nivel 1): mismo alto/ancho, colores de marca distintos. */
+.tb-act{display:inline-flex;align-items:center;justify-content:center;gap:8px;height:38px;min-width:114px;padding:0 16px;border-radius:8px;font-family:var(--f);font-size:13.5px;font-weight:600;cursor:pointer;border:1px solid transparent;flex-shrink:0;transition:background .14s,border-color .14s;}
+.tb-act.primary{background:#040764;color:#fff;}
+.tb-act.primary:hover{background:#04065A;}
+.tb-act.sec{background:#fff;border-color:#040764;color:#040764;}
+.tb-act.sec:hover{background:#F5F5F5;}
+.tb-act.salir{background:#FDEF97;color:#040764;border-color:#EBD98F;}
+.tb-act.salir:hover{background:#FADB0E;}
+/* Botones-ícono (nivel 2): tamaño uniforme, exentos de la regla de ancho. */
+.tb-ico{width:34px;height:34px;border:1px solid var(--bdr);border-radius:8px;background:#fff;color:var(--ink3);display:inline-flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;transition:all .14s;}
+.tb-ico:hover{background:#F5F5F5;color:var(--ink);}
+.tb-ico.danger:hover{background:var(--err-l,#F5D6D6);border-color:var(--err,#CF1717);color:var(--err,#CF1717);}
+/* Char-B en nivel 2: celeste de marca con texto blanco. */
+.tb-btn.charb{background:#1C73CB;color:#fff;border-color:#1C73CB;}
+.tb-btn.charb .ico{color:#fff;}
+.tb-btn.charb:hover{background:#11457A;border-color:#11457A;}
+.topbar-viejo{display:flex;align-items:center;justify-content:space-between;gap:14px;height:58px;padding:0 18px;}
 .ed-left{display:flex;align-items:center;gap:7px;min-width:0;overflow:hidden;}
 .ed-right{display:flex;align-items:center;gap:7px;flex-shrink:0;}
 .ed-back{border:none;background:none;padding:0;cursor:pointer;display:flex;align-items:center;gap:9px;margin-right:4px;flex-shrink:0;}
@@ -1385,7 +1406,7 @@ button,input,select,textarea{font-family:inherit;}
 .topbar .tb-label{display:none;}
 .topbar .crumb-camp{max-width:150px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex-shrink:1;}
 .topbar .crumb-pieza{flex-shrink:0;}
-@media(max-width:1560px){ .topbar .tb-txt{display:none;} .tb-btn{gap:0;} }
+@media(max-width:1120px){ .topbar .tb-txt{display:none;} .topbar .tb-btn{gap:0;} }
 @media(max-width:1280px){ .topbar .ed-name{display:none;} }
 </style>
 </head>
@@ -1393,7 +1414,8 @@ button,input,select,textarea{font-family:inherit;}
 <div class="app">
   <!-- Cabecera del editor (Propuesta C): una sola fila, breadcrumb + acciones. -->
   <header class="topbar">
-    <div class="ed-left">
+    <!-- Nivel 1: identidad · documento · acciones principales -->
+    <div class="tb-r1">
       <button class="ed-back" onclick="irAlInicio()" title="Ir al Inicio">
         <svg class="ed-logo" viewBox="0 0 40 40"><rect width="40" height="40" rx="10" fill="#040764"/><rect x="9" y="10" width="22" height="5" rx="2.5" fill="#FCE865"/><rect x="9" y="19" width="9.5" height="11" rx="2.4" fill="#1C73CB"/><rect x="21.5" y="19" width="9.5" height="11" rx="2.4" fill="#20B6B6"/></svg>
         <span class="ed-name">Simple Block Builder</span>
@@ -1405,20 +1427,22 @@ button,input,select,textarea{font-family:inherit;}
       <span class="ico crumb-sep" data-ic="chevright" data-icsize="13px"></span>
       <span class="crumb-pieza crumb-edit" id="crumb-pieza" onclick="renombrarPiezaActual()" title="Clic para renombrar la creatividad">Creatividad</span>
       <span id="ed-chip"></span>
-      <button class="tb-btn icon-only" onclick="nuevaPiezaPrompt()" title="Nueva creatividad en este proyecto"><span class="ico" data-ic="mas"></span></button>
-    </div>
-    <div class="ed-right">
-      <!-- Zonas fijas (misma lógica en todos los modos): estado · configuración
-           de la pieza · revisión · IA · archivo · acción principal. -->
       <span class="sync-status" id="sync-status" title="Estado de guardado en la nube">—</span>
-      <button class="tb-btn icon-only" onclick="deshacer()" title="Deshacer (Ctrl+Z)"><span class="ico" data-ic="deshacer"></span></button>
+      <div class="tb-spacer"></div>
+      <button class="tb-act sec" onclick="guardarProyectoAhora()" title="Guardar el proyecto ahora"><span class="ico" data-ic="nube"></span> Guardar</button>
+      <button class="tb-act primary" onclick="abrirExportar()" title="Exportar / descargar"><span class="ico" data-ic="exportar"></span> Exportar</button>
+      <button class="tb-act salir" onclick="salirDelProyecto()" title="Guardar y volver a tus proyectos"><span class="ico" data-ic="salir"></span> Salir</button>
+    </div>
+    <!-- Nivel 2: herramientas · configuración de la pieza · IA · archivo -->
+    <div class="tb-r2">
+      <button class="tb-ico" onclick="deshacer()" title="Deshacer (Ctrl+Z)"><span class="ico" data-ic="deshacer"></span></button>
+      <button class="tb-ico" onclick="rehacer()" title="Rehacer (Ctrl+Y)"><span class="ico" data-ic="rehacer"></span></button>
       <span class="tb-sep"></span>
       <div class="tb-group" id="tb-formato">
         <span class="tb-label">Formato</span>
         <select id="fmt" onchange="cambiarFormato(this.value)"></select>
       </div>
       <span id="set-tools" style="display:none">
-        <button class="tb-btn" onclick="aplicarMasterATodos()" title="Aplicar el diseño del máster a todos los tamaños"><span class="ico" data-ic="grid"></span><span class="tb-txt"> Aplicar máster a todos</span></button>
         <button class="tb-link" onclick="salirDeColeccion()" title="Volver a un banner único (queda el máster)">Salir de colección</button>
       </span>
       <div class="dev-seg" id="dev-seg" title="Vista de dispositivo">
@@ -1429,15 +1453,11 @@ button,input,select,textarea{font-family:inherit;}
       <span class="tb-sep"></span>
       <button class="tb-btn" onclick="abrirPreviewActual()" title="Vista previa"><span class="ico" data-ic="ojo"></span><span class="tb-txt"> Vista previa</span></button>
       <button class="tb-btn" id="btn-prueba" onclick="abrirEnvioPrueba()" title="Enviar prueba por correo"><span class="ico" data-ic="enviar"></span><span class="tb-txt"> Enviar prueba</span></button>
-      <button class="tb-btn ia-btn" onclick="abrirIA()" title="Generar con Char-B (IA)"><span class="ico" data-ic="estrella"></span><span class="tb-txt"> Char-B</span></button>
-      <span class="tb-sep"></span>
-      <button class="tb-btn icon-only" id="btn-imagenes" onclick="abrirImagenes()" title="Biblioteca de imágenes"><span class="ico" data-ic="imagen"></span></button>
-      <button class="tb-btn icon-only" id="btn-importar" onclick="abrirImportar()" title="Importar HTML"><span class="ico" data-ic="subir"></span></button>
-      <button class="tb-btn danger icon-only" onclick="eliminarPiezaActual()" title="Eliminar esta creatividad"><span class="ico" data-ic="basura"></span></button>
-      <span class="tb-sep"></span>
-      <button class="tb-btn" onclick="guardarProyectoAhora()" title="Guardar el proyecto ahora en la nube"><span class="ico" data-ic="nube"></span><span class="tb-txt"> Guardar</span></button>
-      <button class="tb-btn" onclick="salirDelProyecto()" title="Guardar y volver a tus proyectos"><span class="ico" data-ic="salir"></span><span class="tb-txt"> Salir</span></button>
-      <button class="tb-btn primary" onclick="abrirExportar()"><span class="ico" data-ic="exportar"></span> Exportar</button>
+      <button class="tb-btn charb" onclick="abrirIA()" title="Generar con Char-B (IA)"><span class="ico" data-ic="estrella"></span><span class="tb-txt"> Char-B</span></button>
+      <div class="tb-spacer"></div>
+      <button class="tb-ico" id="btn-imagenes" onclick="abrirImagenes()" title="Biblioteca de imágenes"><span class="ico" data-ic="imagen"></span></button>
+      <button class="tb-ico" id="btn-importar" onclick="abrirImportar()" title="Importar HTML"><span class="ico" data-ic="subir"></span></button>
+      <button class="tb-ico danger" onclick="eliminarPiezaActual()" title="Eliminar esta creatividad"><span class="ico" data-ic="basura"></span></button>
     </div>
   </header>
 
@@ -2312,6 +2332,7 @@ const ICONOS_SVG = {
   chevdown:     { nombre:"Abajo",           svg:'<path d="m6 9 6 6 6-6"/>' },
   chevleft:     { nombre:"Izquierda",       svg:'<path d="m15 18-6-6 6-6"/>' },
   deshacer:     { nombre:"Deshacer",        svg:'<path d="M9 7 4 12l5 5"/><path d="M4 12h11a5 5 0 0 1 0 10h-1"/>' },
+  rehacer:      { nombre:"Rehacer",         svg:'<path d="M15 7l5 5-5 5"/><path d="M20 12H9a5 5 0 0 0 0 10h1"/>' },
   chevright:    { nombre:"Derecha",         svg:'<path d="m9 18 6-6-6-6"/>' },
   tablet:       { nombre:"Tablet",          svg:'<rect width="16" height="20" x="4" y="2" rx="2"/><path d="M12 18h.01"/>' },
   sol:          { nombre:"Sol",             svg:'<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/>' },
