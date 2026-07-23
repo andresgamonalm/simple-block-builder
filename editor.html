@@ -6577,8 +6577,31 @@ function duplicarCreatividad(id){
 }
 
 // Crear una creatividad en el proyecto abierto (o crea/pide uno antes) y abrir el editor.
+function pedirNombreTrabajo(sug){
+  return new Promise((res)=>{
+    const bg=document.createElement("div");
+    bg.style.cssText="position:fixed;inset:0;background:rgba(10,14,40,.45);z-index:9000;display:flex;align-items:center;justify-content:center;";
+    const face=(document.querySelector(".fab-charb")||{}).src||"";
+    bg.innerHTML=`<div style="background:#fff;border-radius:12px;width:440px;max-width:92vw;padding:20px 22px;font-family:var(--f);">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;">
+        <span style="width:38px;height:38px;border-radius:10px;background:#EAF7F7;display:flex;align-items:center;justify-content:center;">${face?`<img src="${face}" style="width:22px;height:25px;object-fit:contain;">`:""}</span>
+        <div><b style="color:var(--navy);font-size:15px;">Char-B</b><div style="font-size:13px;color:#5b6178;">¿Cómo llamamos a este trabajo? Será también su dirección.</div></div>
+      </div>
+      <input id="pnt-inp" type="text" style="width:100%;border:1px solid #e4e8f0;border-radius:9px;padding:11px 12px;font-family:var(--f);font-size:14px;" value="${escAttr(sug)}">
+      <div style="display:flex;justify-content:flex-end;gap:9px;margin-top:14px;">
+        <button id="pnt-can" style="border:1px solid #e4e8f0;background:#fff;color:#3a4066;border-radius:9px;padding:9px 16px;font-family:var(--f);font-size:14px;font-weight:600;cursor:pointer;">Cancelar</button>
+        <button id="pnt-ok" style="border:none;background:var(--navy);color:#fff;border-radius:9px;padding:9px 18px;font-family:var(--f);font-size:14px;font-weight:600;cursor:pointer;">Crear</button>
+      </div></div>`;
+    document.body.appendChild(bg);
+    const inp=bg.querySelector("#pnt-inp"); inp.focus(); inp.select();
+    const fin=(v)=>{ bg.remove(); res(v); };
+    bg.querySelector("#pnt-ok").onclick=()=>fin(inp.value.trim()||sug);
+    bg.querySelector("#pnt-can").onclick=()=>fin(null);
+    inp.addEventListener("keydown",e=>{ if(e.key==="Enter") fin(inp.value.trim()||sug); if(e.key==="Escape") fin(null); });
+  });
+}
 function crearTrabajoHome(fmt, ruta){ _rutaActual = ruta; crearDesde(fmt); }
-function crearDesde(formato){
+async function crearDesde(formato){
   let pr = proyectoPorId(proyectoVistoId);
   if(!pr){
     // Sin proyecto abierto (p. ej. desde la barra lateral en el dashboard):
@@ -6593,8 +6616,9 @@ function crearDesde(formato){
   // NOMBRE propio desde el inicio: define el proyecto y el path (URL) de la pieza.
   const _fecha = new Date().toLocaleDateString("es-CL",{day:"2-digit",month:"short"});
   const _sug = (cat==="Banners"?"Campaña Display ":cat==="Ads"?"Campaña Search ":cat==="Email"?"Email ":cat==="Post"?"Post ":"Pieza ")+_fecha;
-  let nom = null; try{ nom = prompt("Nombre de este TRABAJO (será también su dirección):", _sug); }catch(_){}
-  nom = (nom===null? _sug : String(nom).trim()) || _sug;
+  let nom = await pedirNombreTrabajo(_sug);
+  if(nom===null) return;              // canceló: no se crea nada
+  nom = String(nom).trim() || _sug;
   if(/^Proyecto \d+$/.test(pr.nombre||"")) pr.nombre = nom;
   // Formatos visuales de tamaño fijo → modelo de capas (colección). Documentos → bloques.
   if(cat === "Banners" || cat === "Post"){
