@@ -5043,10 +5043,25 @@ function attachLienzoInteraccion(p, root){
   if(!stage || !ovl || !cmp) return;
   ovl.innerHTML = "";   // evita duplicados si se reengancha (varios rAF en cola)
   const fila = (familiaDeFormato(fmt)==="franja");
-  // Display se trabaja a TAMAÑO REAL (escala 1); el visor .lienzo-vp hace scroll.
-  wrap.dataset.escala = 1;
-  const tit = wrap.querySelector(".lz-tit");
-  if(tit && !tit.querySelector(".lz-zoom")){ const z=document.createElement("span"); z.className="lz-zoom"; z.textContent=" · tamaño real"; tit.appendChild(z); }
+  // Si el banner CABE, se muestra a tamaño real; si no, se reduce LO JUSTO para
+  // verse completo (nunca se agranda). El export siempre va a píxeles reales.
+  const Fr = FORMATOS[fmt];
+  if(Fr){
+    const dispoW = Math.max(280, (wrap.clientWidth || 760) - 8);   // el ancho REAL del lienzo
+    const dispoH = Math.max(240, window.innerHeight - 300);
+    const s2 = Math.min(dispoW/Fr.ancho, dispoH/Fr.alto, 1);
+    const sc = stage.querySelector(".lienzo-scale");
+    stage.style.width = Math.round(Fr.ancho*s2)+"px";
+    stage.style.height = Math.round(Fr.alto*s2)+"px";
+    if(sc) sc.style.transform = "scale("+s2+")";
+    wrap.dataset.escala = s2;
+    const tit = wrap.querySelector(".lz-tit");
+    if(tit){
+      let z = tit.querySelector(".lz-zoom");
+      if(!z){ z=document.createElement("span"); z.className="lz-zoom"; tit.appendChild(z); }
+      z.textContent = s2>=0.995 ? " · tamaño real" : " · vista al "+Math.round(s2*100)+"% (se exporta a "+Fr.ancho+"×"+Fr.alto+" reales)";
+    }
+  }
   const sr = stage.getBoundingClientRect();
   const rel = (el)=>{ const r=el.getBoundingClientRect(); return { x:r.left-sr.left, y:r.top-sr.top, w:r.width, h:r.height }; };
   const zonasDom = [...cmp.querySelectorAll(".cmp-zona")];
