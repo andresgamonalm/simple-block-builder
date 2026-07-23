@@ -16,6 +16,9 @@
 //             "email", "banner", "ads", "libre".
 // "workspace": el espacio de proyectos del usuario. NO lo cambies después
 //              de creado (el usuario dejaría de ver sus proyectos).
+// "limiteIA":  (opcional) máximo de consultas de IA de ese usuario, contadas
+//              en el servidor. El admin no tiene tope. Sin este campo = sin
+//              tope. Para "recargar" a alguien, se reinicia su contador.
 // ═══════════════════════════════════════════════════════════════════════
 export default {
   usuarios: [
@@ -31,7 +34,8 @@ export default {
       rol: "limitado",
       permisos: ["email", "banner", "ads", "libre"],
       workspace: "ws-lorena",
-      clave: "GacituaOrozco2026"
+      clave: "GacituaOrozco2026",
+      limiteIA: 10
     },
     {
       usuario: "equipo",

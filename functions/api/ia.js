@@ -9,7 +9,7 @@
 //
 // La API key de Gemini vive en env.GEMINI_API_KEY (secreto).
 
-import { json, corsPreflight, getUserEmail, getSesion, tienePermiso } from './_shared.js';
+import { json, corsPreflight, getUserEmail, getSesion, tienePermiso, leerUsoIA, sumarUsoIA } from './_shared.js';
 
 export const onRequestOptions = () => corsPreflight();
 
@@ -88,6 +88,17 @@ async function generar({ request, env }) {
                  : 'email';
   if (necesita && !tienePermiso(sesion, necesita)) {
     return json({ ok: false, error: 'Tu usuario no tiene acceso a este servicio (' + necesita + ').' }, 403);
+  }
+
+  // Tope de consultas de IA por usuario (protege los créditos de Gemini).
+  // El admin no tiene tope; los demás solo si su ficha define limiteIA.
+  if (sesion.rol !== 'admin' && typeof sesion.limiteIA === 'number') {
+    const usados = await leerUsoIA(env, sesion.usuario);
+    if (usados >= sesion.limiteIA) {
+      return json({ ok: false, limiteIA: true, usados, limite: sesion.limiteIA,
+        error: `Llegaste al límite de ${sesion.limiteIA} consultas de IA de tu cuenta. Pídele a un administrador que lo amplíe.` }, 429);
+    }
+    await sumarUsoIA(env, sesion.usuario);   // esta consulta cuenta
   }
 
   const brief = body.brief || {};

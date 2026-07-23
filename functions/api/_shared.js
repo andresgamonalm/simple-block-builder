@@ -165,7 +165,29 @@ export async function getSesion(request, env) {
   return sesionDe(u);
 }
 function sesionDe(u) {
-  return { usuario: u.usuario, rol: (u.rol === 'admin') ? 'admin' : 'limitado', permisos: Array.isArray(u.permisos) ? u.permisos : [], ws: u.workspace || u.usuario };
+  return { usuario: u.usuario, rol: (u.rol === 'admin') ? 'admin' : 'limitado', permisos: Array.isArray(u.permisos) ? u.permisos : [], ws: u.workspace || u.usuario, limiteIA: (typeof u.limiteIA === 'number') ? u.limiteIA : null };
+}
+// ── Tope de consultas de IA por usuario (contado en D1, no manipulable desde
+//    el cliente). Protege los créditos de Gemini. null = sin tope. ──────────
+export async function leerUsoIA(env, usuario) {
+  if (!env || !env.DB) return 0;
+  try {
+    await env.DB.prepare('CREATE TABLE IF NOT EXISTS ia_uso (usuario TEXT PRIMARY KEY, usados INTEGER DEFAULT 0)').run();
+    const r = await env.DB.prepare('SELECT usados FROM ia_uso WHERE usuario=?').bind(usuario).first();
+    return (r && r.usados) || 0;
+  } catch { return 0; }
+}
+export async function sumarUsoIA(env, usuario) {
+  if (!env || !env.DB) return;
+  try {
+    await env.DB.prepare('CREATE TABLE IF NOT EXISTS ia_uso (usuario TEXT PRIMARY KEY, usados INTEGER DEFAULT 0)').run();
+    await env.DB.prepare('INSERT INTO ia_uso (usuario, usados) VALUES (?,1) ON CONFLICT(usuario) DO UPDATE SET usados=usados+1').bind(usuario).run();
+  } catch {}
+}
+// Reinicia el contador de un usuario (para cuando el admin quiera darle más).
+export async function reiniciarUsoIA(env, usuario) {
+  if (!env || !env.DB) return;
+  try { await env.DB.prepare('DELETE FROM ia_uso WHERE usuario=?').bind(usuario).run(); } catch {}
 }
 export function tienePermiso(s, servicio) {
   if (!s) return false;
