@@ -185,6 +185,20 @@ datos y contratos de API intactos** (una sola extensión aditiva en `/api/whoami
 - **Verificación**: Playwright (server local + mocks `/api/*`) — 21/21 PASS, 0 errores de consola,
   desktop + móvil. Capturas y portada 1920×1080 en `entregables/`.
 
+## Orden de Proyectos + jerarquía de botones + Char-B mascota — jul-2026 (correcciones del usuario)
+El usuario rechazó: página Proyectos desordenada, botones todos iguales, popover "Nueva
+creatividad" que "no hacía nada", y el FAB pill con sombra. Decisiones (DEC-007/008/009 en
+DECISIONES-VISUALES.md, según skill lineamientos-marca-gamonal):
+- **UN primario por vista** ("+ Nuevo proyecto" navy); "Borrar todo" = terciario `.py-borrartodo`
+  al PIE de la lista (texto gris→magenta hover), fuera del header.
+- **Selector inline `.py-tipos`** ("¿Qué vas a crear aquí?") dentro de cada grupo de proyecto
+  (`toggleTiposProyecto`/`tiposProyectoHTML`, estado `proyTiposAbierto`; filtrado por `puede()`);
+  reemplaza al popover flotante `nuevaCreatividadMenu` (ELIMINADO). `crearProyecto()` deja el
+  selector del proyecto nuevo abierto (flujo guiado). Secundarios = blanco + borde navy, 40px.
+- **FAB Char-B** = círculo 52px navy plano (sin sombra, sin texto) con mascota llamita amarilla
+  ORIGINAL (SVG inline; el usuario pidió Charmander — no se puede por propiedad intelectual).
+  Hover: primary-d + scale. Tooltip "Char-B · tu asistente de creatividades".
+
 ## Módulo Google Search Ads (/ads-ia) — jul-2026 (ESTADO ACTUAL — no rehacer)
 Pedido del usuario: campañas de Search "pensando como especialista, no como Google" —
 **agrupación por INTENCIÓN de búsqueda, SOLO concordancia exacta y de frase (amplia

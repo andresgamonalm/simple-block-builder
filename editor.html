@@ -527,10 +527,20 @@ button,input,select,textarea{font-family:inherit;}
 .py-vacio{padding:30px 20px;text-align:center;color:var(--ink3);font-size:13px;}
 .works-empty{padding:40px;text-align:center;color:var(--ink3);font-size:13px;}
 /* FAB Crear con IA */
-.fab-ia{position:fixed;right:26px;bottom:26px;z-index:320;height:54px;padding:0 22px;border:none;border-radius:999px;background:var(--navy);box-shadow:0 12px 30px rgba(4,7,100,.4);cursor:pointer;display:none;align-items:center;gap:10px;color:#fff;font-family:var(--f);font-size:14px;font-weight:600;}
+/* Char-B: asistente flotante — botón circular pequeño con la mascota (llamita),
+   plano y discreto (sin sombras ni degradados, DEC-008). */
+.fab-ia{position:fixed;right:22px;bottom:22px;z-index:320;width:52px;height:52px;padding:0;border:none;border-radius:50%;background:var(--navy);cursor:pointer;display:none;align-items:center;justify-content:center;transition:transform .15s ease,background .15s ease;}
 .dash.show .fab-ia{display:flex;}
-.fab-ia .ico{color:var(--yellow);}
-.fab-ia:hover{background:var(--primary-d);}
+.fab-ia:hover{background:var(--primary-d);transform:scale(1.07);}
+.fab-ia:focus-visible{outline:2px solid #378CE3;outline-offset:2px;}
+/* Selector inline "¿Qué vas a crear?" dentro de cada proyecto (DEC-009). */
+.py-tipos{display:flex;align-items:center;gap:8px;flex-wrap:wrap;background:var(--bg);border-radius:8px;padding:12px 14px;margin:12px 20px 6px;}
+.py-tipos .pt-lbl{font-size:12.5px;font-weight:600;color:var(--ink2);margin-right:4px;}
+.py-tipos button{display:inline-flex;align-items:center;gap:7px;height:40px;padding:0 14px;border:1px solid var(--navy);border-radius:8px;background:var(--white);color:var(--navy);font-family:var(--f);font-size:13px;font-weight:500;cursor:pointer;}
+.py-tipos button:hover{background:#F5F5F5;}
+/* Acción destructiva de la página = terciaria (bajo énfasis), nunca compite con el primario. */
+.py-borrartodo{display:inline-flex;align-items:center;gap:6px;margin:18px 2px 0;border:none;background:none;color:#545454;font-family:var(--f);font-size:12.5px;cursor:pointer;padding:6px 4px;}
+.py-borrartodo:hover{color:var(--magenta);}
 /* Permisos */
 .perm-tabla{background:var(--white);border:1px solid var(--bdr);border-radius:10px;overflow:hidden;}
 .perm-cab{display:grid;grid-template-columns:1.4fr 1.6fr 160px;gap:14px;padding:12px 22px;font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--ink4);border-bottom:1px solid var(--bdr);}
@@ -1710,7 +1720,6 @@ button,input,select,textarea{font-family:inherit;}
         <div class="pgh">
           <div><h1>Proyectos</h1><p class="pgh-sub" id="py-sub"></p></div>
           <div class="pgh-acc">
-            <button class="btn-sec danger" id="dash-borrartodo" onclick="borrarTodosProyectos()" style="display:none"><span class="ico" data-ic="basura" data-icsize="15px"></span> Borrar todo</button>
             <button class="btn-pri" onclick="crearProyecto()"><span class="ico" data-ic="mas" data-icsize="15px"></span> Nuevo proyecto</button>
           </div>
         </div>
@@ -1768,7 +1777,9 @@ button,input,select,textarea{font-family:inherit;}
 
     </div>
   </main>
-  <button class="fab-ia" id="fab-ia" onclick="abrirIA()" title="Crear con IA"><span class="ico" data-ic="estrella" data-icsize="19px"></span><span>Crear con IA</span></button>
+  <button class="fab-ia" id="fab-ia" onclick="abrirIA()" title="Char-B · tu asistente de creatividades" aria-label="Abrir el asistente Char-B">
+    <svg viewBox="0 0 32 32" width="28" height="28" aria-hidden="true"><path d="M16 3.2c.8 3.4 3.4 5.5 5.3 8 1.6 2.1 2.7 4.3 2.7 6.9a8 8 0 1 1-16 0c0-2.6 1.1-4.8 2.7-6.9 1.9-2.5 4.5-4.6 5.3-8z" fill="#FCE865"/><circle cx="13.2" cy="18.6" r="1.5" fill="#040764"/><circle cx="18.8" cy="18.6" r="1.5" fill="#040764"/><path d="M13.4 22.2c1.6 1.5 3.6 1.5 5.2 0" stroke="#040764" stroke-width="1.6" stroke-linecap="round" fill="none"/></svg>
+  </button>
   <nav class="mtabs" id="mtabs">
     <button data-view="home" onclick="dashIr('home')" title="Inicio"><span class="ico" data-ic="casa" data-icsize="20px"></span></button>
     <button data-view="proyectos" onclick="dashIr('proyectos')" title="Proyectos"><span class="ico" data-ic="biblioteca" data-icsize="20px"></span></button>
@@ -5568,8 +5579,6 @@ function renderProyectosPage(){
   const nCre = todasLasPiezas().length;
   const sub = document.getElementById("py-sub");
   if(sub) sub.textContent = nCre+" creatividad"+(nCre!==1?"es":"")+" en "+proys.length+" proyecto"+(proys.length!==1?"s":"");
-  const btnBT = document.getElementById("dash-borrartodo");
-  if(btnBT) btnBT.style.display = proys.length ? "inline-flex" : "none";
   document.querySelectorAll(".py-filtros .pillf").forEach(x => x.classList.toggle("on", x.dataset.f===filtroProy));
   const q = (buscaProy||"").toLowerCase();
   const cont = document.getElementById("py-lista"); if(!cont) return;
@@ -5602,15 +5611,34 @@ function renderProyectosPage(){
         <span class="nom" onclick="renombrarProyectoInline(this,'${pr.id}')" title="Clic para renombrar">${esc(pr.nombre)}</span>
         <span class="cnt">${n} creatividad${n!==1?"es":""}</span>
         <div class="py-grupo-acc">
-          <button class="py-nueva" onclick="nuevaCreatividadMenu(event,'${pr.id}')">${svgIcon("mas",{size:"13px"})} Nueva creatividad</button>
+          <button class="py-nueva" onclick="toggleTiposProyecto('${pr.id}')">${svgIcon("mas",{size:"13px"})} Nueva creatividad</button>
           <button class="py-mini danger" onclick="eliminarProyecto('${pr.id}')" title="Enviar el proyecto a la papelera">${svgIcon("basura",{size:"14px"})}</button>
         </div>
       </div>
-      ${piezas.length ? `<div class="py-cab"><span>Creatividad</span><span>Tipo</span><span>Piezas</span><span>Estado</span><span></span></div>${rows}` : `<div class="py-vacio">Sin creatividades todavía · usa "Nueva creatividad"</div>`}
+      ${proyTiposAbierto===pr.id ? tiposProyectoHTML(pr.id) : ""}
+      ${piezas.length ? `<div class="py-cab"><span>Creatividad</span><span>Tipo</span><span>Piezas</span><span>Estado</span><span></span></div>${rows}` : (proyTiposAbierto===pr.id ? "" : `<div class="py-vacio">Proyecto vacío · pulsa <b>+ Nueva creatividad</b> para empezar</div>`)}
     </div>`;
   }).join("");
   cont.innerHTML = html || `<div class="hg-vacio">Nada coincide con el filtro o la búsqueda.</div>`;
+  // Acción destructiva al pie, como terciaria (no compite con "+ Nuevo proyecto").
+  if(proys.length && filtroProy==="todas" && !q) cont.insertAdjacentHTML("beforeend",
+    `<button class="py-borrartodo" onclick="borrarTodosProyectos()">${svgIcon("basura",{size:"13px"})} Enviar todos los proyectos a la papelera</button>`);
   renderEspaciosOtros(cont);
+}
+// Selector inline de tipo de creatividad DENTRO del proyecto (reemplaza al
+// popover flotante, que se perdía — el flujo queda a la vista: DEC-009).
+let proyTiposAbierto = null;
+function toggleTiposProyecto(id){ proyTiposAbierto = (proyTiposAbierto===id) ? null : id; renderProyectosPage(); }
+function tiposProyectoHTML(prId){
+  const tipos = [
+    ["email","email","email","Email"],
+    ["banner","display-300x250","grid","Banner Display"],
+    ["banner","linkedin-post","compartir","Post RRSS"],
+    ["ads","ads","buscar","Google Search"],
+    ["libre","libre","documento","Formato libre"]
+  ].filter(([serv])=>puede(serv));
+  return `<div class="py-tipos"><span class="pt-lbl">¿Qué vas a crear aquí?</span>${tipos.map(([serv,fmt,ico,lbl]) =>
+    `<button onclick="proyectoVistoId='${prId}';crearDesde('${fmt}')">${svgIcon(ico,{size:"15px"})} ${lbl}</button>`).join("")}</div>`;
 }
 // ── ADMIN: los proyectos de LOS DEMÁS usuarios (solo lectura, con dueño) ──
 let _espaciosOtros = null;   // null = no cargado · [] = cargado
@@ -5668,29 +5696,8 @@ function renombrarProyectoInline(span, id){
   const pr = proyectoPorId(id); if(!pr) return;
   _renombrarInline(span, pr.nombre || "Proyecto", (v)=>{ pr.nombre = v; persistir(); renderProyectosPage(); if(proyecto&&proyecto.id===id) renderTabsPiezas(); });
 }
-// Popover "Nueva creatividad" de un proyecto concreto.
-function nuevaCreatividadMenu(ev, prId){
-  ev.stopPropagation();
-  proyectoVistoId = prId;
-  cerrarMenusNav();
-  let m = document.getElementById("menu-nueva-proy");
-  if(m) m.remove();   // se reconstruye para respetar los permisos vigentes
-  m = document.createElement("div");
-  m.id = "menu-nueva-proy"; m.className = "cnav-menu";
-  m.style.position = "fixed";
-  const items = [
-    ["email","email","email","Email"],
-    ["banner","display-300x250","grid","Banner Display"],
-    ["banner","linkedin-post","compartir","Post RRSS"],
-    ["ads","ads","buscar","Google Search Ads"],
-    ["libre","libre","documento","Formato libre"]
-  ].filter(([serv])=>puede(serv));
-  m.innerHTML = items.map(([serv,fmt,ico,lbl])=>`<button onclick="crearDesde('${fmt}')">${svgIcon(ico,{size:"15px"})} ${lbl}</button>`).join("");
-  document.body.appendChild(m);
-  const r = ev.currentTarget.getBoundingClientRect();
-  m.style.top = (r.bottom+6)+"px"; m.style.left = Math.max(10, r.right-222)+"px"; m.style.right = "auto";
-  m.classList.add("open");
-}
+// (El popover flotante "menu-nueva-proy" se eliminó: el selector de tipo ahora
+// es la fila inline .py-tipos dentro del proyecto — ver tiposProyectoHTML.)
 function eliminarCreacionEn(prId, id){ proyectoVistoId = prId; eliminarCreacion(id); }
 function duplicarCreatividadEn(prId, id){ proyectoVistoId = prId; duplicarCreatividad(id); }
 
@@ -5800,6 +5807,9 @@ function crearProyecto(){
   const pr = { id:uid(), nombre: (nombre.trim() || ("Proyecto " + (workspace.proyectos.length+1))), creado: Date.now(), piezas: [], activa: null };
   workspace.proyectos.push(pr);
   persistir();
+  // Flujo guiado: el proyecto recién creado abre con su selector "¿Qué vas a
+  // crear aquí?" desplegado — el paso siguiente queda a la vista.
+  proyTiposAbierto = pr.id;
   abrirProyecto(pr.id);
 }
 function abrirProyecto(id){
