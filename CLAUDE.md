@@ -301,9 +301,14 @@ qué sus piezas actuales están mal planteadas para digital). Persistencia del a
 - **Anti-reglas de Search** (de sus anuncios malos reales, OCR): prohibido meta-copy ("esta
   campaña fue creada para convertir"), keyword stuffing, relleno "rápido-fácil-online",
   productos sin relación en la descripción → REGLAS DURAS en generarAds (universales).
-- Pendiente del usuario: subir logos (Drive Logo-Digital/Large: Horz_Blue y Horz_ZurichWhite)
-  a Marcas→Zurich y las Fotos-Propias a la Biblioteca (nombres ya descriptivos). Drive y
-  producción están bloqueados desde el sandbox (proxy) — no se pudo subir por él.
+- **Recursos SUBIDOS por Claude vía D1** (el sandbox no llega a Drive/producción por red,
+  pero el MCP de Drive sí entrega bytes → se procesaron localmente): **logos oficiales 2022**
+  (Horz_Blue → marca.logo, Horz_ZurichWhite → marca.logoClaro) incrustados como **data URL
+  PNG paleta 360px (~4KB c/u — no dependen de red)**; **50 Fotos-Propias** en
+  `workspace.imagenes` con URLs `https://lh3.googleusercontent.com/d/<id>=w1600` (`drive:true`).
+  ⚠️ Las fotos por URL de Drive REQUIEREN que la carpeta esté compartida "cualquiera con el
+  enlace"; si salen rotas en la Biblioteca, ese es el motivo (plan B: arrastrarlas a mano,
+  van a R2). La imagen previa del usuario en R2 se conservó (posición 0).
 
 ## Roadmap / pendientes
 **Pendientes activos (jun-2026):** (1) confirmar/cerrar la **franja blanca en verticales** (esperando captura del caso exacto); (2) **bloques más ricos** para email (features con ícono en círculo de color, secciones con fondo, hero con degradado, tarjetas con sombra — SIN redondeo por defecto); (3) afinar, si se pide, qué tipografías/recursos extra muestran **/gdn-ia** y **/free**; (4) encender **/post-ia** y **/ads-ia** cuando toque.
