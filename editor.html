@@ -5807,41 +5807,35 @@ function _remountTrasModal(){ const g=document.getElementById("galeria"); if(g &
 // añadir una entrada. 'grupo' las agrupa en el menú.
 const PLANTILLAS = {
   // ── EMAIL · plantillas pro (secciones full-bleed + marca Gamonal: navy #040764, azul #1c73cb, amarillo #fce865) ──
-  "email-promo": { label:"Promoción / Oferta", grupo:"Email", formato:"email", nombre:"Promoción",
+  "email-promo": { label:"Comercial \u00b7 Inversi\u00f3n", grupo:"Email", formato:"email", nombre:"Comercial",
     bloques:[
-      ["bandaHeader",{estilo:"solido",bg:"#040764",alto:"30"}],
-      ["seccion",{bg:"#040764",colorTexto:"#ffffff",colorEyebrow:"#fce865",eyebrow:"OFERTA EXCLUSIVA",titulo:"AHORRA EN GRANDE",fuenteTitulo:"Anton",tamTitulo:"46",subtitulo:"Aprovecha nuestra promoción por tiempo limitado y llévate lo mejor con un descuento que no se repite.",tamSub:"15",botonTexto:"Ver la oferta",botonVariante:"solido",botonColor:"#1c73cb",padV:"54"}],
-      ["imagen",{url:"https://placehold.co/1200x520/1c73cb/ffffff?text=Tu+imagen",anchoImg:"100",radio:"0",padTop:"0",padBottom:"0",padLeft:"0",padRight:"0"}],
-      ["seccion",{bg:"#fce865",colorTexto:"#040764",colorEyebrow:"#1c73cb",eyebrow:"SOLO POR HOY",titulo:"40% OFF",fuenteTitulo:"Anton",tamTitulo:"56",subtitulo:"Usa el código GAMONAL40 al finalizar tu compra. Válido hasta agotar stock.",tamSub:"15",botonTexto:"Comprar ahora",botonVariante:"solido",botonColor:"#040764",padV:"48"}],
-      ["features",{titulo:"¿Por qué elegirnos?",items:[{ico:"trending",t:"Rápido",s:"Recibe tu pedido en tiempo récord."},{ico:"candado",t:"Seguro",s:"Pago protegido de extremo a extremo."},{ico:"corazon",t:"Cercano",s:"Soporte real cuando lo necesitas."}]}],
-      ["seccion",{bg:"#1c73cb",colorTexto:"#ffffff",eyebrow:"",titulo:"¿Listo para empezar?",fuenteTitulo:"Montserrat",tamTitulo:"30",subtitulo:"Únete hoy y empieza a disfrutar de todos los beneficios.",tamSub:"15",botonTexto:"Crear cuenta",botonVariante:"outline",botonColor:"#ffffff",padV:"44"}],
-      ["bandaFooter",{estilo:"solido",bg:"#040764",textoSeguir:"Síguenos"}]
-    ] },
-  "email-newsletter": { label:"Newsletter / Artículos", grupo:"Email", formato:"email", nombre:"Newsletter",
-    bloques:[
-      ["bandaHeader",{estilo:"solido",bg:"#040764",alto:"30"}],
-      ["seccion",{bg:"#ffffff",colorTexto:"#1a1a1a",colorEyebrow:"#1c73cb",eyebrow:"NEWSLETTER",titulo:"Lo nuevo de este mes",fuenteTitulo:"Montserrat",tamTitulo:"30",subtitulo:"Las novedades, consejos y recursos que seleccionamos para ti.",tamSub:"15",botonTexto:"",padV:"36"}],
-      ["grid",{columnas:"2",gap:"18",alinearVert:"center",celdas:[
-        {tipo:"imagen",datos:{url:"https://placehold.co/600x440/1c73cb/ffffff?text=Foto",anchoImg:"100",radio:"10"}},
-        {tipo:"seccion",datos:{bg:"#ffffff",colorTexto:"#1a1a1a",colorEyebrow:"#1c73cb",eyebrow:"ARTÍCULO",titulo:"Un titular que engancha",fuenteTitulo:"Montserrat",tamTitulo:"19",subtitulo:"Resumen breve que invita a leer el contenido completo de esta nota.",tamSub:"13",alinH:"left",botonTexto:"Leer más",botonVariante:"outline",botonColor:"#1c73cb",padV:"4",padH:"2"}}
-      ]}],
+      ["bandaHeader",{estilo:"solido",bg:"#2167ae",alto:"28"}],
+      ["imagen",{url:"",anchoImg:"100",radio:"0",padTop:"0",padBottom:"0",padLeft:"0",padRight:"0"}],
+      ["seccion",{bg:"#ffffff",colorTexto:"#23366f",alinH:"center",eyebrow:"",titulo:"\u00a1Haz que tu dinero trabaje por ti!",fuenteTitulo:"Arial",tamTitulo:"26",subtitulo:"Empezar es simple, r\u00e1pido y para todos. Da el primer paso hoy.",tamSub:"15",botonTexto:"",padV:"32"}],
+      ["features",{titulo:"",disposicion:"fila",porFila:"3",orientacion:"vertical",colorIcono:"#2167ae",tamItemTitulo:"15",tamItemSub:"13",gapItems:"14",bgBloque:"#eaf3fb",items:[{ico:"barchart",t:"Desde $1.000",s:"Empieza con el monto que t\u00fa quieras."},{ico:"monitor",t:"100% online",s:"Gestiona todo digital, sin papeles."},{ico:"reloj",t:"Cuando quieras",s:"Retira tu dinero en cualquier momento."}]}],
+      ["seccion",{bg:"#eaf3fb",colorTexto:"#23366f",alinH:"center",eyebrow:"",titulo:"",subtitulo:"",botonTexto:"Comenzar hoy",botonVariante:"solido",botonColor:"#2167ae",padV:"6"}],
       ["divisor",{}],
-      ["grid",{columnas:"2",gap:"18",alinearVert:"center",celdas:[
-        {tipo:"seccion",datos:{bg:"#ffffff",colorTexto:"#1a1a1a",colorEyebrow:"#1c73cb",eyebrow:"ARTÍCULO",titulo:"Otra historia para ti",fuenteTitulo:"Montserrat",tamTitulo:"19",subtitulo:"Una segunda nota con su imagen al lado para alternar el ritmo visual.",tamSub:"13",alinH:"left",botonTexto:"Leer más",botonVariante:"outline",botonColor:"#1c73cb",padV:"4",padH:"2"}},
-        {tipo:"imagen",datos:{url:"https://placehold.co/600x440/040764/ffffff?text=Foto",anchoImg:"100",radio:"10"}}
-      ]}],
-      ["seccion",{bg:"#040764",colorTexto:"#ffffff",colorEyebrow:"#fce865",eyebrow:"NO TE PIERDAS NADA",titulo:"Síguenos en redes",fuenteTitulo:"Montserrat",tamTitulo:"28",subtitulo:"Recibe lo mejor cada semana, directo a tu correo.",tamSub:"15",botonTexto:"Suscribirme",botonVariante:"solido",botonColor:"#1c73cb",padV:"44"}],
-      ["bandaFooter",{estilo:"solido",bg:"#040764",textoSeguir:"Síguenos"}]
+      ["seccion",{bg:"#ffffff",colorTexto:"#23366f",alinH:"center",eyebrow:"\u00bfTE QUEDAN DUDAS?",colorEyebrow:"#2167ae",titulo:"Estamos para ayudarte",fuenteTitulo:"Arial",tamTitulo:"22",subtitulo:"Nuestros canales de comunicaci\u00f3n est\u00e1n disponibles para ti.",tamSub:"15",botonTexto:"Cont\u00e1ctanos",botonVariante:"outline",botonColor:"#2167ae",padV:"32"}],
+      ["bandaFooter",{estilo:"solido",bg:"#2167ae",textoSeguir:"S\u00edguenos"}]
     ] },
-  "email-bienvenida": { label:"Bienvenida / Informativa", grupo:"Email", formato:"email", nombre:"Bienvenida",
+  "email-newsletter": { label:"Informativo \u00b7 Documento", grupo:"Email", formato:"email", nombre:"Informativo",
     bloques:[
-      ["bandaHeader",{estilo:"solido",bg:"#040764",alto:"30"}],
-      ["seccion",{bg:"#040764",colorTexto:"#ffffff",colorEyebrow:"#fce865",eyebrow:"BIENVENIDO",titulo:"Nos alegra tenerte aquí",fuenteTitulo:"Montserrat",tamTitulo:"34",subtitulo:"Te acompañamos paso a paso para que aproveches todo desde el primer día.",tamSub:"15",botonTexto:"Empezar ahora",botonVariante:"solido",botonColor:"#1c73cb",padV:"54"}],
-      ["imagen",{url:"https://placehold.co/1200x460/1c73cb/ffffff?text=Tu+imagen",anchoImg:"100",radio:"0",padTop:"0",padBottom:"0",padLeft:"0",padRight:"0"}],
-      ["seccion",{bg:"#ffffff",colorTexto:"#1a1a1a",colorEyebrow:"#1c73cb",eyebrow:"CÓMO FUNCIONA",titulo:"En 3 simples pasos",fuenteTitulo:"Montserrat",tamTitulo:"28",subtitulo:"Empezar es muy fácil. Te lo explicamos en un momento.",tamSub:"15",botonTexto:"",padV:"36"}],
-      ["features",{titulo:"",items:[{ico:"usuario",t:"Crea tu cuenta",s:"Regístrate en menos de un minuto."},{ico:"check",t:"Configura tu perfil",s:"Personaliza tu experiencia."},{ico:"trending",t:"Empieza a crear",s:"Saca tu primera pieza hoy mismo."}]}],
-      ["seccion",{bg:"#1c73cb",colorTexto:"#ffffff",eyebrow:"",titulo:"¿Tienes dudas?",fuenteTitulo:"Montserrat",tamTitulo:"28",subtitulo:"Estamos para ayudarte cuando lo necesites.",tamSub:"15",botonTexto:"Contáctanos",botonVariante:"outline",botonColor:"#ffffff",padV:"44"}],
-      ["bandaFooter",{estilo:"solido",bg:"#040764",textoSeguir:"Síguenos"}]
+      ["bandaHeader",{estilo:"solido",bg:"#2167ae",alto:"28"}],
+      ["seccion",{bg:"#2167ae",colorTexto:"#ffffff",alinH:"left",eyebrow:"",titulo:"\u00a1Ya est\u00e1 disponible tu documento!",fuenteTitulo:"Arial",tamTitulo:"30",subtitulo:"",tamSub:"15",botonTexto:"",padV:"44",padH:"36"}],
+      ["seccion",{bg:"#ffffff",colorTexto:"#23366f",alinH:"left",eyebrow:"",titulo:"Hola,",fuenteTitulo:"Arial",tamTitulo:"20",subtitulo:"Ya est\u00e1 disponible tu documento con los \u00faltimos movimientos de tu cuenta. Para abrirlo, sigue las instrucciones de aqu\u00ed abajo.",tamSub:"15",botonTexto:"",padV:"26",padH:"36"}],
+      ["alert",{tipo:"warning",titulo:"Ejemplo de acceso",mensaje:"RUT: 16.222.432-3\nClave: 16222432 (tu RUT sin puntos ni d\u00edgito verificador)"}],
+      ["seccion",{bg:"#ffffff",colorTexto:"#23366f",alinH:"center",eyebrow:"",titulo:"\u00bfTienes dudas sobre c\u00f3mo obtener tu documento?",fuenteTitulo:"Arial",tamTitulo:"20",subtitulo:"Nuestros canales de comunicaci\u00f3n est\u00e1n disponibles para ti.",tamSub:"15",botonTexto:"Ir a mi portal",botonVariante:"solido",botonColor:"#2167ae",padV:"32"}],
+      ["bandaFooter",{estilo:"solido",bg:"#2167ae",textoSeguir:"S\u00edguenos"}]
+    ] },
+  "email-bienvenida": { label:"Concurso \u00b7 Promoci\u00f3n", grupo:"Email", formato:"email", nombre:"Concurso",
+    bloques:[
+      ["bandaHeader",{estilo:"solido",bg:"#2167ae",alto:"28"}],
+      ["imagen",{url:"",anchoImg:"100",radio:"0",padTop:"0",padBottom:"0",padLeft:"0",padRight:"0"}],
+      ["seccion",{bg:"#ffffff",colorTexto:"#23366f",alinH:"center",eyebrow:"",titulo:"Hola,",fuenteTitulo:"Arial",tamTitulo:"22",subtitulo:"Tenemos un concurso especial para ti, pensado para regalarte momentos llenos de alegr\u00eda.",tamSub:"15",botonTexto:"",padV:"28"}],
+      ["alert",{tipo:"info",titulo:"Gana 1 de las 15 entradas",mensaje:"Participa y ll\u00e9vate un premio. Sigue los pasos de aqu\u00ed abajo."}],
+      ["features",{titulo:"\u00bfC\u00f3mo participar?",disposicion:"fila",porFila:"3",orientacion:"vertical",colorIcono:"#2167ae",tamTitulo:"20",tamItemTitulo:"14",tamItemSub:"13",gapItems:"14",items:[{ico:"instagram",t:"S\u00edguenos",s:"S\u00edguenos en nuestra cuenta de Instagram."},{ico:"equipo",t:"Etiqueta a 2 amigos",s:"Menci\u00f3nalos en el comentario."},{ico:"corazon",t:"Consigue Me Gusta",s:"Los comentarios con m\u00e1s likes ganan."}]}],
+      ["seccion",{bg:"#2167ae",colorTexto:"#ffffff",alinH:"center",eyebrow:"",titulo:"\u00a1Haz que este mes sea especial!",fuenteTitulo:"Arial",tamTitulo:"26",subtitulo:"Concurso v\u00e1lido por tiempo limitado. Revisa las bases en el sitio.",tamSub:"15",botonTexto:"Quiero participar",botonVariante:"solido",botonColor:"#ffffff",padV:"42"}],
+      ["bandaFooter",{estilo:"solido",bg:"#2167ae",textoSeguir:"S\u00edguenos"}]
     ] },
   // LinkedIn
   "li-portada": { label:"Portada perfil 1584×396", grupo:"LinkedIn", formato:"linkedin", nombre:"LinkedIn Portada",
