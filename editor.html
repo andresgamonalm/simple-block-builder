@@ -18,6 +18,7 @@
       const chip = document.getElementById("user-chip");
       const em = document.getElementById("user-email");
       if (chip && em) { em.textContent = data.email; chip.style.display = "flex"; }
+      if (typeof aplicarPermisosUI === "function") aplicarPermisosUI();
     };
     if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", set);
     else set();
@@ -1639,10 +1640,10 @@ button,input,select,textarea{font-family:inherit;}
       <div class="cnav-drop">
         <button class="cnav-nueva" onclick="toggleMenuNav('menu-nueva',event)"><span class="ico" data-ic="mas" data-icsize="15px"></span><span>Nueva</span></button>
         <div class="cnav-menu" id="menu-nueva">
-          <button onclick="irARuta('/email-ia')"><span class="ico" data-ic="email" data-icsize="15px"></span> Email</button>
-          <button onclick="irARuta('/gdn-ia')"><span class="ico" data-ic="grid" data-icsize="15px"></span> Banner Display</button>
-          <button onclick="irARuta('/free')"><span class="ico" data-ic="documento" data-icsize="15px"></span> Formato libre</button>
-          <button onclick="irARuta('/ads-ia')"><span class="ico" data-ic="buscar" data-icsize="15px"></span> Google Search Ads</button>
+          <button data-serv="email" onclick="irARuta('/email-ia')"><span class="ico" data-ic="email" data-icsize="15px"></span> Email</button>
+          <button data-serv="banner" onclick="irARuta('/gdn-ia')"><span class="ico" data-ic="grid" data-icsize="15px"></span> Banner Display</button>
+          <button data-serv="libre" onclick="irARuta('/free')"><span class="ico" data-ic="documento" data-icsize="15px"></span> Formato libre</button>
+          <button data-serv="ads" onclick="irARuta('/ads-ia')"><span class="ico" data-ic="buscar" data-icsize="15px"></span> Google Search Ads</button>
           <div class="cnav-menu-sep"></div>
           <button onclick="crearProyecto()"><span class="ico" data-ic="biblioteca" data-icsize="15px"></span> Nuevo proyecto</button>
         </div>
@@ -1651,8 +1652,8 @@ button,input,select,textarea{font-family:inherit;}
         <button class="cnav-av" id="dash-av" onclick="toggleMenuNav('menu-cuenta',event)" title="Cuenta">·</button>
         <div class="cnav-menu der" id="menu-cuenta">
           <div class="cnav-menu-head"><div class="n" id="cuenta-rol">Cuenta</div><div class="s" id="dash-email">—</div></div>
-          <button onclick="dashIr('permisos')">Permisos</button>
-          <button onclick="dashIr('configuracion')">Configuración</button>
+          <button id="menu-perm-item" onclick="dashIr('permisos')">Permisos</button>
+          <button id="menu-config-item" onclick="dashIr('configuracion')">Configuración</button>
           <button onclick="dashIr('papelera')">Papelera <span class="nav-badge" id="nav-pap-badge"></span></button>
           <div class="cnav-menu-sep"></div>
           <button class="salir" onclick="cerrarSesion()">Cerrar sesión</button>
@@ -1679,10 +1680,10 @@ button,input,select,textarea{font-family:inherit;}
           <div class="cb-divisor"></div>
           <div class="cb-tu">O empiézalo tú</div>
           <div class="cb-acciones">
-            <button class="cb-lz" onclick="irARuta('/email-ia')"><span class="cb-lz-ico"><span class="ico" data-ic="email" data-icsize="17px"></span></span>Email</button>
-            <button class="cb-lz" onclick="irARuta('/gdn-ia')"><span class="cb-lz-ico"><span class="ico" data-ic="grid" data-icsize="17px"></span></span>Banner Display</button>
-            <button class="cb-lz" onclick="irARuta('/free')"><span class="cb-lz-ico"><span class="ico" data-ic="documento" data-icsize="17px"></span></span>Formato libre</button>
-            <button class="cb-lz" onclick="irARuta('/ads-ia')"><span class="cb-lz-ico"><span class="ico" data-ic="buscar" data-icsize="17px"></span></span>Google Search</button>
+            <button class="cb-lz" data-serv="email" onclick="irARuta('/email-ia')"><span class="cb-lz-ico"><span class="ico" data-ic="email" data-icsize="17px"></span></span>Email</button>
+            <button class="cb-lz" data-serv="banner" onclick="irARuta('/gdn-ia')"><span class="cb-lz-ico"><span class="ico" data-ic="grid" data-icsize="17px"></span></span>Banner Display</button>
+            <button class="cb-lz" data-serv="libre" onclick="irARuta('/free')"><span class="cb-lz-ico"><span class="ico" data-ic="documento" data-icsize="17px"></span></span>Formato libre</button>
+            <button class="cb-lz" data-serv="ads" onclick="irARuta('/ads-ia')"><span class="cb-lz-ico"><span class="ico" data-ic="buscar" data-icsize="17px"></span></span>Google Search</button>
             <span class="cb-pronto-lbl">Pronto</span>
             <button class="cb-pronto" onclick="irARuta('/post-ia')">Post RRSS</button>
           </div>
@@ -1775,10 +1776,10 @@ button,input,select,textarea{font-family:inherit;}
     <button data-view="configuracion" onclick="dashIr('configuracion')" title="Cuenta"><span class="ico" data-ic="usuario" data-icsize="20px"></span></button>
   </nav>
   <div class="cnav-menu movil" id="menu-nueva-m">
-    <button onclick="irARuta('/email-ia')"><span class="ico" data-ic="email" data-icsize="15px"></span> Email</button>
-    <button onclick="irARuta('/gdn-ia')"><span class="ico" data-ic="grid" data-icsize="15px"></span> Banner Display</button>
-    <button onclick="irARuta('/free')"><span class="ico" data-ic="documento" data-icsize="15px"></span> Formato libre</button>
-    <button onclick="irARuta('/ads-ia')"><span class="ico" data-ic="buscar" data-icsize="15px"></span> Google Search Ads</button>
+    <button data-serv="email" onclick="irARuta('/email-ia')"><span class="ico" data-ic="email" data-icsize="15px"></span> Email</button>
+    <button data-serv="banner" onclick="irARuta('/gdn-ia')"><span class="ico" data-ic="grid" data-icsize="15px"></span> Banner Display</button>
+    <button data-serv="libre" onclick="irARuta('/free')"><span class="ico" data-ic="documento" data-icsize="15px"></span> Formato libre</button>
+    <button data-serv="ads" onclick="irARuta('/ads-ia')"><span class="ico" data-ic="buscar" data-icsize="15px"></span> Google Search Ads</button>
     <div class="cnav-menu-sep"></div>
     <button onclick="crearProyecto()"><span class="ico" data-ic="biblioteca" data-icsize="15px"></span> Nuevo proyecto</button>
   </div>
@@ -5440,7 +5441,7 @@ let dashView = "home";
 let filtroHome = "todas", filtroProy = "todas", buscaProy = "";
 
 function urlDeVista(v){ return v==="home" ? "/home" : "/"+v; }
-function dashVista(v){ if(!DASH_VIEWS[v]) v="home"; dashView=v; document.getElementById("galeria").classList.add("show"); renderGaleria(); }
+function dashVista(v){ if(!DASH_VIEWS[v]) v="home"; dashView=v; document.getElementById("galeria").classList.add("show"); renderGaleria(); if(typeof aplicarPermisosUI==="function") aplicarPermisosUI(); }
 function dashIr(view){
   cerrarMenusNav();
   dashVista(view);
@@ -5571,7 +5572,7 @@ function renderProyectosPage(){
   document.querySelectorAll(".py-filtros .pillf").forEach(x => x.classList.toggle("on", x.dataset.f===filtroProy));
   const q = (buscaProy||"").toLowerCase();
   const cont = document.getElementById("py-lista"); if(!cont) return;
-  if(!proys.length){ cont.innerHTML = `<div class="hg-vacio">Aún no tienes proyectos. Crea el primero con <b>+ Nuevo proyecto</b>.</div>`; return; }
+  if(!proys.length){ cont.innerHTML = `<div class="hg-vacio">Aún no tienes proyectos. Crea el primero con <b>+ Nuevo proyecto</b>.</div>`; renderEspaciosOtros(cont); return; }
   const html = proys.slice().reverse().map(pr => {
     const piezas = (pr.piezas||[]).filter(p =>
       (filtroProy==="todas" || categoriaDe(p.formato)===filtroProy) &&
@@ -5608,6 +5609,59 @@ function renderProyectosPage(){
     </div>`;
   }).join("");
   cont.innerHTML = html || `<div class="hg-vacio">Nada coincide con el filtro o la búsqueda.</div>`;
+  renderEspaciosOtros(cont);
+}
+// ── ADMIN: los proyectos de LOS DEMÁS usuarios (solo lectura, con dueño) ──
+let _espaciosOtros = null;   // null = no cargado · [] = cargado
+function renderEspaciosOtros(cont){
+  const u = window.SBB_USER || {};
+  if(u.rol !== "admin") return;
+  if(_espaciosOtros === null){
+    _espaciosOtros = [];   // evita doble fetch
+    fetch("/api/proyectos?todos=1", { credentials:"include" })
+      .then(r=>r.ok?r.json():null)
+      .then(d=>{ if(d && d.ok){ _espaciosOtros = d.espacios || []; if(dashView==="proyectos") renderProyectosPage(); } })
+      .catch(()=>{});
+    return;
+  }
+  const conAlgo = _espaciosOtros.filter(e => (e.proyectos||[]).length);
+  if(!conAlgo.length) return;
+  let h = `<div class="dz-sec" style="margin:26px 0 10px;font-size:12px;letter-spacing:.08em;color:#5b6178;">ESPACIOS DE OTROS USUARIOS · solo lectura</div>`;
+  conAlgo.forEach((e, ei) => {
+    (e.proyectos||[]).slice().reverse().forEach(pr => {
+      const piezas = pr.piezas||[];
+      const rows = piezas.slice().reverse().map(p => {
+        const cat = categoriaDe(p.formato); const est = estadoDe(p);
+        const nT = (p.esSet||p.composicion) ? (((p.artboards||[]).length||1)+" tamaños") : "1 pieza";
+        return `<div class="py-row">
+          <div style="min-width:0"><div class="rn" onclick="previewAjeno(${ei},'${pr.id}','${p.id}')" title="Vista previa">${esc(p.nombre)}</div><div class="rs">${p._mod?"Actualizado "+tiempoRel(p._mod):""}</div></div>
+          <span>${chipDe(cat)}</span>
+          <span class="py-piezas">${nT}</span>
+          <span class="st-pill"><span class="pt" style="background:${est.color}"></span>${est.txt}</span>
+          <div class="py-acc"><button class="py-mini" onclick="previewAjeno(${ei},'${pr.id}','${p.id}')" title="Vista previa">${svgIcon("ojo",{size:"14px"})}</button></div>
+        </div>`;
+      }).join("");
+      const n = piezas.length;
+      h += `<div class="py-grupo">
+        <div class="py-grupo-head">
+          <span class="nom" style="cursor:default">${esc(pr.nombre)}</span>
+          <span class="chip" style="background:#eef1fb;color:#040764;">${esc((e.usuario||"?").toUpperCase())}</span>
+          <span class="cnt">${n} creatividad${n!==1?"es":""}</span>
+        </div>
+        ${n ? `<div class="py-cab"><span>Creatividad</span><span>Tipo</span><span>Piezas</span><span>Estado</span><span></span></div>${rows}` : ""}
+      </div>`;
+    });
+  });
+  cont.insertAdjacentHTML("beforeend", h);
+}
+function previewAjeno(ei, prId, pId){
+  const e = (_espaciosOtros||[])[ei]; if(!e) return;
+  const pr = (e.proyectos||[]).find(x=>x.id===prId); if(!pr) return;
+  const p = (pr.piezas||[]).find(x=>x.id===pId); if(!p) return;
+  document.getElementById("pv-title").textContent = p.nombre + " · de " + (e.usuario||"otro usuario");
+  document.getElementById("pv-frame").srcdoc = (p.esSet||p.composicion) ? generarHTMLDeComposicion(p, p.masterFmt||"display-300x250") : generarHTMLDePieza(p);
+  setPreviewWidth(esMovil() ? "movil" : "full");
+  document.getElementById("preview-modal").classList.add("show");
 }
 function renombrarProyectoInline(span, id){
   const pr = proyectoPorId(id); if(!pr) return;
@@ -5619,17 +5673,19 @@ function nuevaCreatividadMenu(ev, prId){
   proyectoVistoId = prId;
   cerrarMenusNav();
   let m = document.getElementById("menu-nueva-proy");
-  if(!m){
-    m = document.createElement("div");
-    m.id = "menu-nueva-proy"; m.className = "cnav-menu";
-    m.style.position = "fixed";
-    m.innerHTML = `<button onclick="crearDesde('email')">${svgIcon("email",{size:"15px"})} Email</button>
-      <button onclick="crearDesde('display-300x250')">${svgIcon("grid",{size:"15px"})} Banner Display</button>
-      <button onclick="crearDesde('linkedin-post')">${svgIcon("compartir",{size:"15px"})} Post RRSS</button>
-      <button onclick="crearDesde('ads')">${svgIcon("buscar",{size:"15px"})} Google Search Ads</button>
-      <button onclick="crearDesde('libre')">${svgIcon("documento",{size:"15px"})} Formato libre</button>`;
-    document.body.appendChild(m);
-  }
+  if(m) m.remove();   // se reconstruye para respetar los permisos vigentes
+  m = document.createElement("div");
+  m.id = "menu-nueva-proy"; m.className = "cnav-menu";
+  m.style.position = "fixed";
+  const items = [
+    ["email","email","email","Email"],
+    ["banner","display-300x250","grid","Banner Display"],
+    ["banner","linkedin-post","compartir","Post RRSS"],
+    ["ads","ads","buscar","Google Search Ads"],
+    ["libre","libre","documento","Formato libre"]
+  ].filter(([serv])=>puede(serv));
+  m.innerHTML = items.map(([serv,fmt,ico,lbl])=>`<button onclick="crearDesde('${fmt}')">${svgIcon(ico,{size:"15px"})} ${lbl}</button>`).join("");
+  document.body.appendChild(m);
   const r = ev.currentTarget.getBoundingClientRect();
   m.style.top = (r.bottom+6)+"px"; m.style.left = Math.max(10, r.right-222)+"px"; m.style.right = "auto";
   m.classList.add("open");
@@ -5657,21 +5713,26 @@ function montarPapeleraEnPagina(){
 function renderPermisosPage(){
   const cont = document.getElementById("permisos-cont"); if(!cont) return;
   const u = window.SBB_USER || {};
-  const lista = (u.allowed && u.allowed.length) ? u.allowed : (u.email ? [u.email] : []);
-  const superAdmin = (u.superAdmin || (u.isSuperAdmin ? u.email : "") || "").toLowerCase();
+  if(u.rol && u.rol !== "admin"){
+    cont.innerHTML = `<div class="hg-vacio">Los permisos los administra el administrador.</div>`;
+    return;
+  }
+  const lista = (u.usuarios && u.usuarios.length) ? u.usuarios : (u.usuario ? [{usuario:u.usuario, rol:u.rol||"admin", permisos:["*"]}] : []);
   const colores = ["#040764","#1c73cb","#20b6b6","#b318a3","#149a9a"];
+  const SERV_LBL = { "*":"Todo", email:"Email", banner:"Banners", ads:"Search", libre:"Libre" };
   cont.innerHTML = `<div class="perm-tabla">
-    <div class="perm-cab"><span>Persona</span><span>Correo</span><span>Rol</span></div>
+    <div class="perm-cab"><span>Usuario</span><span>Servicios</span><span>Rol</span></div>
     ${lista.map((m,i)=>{
-      const esSA = superAdmin && m.toLowerCase()===superAdmin;
+      const esAdm = m.rol === "admin";
+      const servs = (m.permisos||[]).map(p=>SERV_LBL[p]||p).join(" · ") || "—";
       return `<div class="perm-row">
-        <div class="perm-user"><span class="perm-av" style="background:${colores[i%colores.length]}">${esc((m[0]||"?"))}</span><span class="perm-nom">${esc(m.split("@")[0])}</span></div>
-        <span class="perm-mail">${esc(m)}</span>
-        <span class="st-pill"><span class="pt" style="background:${esSA?"#1c73cb":"#20b6b6"}"></span>${esSA?"Super admin":"Editor"}</span>
+        <div class="perm-user"><span class="perm-av" style="background:${colores[i%colores.length]}">${esc((m.usuario[0]||"?").toUpperCase())}</span><span class="perm-nom">${esc(m.usuario)}</span></div>
+        <span class="perm-mail">${esAdm?"Todos los servicios":esc(servs)}</span>
+        <span class="st-pill"><span class="pt" style="background:${esAdm?"#1c73cb":"#20b6b6"}"></span>${esAdm?"Administrador":"Limitado"}</span>
       </div>`;
     }).join("")}
   </div>
-  <div class="perm-nota">Los correos autorizados se administran en Cloudflare Pages → Settings → Variables y Secretos (<b>ALLOWED_EMAILS</b>, separados por coma). Al guardar la variable, el acceso aplica de inmediato sin tocar el código.</div>`;
+  <div class="perm-nota">Los usuarios se administran en el archivo <b>usuarios.js</b> del repositorio en GitHub: agrega o edita la línea del usuario (contraseña, rol y servicios) y guarda — en 1-2 minutos queda activo. La contraseña puede ir simple (campo <b>clave</b>) o protegida (genera la línea en <b>Configuración → Generador de acceso</b>).</div>`;
 }
 
 function renderConfigPage(){
@@ -5696,7 +5757,32 @@ function renderConfigPage(){
       <div class="int-row"><div><div class="int-nom">Cloudflare D1 · Datos</div><div class="int-sub">Guardado del workspace en la nube</div></div>${badge(ints.d1)}</div>
       <div class="int-row"><div><div class="int-nom">Cloudflare R2 · Imágenes</div><div class="int-sub">Almacenamiento de la biblioteca</div></div>${badge(ints.r2)}</div>
     </div>` : ""}
+    ${(u.rol==="admin") ? `<div class="cfg-card"><h3>Generador de acceso (usuarios.js)</h3>
+      <p style="font-size:12.5px;color:#5b6178;margin:0 0 12px;line-height:1.6;">Escribe el usuario y la contraseña que le inventaste. Te doy la <b>línea protegida</b> lista para pegar en el archivo <b>usuarios.js</b> de GitHub (la contraseña no queda legible). Elige también sus servicios editando "permisos".</p>
+      <div class="cfg-grid">
+        <div><div class="cfg-lbl">Usuario</div><input class="cfg-inp" id="gen-usuario" placeholder="ej. maria" autocapitalize="none" spellcheck="false"></div>
+        <div><div class="cfg-lbl">Contraseña</div><input class="cfg-inp" id="gen-pass" placeholder="la contraseña que le diste"></div>
+      </div>
+      <div class="cfg-acciones" style="margin-top:12px;"><button class="btn-pri" onclick="generarLineaUsuario()">Generar línea</button></div>
+      <textarea class="cfg-inp" id="gen-out" readonly style="display:none;margin-top:12px;height:130px;font-family:monospace;font-size:11.5px;line-height:1.5;" onclick="this.select()"></textarea>
+    </div>` : ""}
     <div class="cfg-acciones"><button class="btn-pri" onclick="guardarConfig()">Guardar cambios</button></div>`;
+}
+// Genera la línea de usuarios.js con la contraseña PROTEGIDA (sal + huella
+// sha256, calculada aquí mismo en el navegador — la contraseña no viaja a ningún lado).
+async function generarLineaUsuario(){
+  const usuario = (document.getElementById("gen-usuario")||{}).value.trim();
+  const pass = (document.getElementById("gen-pass")||{}).value;
+  if(!usuario || !pass){ toast("Escribe usuario y contraseña"); return; }
+  const sal = Array.from(crypto.getRandomValues(new Uint8Array(8))).map(b=>b.toString(16).padStart(2,"0")).join("");
+  const buf = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(sal+":"+pass));
+  const hash = Array.from(new Uint8Array(buf)).map(b=>b.toString(16).padStart(2,"0")).join("");
+  const linea = JSON.stringify({ usuario, rol:"limitado", permisos:["email","banner"], workspace:"ws-"+usuario.toLowerCase().replace(/[^a-z0-9]+/g,""), sal, hash }, null, 2);
+  const out = document.getElementById("gen-out");
+  out.value = linea + "\n\n← Pega esto en usuarios.js (dentro de \"usuarios\": [ … ]). Ajusta \"permisos\" a los servicios que le des: email, banner, ads, libre o [\"*\"].";
+  out.style.display = "";
+  out.focus(); out.select();
+  try{ await navigator.clipboard.writeText(linea); toast("Línea copiada al portapapeles"); }catch(_){ toast("Línea generada — cópiala del recuadro"); }
 }
 function guardarConfig(){
   const n = (document.getElementById("cfg-nombre")||{}).value || "";
@@ -6380,6 +6466,7 @@ function catalogoBloquesParaIA(){
 let iaPiezas = { email:true, banner:false, ads:false };
 function iaTogglePieza(p){
   if(!(p in iaPiezas)) return;
+  if(!iaPiezas[p] && !puede(p)){ toast("Tu usuario no tiene acceso a este servicio"); return; }
   iaPiezas[p] = !iaPiezas[p];
   if(!iaPiezas.email && !iaPiezas.banner && !iaPiezas.ads) iaPiezas[p] = true;   // al menos una
   iaPintaPiezas();
@@ -6391,7 +6478,10 @@ function iaSetFormato(f){
   iaPintaPiezas();
 }
 function iaPintaPiezas(){
-  document.querySelectorAll("#ia-piezas-seg button").forEach(b => b.classList.toggle("on", !!iaPiezas[b.dataset.p]));
+  // Permisos: sin acceso a un servicio, ni se ofrece ni queda marcado.
+  ["email","banner","ads"].forEach(k => { if(iaPiezas[k] && !puede(k)) iaPiezas[k] = false; });
+  if(!iaPiezas.email && !iaPiezas.banner && !iaPiezas.ads){ const primero = ["email","banner","ads"].find(k=>puede(k)); if(primero) iaPiezas[primero] = true; }
+  document.querySelectorAll("#ia-piezas-seg button").forEach(b => { b.style.display = puede(b.dataset.p) ? "" : "none"; b.classList.toggle("on", !!iaPiezas[b.dataset.p]); });
   const tw = document.getElementById("ia-tono-wrap"); if(tw) tw.style.display = iaPiezas.email ? "" : "none";
   // Search es 100% texto: el campo de fotos solo aplica si hay email o banner.
   const fw = document.getElementById("ia-fotos-wrap"); if(fw) fw.style.display = (iaPiezas.email || iaPiezas.banner) ? "" : "none";
@@ -6442,7 +6532,7 @@ function abrirIA(){
   if(sec==="/ads-ia") iaSetFormato("ads");
   else if(sec==="/gdn-ia") iaSetFormato("banner");
   else if(sec==="/email-ia") iaSetFormato("email");
-  else { iaPiezas = { email:true, banner:true, ads:true }; iaPintaPiezas(); }
+  else { iaPiezas = { email:puede("email"), banner:puede("banner"), ads:puede("ads") }; iaPintaPiezas(); }
   const ms = document.getElementById("ia-marca");
   const marcas = workspace.marcas||[];
   ms.innerHTML = (marcas.length ? "" : `<option value="">— Sin marca (crea una en Marcas) —</option>`) +
@@ -6969,12 +7059,30 @@ function aplicarModoDispositivo(){
 // Cada "producto" tiene su URL. El SPA entra a la sección al navegar (irARuta)
 // o al cargar un deep-link (aplicarRutaInicial). Lo "pronto" queda en gris.
 const RUTAS_PRODUCTO = {
-  "/email-ia": { tipo:"email",             nombre:"Email · Char-B" },
-  "/gdn-ia":   { tipo:"display-300x250",   nombre:"Banner Display · Char-B" },
-  "/free":     { tipo:"libre",             nombre:"Estilo Libre" },
+  "/email-ia": { tipo:"email",             nombre:"Email · Char-B",          serv:"email" },
+  "/gdn-ia":   { tipo:"display-300x250",   nombre:"Banner Display · Char-B", serv:"banner" },
+  "/free":     { tipo:"libre",             nombre:"Estilo Libre",            serv:"libre" },
   "/post-ia":  { pronto:true,              nombre:"Post RRSS" },
-  "/ads-ia":   { tipo:"ads",               nombre:"Google Search Ads" },
+  "/ads-ia":   { tipo:"ads",               nombre:"Google Search Ads",       serv:"ads" },
 };
+// Permisos por servicio: 'admin' o permiso '*' = todo; si aún no cargó la
+// sesión (o en pruebas locales sin whoami) no se bloquea nada.
+function puede(serv){
+  const u = window.SBB_USER;
+  if(!u || !u.rol) return true;
+  if(u.rol === "admin") return true;
+  const p = u.permisos || [];
+  return p.includes("*") || p.includes(serv);
+}
+// Oculta de la interfaz todo lo marcado con data-serv que el usuario no tiene.
+function aplicarPermisosUI(){
+  const u = window.SBB_USER; if(!u || !u.rol) return;
+  document.querySelectorAll("[data-serv]").forEach(el => { el.style.display = puede(el.dataset.serv) ? "" : "none"; });
+  const esAdmin = u.rol === "admin";
+  ["menu-perm-item","menu-config-item"].forEach(id => { const el=document.getElementById(id); if(el) el.style.display = esAdmin ? "" : "none"; });
+  const rolEl = document.getElementById("cuenta-rol");
+  if(rolEl) rolEl.textContent = esAdmin ? "Administrador" : "Usuario limitado";
+}
 const RUTAS_MENU = {
   "/proyectos":     () => dashVista("proyectos"),
   "/marcas":        () => dashVista("marcas"),
@@ -6991,6 +7099,7 @@ function irARuta(ruta){
   if(RUTAS_MENU[ruta]){ setURL(ruta); RUTAS_MENU[ruta](); return; }
   const cfg = RUTAS_PRODUCTO[ruta];
   if(cfg && cfg.pronto){ toast(cfg.nombre + ": próximamente"); return; }
+  if(cfg && cfg.serv && !puede(cfg.serv)){ toast("Tu usuario no tiene acceso a este servicio"); return; }
   if(cfg){ _rutaActual = ruta; setURL(ruta); crearDesde(cfg.tipo); return; }
   _rutaActual = "/home"; setURL("/home"); volverAProyectos();
 }
@@ -7001,6 +7110,7 @@ function aplicarRutaInicial(){
   if(RUTAS_MENU[ruta]){ RUTAS_MENU[ruta](); return; }
   const cfg = RUTAS_PRODUCTO[ruta];
   if(cfg && cfg.pronto){ toast(cfg.nombre + ": próximamente"); return; }
+  if(cfg && cfg.serv && !puede(cfg.serv)){ toast("Tu usuario no tiene acceso a este servicio"); setURL("/home"); return; }
   if(cfg) restaurarSeccion(ruta);
 }
 // Entra a una sección REABRIENDO la última pieza que tenías ahí (no crea una nueva

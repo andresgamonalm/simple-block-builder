@@ -84,22 +84,24 @@ input[type=email]:disabled{opacity:.6;cursor:not-allowed;}
     </div>
 
     <h1>Entrar al editor</h1>
-    <p class="sub">Te enviamos un enlace mágico al correo. Un clic y entras. Sin contraseñas.</p>
+    <p class="sub">Escribe tu usuario y tu contraseña. Sin correos ni enlaces.</p>
 
     <div class="alert" id="alert"></div>
 
-    <form id="form" autocomplete="email">
-      <label for="email">Tu correo</label>
-      <input type="email" id="email" name="email" required autocomplete="email" placeholder="tu@email.com">
+    <form id="form" autocomplete="on">
+      <label for="usuario">Usuario</label>
+      <input type="text" id="usuario" name="username" required autocomplete="username" placeholder="tu usuario" autocapitalize="none" spellcheck="false">
+      <label for="password" style="margin-top:12px;display:block;">Contraseña</label>
+      <input type="password" id="password" name="password" required autocomplete="current-password" placeholder="tu contraseña">
       <button type="submit" class="btn" id="btn">
         <span class="spin"></span>
-        <span class="lbl">Enviarme el enlace</span>
+        <span class="lbl">Entrar</span>
       </button>
     </form>
 
     <div class="foot">
-      Solo correos autorizados pueden entrar.<br>
-      Si no recibes el correo, revisa spam.
+      Solo usuarios autorizados pueden entrar.<br>
+      ¿Olvidaste tu contraseña? Pídele una nueva al administrador.
     </div>
   </div>
 </div>
@@ -110,7 +112,7 @@ input[type=email]:disabled{opacity:.6;cursor:not-allowed;}
     <div class="foto-alt">
       <svg class="mark" viewBox="0 0 40 40"><rect width="40" height="40" rx="10" fill="#0a0e57"/><rect x="9" y="10" width="22" height="5" rx="2.5" fill="#FCE865"/><rect x="9" y="19" width="9.5" height="11" rx="2.4" fill="#1C73CB"/><rect x="21.5" y="19" width="9.5" height="11" rx="2.4" fill="#20B6B6"/></svg>
       <div class="grande">Arma, aplica tu marca y lanza. Todo por bloques.</div>
-      <div class="chico">© Gamonal · Solo correos autorizados</div>
+      <div class="chico">© Gamonal · Solo usuarios autorizados</div>
     </div>
   </div>
   <div class="quote">
@@ -133,67 +135,53 @@ input[type=email]:disabled{opacity:.6;cursor:not-allowed;}
   splash.classList.add("hidden");
   card.style.display = "block";
 
-  // Mostrar mensaje si volvimos de un verify con error
+  // Mensajes al volver con error (p. ej. enlaces mágicos viejos, ya desactivados).
   const params = new URLSearchParams(location.search);
   const err = params.get("login_error");
   const alertEl = document.getElementById("alert");
   if (err) {
-    const map = {
-      sin_token: "El enlace no incluye token.",
-      invalido: "El enlace no es válido.",
-      ya_usado: "Este enlace ya se usó. Pide uno nuevo.",
-      expirado: "El enlace expiró. Pide uno nuevo.",
-      no_permitido: "Este email no tiene acceso.",
-      config: "Configuración del servidor incompleta. Avisa al admin.",
-    };
-    alertEl.textContent = map[err] || "Hubo un problema con el enlace.";
+    alertEl.textContent = (err === "desactivado")
+      ? "El acceso por enlace de correo se reemplazó: ahora entra con tu usuario y contraseña."
+      : "Hubo un problema al entrar. Usa tu usuario y contraseña.";
     alertEl.className = "alert err show";
     history.replaceState({}, "", location.pathname);
   }
 
   const form = document.getElementById("form");
-  const emailInput = document.getElementById("email");
+  const userInput = document.getElementById("usuario");
+  const passInput = document.getElementById("password");
   const btn = document.getElementById("btn");
   const btnLbl = btn.querySelector(".lbl");
+  const setBusy = (b) => {
+    btn.classList.toggle("loading", b); btn.disabled = b;
+    userInput.disabled = b; passInput.disabled = b;
+    btnLbl.textContent = b ? "Entrando..." : "Entrar";
+  };
 
   form.addEventListener("submit", async (e) => {
     e.preventDefault();
-    const email = emailInput.value.trim().toLowerCase();
-    if (!email) return;
-
-    btn.classList.add("loading");
-    btn.disabled = true;
-    emailInput.disabled = true;
-    btnLbl.textContent = "Enviando...";
+    const usuario = userInput.value.trim();
+    const password = passInput.value;
+    if (!usuario || !password) return;
+    setBusy(true);
     alertEl.classList.remove("show");
-
     try {
-      const r = await fetch("/api/auth/request", {
+      const r = await fetch("/api/auth/login", {
         method: "POST",
+        credentials: "include",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email })
+        body: JSON.stringify({ usuario, password })
       });
       const data = await r.json().catch(() => ({}));
-
-      if (r.ok && data.ok) {
-        alertEl.textContent = "Revisa tu correo. Si tu email está autorizado, te enviamos un enlace para entrar (expira en 15 min).";
-        alertEl.className = "alert ok show";
-        btnLbl.textContent = "Enlace enviado ✓";
-      } else {
-        alertEl.textContent = data.error || "No se pudo enviar el enlace. Intenta de nuevo.";
-        alertEl.className = "alert err show";
-        btn.classList.remove("loading");
-        btn.disabled = false;
-        emailInput.disabled = false;
-        btnLbl.textContent = "Enviarme el enlace";
-      }
+      if (r.ok && data.ok) { location.replace("/home"); return; }
+      alertEl.textContent = data.error || "Usuario o contraseña incorrectos.";
+      alertEl.className = "alert err show";
+      setBusy(false);
+      passInput.value = ""; passInput.focus();
     } catch (e) {
       alertEl.textContent = "Error de red. Verifica tu conexión.";
       alertEl.className = "alert err show";
-      btn.classList.remove("loading");
-      btn.disabled = false;
-      emailInput.disabled = false;
-      btnLbl.textContent = "Enviarme el enlace";
+      setBusy(false);
     }
   });
 })();

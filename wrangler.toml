@@ -14,12 +14,12 @@ binding     = "IMAGENES"
 bucket_name = "simple-builder-block-img"
 
 # Variables NO sensibles. Se administran aquí (no en el dashboard).
-# Para agregar a alguien al sistema, edita ALLOWED_EMAILS y haz git push.
+# ACCESOS: los usuarios (nombre + contraseña + permisos) viven en usuarios.js
+# en la raíz del repo — se editan ahí y con git push quedan activos.
 [vars]
 SITE_URL          = "https://simple-block-builder.gamonal.app"
 SUPER_ADMIN_EMAIL = "hola@andresgamonal.com"
 RESEND_FROM       = "Simple Block Builder <onboarding@resend.dev>"
-ALLOWED_EMAILS    = "hola@andresgamonal.com"
 
 # Las variables sensibles (cifradas) se configuran como Secrets en
 # Cloudflare Pages → Settings → Variables y secretos:

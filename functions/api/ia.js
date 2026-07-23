@@ -9,7 +9,7 @@
 //
 // La API key de Gemini vive en env.GEMINI_API_KEY (secreto).
 
-import { json, corsPreflight, getUserEmail } from './_shared.js';
+import { json, corsPreflight, getUserEmail, getSesion, tienePermiso } from './_shared.js';
 
 export const onRequestOptions = () => corsPreflight();
 
@@ -69,8 +69,8 @@ export async function onRequestPost(ctx) {
 }
 
 async function generar({ request, env }) {
-  const email = await getUserEmail(request, env);
-  if (!email) return json({ ok: false, error: 'No autenticado' }, 401);
+  const sesion = await getSesion(request, env);
+  if (!sesion) return json({ ok: false, error: 'No autenticado' }, 401);
   if (!env.GEMINI_API_KEY) {
     return json({ ok: false, error: 'Falta GEMINI_API_KEY en el servidor (cárgala como secreto en Cloudflare).' }, 500);
   }
@@ -78,6 +78,17 @@ async function generar({ request, env }) {
   let body;
   try { body = await request.json(); }
   catch { return json({ ok: false, error: 'JSON inválido' }, 400); }
+
+  // Permisos por servicio (el servidor manda, no solo la UI): cada producto
+  // exige su permiso; los modos auxiliares exigen alguno que los use.
+  const necesita = body.producto === 'ads' ? 'ads'
+                 : body.producto === 'banner' ? 'banner'
+                 : (body.modo === 'textos' || body.modo === 'imagen') ? 'banner'
+                 : body.modo === 'concepto' ? null   // lo valida el orquestador pieza a pieza
+                 : 'email';
+  if (necesita && !tienePermiso(sesion, necesita)) {
+    return json({ ok: false, error: 'Tu usuario no tiene acceso a este servicio (' + necesita + ').' }, 403);
+  }
 
   const brief = body.brief || {};
 

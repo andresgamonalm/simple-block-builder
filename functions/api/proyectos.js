@@ -7,13 +7,31 @@
 //
 // Todo requiere sesión válida (cookie firmada). El id de la fila es el email.
 
-import { json, corsPreflight, getUserEmail, nowIso } from './_shared.js';
+import { json, corsPreflight, getSesion, listaUsuarios, nowIso } from './_shared.js';
 
 export const onRequestOptions = () => corsPreflight();
 
 export async function onRequestGet({ request, env }) {
-  const email = await getUserEmail(request, env);
-  if (!email) return json({ ok: false, error: 'No autenticado' }, 401);
+  const s = await getSesion(request, env);
+  if (!s) return json({ ok: false, error: 'No autenticado' }, 401);
+  const email = s.ws;
+
+  // Vista de ADMIN: los espacios de TODOS los usuarios (solo lectura, para el
+  // dashboard del administrador — cada tarjeta lleva el dueño).
+  const u = new URL(request.url);
+  if (u.searchParams.get('todos') === '1') {
+    if (s.rol !== 'admin') return json({ ok: false, error: 'Solo el administrador' }, 403);
+    const espacios = [];
+    for (const usr of listaUsuarios()) {
+      const wsKey = usr.workspace || usr.usuario;
+      if (wsKey === s.ws) continue;   // el propio ya lo tiene la app
+      const row = await env.DB.prepare('SELECT piezas_json, actualizado_en FROM proyectos WHERE id = ?').bind(wsKey).first();
+      if (!row) { espacios.push({ usuario: usr.usuario, proyectos: [], actualizado_en: null }); continue; }
+      let ws = null; try { ws = JSON.parse(row.piezas_json); } catch {}
+      espacios.push({ usuario: usr.usuario, proyectos: (ws && ws.proyectos) || [], actualizado_en: row.actualizado_en });
+    }
+    return json({ ok: true, espacios });
+  }
 
   const row = await env.DB
     .prepare('SELECT piezas_json, actualizado_en FROM proyectos WHERE id = ?')
@@ -28,8 +46,9 @@ export async function onRequestGet({ request, env }) {
 }
 
 export async function onRequestPost({ request, env }) {
-  const email = await getUserEmail(request, env);
-  if (!email) return json({ ok: false, error: 'No autenticado' }, 401);
+  const s = await getSesion(request, env);
+  if (!s) return json({ ok: false, error: 'No autenticado' }, 401);
+  const email = s.ws;
 
   let body;
   try { body = await request.json(); }

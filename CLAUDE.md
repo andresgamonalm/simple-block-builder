@@ -253,6 +253,39 @@ cualquier marca):
   primary #2167ae y CTA #e71313 se mantienen. (D1 via MCP con bump de _ts.)
 - Verificado con Playwright: veri-zurich.js 14/14 + regresión campana 17/17 + ads 32/32.
 
+## Login por USUARIO + CONTRASEÑA y permisos por servicio — jul-2026 (ESTADO ACTUAL — no rehacer)
+Pedido del usuario: sin magic link ni correos; usuarios editables "casi en GitHub"; su acceso
+admin + usuarios limitados por servicio; **cada usuario ve SUS proyectos y el admin ve los de
+todos** (con identificador del dueño en la card).
+- **`usuarios.js` (raíz del repo)** = fuente de verdad de accesos: `{usuario, rol:'admin'|'limitado',
+  permisos:['*']|['email','banner','ads','libre'], workspace, clave? | sal+hash}`. Editar en GitHub →
+  deploy 1-2 min. Contraseña en 2 modos: `clave` en texto plano (elección del admin, manda si existe)
+  o `sal`+`hash` (sha256 de "sal:contraseña"; generador en Configuración). Es .js con `export default`
+  (NO .json: el import JSON podía romper el bundler de Pages).
+- **Backend** (`_shared.js`): `getSesion()` → `{usuario, rol, permisos, ws}`; cookie JWT guarda solo
+  `{u}` y el resto se relee del archivo (sacar a alguien del archivo lo expulsa al tiro). `getUserEmail()`
+  = compat → devuelve `ws` (para andres sigue siendo `hola@andresgamonal.com`: NO se migró D1).
+  `tienePermiso(s,serv)`. `POST /api/auth/login {usuario,password}`; `auth/request`/`verify` = stubs 410
+  (magic link muerto); ALLOWED_EMAILS eliminado de wrangler.toml. **Permisos server-side**: ia.js exige
+  el permiso del producto (ads/banner/email; modos textos/imagen→banner; concepto→lo validan las piezas),
+  test-send exige email. `/api/proyectos?todos=1` (solo admin) → `{espacios:[{usuario,proyectos[]}]}`.
+  whoami → `{usuario, email(=usuario, compat), rol, permisos, isSuperAdmin:rol==='admin', usuarios[] y
+  config solo admin}`.
+- **Frontend**: index.html = form usuario+contraseña (login_error=desactivado para enlaces viejos).
+  editor.html: `puede(serv)` (sin whoami no bloquea — clave para tests/mocks), `aplicarPermisosUI()`
+  oculta `[data-serv]` (lanzadores Home, menús + Nueva desktop/móvil) y deja Permisos/Configuración
+  solo admin (`#menu-perm-item`/`#menu-config-item`); `cuenta-rol` = Administrador/Usuario limitado.
+  Guardas en `irARuta`/`aplicarRutaInicial` (toast "no tienes acceso"); `nuevaCreatividadMenu` se
+  reconstruye filtrado; asistente IA: `iaPintaPiezas` oculta y desmarca piezas sin permiso.
+  **Admin ve a los demás**: `renderEspaciosOtros()` en la página Proyectos (fetch `?todos=1`, cache
+  `_espaciosOtros`) — grupos solo-lectura con **badge del dueño** (chip usuario) y `previewAjeno()`
+  (vista previa; no se editan espacios ajenos: el sync LWW de workspace completo se pisaría).
+  Configuración: **Generador de acceso** (`generarLineaUsuario`, sha256 en el navegador, copia la
+  línea lista para usuarios.js). Página Permisos = lista de usuarios.js con rol y servicios.
+- **Credenciales iniciales**: andres (admin, hash) y equipo (limitado email+banner, workspace
+  ws-equipo, hash). Las temporales se avisaron por chat; cambiar = generador o campo `clave`.
+- Verificado con Playwright: veri-login.js 21/21 + regresiones campana 17/17, ads 32/32, zurich 14/14.
+
 ## Roadmap / pendientes
 **Pendientes activos (jun-2026):** (1) confirmar/cerrar la **franja blanca en verticales** (esperando captura del caso exacto); (2) **bloques más ricos** para email (features con ícono en círculo de color, secciones con fondo, hero con degradado, tarjetas con sombra — SIN redondeo por defecto); (3) afinar, si se pide, qué tipografías/recursos extra muestran **/gdn-ia** y **/free**; (4) encender **/post-ia** y **/ads-ia** cuando toque.
 0. ✅ **(a) PLANTILLAS POR TIPO DE EMAIL — HECHO.** El nuevo `generarEmail` (ia.js) pide a la IA **solo el copy estructurado** `{ nombre, titular, intro, oferta, beneficios:[{icono,titulo,texto}]×3, cierre, cta, imagen }` y el **código arma el esqueleto** según `brief.tipo`: **comercial** = hero(titular sobre foto) → alert(oferta) → texto(intro) → features → espaciador → cta; **corporativo/informativo** = hero → texto(intro) → features → divisor → texto(cierre) → cta (sin alert agresivo); sin foto → título de texto en vez de hero. Íconos validados/distintos (lista `ICONOS_VALIDOS`), titulares sin punto (`sinPuntoFinal`), **un solo CTA al final**. Más rápido (maxTokens 2048, sin pedir maquetación). El cliente (`generarConIA`) ya no duplica fotos (la red de seguridad solo inserta hero si NO hay ningún bloque visual). Verificado con Playwright (10/10 PASS). **Pendiente (b):** bloques más ricos (features con ícono en círculo de color, secciones con fondo, hero con degradado, tarjetas con sombra) — SIN redondeo por defecto. Idea futura: pedir 1-2 emails "bien diseñados" como referencia para clonar el estándar.

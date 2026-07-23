@@ -3,13 +3,15 @@
 // (onboarding@resend.dev) solo llega al dueño de la cuenta; para enviar a
 // cualquier destinatario hay que verificar un dominio propio en Resend.
 
-import { json, corsPreflight, getUserEmail } from './_shared.js';
+import { json, corsPreflight, getSesion, tienePermiso } from './_shared.js';
 
 export const onRequestOptions = () => corsPreflight();
 
 export async function onRequestPost({ request, env }) {
-  const email = await getUserEmail(request, env);
-  if (!email) return json({ ok: false, error: 'No autenticado' }, 401);
+  const s = await getSesion(request, env);
+  if (!s) return json({ ok: false, error: 'No autenticado' }, 401);
+  if (!tienePermiso(s, 'email')) return json({ ok: false, error: 'Tu usuario no tiene acceso al servicio de email.' }, 403);
+  const email = s.ws;
 
   let body;
   try { body = await request.json(); }

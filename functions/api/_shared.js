@@ -112,40 +112,82 @@ export function buildLogoutCookie() {
   return `${SESSION_COOKIE}=; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=0`;
 }
 
-// ── Auth: lista de emails permitidos + lectura de sesión ────────────────
-export function getAllowedEmails(env) {
-  const raw = env.ALLOWED_EMAILS || '';
-  return raw.split(',').map(e => e.trim().toLowerCase()).filter(Boolean);
+// ── Auth por USUARIO + CONTRASEÑA (archivo usuarios.json del repo) ──────
+// Los usuarios viven en usuarios.js (raíz del repo): usuario, rol
+// ('admin'|'limitado'), permisos (['*'] o ['email','banner','ads','libre']),
+// workspace (clave de su espacio en D1) y la contraseña como "clave" simple
+// o como sal+hash (sha256 de "sal:contraseña" — nunca legible). Editar el
+// archivo en GitHub = alta/baja/cambio de contraseña (auto-deploy en 1-2 min).
+import USUARIOS_FILE from '../../usuarios.js';
+
+export function listaUsuarios() {
+  return (USUARIOS_FILE && Array.isArray(USUARIOS_FILE.usuarios)) ? USUARIOS_FILE.usuarios : [];
+}
+export function buscarUsuario(nombre) {
+  const n = String(nombre || '').trim().toLowerCase();
+  return listaUsuarios().find(u => String(u.usuario || '').toLowerCase() === n) || null;
+}
+export async function sha256Hex(str) {
+  const buf = await crypto.subtle.digest('SHA-256', ENC.encode(str));
+  return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, '0')).join('');
+}
+export async function verificarPassword(u, password) {
+  if (!u) return false;
+  // Opción simple: "clave" en texto plano en el archivo (elección del admin).
+  if (u.clave != null && u.clave !== '') return String(password || '') === String(u.clave);
+  // Opción protegida: sal + hash (generador en Configuración).
+  if (!u.hash || !u.sal) return false;
+  const h = await sha256Hex(u.sal + ':' + String(password || ''));
+  return h === u.hash;
 }
 
-export function isEmailAllowed(email, env) {
-  if (!email) return false;
-  return getAllowedEmails(env).includes(email.trim().toLowerCase());
-}
-
-export async function getUserEmail(request, env) {
+// Sesión: la cookie guarda { u: usuario }. El resto (rol/permisos/workspace)
+// se lee SIEMPRE del archivo → quitar un usuario del archivo lo saca al tiro.
+export async function getSesion(request, env) {
   const token = readCookie(request, SESSION_COOKIE);
   if (!token) {
-    // DEV_USER_EMAIL es SOLO para desarrollo local (wrangler pages dev).
-    // En producción nunca inicia sesión sola, aunque la variable exista.
+    // DEV_USER_EMAIL es SOLO para desarrollo local (wrangler pages dev):
+    // entra como el primer admin del archivo, nunca en producción.
     if (env.DEV_USER_EMAIL) {
       let host = '';
       try { host = new URL(request.url).hostname; } catch {}
-      if (host === 'localhost' || host === '127.0.0.1') return env.DEV_USER_EMAIL.toLowerCase();
+      if (host === 'localhost' || host === '127.0.0.1') {
+        const adm = listaUsuarios().find(u => u.rol === 'admin');
+        if (adm) return sesionDe(adm);
+      }
     }
     return null;
   }
   const payload = await verifyJWT(token, env.JWT_SECRET || 'dev-only-secret');
-  if (!payload) return null;
-  const email = (payload.email || '').toLowerCase();
-  // Si el email se quitó del allowlist después de loguearse, deja de tener acceso.
-  if (!isEmailAllowed(email, env)) return null;
-  return email || null;
+  if (!payload || !payload.u) return null;   // cookies del login viejo (email) quedan inválidas
+  const u = buscarUsuario(payload.u);
+  if (!u) return null;
+  return sesionDe(u);
+}
+function sesionDe(u) {
+  return { usuario: u.usuario, rol: (u.rol === 'admin') ? 'admin' : 'limitado', permisos: Array.isArray(u.permisos) ? u.permisos : [], ws: u.workspace || u.usuario };
+}
+export function tienePermiso(s, servicio) {
+  if (!s) return false;
+  if (s.rol === 'admin') return true;
+  const p = s.permisos || [];
+  return p.includes('*') || p.includes(servicio);
 }
 
-export function isSuperAdmin(email, env) {
-  const sa = (env.SUPER_ADMIN_EMAIL || 'hola@andresgamonal.com').toLowerCase();
-  return email === sa;
+// Compat: los endpoints viejos piden "el email del usuario"; ahora devuelve la
+// CLAVE DE WORKSPACE de la sesión (para andres sigue siendo su email histórico,
+// así no se migra ninguna fila de D1).
+export async function getUserEmail(request, env) {
+  const s = await getSesion(request, env);
+  return s ? s.ws : null;
+}
+
+export function getAllowedEmails() {
+  return listaUsuarios().map(u => u.usuario);
+}
+
+export function isSuperAdmin(_email, _env) {
+  return false;   // compat: el rol ahora viene de la sesión (getSesion().rol === 'admin')
 }
 
 export function nowIso() {

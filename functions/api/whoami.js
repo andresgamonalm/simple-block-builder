@@ -1,16 +1,21 @@
-import { json, corsPreflight, getUserEmail, isSuperAdmin, getAllowedEmails } from './_shared.js';
+import { json, corsPreflight, getSesion, listaUsuarios } from './_shared.js';
 
 export const onRequestOptions = () => corsPreflight();
 
 export async function onRequestGet({ request, env }) {
-  const email = await getUserEmail(request, env);
-  if (!email) return json({ ok: false, error: 'No autenticado' }, 401);
-  const out = { ok: true, email, isSuperAdmin: isSuperAdmin(email, env) };
-  // Extensión aditiva (rediseño Portal): datos reales para Permisos y Configuración.
-  // Solo el super admin ve la lista de autorizados y el estado de integraciones.
-  if (out.isSuperAdmin) {
-    out.allowed = getAllowedEmails(env);
-    out.superAdmin = (env.SUPER_ADMIN_EMAIL || 'hola@andresgamonal.com').toLowerCase();
+  const s = await getSesion(request, env);
+  if (!s) return json({ ok: false, error: 'No autenticado' }, 401);
+  const out = {
+    ok: true,
+    usuario: s.usuario,
+    email: s.usuario,             // compat: la UI vieja muestra "email"
+    rol: s.rol,
+    permisos: s.permisos,
+    isSuperAdmin: s.rol === 'admin',
+  };
+  // Solo el admin ve la lista de usuarios (sin sal/hash) y el estado del sistema.
+  if (s.rol === 'admin') {
+    out.usuarios = listaUsuarios().map(u => ({ usuario: u.usuario, rol: u.rol === 'admin' ? 'admin' : 'limitado', permisos: u.permisos || [], workspace: u.workspace || u.usuario }));
     out.config = {
       resendFrom: env.RESEND_FROM || '',
       siteUrl: env.SITE_URL || '',
