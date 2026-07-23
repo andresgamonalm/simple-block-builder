@@ -132,7 +132,9 @@ async function generar({ request, env }) {
     if(Array.isArray(parts)) texto = parts.map(p => (p && p.text) || "").join("");
     const parsed = extraerJSON(texto);
     if(!parsed) return json({ ok:false, error:"No se pudo interpretar la respuesta de la IA. Inicio: "+String(texto).slice(0,160) }, 500);
-    return json({ ok:true, titular:String(parsed.titular||"").slice(0,120), cuerpo:String(parsed.cuerpo||"").slice(0,240), cta:String(parsed.cta||"").slice(0,40) });
+    // Segunda pasada: corrector ortográfico RAE.
+    const rev = await corregirOrtografia(env, [String(parsed.titular||""), String(parsed.cuerpo||""), String(parsed.cta||"")]);
+    return json({ ok:true, titular:rev.textos[0].slice(0,120), cuerpo:rev.textos[1].slice(0,240), cta:rev.textos[2].slice(0,40), ortografia: rev.revisado ? "revisada" : "sin-revisar" });
   }
 
   // Modo "imagen": genera una FOTOGRAFÍA de fondo con Imagen (misma API key de
@@ -205,14 +207,18 @@ async function generar({ request, env }) {
     const { parsed, error } = await llamarGemini(env, prompt, 1024);
     if (error) return json({ ok: false, error }, 500);
     const c = parsed || {};
+    const mensajes = (Array.isArray(c.mensajes) ? c.mensajes : []).map(m => String(m).replace(/\s+/g, ' ').trim().slice(0, 120)).filter(Boolean).slice(0, 4);
+    // Segunda pasada: corrector ortográfico RAE (el concepto guía TODAS las piezas).
+    const rev = await corregirOrtografia(env, [String(c.nombre || brief.que), String(c.idea || ''), String(c.titular || '')].concat(mensajes));
     return json({
       ok: true,
-      nombre: String(c.nombre || brief.que).replace(/\s+/g, ' ').trim().slice(0, 60),
+      nombre: rev.textos[0].slice(0, 60),
       concepto: {
-        idea: String(c.idea || '').replace(/\s+/g, ' ').trim().slice(0, 200),
-        titular: String(c.titular || '').replace(/\s*[.。]+\s*$/, '').replace(/\s+/g, ' ').trim().slice(0, 80),
-        mensajes: (Array.isArray(c.mensajes) ? c.mensajes : []).map(m => String(m).replace(/\s+/g, ' ').trim().slice(0, 120)).filter(Boolean).slice(0, 4)
-      }
+        idea: rev.textos[1].slice(0, 200),
+        titular: rev.textos[2].replace(/\s*[.。]+\s*$/, '').slice(0, 80),
+        mensajes: mensajes.map((m, i) => rev.textos[3 + i].slice(0, 120))
+      },
+      ortografia: rev.revisado ? 'revisada' : 'sin-revisar'
     });
   }
 
@@ -272,7 +278,14 @@ function enfoqueDe(tipo) {
   if (tipo === 'corporativo') return 'ENFOQUE CORPORATIVO: tono institucional, sobrio y de confianza; comunica respaldo, solidez y profesionalismo. NADA de urgencia ni lenguaje de oferta. Titular sereno; cuerpo claro y elegante; CTA suave.';
   if (tipo === 'informativo') return 'ENFOQUE INFORMATIVO: explica con claridad y calma el producto y sus beneficios; útil y didáctico, sin presión de venta. Titular descriptivo; cuerpo que orienta; CTA suave e invitador.';
   if (tipo === 'newsletter') return 'ENFOQUE NEWSLETTER: varias secciones cortas de novedades/contenido útil, en la voz cercana de la marca; cada sección con su mini-titular; sin sobre-venta.';
-  return 'ENFOQUE COMERCIAL (que VENDA): el titular comunica un BENEFICIO claro (persuade, no describe); el cuerpo conecta con el deseo/dolor del público y resalta el gancho; genera urgencia/escasez cuando aplique; lenguaje concreto y enérgico, frases cortas, cero relleno; CTA potente en imperativo + adverbio.';
+  return [
+    'ENFOQUE COMERCIAL (que VENDA): esto es PUBLICIDAD, no comunicación corporativa.',
+    '- El titular vende un BENEFICIO concreto para el lector (persuade, no describe el producto ni habla de la empresa).',
+    '- Háblale al lector de TÚ y de lo que ÉL gana. La primera frase es sobre el lector, nunca sobre la marca.',
+    '- PROHIBIDO el tono de comunicado: "Nos complace anunciar", "En [marca] estamos comprometidos", "Queremos informarte", "Le informamos", "Nos es grato", "Estimado cliente". Si una frase podría abrir una memoria anual, reescríbela.',
+    '- Genera urgencia o escasez SOLO si el gancho la trae de verdad; lenguaje concreto y enérgico, frases cortas, cero relleno.',
+    '- CTA potente en imperativo + adverbio.'
+  ].join('\n');
 }
 
 // ── Lee 1-3 URLs de referencia y devuelve un extracto de texto ────────────
@@ -350,7 +363,7 @@ function extraerJSON(texto) {
   }
   return undefined;
 }
-async function llamarGemini(env, promptOrParts, maxTokens) {
+async function llamarGemini(env, promptOrParts, maxTokens, temp) {
   const model = env.GEMINI_MODEL || 'gemini-2.5-flash';
   const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${encodeURIComponent(env.GEMINI_API_KEY)}`;
   const ctl = new AbortController(); const timer = setTimeout(() => ctl.abort(), 40000);
@@ -360,7 +373,7 @@ async function llamarGemini(env, promptOrParts, maxTokens) {
   try {
     res = await fetch(url, {
       method: 'POST', headers: { 'Content-Type': 'application/json' }, signal: ctl.signal,
-      body: JSON.stringify({ contents: [{ role: 'user', parts: partesEntrada }], generationConfig: { responseMimeType: 'application/json', temperature: 0.7, maxOutputTokens: maxTokens || 4096, thinkingConfig: { thinkingBudget: 0 } } })
+      body: JSON.stringify({ contents: [{ role: 'user', parts: partesEntrada }], generationConfig: { responseMimeType: 'application/json', temperature: (typeof temp === 'number' ? temp : 0.7), maxOutputTokens: maxTokens || 4096, thinkingConfig: { thinkingBudget: 0 } } })
     });
   } catch (e) {
     return { error: (e && e.name === 'AbortError') ? `Gemini (${model}) tardó demasiado. Prueba GEMINI_MODEL=gemini-flash-latest.` : 'No se pudo contactar a Gemini: ' + (e.message || e) };
@@ -376,6 +389,36 @@ async function llamarGemini(env, promptOrParts, maxTokens) {
   const parsed = extraerJSON(texto);
   if (parsed === undefined) return { error: 'No se pudo interpretar la respuesta de la IA como JSON. Inicio: ' + String(texto).slice(0, 160) };
   return { parsed };
+}
+
+// ── Corrección ortográfica RAE (segunda pasada, server-side) ──────────────
+// La regla "cero faltas" en el prompt demostró NO bastar (salió un banner con
+// falta de ortografía). Ahora TODO texto visible pasa por un corrector antes
+// de devolverse: una llamada extra a Gemini con temperatura 0 que corrige SOLO
+// ortografía/puntuación RAE sin tocar estilo ni largo. Si el corrector falla,
+// la generación no se bloquea: se devuelven los originales y `ortografia:"sin-revisar"`.
+async function corregirOrtografia(env, textos) {
+  const originales = textos.map(t => String(t == null ? '' : t));
+  const conTexto = originales.map((t, i) => [i, t]).filter(p => p[1].trim().length > 1);
+  if (!conTexto.length) return { textos: originales, revisado: true };
+  const prompt = [
+    'Eres corrector ortográfico profesional de piezas publicitarias en español de Chile (normas RAE).',
+    'Corrige SOLO: tildes y acentos, mayúsculas/minúsculas, signos de apertura y cierre (¿? ¡!), puntuación y erratas evidentes (letras cambiadas o faltantes).',
+    'NO cambies: el estilo, el orden de las palabras, el vocabulario, los números, los nombres de marca o producto, ni el largo. NO agregues punto final a un texto que no lo tenía. NO "mejores" la redacción.',
+    'Devuelve EXCLUSIVAMENTE este JSON: { "textos": [ ... ] } con la MISMA cantidad de textos, en el MISMO orden (idénticos si ya estaban correctos).',
+    'TEXTOS A REVISAR:',
+    JSON.stringify({ textos: conTexto.map(p => p[1]) })
+  ].join('\n');
+  const { parsed, error } = await llamarGemini(env, prompt, 3072, 0);
+  if (error || !parsed || !Array.isArray(parsed.textos) || parsed.textos.length !== conTexto.length) {
+    return { textos: originales, revisado: false };
+  }
+  const out = originales.slice();
+  for (let j = 0; j < conTexto.length; j++) {
+    const corregido = String(parsed.textos[j] == null ? '' : parsed.textos[j]).replace(/\s+/g, ' ').trim();
+    if (corregido) out[conTexto[j][0]] = corregido;
+  }
+  return { textos: out, revisado: true };
 }
 
 // ════════════ PRODUCTO 1: BANNERS DE GOOGLE DISPLAY (3 zonas) ════════════
@@ -439,6 +482,12 @@ async function generarBanner({ env, brief, marca, imagenes, refsTxt }) {
     imagen: (typeof parsed.imagen === 'string' && /^https?:\/\//.test(parsed.imagen)) ? parsed.imagen : ''
   };
   if (!out.zonas.titular && !out.zonas.cuerpo) return json({ ok: false, error: 'La IA no produjo textos. Reformula el brief.' }, 500);
+  // Segunda pasada: corrector ortográfico RAE sobre todo texto visible.
+  const rev = await corregirOrtografia(env, [out.nombre, out.zonas.etiqueta, out.zonas.titular, out.zonas.cuerpo, out.zonas.cta, out.burbuja]);
+  out.nombre = String(rev.textos[0]).slice(0, 80);
+  out.zonas = { etiqueta: limpia(rev.textos[1], 3), titular: sinPuntoFinal(limpia(rev.textos[2], 8)), cuerpo: limpia(rev.textos[3], 18), cta: limpia(rev.textos[4], 4) };
+  out.burbuja = brief.gancho ? limpia(rev.textos[5], 5) : '';
+  out.ortografia = rev.revisado ? 'revisada' : 'sin-revisar';
   return json(out);
 }
 
@@ -475,6 +524,7 @@ async function generarEmail({ env, brief, marca, imagenes, refsTxt }) {
     '',
     'REGLAS:',
     '- Español de Chile, concreto y persuasivo; nada de placeholders ni texto de relleno.',
+    '- Escribe como un AVISO publicitario, no como un comunicado: el lector debe sentir que le hablan a él (tú), no que la empresa se describe a sí misma.',
     '- Exactamente 3 beneficios. Cada "icono" DISTINTO y relevante, de esta lista EXACTA: ' + ICONOS_VALIDOS.join(', ') + '.',
     '- "imagen": elige la URL EXACTA de la biblioteca cuya descripción mejor calce con el brief; si ninguna calza o está vacía, deja "". NUNCA un logo ni un ícono.',
     '- Titulares y frases sobre imagen NUNCA terminan en punto.',
@@ -513,16 +563,28 @@ async function generarEmail({ env, brief, marca, imagenes, refsTxt }) {
     return { ico, t: sinPuntoFinal(b && b.titulo).slice(0, 40), s: String((b && b.texto) || '').replace(/\s+/g, ' ').trim().slice(0, 140) };
   }).filter(b => b.t || b.s);
 
+  // ── Segunda pasada: corrector ortográfico RAE sobre todo el copy ──────
+  const nombreEmail = String(c.nombre || brief.que).slice(0, 120);
+  const planos = [titular, intro, oferta, cierre, cta].concat(benes.flatMap(b => [b.t, b.s])).concat([nombreEmail]);
+  const rev = await corregirOrtografia(env, planos);
+  const titularR = sinPuntoFinal(rev.textos[0]).slice(0, 90);
+  const introR   = rev.textos[1].slice(0, 260);
+  const ofertaR  = sinPuntoFinal(rev.textos[2]).slice(0, 90);
+  const cierreR  = rev.textos[3].slice(0, 260);
+  const ctaR     = (rev.textos[4].split(' ').slice(0, 3).join(' ')) || cta;
+  benes = benes.map((b, i) => ({ ico: b.ico, t: sinPuntoFinal(rev.textos[5 + i * 2]).slice(0, 40), s: rev.textos[6 + i * 2].slice(0, 140) }));
+  const nombreR = rev.textos[5 + benes.length * 2].slice(0, 120) || nombreEmail;
+
   // ── Esqueleto por TIPO (el "molde" del email) ─────────────────────────
   const bloques = [];
   const push = (t, datos) => bloques.push({ tipo: t, datos });
   // 1) Imagen principal → HERO (titular ENCIMA de la foto). Sin foto → título de texto.
-  if (imagen) push('hero', { imagenUrl: imagen, titulo: titular, sub: '', ctaTexto: '', alturaHero: '340', oscurecer: '45', radioImg: '0' });
-  else        push('texto', { titulo: titular, contenido: '', tamano: '26', negrita: true, alinH: 'center' });
+  if (imagen) push('hero', { imagenUrl: imagen, titulo: titularR, sub: '', ctaTexto: '', alturaHero: '340', oscurecer: '45', radioImg: '0' });
+  else        push('texto', { titulo: titularR, contenido: '', tamano: '26', negrita: true, alinH: 'center' });
   // 2) Oferta destacada — SIEMPRE después de la foto (solo comercial la resalta en banner).
-  if (oferta && tipo === 'comercial') push('alert', { tipo: 'info', titulo: oferta, mensaje: '' });
+  if (ofertaR && tipo === 'comercial') push('alert', { tipo: 'info', titulo: ofertaR, mensaje: '' });
   // 3) Intro
-  if (intro) push('texto', { contenido: intro });
+  if (introR) push('texto', { contenido: introR });
   // 4) Beneficios (íconos distintos)
   if (benes.length) push('features', { items: benes });
   // 5) Respiro / cierre según el tono del tipo
@@ -530,13 +592,13 @@ async function generarEmail({ env, brief, marca, imagenes, refsTxt }) {
     push('espaciador', { altoEsp: '24' });
   } else {
     push('divisor', {});
-    if (cierre) push('texto', { contenido: cierre });
+    if (cierreR) push('texto', { contenido: cierreR });
     else push('espaciador', { altoEsp: '16' });
   }
   // 6) UN solo CTA, al final (el enlace lo fija el usuario en el cliente).
-  push('cta', { texto: cta, url: '' });
+  push('cta', { texto: ctaR, url: '' });
 
-  return json({ ok: true, nombre: String(c.nombre || brief.que).slice(0, 120), bloques });
+  return json({ ok: true, nombre: nombreR, bloques, ortografia: rev.revisado ? 'revisada' : 'sin-revisar' });
 }
 
 // ════════════ PRODUCTO 3: GOOGLE SEARCH ADS (campaña razonada) ════════════
@@ -623,11 +685,31 @@ async function generarAds({ env, brief, marca, refsTxt }) {
 
   if (!grupos.length) return json({ ok: false, error: 'La IA no produjo grupos de anuncios válidos. Reformula el brief (di qué vendes y a quién).' }, 500);
 
+  // Segunda pasada: corrector RAE sobre los textos VISIBLES (nombres, intención,
+  // titulares y descripciones). Las keywords NO se corrigen: la gente busca sin
+  // tildes y así deben quedar. Tras corregir se re-recortan los límites 30/90.
+  const planos = [legible(parsed.nombre || brief.que).slice(0, 80)];
+  for (const g of grupos) { planos.push(g.nombre, g.intencion, g.razonamiento); planos.push(...g.titulares, ...g.descripciones); }
+  const rev = await corregirOrtografia(env, planos);
+  let k = 0;
+  const nombreR = String(rev.textos[k++]).slice(0, 80);
+  for (const g of grupos) {
+    g.nombre = String(rev.textos[k++]).slice(0, 60) || g.nombre;
+    g.intencion = String(rev.textos[k++]).slice(0, 200);
+    g.razonamiento = String(rev.textos[k++]).slice(0, 300);
+    g.titulares = g.titulares.map(() => sinPuntoFinal(rev.textos[k++]).slice(0, 30)).filter(Boolean);
+    g.descripciones = g.descripciones.map(() => String(rev.textos[k++]).slice(0, 90)).filter(Boolean);
+  }
+
   return json({
     ok: true,
-    nombre: legible(parsed.nombre || brief.que).slice(0, 80),
+    nombre: nombreR,
     urlFinal: clean(brief.ctaUrl || ''),
     grupos,
-    negativas: dedup((Array.isArray(parsed.negativas) ? parsed.negativas : []).map(kwLimpia).filter(Boolean)).slice(0, 25)
+    negativas: dedup((Array.isArray(parsed.negativas) ? parsed.negativas : []).map(kwLimpia).filter(Boolean)).slice(0, 25),
+    ortografia: rev.revisado ? 'revisada' : 'sin-revisar'
   });
 }
+
+// Exportados SOLO para pruebas locales (Cloudflare Pages los ignora).
+export { corregirOrtografia, extraerJSON, generarEmail, generarBanner, generarAds };
