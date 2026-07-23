@@ -5004,6 +5004,20 @@ function attachLienzoInteraccion(p, root){
   if(!stage || !ovl || !cmp) return;
   ovl.innerHTML = "";   // evita duplicados si se reengancha (varios rAF en cola)
   const fila = (familiaDeFormato(fmt)==="franja");
+  // Escala RESPONSIVA: ajusta el banner al ancho real disponible (y a un alto
+  // cómodo), en vez de un 760×460 fijo que no cabía en pantallas chicas.
+  const Fr = FORMATOS[fmt];
+  if(Fr){
+    const cont = wrap.parentElement;
+    const dispoW = Math.max(280, Math.min((cont ? cont.clientWidth : 760) - 24, 900));
+    const dispoH = Math.max(220, Math.min(window.innerHeight - 320, 520));
+    const s2 = Math.min(dispoW/Fr.ancho, dispoH/Fr.alto, 2.2);
+    const sc = stage.querySelector(".lienzo-scale");
+    stage.style.width = Math.round(Fr.ancho*s2)+"px";
+    stage.style.height = Math.round(Fr.alto*s2)+"px";
+    if(sc) sc.style.transform = "scale("+s2+")";
+    wrap.dataset.escala = s2;
+  }
   const sr = stage.getBoundingClientRect();
   const rel = (el)=>{ const r=el.getBoundingClientRect(); return { x:r.left-sr.left, y:r.top-sr.top, w:r.width, h:r.height }; };
   const zonasDom = [...cmp.querySelectorAll(".cmp-zona")];
