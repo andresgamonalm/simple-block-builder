@@ -5121,16 +5121,23 @@ function hacerElementosMovibles(cmp, ovl, stage, fmt, rel){
   items.forEach(it=>{
     const el = cmp.querySelector(it.sel); if(!el) return;
     const rc = rel(el);
+    // El feedback en vivo debe verse: para Título/Bajada el original está oculto
+    // bajo su clon editable — hay que mover el CLON (overlay sin escala).
+    const clon = ()=> ovl.querySelector(`.lienzo-edit[data-for="${it.sel}"]`);
     // — Grip vertical (mover) —
     const g=document.createElement("div"); g.className="lienzo-grip"; g.title="Arrastra para mover arriba/abajo";
     g.style.cssText=`left:${Math.max(0,rc.x-16)}px;top:${rc.y+rc.h/2-9}px;`;
     g.innerHTML="⋮";
     g.addEventListener("pointerdown",(e)=>{
       e.preventDefault(); e.stopPropagation();
-      const y0=e.clientY; let dy=0;
-      const mv=(ev)=>{ dy=ev.clientY-y0; el.style.transform=`translateY(${dy}px)`; };
+      const y0=e.clientY; let dy=0; const c=clon();
+      const mv=(ev)=>{ dy=ev.clientY-y0;
+        el.style.transform=`translateY(${dy/sLienzo}px)`;      // el original vive escalado
+        if(c) c.style.transform=`translateY(${dy}px)`;          // el clon, en px de pantalla
+        g.style.transform=`translateY(${dy}px)`;
+      };
       const up=()=>{ window.removeEventListener("pointermove",mv); window.removeEventListener("pointerup",up);
-        el.style.transform="";
+        el.style.transform=""; if(c) c.style.transform=""; g.style.transform="";
         if(Math.abs(dy)>2){
           const cur=parseFloat(getPath(composicionEfectiva(pieza(),fmt), it.sep))||0;
           setCompScope(fmt, it.sep, String(Math.round(cur + dy/k)));
@@ -5147,10 +5154,14 @@ function hacerElementosMovibles(cmp, ovl, stage, fmt, rel){
       w.style.cssText=`left:${rc.x+rc.w-4}px;top:${rc.y+rc.h/2-11}px;`;
       w.addEventListener("pointerdown",(e)=>{
         e.preventDefault(); e.stopPropagation();
-        const x0=e.clientX; let dx=0;
-        const mv=(ev)=>{ dx=ev.clientX-x0; el.style.width=(rc.w+dx)/sLienzo+"px"; };
+        const x0=e.clientX; let dx=0; const c=clon();
+        const mv=(ev)=>{ dx=ev.clientX-x0;
+          el.style.width=(rc.w+dx)/sLienzo+"px";
+          if(c) c.style.width=(rc.w+dx+4)+"px";                // feedback visible en el clon
+          w.style.transform=`translateX(${dx}px)`;
+        };
         const up=()=>{ window.removeEventListener("pointermove",mv); window.removeEventListener("pointerup",up);
-          el.style.width="";
+          el.style.width=""; if(c) c.style.width=""; w.style.transform="";
           if(Math.abs(dx)>2 && zw>0){
             const pct=Math.max(20, Math.min(100, Math.round((rc.w+dx)/zw*100)));
             setCompScope(fmt, it.ancho, String(pct));
@@ -5170,11 +5181,17 @@ function hacerTextoEditableLienzo(cmp, ovl, stage, fmt, rel){
     {sel:".cmp-tit", path:"zonas.texto.titular.texto", size:"zonas.texto.titular.tamano", mn:12, mx:60},
     {sel:".cmp-cue", path:"zonas.texto.cuerpo.texto",  size:"zonas.texto.cuerpo.tamano",  mn:9,  mx:32}
   ];
+  // El overlay NO está escalado: el clon editable debe compensar la escala de
+  // la vista (si no, en un 1200px "al 75%" el texto se dibuja gigante, se monta
+  // sobre la bajada y tapa los controles).
+  const sV = parseFloat(cmp.closest(".lienzo")?.dataset.escala)||1;
+  const pxScaled = (v)=>{ const n=parseFloat(v); return isNaN(n) ? v : (n*sV)+"px"; };
   partes.forEach(pt=>{
     const el=cmp.querySelector(pt.sel); if(!el) return;
     const rc=rel(el); const cs=getComputedStyle(el);
     const ed=document.createElement("div"); ed.className="lienzo-edit"; ed.contentEditable="true"; ed.spellcheck=false;
-    ed.style.cssText=`left:${rc.x-2}px;top:${rc.y-1}px;width:${rc.w+4}px;font-family:${cs.fontFamily};font-size:${cs.fontSize};font-weight:${cs.fontWeight};line-height:${cs.lineHeight};color:${cs.color};text-align:${cs.textAlign};letter-spacing:${cs.letterSpacing};`;
+    ed.dataset.for=pt.sel;
+    ed.style.cssText=`left:${rc.x-2}px;top:${rc.y-1}px;width:${rc.w+4}px;font-family:${cs.fontFamily};font-size:${pxScaled(cs.fontSize)};font-weight:${cs.fontWeight};line-height:${cs.lineHeight&&cs.lineHeight!=="normal"?pxScaled(cs.lineHeight):cs.lineHeight};color:${cs.color};text-align:${cs.textAlign};letter-spacing:${cs.letterSpacing&&cs.letterSpacing!=="normal"?pxScaled(cs.letterSpacing):cs.letterSpacing};`;
     ed.textContent=el.textContent;
     el.style.visibility="hidden";
     ed.addEventListener("focus",()=>mostrarBarraTexto(ed, stage, fmt, pt));
