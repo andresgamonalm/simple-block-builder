@@ -482,6 +482,11 @@ button,input,select,textarea{font-family:inherit;}
 .adsc-serp .ruta{font-size:12.5px;color:#5b6178;margin:2px 0;overflow-wrap:anywhere;}
 .adsc-serp .tit{font-size:17px;color:#1c73cb;font-weight:500;line-height:1.35;margin-bottom:3px;}
 .adsc-serp .desc{font-size:12.5px;color:#4a5069;line-height:1.5;}
+.adsc-serp .tit,.adsc-serp .desc{transition:opacity .2s ease;}
+.adsc-rota{display:flex;align-items:center;gap:7px;margin-top:12px;padding-top:11px;border-top:1px dashed #e4e8f0;font-size:11.5px;color:#5b6178;line-height:1.5;}
+.adsc-rota b{color:#1c73cb;font-weight:600;}
+.adsc-rota .dot{width:8px;height:8px;border-radius:50%;background:#20B6B6;flex-shrink:0;animation:adsblink 1.3s ease-in-out infinite;}
+@keyframes adsblink{0%,100%{opacity:.35;}50%{opacity:1;}}
 .adsc-item{display:flex;align-items:flex-start;gap:10px;padding:7px 2px;border-bottom:1px solid #eef1f6;font-size:13px;line-height:1.45;}
 .adsc-item:last-child{border-bottom:0;}
 .adsc .tx{outline:none;border-radius:4px;padding:1px 4px;}
@@ -1375,6 +1380,9 @@ button,input,select,textarea{font-family:inherit;}
       <button class="tb-btn icon-only" id="btn-imagenes" onclick="abrirImagenes()" title="Biblioteca de imágenes"><span class="ico" data-ic="imagen"></span></button>
       <button class="tb-btn icon-only" id="btn-importar" onclick="abrirImportar()" title="Importar HTML"><span class="ico" data-ic="subir"></span></button>
       <button class="tb-btn danger icon-only" onclick="eliminarPiezaActual()" title="Eliminar esta creatividad"><span class="ico" data-ic="basura"></span></button>
+      <span class="tb-sep"></span>
+      <button class="tb-btn" onclick="guardarProyectoAhora()" title="Guardar el proyecto ahora en la nube"><span class="ico" data-ic="nube"></span><span class="tb-txt"> Guardar</span></button>
+      <button class="tb-btn" onclick="salirDelProyecto()" title="Guardar y volver a tus proyectos"><span class="ico" data-ic="salir"></span><span class="tb-txt"> Salir</span></button>
       <button class="tb-btn primary" onclick="abrirExportar()"><span class="ico" data-ic="exportar"></span> Exportar</button>
     </div>
   </header>
@@ -1631,7 +1639,7 @@ button,input,select,textarea{font-family:inherit;}
       <textarea id="ia-notas" class="ia-refs" placeholder="Ej: tono cercano y claro, destacar la facilidad de uso, sin tecnicismos…"></textarea>
     </div>
     <div id="ia-paso-3" style="display:none">
-      <p class="ia-resultado-hint">Char-B está armando tu pieza con la identidad de la marca. Al terminar se abre directo en el editor.</p>
+      <p class="ia-resultado-hint" id="ia-hint">Char-B está armando tu pieza con la identidad de la marca. Al terminar se abre directo en el editor.</p>
       <div id="ia-estado" class="ia-estado"></div>
     </div>
   </div>
@@ -5886,6 +5894,21 @@ function volverAProyectos(){
   vistaDash = "proyectos"; proyectoVistoId = null;
   dashVista("proyectos");
 }
+// Guardar explícito (aunque el guardado es automático, el botón da tranquilidad).
+async function guardarProyectoAhora(){
+  persistir();
+  toast("Guardando el proyecto…");
+  await guardarEnNube();
+  toast("Proyecto guardado ✓");
+}
+// Salir del proyecto: guarda y vuelve a la lista de proyectos (deja el proyecto
+// abierto/seleccionado para que la persona no se pierda).
+function salirDelProyecto(){
+  persistir();
+  guardarEnNube();
+  if(proyecto) proyectoVistoId = proyecto.id;
+  dashIr("proyectos");
+}
 function renombrarProyecto(id){
   const pr = proyectoPorId(id); if(!pr) return;
   const n = prompt("Nuevo nombre del proyecto:", pr.nombre);
@@ -6643,8 +6666,19 @@ async function generarConIA(){
   const marcaAPI = M ? { nombre:M.nombre, empresa:M.empresa, primary:M.primary, secondary:M.secondary, cta:M.cta, ctaText:M.ctaText, text:M.text, bg:M.bg, accent1:M.accent1, accent2:M.accent2, fontTitulo:M.fontTitulo, fontCuerpo:M.fontCuerpo, logoUrl:M.logo, negocio:M.negocio, tono:M.tono, eslogan:M.eslogan, publico:M.publico, productos:M.productos, usar:M.usar, evitar:M.evitar, directrices:M.directrices, disclaimer:M.disclaimer } : null;
   const btn = document.getElementById("ia-btn"); const est = document.getElementById("ia-estado");
   const esCampana = sel.length > 1;
+  // El texto del paso 3 se adapta al producto: una campaña de Search NO es una
+  // gráfica (no tiene "identidad visual"), son grupos, keywords y anuncios.
+  const hint = document.getElementById("ia-hint");
+  if(hint){
+    if(esCampana) hint.textContent = "Char-B está armando tu campaña (email, banners y/o Search) con una idea común. Al terminar se abre directo en el editor.";
+    else if(sel[0]==="ads") hint.textContent = "Char-B está armando tu campaña de Google Search: grupos por intención, keywords (exacta y frase) y los anuncios. Al terminar se abre directo en el editor.";
+    else if(sel[0]==="banner") hint.textContent = "Char-B está armando tus banners con la identidad de la marca. Al terminar se abren directo en el editor.";
+    else hint.textContent = "Char-B está armando tu email con la identidad de la marca. Al terminar se abre directo en el editor.";
+  }
   btn.disabled = true; est.className = "ia-estado loading";
-  est.textContent = esCampana ? `Armando la campaña (${sel.length} piezas) para «${M ? M.nombre : 'sin marca'}»…` : `Generando para «${M ? M.nombre : 'sin marca'}»…`;
+  est.textContent = esCampana ? `Armando la campaña (${sel.length} piezas) para «${M ? M.nombre : 'sin marca'}»…`
+    : sel[0]==="ads" ? `Armando la campaña de Search para «${M ? M.nombre : 'sin marca'}»…`
+    : `Generando para «${M ? M.nombre : 'sin marca'}»…`;
   // Biblioteca candidata (solo si hay email/banner). Fotos elegidas a mano mandan;
   // si no, toda la biblioteca + el bucket R2 (sin logos/íconos).
   const fotosElegidas = _iaFotos.length > 0;
@@ -6918,7 +6952,30 @@ function insertarAdsIA(data, marca){
 // por grupo; keywords con concordancia; el anuncio previsualizado como en el
 // buscador; negativas aparte) + los inventarios con contador de Ads Editor.
 let adsVista = "res";
+let _adsRotador = null;   // intervalo del anuncio que rota (como Google RSA)
 function adsIrVista(v){ adsVista = String(v); renderAdsCampana(); }
+// El anuncio de la vista previa rota titulares y descripciones como lo hace
+// Google con los RSA (anuncios adaptables): cada tanto muestra otra combinación,
+// para que se entienda que Google no fija un orden. Determinista, con fundido.
+function iniciarRotadorSerp(g){
+  if(_adsRotador){ clearInterval(_adsRotador); _adsRotador = null; }
+  const T = (g.titulares||[]).filter(Boolean);
+  const D = (g.descripciones||[]).filter(Boolean);
+  // Si no hay material para rotar, se queda fijo (nada que alternar).
+  if(T.length <= 3 && D.length <= 2) return;
+  let paso = 1;
+  const pick = (arr, n, off) => { const out=[]; for(let i=0;i<Math.min(n,arr.length);i++) out.push(arr[(off+i)%arr.length]); return out; };
+  _adsRotador = setInterval(() => {
+    const et = document.getElementById("serp-tit"), ed = document.getElementById("serp-desc");
+    if(!et || !ed){ clearInterval(_adsRotador); _adsRotador = null; return; }
+    const tit = pick(T, 3, paso % Math.max(1,T.length)).join(" · ");
+    const desc = pick(D, 2, paso % Math.max(1,D.length)).join(" ");
+    et.style.opacity = ed.style.opacity = "0";
+    setTimeout(() => { et.textContent = tit; ed.textContent = desc; et.style.opacity = ed.style.opacity = "1"; }, 200);
+    paso++;
+  }, 2600);
+  livePreviewIntervals.push(_adsRotador);   // se limpia también en renderCanvas
+}
 // Panel izquierdo propio del formato ads: resumen de la campaña, navegación
 // por grupos (sincronizada con las píldoras de la consola) y acciones.
 function renderPanelAds(){
@@ -6955,6 +7012,7 @@ function renderPanelAds(){
   </div>`;
 }
 function renderAdsCampana(){
+  if(_adsRotador){ clearInterval(_adsRotador); _adsRotador = null; }   // corta el rotador anterior
   const c = document.getElementById("canvas");
   ajustarFrameParaSet(false);
   const p = pieza(); const d = p && p.adsData;
@@ -6991,6 +7049,8 @@ function renderAdsCampana(){
       ${G.map((g,i)=>`<button class="adsc-pill ${String(i)===String(adsVista)?"on":""}" onclick="adsIrVista('${i}')">${esc(_deslug(g.nombre).slice(0,28))} <span class="n">· ${(g.keywords||[]).length} kw</span></button>`).join("")}
     </div>`;
   c.innerHTML = `<div class="adsc">${head}${pills}${adsVista==="res" ? adsVistaResumen(d) : adsVistaGrupo(d, parseInt(adsVista,10))}</div>`;
+  // En vista de grupo, el anuncio de ejemplo rota como en Google.
+  if(adsVista!=="res"){ const gi = parseInt(adsVista,10); if(G[gi]) iniciarRotadorSerp(G[gi]); }
 }
 function adsVistaResumen(d){
   const cards = d.grupos.map((g,i)=>`
@@ -7052,8 +7112,9 @@ function adsVistaGrupo(d, gi){
           <div class="tag">Así se vería tu anuncio en Google</div>
           <div class="pat">Patrocinado</div>
           <div class="ruta">${esc(ruta)}</div>
-          <div class="tit">${esc((g.titulares||[]).slice(0,3).join(" | "))}</div>
-          <div class="desc">${esc((g.descripciones||[])[0]||"")}</div>
+          <div class="tit" id="serp-tit">${esc((g.titulares||[]).slice(0,3).join(" · "))}</div>
+          <div class="desc" id="serp-desc">${esc((g.descripciones||[]).slice(0,2).join(" "))}</div>
+          <div class="adsc-rota"><span class="dot"></span> Google combina y <b>rota</b> tus titulares y descripciones (anuncio adaptable). Aquí ves cómo va cambiando.</div>
         </div>
         <div class="adsc-card">
           <h3>Titulares · ${(g.titulares||[]).length} <span class="lim">máx 30 caracteres</span> <button class="adsc-copy" onclick="adsCopiar('titulares',${gi})">Copiar</button></h3>
