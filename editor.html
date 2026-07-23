@@ -508,7 +508,7 @@ button,input,select,textarea{font-family:inherit;}
 .hg-chip{position:absolute;top:10px;left:10px;background:#fff;border-radius:999px;box-shadow:0 1px 3px rgba(4,7,100,.12);}
 .chip{display:inline-flex;align-items:center;font-size:13px;font-weight:600;letter-spacing:.04em;border-radius:999px;padding:4px 9px;}
 .chip.email{background:#e7f0fb;color:#1c73cb;}
-.chip.display{background:#e4f6f6;color:#149a9a;}
+.chip.display{background:#fbf2b0;color:#6b5c00;}
 .chip.libre{background:#f7e6f4;color:#b318a3;}
 .chip.post{background:#eef1fb;color:#040764;}
 .chip.ads{background:#e9ecf2;color:#565d73;}
@@ -650,7 +650,7 @@ button,input,select,textarea{font-family:inherit;}
 .py-tipos button:hover{filter:brightness(.955);}
 .py-tipos button .ico{display:inline-flex;}
 .py-tipos button.t-email{background:#e7f0fb;color:#155e9e;}
-.py-tipos button.t-display{background:#e4f6f6;color:#0b6b6b;}
+.py-tipos button.t-display{background:#fbf2b0;color:#6b5c00;}
 .py-tipos button.t-ads{background:#eef1fb;color:var(--navy,#040764);}
 .py-tipos button.t-libre{background:#f7e6f4;color:#8f1583;}
 /* Acción destructiva de la página = terciaria (bajo énfasis), nunca compite con el primario. */
@@ -920,6 +920,10 @@ button,input,select,textarea{font-family:inherit;}
 .lienzo-textbar button{width:30px;height:28px;border:none;background:transparent;border-radius:6px;cursor:pointer;color:var(--ink2,#3b3b3b);font-family:var(--f);font-size:13px;font-weight:700;display:inline-flex;align-items:center;justify-content:center;}
 .lienzo-textbar button:hover{background:var(--bg,#eef1f6);color:var(--navy,#040764);}
 .lienzo-textbar .sep{width:1px;height:18px;background:var(--bdr,#e4e8f0);margin:0 3px;}
+.lienzo-grip{position:absolute;z-index:28;width:14px;height:18px;border-radius:5px;background:var(--navy,#040764);color:#fff;font-size:13px;line-height:18px;text-align:center;cursor:grab;user-select:none;opacity:.85;}
+.lienzo-grip:hover{opacity:1;}
+.lienzo-wh{position:absolute;z-index:28;width:8px;height:22px;border-radius:4px;background:var(--blue,#1c73cb);cursor:ew-resize;opacity:.85;}
+.lienzo-wh:hover{opacity:1;}
 .lienzo-quitar{position:absolute;z-index:30;width:22px;height:22px;border-radius:50%;border:none;background:var(--magenta,#B318A3);color:#fff;font-size:15px;line-height:1;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0;}
 .lienzo-quitar:hover{background:var(--magenta-d,#A11693);}
 /* Editor de Diseño global (capas) */
@@ -3740,7 +3744,9 @@ function aplicarTema(){
     f.style.height = fmt.alto + "px";
   } else {
     f.style.height = "";
-    if(t.ancho && /^\d+$/.test(t.ancho)) f.style.maxWidth = t.ancho + "px";
+    // Ancho propio del usuario, con piso defensivo: un valor guardado menor a
+    // 320px deja el lienzo inusable (se veia "como de 200px") → se ignora.
+    if(t.ancho && /^\d+$/.test(t.ancho) && parseInt(t.ancho) >= 320) f.style.maxWidth = t.ancho + "px";
     else f.style.maxWidth = fmt.ancho + "px";
     // Vista de dispositivo: previsualiza el ancho en tablet/móvil (solo flexibles).
     if(dispositivo === "tablet") f.style.maxWidth = "768px";
@@ -4808,8 +4814,12 @@ function zonaContenido(zk, z, px){
     const est = (o)=> `${o.negrita?'font-weight:700;':''}${o.italica?'font-style:italic;':''}`;
     // Etiqueta de producto (píldora chica sobre el titular, ej. "Seguro").
     const etEl = et.texto ? `<div><span class="cmp-etq" style="font-size:${px(et.tamano,11)}px;padding:${px(4,4)}px ${px(10,10)}px;background:${esc(et.color||'rgba(255,255,255,.18)')};color:${esc(et.colorTexto||ti.color||'#fff')};${fam}">${esc(et.texto)}</span></div>` : "";
-    const tiEl = ti.texto ? `<div class="cmp-tit" style="font-size:${px(ti.tamano,26)}px;color:${esc(ti.color||'#fff')};text-align:${alinText(z.alinH)};${fam}${est(ti)}">${escMultiline(ti.texto)}</div>` : "";
-    const cuEl = cu.texto ? `<div class="cmp-cue" style="font-size:${px(cu.tamano,13)}px;color:${esc(cu.color||'#fff')};text-align:${alinText(z.alinH)};${fam}${est(cu)}">${escMultiline(cu.texto)}</div>` : "";
+    // sep = desplazamiento vertical propio (px base, escala con el tamaño) ·
+    // ancho = ancho de la caja de texto (%). Ambos editables desde el lienzo.
+    const sepA=(o)=>{ const v=parseFloat(o.sep); return v?`margin-top:${px(v,0)}px;`:""; };
+    const anchoA=(o)=>{ const v=parseFloat(o.ancho); return (v&&v>=20&&v<=100)?`width:${v}%;`:""; };
+    const tiEl = ti.texto ? `<div class="cmp-tit" style="font-size:${px(ti.tamano,26)}px;color:${esc(ti.color||'#fff')};text-align:${alinText(z.alinH)};${sepA(ti)}${anchoA(ti)}${fam}${est(ti)}">${escMultiline(ti.texto)}</div>` : "";
+    const cuEl = cu.texto ? `<div class="cmp-cue" style="font-size:${px(cu.tamano,13)}px;color:${esc(cu.color||'#fff')};text-align:${alinText(z.alinH)};${sepA(cu)}${anchoA(cu)}${fam}${est(cu)}">${escMultiline(cu.texto)}</div>` : "";
     return etEl+tiEl+cuEl;
   }
   if(zk==="cta"){
@@ -4818,7 +4828,8 @@ function zonaContenido(zk, z, px){
     const pY=Math.round(t*0.55), pX=Math.round(t*1.25);
     const fam = z.fuente ? `font-family:'${esc(z.fuente)}',Arial,sans-serif;` : "";
     const est = `${z.negrita?'font-weight:700;':''}${z.italica?'font-style:italic;':''}`;
-    return `<a class="cmp-cta" href="${esc(z.url||'#')}" target="_blank" rel="noopener" style="font-size:${px(z.tamano,13)}px;background:${esc(z.colorFondo||'#2f80ed')};color:${esc(z.colorTexto||'#fff')};border-radius:${px(z.radio,8)}px;padding:${px(pY,pY)}px ${px(pX,pX)}px;${fam}${est}">${esc(z.texto)}</a>`;
+    const sepC = parseFloat(z.sep) ? `margin-top:${px(parseFloat(z.sep),0)}px;` : "";
+    return `<a class="cmp-cta" href="${esc(z.url||'#')}" target="_blank" rel="noopener" style="font-size:${px(z.tamano,13)}px;background:${esc(z.colorFondo||'#2f80ed')};color:${esc(z.colorTexto||'#fff')};border-radius:${px(z.radio,8)}px;padding:${px(pY,pY)}px ${px(pX,pX)}px;${sepC}${fam}${est}">${esc(z.texto)}</a>`;
   }
   return "";
 }
@@ -5057,6 +5068,67 @@ function attachLienzoInteraccion(p, root){
   }
   // Texto editable DIRECTO sobre el banner (Título y Bajada).
   hacerTextoEditableLienzo(cmp, ovl, stage, fmt, rel);
+  // Mover cada texto y el CTA en vertical + ajustar el ancho de la caja.
+  hacerElementosMovibles(cmp, ovl, stage, fmt, rel);
+}
+// Grips de arrastre por elemento: ▲▼ mueve Título/Bajada/CTA (escribe su "sep"
+// por alcance: global si editas el máster, override si es un tamaño) y el
+// tirador lateral cambia el ANCHO de la caja de texto (%).
+function hacerElementosMovibles(cmp, ovl, stage, fmt, rel){
+  const F = FORMATOS[fmt]; if(!F) return;
+  const fila = (familiaDeFormato(fmt)==="franja");
+  const escF = fila ? Math.max(0.5, Math.min(1.05, F.alto/110)) : Math.max(0.5, Math.min(1.3, F.ancho/300));
+  const sLienzo = parseFloat(cmp.closest(".lienzo")?.dataset.escala) || 1;
+  const k = escF * sLienzo;   // px de pantalla por unidad base
+  const items = [
+    {sel:".cmp-tit", sep:"zonas.texto.titular.sep", ancho:"zonas.texto.titular.ancho"},
+    {sel:".cmp-cue", sep:"zonas.texto.cuerpo.sep",  ancho:"zonas.texto.cuerpo.ancho"},
+    {sel:".cmp-cta", sep:"zonas.cta.sep"}
+  ];
+  items.forEach(it=>{
+    const el = cmp.querySelector(it.sel); if(!el) return;
+    const rc = rel(el);
+    // — Grip vertical (mover) —
+    const g=document.createElement("div"); g.className="lienzo-grip"; g.title="Arrastra para mover arriba/abajo";
+    g.style.cssText=`left:${Math.max(0,rc.x-16)}px;top:${rc.y+rc.h/2-9}px;`;
+    g.innerHTML="⋮";
+    g.addEventListener("pointerdown",(e)=>{
+      e.preventDefault(); e.stopPropagation();
+      const y0=e.clientY; let dy=0;
+      const mv=(ev)=>{ dy=ev.clientY-y0; el.style.transform=`translateY(${dy}px)`; };
+      const up=()=>{ window.removeEventListener("pointermove",mv); window.removeEventListener("pointerup",up);
+        el.style.transform="";
+        if(Math.abs(dy)>2){
+          const cur=parseFloat(getPath(composicionEfectiva(pieza(),fmt), it.sep))||0;
+          setCompScope(fmt, it.sep, String(Math.round(cur + dy/k)));
+          persistir(); renderTablero();
+        }
+      };
+      window.addEventListener("pointermove",mv); window.addEventListener("pointerup",up);
+    });
+    ovl.appendChild(g);
+    // — Tirador de ANCHO (solo cajas de texto) —
+    if(it.ancho){
+      const zona = el.closest(".cmp-zona"); const zw = zona ? rel(zona).w : rc.w;
+      const w=document.createElement("div"); w.className="lienzo-wh"; w.title="Arrastra para cambiar el ancho de la caja";
+      w.style.cssText=`left:${rc.x+rc.w-4}px;top:${rc.y+rc.h/2-11}px;`;
+      w.addEventListener("pointerdown",(e)=>{
+        e.preventDefault(); e.stopPropagation();
+        const x0=e.clientX; let dx=0;
+        const mv=(ev)=>{ dx=ev.clientX-x0; el.style.width=(rc.w+dx)/sLienzo+"px"; };
+        const up=()=>{ window.removeEventListener("pointermove",mv); window.removeEventListener("pointerup",up);
+          el.style.width="";
+          if(Math.abs(dx)>2 && zw>0){
+            const pct=Math.max(20, Math.min(100, Math.round((rc.w+dx)/zw*100)));
+            setCompScope(fmt, it.ancho, String(pct));
+            persistir(); renderTablero();
+          }
+        };
+        window.addEventListener("pointermove",mv); window.addEventListener("pointerup",up);
+      });
+      ovl.appendChild(w);
+    }
+  });
 }
 // Edición inline del texto en el lienzo: clic → escribir, Enter = salto de línea,
 // y una barrita con tamaño (A-/A+) y alineación (izq/centro/der).
@@ -6030,8 +6102,8 @@ const CAT_ICO    = { "Email":"email", "Banners":"grid", "Post":"compartir", "For
 const CAT_TINTE  = { "Email":"#1c73cb", "Banners":"#fce865", "Post":"#040764", "Formato Libre":"#b318a3", "Ads":"#aeb6c6", "Otro":"#aeb6c6" };
 // Íconos SÓLIDOS de la tabla de trabajos (según la gráfica): Email azul ·
 // Display turquesa (glifo navy) · Search navy · Libre magenta.
-const WORK_BG = { "Email":"#1c73cb", "Banners":"#20b6b6", "Post":"#040764", "Formato Libre":"#b318a3", "Ads":"#aeb6c6", "Otro":"#aeb6c6" };
-const WORK_GL = { "Email":"#ffffff", "Banners":"#053a3a", "Post":"#ffffff", "Formato Libre":"#ffffff", "Ads":"#141c3a", "Otro":"#141c3a" };
+const WORK_BG = { "Email":"#1c73cb", "Banners":"#fce865", "Post":"#040764", "Formato Libre":"#b318a3", "Ads":"#aeb6c6", "Otro":"#aeb6c6" };
+const WORK_GL = { "Email":"#ffffff", "Banners":"#08103a", "Post":"#ffffff", "Formato Libre":"#ffffff", "Ads":"#141c3a", "Otro":"#141c3a" };
 function chipDe(cat){ return `<span class="chip ${CHIP_CLASE[cat]||"libre"}">${CHIP_TXT[cat]||"LIBRE"}</span>`; }
 function estadoDe(p){
   const listo = (p.canvas||[]).length>0 || !!p.composicion || !!p.esSet || !!(p.adsData && (p.adsData.grupos||[]).length);
