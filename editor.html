@@ -558,9 +558,16 @@ button,input,select,textarea{font-family:inherit;}
 /* Selector inline "¿Qué vas a crear?" dentro de cada proyecto (DEC-009). */
 .py-tipos{display:flex;align-items:center;gap:8px;flex-wrap:wrap;background:var(--bg);border-radius:8px;padding:12px 14px;margin:12px 20px 6px;}
 .py-tipos .pt-lbl{font-size:12.5px;font-weight:600;color:var(--ink2);margin-right:4px;}
-.py-tipos button{display:inline-flex;align-items:center;gap:7px;height:40px;padding:0 14px;border:1px solid var(--bdr2,#cfd6e4);border-radius:8px;background:var(--white);color:var(--ink,#12173d);font-family:var(--f);font-size:13px;font-weight:500;cursor:pointer;transition:border-color .13s,color .13s;}
-.py-tipos button:hover{border-color:var(--blue,#1C73CB);color:var(--blue,#1C73CB);}
+/* Botones secundarios TINTADOS por tipo (tonos claros de la paleta; texto con
+   contraste AA ≥4.5:1 verificado): azul #155e9e/#e7f0fb · turquesa #0b6b6b/#e4f6f6
+   · navy/#eef1fb · magenta #8f1583/#f7e6f4. Nada de "todo azul". */
+.py-tipos button{display:inline-flex;align-items:center;gap:7px;height:40px;padding:0 14px;border:1px solid transparent;border-radius:8px;font-family:var(--f);font-size:13px;font-weight:500;cursor:pointer;transition:filter .13s;}
+.py-tipos button:hover{filter:brightness(.955);}
 .py-tipos button .ico{display:inline-flex;}
+.py-tipos button.t-email{background:#e7f0fb;color:#155e9e;}
+.py-tipos button.t-display{background:#e4f6f6;color:#0b6b6b;}
+.py-tipos button.t-ads{background:#eef1fb;color:var(--navy,#040764);}
+.py-tipos button.t-libre{background:#f7e6f4;color:#8f1583;}
 /* Acción destructiva de la página = terciaria (bajo énfasis), nunca compite con el primario. */
 .py-borrartodo{display:inline-flex;align-items:center;gap:6px;margin:18px 2px 0;border:none;background:none;color:#545454;font-family:var(--f);font-size:12.5px;cursor:pointer;padding:6px 4px;}
 .py-borrartodo:hover{color:var(--magenta);}
@@ -5692,11 +5699,11 @@ function tiposProyectoHTML(prId){
     ["ads","ads","buscar","Google Search"],
     ["libre","libre","documento","Formato libre"]
   ].filter(([serv])=>puede(serv));
-  // El ícono lleva el color del TIPO (mismo código de color que los chips
-  // EMAIL/DISPLAY/POST/ADS/LIBRE) para que la jerarquía se lea de un vistazo.
-  const colorTipo = { email:"#1c73cb", "display-300x250":"#149a9a", "linkedin-post":"#149a9a", ads:"#040764", libre:"#b318a3" };
+  // Cada tipo usa su TINTE claro de la paleta (mismo código de color que los
+  // chips EMAIL/DISPLAY/ADS/LIBRE) — la jerarquía se lee de un vistazo.
+  const claseTipo = { email:"t-email", "display-300x250":"t-display", "linkedin-post":"t-display", ads:"t-ads", libre:"t-libre" };
   return `<div class="py-tipos"><span class="pt-lbl">¿Qué vas a crear aquí?</span>${tipos.map(([serv,fmt,ico,lbl]) =>
-    `<button onclick="proyectoVistoId='${prId}';crearDesde('${fmt}')"><span style="color:${colorTipo[fmt]||"#5b6178"};display:inline-flex;">${svgIcon(ico,{size:"15px"})}</span> ${lbl}</button>`).join("")}</div>`;
+    `<button class="${claseTipo[fmt]||""}" onclick="proyectoVistoId='${prId}';crearDesde('${fmt}')"><span style="display:inline-flex;">${svgIcon(ico,{size:"15px"})}</span> ${lbl}</button>`).join("")}</div>`;
 }
 // ── ADMIN: los proyectos de LOS DEMÁS usuarios (solo lectura, con dueño) ──
 let _espaciosOtros = null;   // null = no cargado · [] = cargado
