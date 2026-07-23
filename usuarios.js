@@ -24,8 +24,14 @@ export default {
       rol: "admin",
       permisos: ["*"],
       workspace: "hola@andresgamonal.com",
-      sal: "f47421c0741305d5",
-      hash: "440065259d127367c6b38c1725f53b28bc5c788d3bc55a0841ea3c369e276d5a"
+      clave: "Matias1402."
+    },
+    {
+      usuario: "lorena",
+      rol: "limitado",
+      permisos: ["email", "banner", "ads", "libre"],
+      workspace: "ws-lorena",
+      clave: "GacituaOrozco2026"
     },
     {
       usuario: "equipo",
