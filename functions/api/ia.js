@@ -219,7 +219,8 @@ async function generar({ request, env }) {
   const producto = (body.producto === 'banner') ? 'banner' : (body.producto === 'ads') ? 'ads' : 'email';
   const marca = body.marca || null;
   const imagenes = Array.isArray(body.imagenes) ? body.imagenes.slice(0, 40) : [];
-  const refsTxt = await leerReferencias(brief.refs);
+  // Lee también el SITIO DE DESTINO del anuncio (ctaUrl), no solo las URLs de referencia.
+  const refsTxt = await leerReferencias([brief.ctaUrl].concat(Array.isArray(brief.refs) ? brief.refs : []));
 
   if (producto === 'ads') return generarAds({ env, brief, marca, refsTxt });
   if (producto === 'banner') return generarBanner({ env, brief, marca, imagenes, refsTxt });
@@ -258,6 +259,7 @@ function reglasBrief(brief) {
     ? `Texto del CTA basado en "${brief.accion || 'Saber más'}": imperativo + adverbio de tiempo/lugar (ej.: "Cotiza hoy", "Cotizar aquí", "Contrata ahora"). Máx 3 palabras.`
     : `Texto del CTA basado en "${brief.accion || 'Saber más'}": claro y sobrio, sin urgencia (ej.: "Conoce más", "Más información"). Máx 3 palabras.`);
   out.push('Los TITULARES y las frases sobre imágenes NUNCA terminan en punto.');
+  out.push('ORTOGRAFÍA: escribe en español correcto y revisado — tildes/acentos donde corresponde, mayúscula inicial, y signos ¿? ¡! de apertura y cierre bien puestos. Revisa el texto antes de responder: CERO faltas de ortografía.');
   if (brief.gancho) {
     out.push(`GANCHO/OFERTA EXACTO (úsalo TAL CUAL, NO inventes otros números/fechas/precios): ${brief.gancho}`);
     out.push(`DESTACA el gancho de forma MUY visible y al PRINCIPIO: ponlo en el TITULAR principal (hero) bien grande, y además resáltalo en un bloque "alert" (o un divisor con color de marca) cerca del inicio. Que sea lo primero que se vea.`);
@@ -305,7 +307,12 @@ function extraerTextoPagina(html, max) {
 // Lee SOLO las URLs exactas que el usuario pasa (hasta 3). No rastrea páginas
 // internas (eso era lento); si quieres una interior, pégala como otra URL.
 async function leerReferencias(refs) {
-  const urls = Array.isArray(refs) ? refs.filter(u => /^https?:\/\//i.test(u)).slice(0, 2) : [];
+  // Dedup + hasta 3 URLs (la landing de destino + referencias).
+  const vistos = new Set();
+  const urls = (Array.isArray(refs) ? refs : []).filter(u => {
+    if (!/^https?:\/\//i.test(u || '')) return false;
+    const k = u.split('#')[0]; if (vistos.has(k)) return false; vistos.add(k); return true;
+  }).slice(0, 3);
   if (!urls.length) return '';
   // En PARALELO (no una por una) → el total ≈ la página más lenta, no la suma.
   const leerUna = async (u) => {
