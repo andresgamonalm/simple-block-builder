@@ -292,11 +292,24 @@ button,input,select,textarea{font-family:inherit;}
 .ia-req{font-size:13px;font-weight:600;color:var(--magenta);text-transform:uppercase;letter-spacing:.04em;}
 .ia-label small{font-weight:400;color:var(--ink3);font-size:13px;}
 .ia-col small{font-weight:400;color:var(--ink3);font-size:13px;}
-.ia-seg{display:flex;border:1px solid var(--bdr);border-radius:8px;overflow:hidden;}
-.ia-seg button{flex:1;border:none;background:var(--white);padding:9px 6px;font-family:var(--f);font-size:13px;font-weight:500;color:var(--ink2);cursor:pointer;border-right:1px solid var(--bdr);display:inline-flex;align-items:center;justify-content:center;gap:6px;}
-.ia-seg button:last-child{border-right:none;}
-.ia-seg button.on{background:var(--navy);color:#fff;}
-.ia-seg button .ico{width:15px;height:15px;}
+/* Segmentos del asistente = chips suaves (estilo conversación, no barras navy). */
+.ia-seg{display:flex;gap:8px;flex-wrap:wrap;}
+.ia-seg button{flex:1 1 auto;border:1.5px solid var(--bdr);border-radius:22px;background:var(--white);padding:11px 14px;font-family:var(--f);font-size:14px;font-weight:500;color:var(--ink2);cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:8px;transition:background .12s,border-color .12s,color .12s;}
+.ia-seg button:hover{border-color:#cfd6e4;}
+.ia-seg button.on{background:#EEF0FA;border-color:var(--navy);color:var(--navy);font-weight:600;}
+.ia-seg button .ico{width:16px;height:16px;}
+/* Identidad de Char-B en el header + burbuja de chat (con su foto). */
+.ia-head .ia-idn{display:flex;align-items:center;gap:11px;}
+.ia-av{width:42px;height:42px;border-radius:12px;background:#EAF7F7;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.ia-av img{width:26px;height:29px;object-fit:contain;}
+.ia-idn-t{line-height:1.25;}
+.ia-idn-t b{display:block;font-size:16px;font-weight:600;color:var(--navy);}
+.ia-idn-t span{font-size:13px;color:var(--ink3);}
+.ia-bubble{display:flex;gap:10px;align-items:flex-start;margin-bottom:16px;}
+.ia-bav{width:30px;height:30px;border-radius:9px;background:#EAF7F7;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:2px;}
+.ia-bav img{width:19px;height:21px;object-fit:contain;}
+.ia-msg{background:#F6F8FC;border:1px solid var(--bdr);border-radius:4px 14px 14px 14px;padding:12px 15px;font-size:14px;color:var(--ink);line-height:1.55;}
+.ia-msg b{color:var(--navy);font-weight:600;}
 .ia-fotos{display:flex;flex-wrap:wrap;gap:6px;margin:4px 0 6px;}
 .ia-fotos .ia-foto{position:relative;}
 .ia-fotos .ia-foto img{width:48px;height:36px;object-fit:cover;border:1px solid var(--bdr);border-radius:5px;display:block;}
@@ -1737,7 +1750,7 @@ button,input,select,textarea{font-family:inherit;}
   </div>
 </div></div>
 <div class="modal-bg" id="modal-ia"><div class="modal">
-  <div class="modal-head"><h3><span class="ia-spark ico" data-ic="estrella" data-icsize="16px"></span> Asistente IA · Char-B</h3><button class="modal-close" onclick="cerrarModal('ia')">×</button></div>
+  <div class="modal-head ia-head"><div class="ia-idn"><span class="ia-av"><img class="charb-face" alt="Char-B"></span><div class="ia-idn-t"><b>Char-B</b><span>Tu asistente de Marketing Digital con IA</span></div></div><button class="modal-close" onclick="cerrarModal('ia')">×</button></div>
   <div class="modal-body">
     <div class="ia-pasos" id="ia-pasos">
       <span class="ia-paso-tag on" data-p="1"><i>1</i> Producto</span><span class="ia-paso-linea"></span>
@@ -1745,7 +1758,7 @@ button,input,select,textarea{font-family:inherit;}
       <span class="ia-paso-tag" data-p="3"><i>3</i> Resultado</span>
     </div>
     <div id="ia-paso-1">
-      <p>Elige tu marca y marca las piezas: con <b>un solo brief</b>, Char-B genera toda la campaña en la <b>voz de tu marca</b>, con el mismo mensaje en cada pieza.</p>
+      <div class="ia-bubble"><span class="ia-bav"><img class="charb-face" alt=""></span><div class="ia-msg">¡Hola! Soy <b>Char-B</b> 👋 Con <b>un solo brief</b> te armo toda la campaña en la <b>voz de tu marca</b>. Cuéntame para qué marca y qué piezas necesitas.</div></div>
       <label class="ia-label">Marca <span class="ia-req">·obligatoria</span></label>
       <select id="ia-marca" class="dz-inp"></select>
       <label class="ia-label">¿Qué piezas necesita tu campaña? <small>(marca una o varias)</small></label>
@@ -7102,6 +7115,9 @@ function abrirIA(){
   const est = document.getElementById("ia-estado"); est.textContent = ""; est.className = "ia-estado";
   iaIrPaso(1);
   document.getElementById("modal-ia").classList.add("show");
+  // Foto de Char-B en los avatares del asistente (reusa la de la mascota flotante).
+  const _face = document.querySelector(".fab-charb");
+  if(_face && _face.src) document.querySelectorAll("#modal-ia .charb-face").forEach(i => i.src = _face.src);
   pintarIconos();
 }
 async function generarConIA(){
