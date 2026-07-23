@@ -4665,7 +4665,8 @@ function composicionDesdeCanvas(canvas, tema){
     else if(b.tipo==="cta"){ if(d.texto) comp.zonas.cta.texto=d.texto; if(d.url) comp.zonas.cta.url=d.url; }
     else if(b.tipo==="imagen"){ if(d.url && !comp.fondo.imagen.url){ comp.fondo.tipo="imagen"; comp.fondo.imagen.url=d.url; } }
   });
-  if(tema&&tema.bg) comp.fondo.color=tema.bg;
+  // Solo adopta el fondo del tema si es oscuro (los textos son blancos).
+  if(tema&&tema.bg&&typeof esColorOscuro==="function"&&esColorOscuro(tema.bg)) comp.fondo.color=tema.bg;
   if(tema&&tema.primary) comp.zonas.cta.colorFondo=tema.primary;
   return comp;
 }
@@ -4756,14 +4757,18 @@ function esComposicion(p){ return !!(p && p.esSet && p.composicion); }
 // ── Modelo de 3 ZONAS (logo · texto · cta) con fondo de banner continuo ──
 function imgDefComp(){ return { url:"", foco:"center", fit:"cover", zoom:100, oscurecer:40 }; }
 function composicionDefault(tema){
-  const bg=(tema&&tema.bg)||"#0e2748", pri=(tema&&tema.primary)||"#2f80ed";
+  // Los textos parten en blanco (#fff): el fondo del tema solo se adopta si es
+  // OSCURO. Un tema claro dejaba el prearmado blanco-sobre-blanco → "no
+  // funciona nada" (escribías y no se veía). Default seguro: navy.
+  const bg=(tema&&tema.bg&&typeof esColorOscuro==="function"&&esColorOscuro(tema.bg))?tema.bg:"#0e2748";
+  const pri=(tema&&tema.primary)||"#2f80ed";
   const zona=(extra)=>Object.assign({ bg:"hereda", color:"", imagen:imgDefComp(), alinH:"left", alinV:"center", visible:true }, extra);
   return {
     fondo:{ tipo:"color", color:bg, imagen:imgDefComp() },
     prop:[25,50,25],
     zonas:{
       logo:  zona({ url:"", alto:48, maxw:70 }),
-      texto: zona({ titular:{texto:"",tamano:26,color:"#ffffff"}, cuerpo:{texto:"",tamano:13,color:"#ffffff"} }),
+      texto: zona({ titular:{texto:"Tu mensaje aquí",tamano:26,color:"#ffffff"}, cuerpo:{texto:"Escribe una bajada breve o pídesela a Char-B",tamano:13,color:"#ffffff"} }),
       cta:   zona({ texto:"Saber más", url:"", colorFondo:pri, colorTexto:"#ffffff", radio:8, tamano:13 })
     }
   };
