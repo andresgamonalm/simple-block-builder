@@ -40,6 +40,15 @@ export default {
       limiteIA: 10
     },
     {
+      usuario: "cristian",
+      nombre: "Cristian",
+      rol: "limitado",
+      permisos: ["email", "banner", "ads", "libre"],
+      workspace: "ws-cristian",
+      clave: "elverdaderochar",
+      limiteIA: 10
+    },
+    {
       usuario: "equipo",
       rol: "limitado",
       permisos: ["email", "banner"],
