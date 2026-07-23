@@ -6592,7 +6592,7 @@ function crearDesde(formato){
   // NOMBRE propio desde el inicio: define el proyecto y el path (URL) de la pieza.
   const _fecha = new Date().toLocaleDateString("es-CL",{day:"2-digit",month:"short"});
   const _sug = (cat==="Banners"?"Campaña Display ":cat==="Ads"?"Campaña Search ":cat==="Email"?"Email ":cat==="Post"?"Post ":"Pieza ")+_fecha;
-  let nom = null; try{ nom = prompt("Nombre de esta creatividad (será también su dirección):", _sug); }catch(_){}
+  let nom = null; try{ nom = prompt("Nombre de este TRABAJO (será también su dirección):", _sug); }catch(_){}
   nom = (nom===null? _sug : String(nom).trim()) || _sug;
   if(/^Proyecto \d+$/.test(pr.nombre||"")) pr.nombre = nom;
   // Formatos visuales de tamaño fijo → modelo de capas (colección). Documentos → bloques.
