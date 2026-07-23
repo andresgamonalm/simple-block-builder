@@ -106,7 +106,7 @@ async function generar({ request, env }) {
   // Modo "textos": sugiere copy para una Composición (titular + cuerpo + CTA).
   if (body.modo === "textos") {
     const mk = body.marca || null;
-    const refsTxt = await leerReferencias(brief.refs);
+    const refsTxt = (await leerReferencias(brief.refs)).texto;
     const instr = [
       "Eres redactor publicitario experto. Devuelve EXCLUSIVAMENTE un JSON:",
       '{ "titular": "...", "cuerpo": "...", "cta": "..." }',
@@ -192,7 +192,8 @@ async function generar({ request, env }) {
   // para que toda la campaña diga lo mismo con el mismo vocabulario (campaña-primero).
   if (body.modo === 'concepto') {
     const mk = body.marca || null;
-    const refsTxt2 = await leerReferencias(brief.refs);
+    const refs2 = await leerReferencias(brief.refs);
+    const refsTxt2 = refs2.texto;
     const prompt = [
       `Eres director creativo de ${mk ? (mk.nombre || mk.empresa) : 'la marca'}. Define el CONCEPTO de una campaña multicanal (email + banners display + anuncios de Google Search).`,
       'Devuelve EXCLUSIVAMENTE este JSON (sin texto extra):',
@@ -202,7 +203,7 @@ async function generar({ request, env }) {
       voorMarca(mk),
       refsTxt2 ? 'CONTEXTO de las URLs de referencia (úsalo para el vocabulario y la propuesta de valor):\n' + refsTxt2 : '',
       'BRIEF:',
-      reglasBrief(brief)
+      reglasBrief(brief, refs2.promos)
     ].filter(Boolean).join('\n');
     const { parsed, error } = await llamarGemini(env, prompt, 1024);
     if (error) return json({ ok: false, error }, 500);
@@ -226,11 +227,12 @@ async function generar({ request, env }) {
   const marca = body.marca || null;
   const imagenes = Array.isArray(body.imagenes) ? body.imagenes.slice(0, 40) : [];
   // Lee también el SITIO DE DESTINO del anuncio (ctaUrl), no solo las URLs de referencia.
-  const refsTxt = await leerReferencias([brief.ctaUrl].concat(Array.isArray(brief.refs) ? brief.refs : []));
+  const refs = await leerReferencias([brief.ctaUrl].concat(Array.isArray(brief.refs) ? brief.refs : []));
+  const refsTxt = refs.texto, promos = refs.promos, enlaces = refs.enlaces;
 
-  if (producto === 'ads') return generarAds({ env, brief, marca, refsTxt });
-  if (producto === 'banner') return generarBanner({ env, brief, marca, imagenes, refsTxt });
-  return generarEmail({ env, brief, marca, imagenes, refsTxt, catalogo: Array.isArray(body.catalogo) ? body.catalogo : [] });
+  if (producto === 'ads') return generarAds({ env, brief, marca, refsTxt, promos, enlaces });
+  if (producto === 'banner') return generarBanner({ env, brief, marca, imagenes, refsTxt, promos });
+  return generarEmail({ env, brief, marca, imagenes, refsTxt, promos, catalogo: Array.isArray(body.catalogo) ? body.catalogo : [] });
 }
 
 // ── Voz de marca: el bloque de contexto que comparten ambos productos ──────
@@ -252,7 +254,7 @@ function voorMarca(marca) {
 }
 
 // ── Reglas duras del brief (comunes) ──────────────────────────────────────
-function reglasBrief(brief) {
+function reglasBrief(brief, promos) {
   const tipo = brief.tipo || 'comercial';
   const newsletter = tipo === 'newsletter';
   const vende = tipo === 'comercial';
@@ -269,6 +271,8 @@ function reglasBrief(brief) {
   if (brief.gancho) {
     out.push(`GANCHO/OFERTA EXACTO (úsalo TAL CUAL, NO inventes otros números/fechas/precios): ${brief.gancho}`);
     out.push(`DESTACA el gancho de forma MUY visible y al PRINCIPIO: ponlo en el TITULAR principal (hero) bien grande, y además resáltalo en un bloque "alert" (o un divisor con color de marca) cerca del inicio. Que sea lo primero que se vea.`);
+  } else if (promos && promos.length) {
+    out.push(`El brief no trae gancho, pero la LANDING muestra estas promociones VIGENTES: ${promos.join(' · ')}. Puedes usarlas TAL CUAL (sin cambiar cifras ni condiciones) como oferta destacada. NO inventes ninguna otra cifra, precio ni fecha.`);
   } else out.push('Sin oferta numérica: NO inventes precios, porcentajes ni fechas.');
   if (brief.notas && String(brief.notas).trim()) out.push(`INDICACIONES ADICIONALES del usuario (respétalas): ${String(brief.notas).trim()}`);
   return out.join('\n');
@@ -294,31 +298,88 @@ const UA_NAVEGADOR = {
   'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
   'Accept-Language': 'es-ES,es;q=0.9,en;q=0.8'
 };
-// Extrae título + meta description + Open Graph + texto visible (sirve aun en webs JS).
+// Extrae título + meta description + Open Graph + JSON-LD + texto visible
+// (sirve aun en webs JS: muchas llevan sus datos de producto/oferta en ld+json).
 function extraerTextoPagina(html, max) {
   const pick = (re) => { const m = html.match(re); return m ? m[1].replace(/\s+/g, ' ').trim() : ''; };
   const titulo = pick(/<title[^>]*>([\s\S]*?)<\/title>/i);
   const ogt    = pick(/<meta[^>]+(?:property|name)=["']og:title["'][^>]+content=["']([^"']+)["']/i);
   const desc   = pick(/<meta[^>]+name=["']description["'][^>]+content=["']([^"']+)["']/i)
               || pick(/<meta[^>]+(?:property|name)=["']og:description["'][^>]+content=["']([^"']+)["']/i);
+  // Datos estructurados (nombre/descripcion/ofertas): oro en landings renderizadas por JS.
+  let ld = '';
+  const ldBloques = html.match(/<script[^>]+application\/ld\+json[^>]*>([\s\S]*?)<\/script>/gi) || [];
+  for (const bl of ldBloques.slice(0, 4)) {
+    try {
+      const j = JSON.parse(bl.replace(/^<script[^>]*>/i, '').replace(/<\/script>$/i, ''));
+      const nodos = Array.isArray(j) ? j : (j['@graph'] || [j]);
+      for (const n of nodos) {
+        if (!n || typeof n !== 'object') continue;
+        const partes = [n.name, n.headline, n.description, n.offers && (n.offers.price ? 'precio ' + n.offers.price + ' ' + (n.offers.priceCurrency || '') : ''), n.slogan].filter(Boolean);
+        if (partes.length) ld += partes.join(' · ') + ' · ';
+      }
+    } catch {}
+  }
   // Quita ruido (scripts, estilos, navegación, pies, cabeceras, svg) para quedarnos con el contenido.
   const limpio = html
     .replace(/<script[\s\S]*?<\/script>/gi, ' ').replace(/<style[\s\S]*?<\/style>/gi, ' ')
     .replace(/<noscript[\s\S]*?<\/noscript>/gi, ' ').replace(/<svg[\s\S]*?<\/svg>/gi, ' ')
     .replace(/<(nav|footer|header|aside|form)[\s\S]*?<\/\1>/gi, ' ');
-  // Prioriza titulares y párrafos (lo importante de una landing).
-  const destacados = (limpio.match(/<(h1|h2|h3|li|p)[^>]*>([\s\S]*?)<\/\1>/gi) || [])
+  // Prioriza titulares, párrafos y BOTONES/CTAs (lo importante de una landing).
+  const destacados = (limpio.match(/<(h1|h2|h3|h4|li|p|button|strong)[^>]*>([\s\S]*?)<\/\1>/gi) || [])
     .map(s => s.replace(/<[^>]+>/g, ' ').replace(/&[a-z#0-9]+;/gi, ' ').replace(/\s+/g, ' ').trim())
-    .filter(t => t.length > 2).slice(0, 60).join(' · ');
+    .filter(t => t.length > 2).slice(0, 80).join(' · ');
   const cuerpo = limpio.replace(/<[^>]+>/g, ' ').replace(/&[a-z#0-9]+;/gi, ' ').replace(/\s+/g, ' ').trim();
-  const meta = [titulo && 'Título: ' + titulo, (ogt && ogt !== titulo) && 'OG: ' + ogt, desc && 'Descripción: ' + desc].filter(Boolean).join(' · ');
+  const meta = [titulo && 'Título: ' + titulo, (ogt && ogt !== titulo) && 'OG: ' + ogt, desc && 'Descripción: ' + desc, ld && 'Datos: ' + ld.slice(0, 700)].filter(Boolean).join(' · ');
   const texto = (destacados || cuerpo);
-  return ((meta ? meta + '\n' : '') + texto.slice(0, max || 1200)).trim().slice(0, (max || 1200) + 300);
+  return ((meta ? meta + '\n' : '') + texto.slice(0, max || 1200)).trim().slice(0, (max || 1200) + 1000);
+}
+
+// Enlaces internos de la landing (texto + ruta): candidatos REALES a sitelinks.
+function extraerEnlaces(html, urlBase) {
+  let host = ''; try { host = new URL(urlBase).host; } catch {}
+  const out = []; const vistos = new Set();
+  const re = /<a[^>]+href=["']([^"'#?]+)[^"']*["'][^>]*>([\s\S]*?)<\/a>/gi;
+  let m;
+  while ((m = re.exec(html)) && out.length < 12) {
+    const href = m[1].trim();
+    const texto = m[2].replace(/<[^>]+>/g, ' ').replace(/&[a-z#0-9]+;/gi, ' ').replace(/\s+/g, ' ').trim();
+    if (!texto || texto.length < 3 || texto.length > 35) continue;
+    if (/^(javascript:|mailto:|tel:)/i.test(href)) continue;
+    let esInterno = href.startsWith('/');
+    let ruta = href;
+    if (/^https?:\/\//i.test(href)) { try { const u = new URL(href); esInterno = u.host === host; ruta = u.pathname; } catch { continue; } }
+    if (!esInterno || ruta === '/' || ruta === '') continue;
+    const k = (texto + '|' + ruta).toLowerCase();
+    if (vistos.has(k)) continue; vistos.add(k);
+    out.push({ texto: texto.slice(0, 30), ruta: ruta.slice(0, 80) });
+  }
+  return out;
+}
+
+// Promociones REALES visibles en el texto (cuotas, %, gratis, 2x1, sorteos).
+// Se ofrecen a la IA para usarlas TAL CUAL — lo contrario de inventar ofertas.
+function detectarPromos(texto) {
+  const t = ' ' + String(texto || '') + ' ';
+  const out = [];
+  const push = (s) => { s = String(s).replace(/\s+/g, ' ').trim(); if (s && !out.some(x => x.toLowerCase() === s.toLowerCase())) out.push(s.slice(0, 60)); };
+  const patrones = [
+    /\b\d{1,2}\s*cuotas?\s+(?:gratis|sin\s+inter[eé]s)\b/gi,
+    /\b(?:hasta\s+)?\d{1,3}\s*%\s*(?:de\s+)?(?:dcto|desc(?:uento)?|off)\b\.?/gi,
+    /\b(?:2x1|3x2)\b/gi,
+    /\b\d{1,2}\s+mes(?:es)?\s+gratis\b/gi,
+    /\benv[ií]o\s+gratis\b/gi,
+    /\bsorteo\s+(?:de\s+)?[a-z0-9áéíóúñ ]{3,30}/gi
+  ];
+  for (const re of patrones) { let m; while ((m = re.exec(t))) push(m[0]); }
+  return out.slice(0, 4);
 }
 // Lee 1-3 URLs de referencia y RASTREA hasta 2 páginas internas de cada una
 // (mismo dominio), con tope de páginas y presupuesto de tiempo.
 // Lee SOLO las URLs exactas que el usuario pasa (hasta 3). No rastrea páginas
 // internas (eso era lento); si quieres una interior, pégala como otra URL.
+// Devuelve { texto, promos, enlaces }: el extracto para el prompt, las
+// promociones REALES detectadas y los enlaces internos (candidatos a sitelinks).
 async function leerReferencias(refs) {
   // Dedup + hasta 3 URLs (la landing de destino + referencias).
   const vistos = new Set();
@@ -326,21 +387,42 @@ async function leerReferencias(refs) {
     if (!/^https?:\/\//i.test(u || '')) return false;
     const k = u.split('#')[0]; if (vistos.has(k)) return false; vistos.add(k); return true;
   }).slice(0, 3);
-  if (!urls.length) return '';
+  if (!urls.length) return { texto: '', promos: [], enlaces: [] };
   // En PARALELO (no una por una) → el total ≈ la página más lenta, no la suma.
-  const leerUna = async (u) => {
+  const leerUna = async (u, esPrimera) => {
     const norm = u.split('#')[0];
-    try {
+    const bajar = async (headers) => {
       const ctl = new AbortController(); const t = setTimeout(() => ctl.abort(), 6500);
-      const r = await fetch(norm, { redirect: 'follow', signal: ctl.signal, headers: UA_NAVEGADOR });
-      clearTimeout(t);
-      if (!r.ok) return `(${norm}: HTTP ${r.status})`;
-      const html = await r.text();
-      return `• ${norm}\n${extraerTextoPagina(html, 3500)}`;
-    } catch (e) { return `(${norm}: no se pudo leer)`; }
+      try {
+        const r = await fetch(norm, { redirect: 'follow', signal: ctl.signal, headers });
+        clearTimeout(t);
+        return r.ok ? await r.text() : null;
+      } catch { clearTimeout(t); return null; }
+    };
+    let html = await bajar(UA_NAVEGADOR);
+    let extracto = html ? extraerTextoPagina(html, 4500) : '';
+    // Landing renderizada por JS (casi sin texto) → reintenta como Googlebot:
+    // muchos sitios sirven una versión pre-renderizada a los bots.
+    if (!extracto || extracto.length < 250) {
+      const html2 = await bajar({ ...UA_NAVEGADOR, 'User-Agent': 'Mozilla/5.0 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)' });
+      if (html2) {
+        const ex2 = extraerTextoPagina(html2, 4500);
+        if (ex2.length > extracto.length) { html = html2; extracto = ex2; }
+      }
+    }
+    if (!extracto) return { trozo: `(${norm}: no se pudo leer)`, promos: [], enlaces: [] };
+    return {
+      trozo: `• ${norm}\n${extracto}`,
+      promos: detectarPromos(extracto),
+      enlaces: esPrimera && html ? extraerEnlaces(html, norm) : []   // sitelinks: solo de la landing principal
+    };
   };
-  const trozos = await Promise.all(urls.map(leerUna));
-  return trozos.join('\n\n').slice(0, 7000);
+  const partes = await Promise.all(urls.map((u, i) => leerUna(u, i === 0)));
+  return {
+    texto: partes.map(p => p.trozo).join('\n\n').slice(0, 9000),
+    promos: partes.flatMap(p => p.promos).slice(0, 4),
+    enlaces: partes.flatMap(p => p.enlaces).slice(0, 12)
+  };
 }
 
 // ── Llamada a Gemini con parseo robusto de JSON ───────────────────────────
@@ -422,7 +504,7 @@ async function corregirOrtografia(env, textos) {
 }
 
 // ════════════ PRODUCTO 1: BANNERS DE GOOGLE DISPLAY (3 zonas) ════════════
-async function generarBanner({ env, brief, marca, imagenes, refsTxt }) {
+async function generarBanner({ env, brief, marca, imagenes, refsTxt, promos }) {
   const imgsTxt = imagenes.length
     ? imagenes.map(im => `- ${im.url}  →  ${im.nombre || '(sin descripción)'}`).join('\n')
     : '(biblioteca vacía: deja "imagen" en "")';
@@ -436,12 +518,12 @@ async function generarBanner({ env, brief, marca, imagenes, refsTxt }) {
     'REGLAS DURAS:',
     '- Español de Chile, claro y persuasivo. Nada de placeholders ni texto de relleno.',
     '- LÍMITES: titular ≤ 6 palabras; cuerpo ≤ 14 palabras; cta ≤ 3 palabras.',
-    '- "burbuja": usa el gancho EXACTO del brief abreviado (empieza con el número si lo hay: "2 Cuotas Gratis"). NUNCA inventes una oferta: sin gancho va "".',
+    '- "burbuja": usa el gancho EXACTO del brief abreviado (empieza con el número si lo hay: "2 Cuotas Gratis"), o una promoción VIGENTE detectada en la landing, tal cual. NUNCA inventes una oferta: sin gancho ni promoción real va "".',
     '- CLAVE: la OFERTA va SOLO en la burbuja. El "titular" NO puede repetir la oferta: si la burbuja dice "2 Cuotas Gratis", el titular debe comunicar la PROPUESTA DE VALOR o el beneficio (ej. "Tu auto siempre protegido", "Maneja tranquilo"), nunca "2 Cuotas Gratis" otra vez.',
     '- "titular" y "cuerpo" no deben decir lo mismo: el titular engancha, el cuerpo suma un beneficio o razón concreta distinta.',
     '- "etiqueta": el nombre del producto, NO la marca (la marca ya está en el logo).',
     '- El "cta" debe reflejar la ACCIÓN del brief.',
-    '- "imagen": elige la URL EXACTA de la biblioteca cuya descripción mejor calce con el brief; si ninguna calza, deja "".',
+    '- "imagen": si la biblioteca tiene fotos, DEBES elegir la URL EXACTA de la que mejor calce con el brief (no la dejes vacía); solo con biblioteca vacía va "".',
     '- NUNCA uses un logo ni un ícono como "imagen" (esos van en su propia zona, no como foto del banner).',
     '- Respeta el tono y las palabras de la marca; NO inventes ofertas/precios/fechas.',
     '',
@@ -453,7 +535,7 @@ async function generarBanner({ env, brief, marca, imagenes, refsTxt }) {
     refsTxt ? '\nCONTENIDO DE LAS URLS DE REFERENCIA — ANALÍZALO y RAZONA: identifica la propuesta de valor, beneficios, público y tono, y úsalos para escribir una pieza coherente y específica (NO copies literal, NO inventes datos que no estén):\n' + refsTxt : '',
     '',
     'BRIEF:',
-    reglasBrief(brief)
+    reglasBrief(brief, promos)
   ].filter(Boolean).join('\n');
 
   // Multimodal "light": si llegan miniaturas, la IA VE las imágenes (máx 10, una sola
@@ -477,8 +559,8 @@ async function generarBanner({ env, brief, marca, imagenes, refsTxt }) {
     ok: true,
     nombre: String((parsed && parsed.nombre) || brief.que).slice(0, 80),
     zonas: { etiqueta: limpia(z.etiqueta, 3), titular: limpia(z.titular, 8), cuerpo: limpia(z.cuerpo, 18), cta: limpia(z.cta, 4) },
-    // La burbuja solo existe si el brief traía gancho (no se inventan ofertas).
-    burbuja: brief.gancho ? limpia(parsed.burbuja, 5) : '',
+    // La burbuja solo existe con gancho del brief o promoción REAL de la landing.
+    burbuja: (brief.gancho || (promos && promos.length)) ? limpia(parsed.burbuja, 5) : '',
     imagen: (typeof parsed.imagen === 'string' && /^https?:\/\//.test(parsed.imagen)) ? parsed.imagen : ''
   };
   if (!out.zonas.titular && !out.zonas.cuerpo) return json({ ok: false, error: 'La IA no produjo textos. Reformula el brief.' }, 500);
@@ -486,7 +568,7 @@ async function generarBanner({ env, brief, marca, imagenes, refsTxt }) {
   const rev = await corregirOrtografia(env, [out.nombre, out.zonas.etiqueta, out.zonas.titular, out.zonas.cuerpo, out.zonas.cta, out.burbuja]);
   out.nombre = String(rev.textos[0]).slice(0, 80);
   out.zonas = { etiqueta: limpia(rev.textos[1], 3), titular: sinPuntoFinal(limpia(rev.textos[2], 8)), cuerpo: limpia(rev.textos[3], 18), cta: limpia(rev.textos[4], 4) };
-  out.burbuja = brief.gancho ? limpia(rev.textos[5], 5) : '';
+  out.burbuja = (brief.gancho || (promos && promos.length)) ? limpia(rev.textos[5], 5) : '';
   out.ortografia = rev.revisado ? 'revisada' : 'sin-revisar';
   return json(out);
 }
@@ -500,7 +582,7 @@ async function generarBanner({ env, brief, marca, imagenes, refsTxt }) {
 const ICONOS_VALIDOS = ['check','candado','reloj','globo','regalo','corazon','estrella','casa','usuario','trending','tag','carrito','telefono','chat','info','descargar','calendario','equipo','pin','nube'];
 const sinPuntoFinal = s => String(s == null ? '' : s).replace(/\s*[.。]+\s*$/, '').replace(/\s+/g, ' ').trim();
 
-async function generarEmail({ env, brief, marca, imagenes, refsTxt }) {
+async function generarEmail({ env, brief, marca, imagenes, refsTxt, promos }) {
   const tipo = ['comercial', 'corporativo', 'informativo', 'newsletter'].includes(brief.tipo) ? brief.tipo : 'comercial';
   const imgsTxt = imagenes.length
     ? imagenes.map(im => `- ${im.url}  →  ${im.nombre || '(sin descripción)'}`).join('\n')
@@ -526,7 +608,7 @@ async function generarEmail({ env, brief, marca, imagenes, refsTxt }) {
     '- Español de Chile, concreto y persuasivo; nada de placeholders ni texto de relleno.',
     '- Escribe como un AVISO publicitario, no como un comunicado: el lector debe sentir que le hablan a él (tú), no que la empresa se describe a sí misma.',
     '- Exactamente 3 beneficios. Cada "icono" DISTINTO y relevante, de esta lista EXACTA: ' + ICONOS_VALIDOS.join(', ') + '.',
-    '- "imagen": elige la URL EXACTA de la biblioteca cuya descripción mejor calce con el brief; si ninguna calza o está vacía, deja "". NUNCA un logo ni un ícono.',
+    '- "imagen": si la biblioteca tiene fotos, DEBES elegir la URL EXACTA de la que mejor calce con el brief (no la dejes vacía); solo con biblioteca vacía va "". NUNCA un logo ni un ícono.',
     '- Titulares y frases sobre imagen NUNCA terminan en punto.',
     '- Respeta el tono y las palabras de la marca; NO inventes ofertas/precios/fechas.',
     '',
@@ -538,7 +620,7 @@ async function generarEmail({ env, brief, marca, imagenes, refsTxt }) {
     refsTxt ? '\nCONTENIDO DE LAS URLS DE REFERENCIA — ANALÍZALO y RAZONA: identifica la propuesta de valor, beneficios, público y tono, y úsalos para escribir copy coherente y específico (NO copies literal, NO inventes datos que no estén):\n' + refsTxt : '',
     '',
     'BRIEF:',
-    reglasBrief(brief)
+    reglasBrief(brief, promos)
   ].filter(Boolean).join('\n');
 
   const { parsed, error } = await llamarGemini(env, prompt, 2048);
@@ -608,7 +690,7 @@ async function generarEmail({ env, brief, marca, imagenes, refsTxt }) {
 //   - Entrega negativas (por grupo y de campaña) para no pagar clics basura.
 //   - Anuncios RSA con límites REALES de Google: titulares ≤30, descripciones ≤90,
 //     rutas ≤15. El servidor VALIDA y recorta: nada sale fuera de límite.
-async function generarAds({ env, brief, marca, refsTxt }) {
+async function generarAds({ env, brief, marca, refsTxt, promos, enlaces }) {
   const prompt = [
     `Eres un especialista senior en Google Ads (Search) de ${marca ? (marca.nombre || marca.empresa) : 'la marca'}. Estructuras campañas como un profesional: por INTENCIÓN de búsqueda, con concordancias controladas y negativas. Detestas la concordancia amplia porque quema presupuesto.`,
     '',
@@ -627,7 +709,8 @@ async function generarAds({ env, brief, marca, refsTxt }) {
     '      "path1": "ruta-1", "path2": "ruta-2"',
     '    }',
     '  ],',
-    '  "negativas": [ "negativas de TODA la campaña (gratis, empleo, curso, segunda mano, etc. según el caso)" ]',
+    '  "negativas": [ "negativas de TODA la campaña (gratis, empleo, curso, segunda mano, etc. según el caso)" ],',
+    '  "sitelinks": [ { "texto": "≤25 caracteres", "desc1": "≤35 caracteres", "desc2": "≤35 caracteres", "url": "ruta REAL de la landing (ej. /cotizar)" } ]',
     '}',
     '',
     'REGLAS DURAS (violarlas invalida la respuesta):',
@@ -641,14 +724,18 @@ async function generarAds({ env, brief, marca, refsTxt }) {
     '- El anuncio le habla AL CLIENTE, jamás habla del anuncio o de la campaña ("esta campaña fue creada para...", "si buscas X, este anuncio..." = PROHIBIDO). No repitas la misma keyword más de 2 veces entre titular y descripción.',
     '- Cada descripción dice UNA cosa CONCRETA (una cobertura, un precio, un plazo, un beneficio real). Nada de relleno tipo "rápido, fácil y online" como frase completa, ni listas de productos sin relación con el grupo.',
     '- "path1"/"path2": máximo 15 caracteres, minúsculas, sin espacios (usa guiones), relacionados con el grupo.',
+    '- "sitelinks": 4 a 6, de la MISMA landing. USA los enlaces internos reales listados abajo cuando existan (no inventes rutas); texto ≤25 caracteres, cada descripción ≤35.',
+    (promos && promos.length) ? `- La landing muestra estas PROMOCIONES vigentes: ${promos.join(' · ')}. Inclúyelas TAL CUAL en 2-3 titulares y al menos 1 descripción del grupo más transaccional (sin cambiar cifras).` : '',
+    '- Las keywords y los anuncios deben usar el VOCABULARIO REAL de la landing (los nombres de producto y términos que ella usa, no sinónimos genéricos).',
     '- Español de Chile. Respeta el tono y las palabras de la marca; NO inventes ofertas, precios ni fechas.',
     '',
     'VOZ DE MARCA:',
     voorMarca(marca),
     refsTxt ? '\nCONTENIDO DE LAS URLS DE REFERENCIA — ANALÍZALO y RAZONA: identifica la propuesta de valor, los productos y el vocabulario real del sitio, y úsalo para que las keywords y anuncios calcen con lo que la landing de verdad ofrece (NO copies literal, NO inventes datos):\n' + refsTxt : '',
+    (enlaces && enlaces.length) ? '\nENLACES INTERNOS REALES de la landing (candidatos a sitelinks, "texto → ruta"):\n' + enlaces.map(e => `- ${e.texto} → ${e.ruta}`).join('\n') : '',
     '',
     'BRIEF:',
-    reglasBrief(brief),
+    reglasBrief(brief, promos),
     brief.ctaUrl ? `URL FINAL de los anuncios (landing): ${brief.ctaUrl}` : ''
   ].filter(Boolean).join('\n');
 
@@ -685,11 +772,21 @@ async function generarAds({ env, brief, marca, refsTxt }) {
 
   if (!grupos.length) return json({ ok: false, error: 'La IA no produjo grupos de anuncios válidos. Reformula el brief (di qué vendes y a quién).' }, 500);
 
+  // Sitelinks validados con los límites reales de Google Ads: texto ≤25,
+  // descripciones ≤35. Se prefieren rutas reales de la landing.
+  const sitelinks = (Array.isArray(parsed.sitelinks) ? parsed.sitelinks : []).map(s => ({
+    texto: clean(s && s.texto).slice(0, 25),
+    desc1: clean(s && s.desc1).slice(0, 35),
+    desc2: clean(s && s.desc2).slice(0, 35),
+    url: clean(s && s.url).slice(0, 200)
+  })).filter(s => s.texto).slice(0, 6);
+
   // Segunda pasada: corrector RAE sobre los textos VISIBLES (nombres, intención,
-  // titulares y descripciones). Las keywords NO se corrigen: la gente busca sin
-  // tildes y así deben quedar. Tras corregir se re-recortan los límites 30/90.
+  // titulares, descripciones y sitelinks). Las keywords NO se corrigen: la gente
+  // busca sin tildes y así deben quedar. Tras corregir se re-recortan los límites.
   const planos = [legible(parsed.nombre || brief.que).slice(0, 80)];
   for (const g of grupos) { planos.push(g.nombre, g.intencion, g.razonamiento); planos.push(...g.titulares, ...g.descripciones); }
+  for (const s of sitelinks) planos.push(s.texto, s.desc1, s.desc2);
   const rev = await corregirOrtografia(env, planos);
   let k = 0;
   const nombreR = String(rev.textos[k++]).slice(0, 80);
@@ -700,6 +797,11 @@ async function generarAds({ env, brief, marca, refsTxt }) {
     g.titulares = g.titulares.map(() => sinPuntoFinal(rev.textos[k++]).slice(0, 30)).filter(Boolean);
     g.descripciones = g.descripciones.map(() => String(rev.textos[k++]).slice(0, 90)).filter(Boolean);
   }
+  for (const s of sitelinks) {
+    s.texto = (String(rev.textos[k++]).slice(0, 25)) || s.texto;
+    s.desc1 = String(rev.textos[k++]).slice(0, 35);
+    s.desc2 = String(rev.textos[k++]).slice(0, 35);
+  }
 
   return json({
     ok: true,
@@ -707,9 +809,10 @@ async function generarAds({ env, brief, marca, refsTxt }) {
     urlFinal: clean(brief.ctaUrl || ''),
     grupos,
     negativas: dedup((Array.isArray(parsed.negativas) ? parsed.negativas : []).map(kwLimpia).filter(Boolean)).slice(0, 25),
+    sitelinks,
     ortografia: rev.revisado ? 'revisada' : 'sin-revisar'
   });
 }
 
 // Exportados SOLO para pruebas locales (Cloudflare Pages los ignora).
-export { corregirOrtografia, extraerJSON, generarEmail, generarBanner, generarAds };
+export { corregirOrtografia, extraerJSON, generarEmail, generarBanner, generarAds, detectarPromos, extraerEnlaces, extraerTextoPagina };
