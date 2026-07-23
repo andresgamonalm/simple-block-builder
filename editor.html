@@ -893,6 +893,8 @@ button,input,select,textarea{font-family:inherit;}
 .lienzo-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:0 2px 12px;flex-wrap:wrap;}
 .lienzo-head .lz-tit{font-size:14px;font-weight:600;color:var(--ink,#12173d);display:flex;align-items:center;gap:9px;}
 .lz-zoom{color:var(--ink3,#5b6178);font-weight:400;font-size:13px;}
+.lienzo-vp{overflow:auto;max-height:560px;max-width:100%;border-radius:6px;}
+.lienzo-vp .lienzo-stage{margin:0 auto;}
 .lienzo-head .lz-tit .lz-badge{font-size:13px;font-weight:600;color:#fff;background:var(--navy,#040764);border-radius:999px;padding:3px 10px;}
 .lienzo-head .lz-ayuda{font-size:13px;color:var(--ink3,#5b6178);display:flex;align-items:center;gap:6px;}
 .lienzo-stage{position:relative;margin:0 auto;border-radius:6px;overflow:hidden;box-shadow:0 6px 26px rgba(8,14,28,.14);background:#0e2748;}
@@ -5015,8 +5017,8 @@ function renderLienzoEdicion(p){
   const fmt = p.activaFmt || p.masterFmt || "display-300x250";
   const F = FORMATOS[fmt]; if(!F) return "";
   const ef = composicionEfectiva(p, fmt);
-  const s = Math.min(760/F.ancho, 460/F.alto, 1);   // nunca agrandar sobre el tamaño real
-  const Ws = Math.round(F.ancho*s), Hs = Math.round(F.alto*s);
+  const s = 1;   // display se revisa a TAMAÑO REAL; si no cabe, el visor hace scroll
+  const Ws = F.ancho, Hs = F.alto;
   const esMaster = esFmtMaster(fmt);
   const alcance = esMaster ? "editando TODOS los tamaños" : `editando SOLO ${F.ancho}×${F.alto}`;
   return `<div class="lienzo" data-fmt="${fmt}" data-escala="${s}">
@@ -5024,10 +5026,10 @@ function renderLienzoEdicion(p){
       <div class="lz-tit"><span class="lz-badge">${F.ancho}×${F.alto}</span> ${esMaster?'Máster · '+alcance:alcance}</div>
       <div class="lz-ayuda">${svgIcon("info",{size:"13px"})} Arrastra los <b>divisores</b> para el espacio de cada zona · arrastra la <b>burbuja</b> para moverla · <b>clic</b> en una zona para editarla</div>
     </div>
-    <div class="lienzo-stage" style="width:${Ws}px;height:${Hs}px;">
+    <div class="lienzo-vp"><div class="lienzo-stage" style="width:${Ws}px;height:${Hs}px;">
       <div class="lienzo-scale" style="width:${F.ancho}px;height:${F.alto}px;transform:scale(${s});">${renderComposicion(ef, fmt)}</div>
       <div class="lienzo-ovl"></div>
-    </div>
+    </div></div>
   </div>`;
 }
 // Mide las zonas reales y coloca zonas clicables, divisores y la burbuja. Todo
@@ -5041,27 +5043,10 @@ function attachLienzoInteraccion(p, root){
   if(!stage || !ovl || !cmp) return;
   ovl.innerHTML = "";   // evita duplicados si se reengancha (varios rAF en cola)
   const fila = (familiaDeFormato(fmt)==="franja");
-  // Escala RESPONSIVA: ajusta el banner al ancho real disponible (y a un alto
-  // cómodo), en vez de un 760×460 fijo que no cabía en pantallas chicas.
-  const Fr = FORMATOS[fmt];
-  if(Fr){
-    const cont = wrap.parentElement;
-    const dispoW = Math.max(280, Math.min((cont ? cont.clientWidth : 760) - 24, 900));
-    const dispoH = Math.max(220, Math.min(window.innerHeight - 320, 520));
-    const s2 = Math.min(dispoW/Fr.ancho, dispoH/Fr.alto, 1);   // cap 1: un 300x250 se ve de 300px, no inflado
-    const sc = stage.querySelector(".lienzo-scale");
-    stage.style.width = Math.round(Fr.ancho*s2)+"px";
-    stage.style.height = Math.round(Fr.alto*s2)+"px";
-    if(sc) sc.style.transform = "scale("+s2+")";
-    wrap.dataset.escala = s2;
-    // Rotula el % de vista: aclara por qué un 1200px se ve reducido en pantalla.
-    const tit = wrap.querySelector(".lz-tit");
-    if(tit){
-      let z = tit.querySelector(".lz-zoom");
-      if(!z){ z=document.createElement("span"); z.className="lz-zoom"; tit.appendChild(z); }
-      z.textContent = s2>=0.995 ? " · tamaño real" : " · vista al "+Math.round(s2*100)+"%";
-    }
-  }
+  // Display se trabaja a TAMAÑO REAL (escala 1); el visor .lienzo-vp hace scroll.
+  wrap.dataset.escala = 1;
+  const tit = wrap.querySelector(".lz-tit");
+  if(tit && !tit.querySelector(".lz-zoom")){ const z=document.createElement("span"); z.className="lz-zoom"; z.textContent=" · tamaño real"; tit.appendChild(z); }
   const sr = stage.getBoundingClientRect();
   const rel = (el)=>{ const r=el.getBoundingClientRect(); return { x:r.left-sr.left, y:r.top-sr.top, w:r.width, h:r.height }; };
   const zonasDom = [...cmp.querySelectorAll(".cmp-zona")];
