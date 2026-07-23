@@ -893,7 +893,7 @@ button,input,select,textarea{font-family:inherit;}
 .lienzo-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:0 2px 12px;flex-wrap:wrap;}
 .lienzo-head .lz-tit{font-size:14px;font-weight:600;color:var(--ink,#12173d);display:flex;align-items:center;gap:9px;}
 .lz-zoom{color:var(--ink3,#5b6178);font-weight:400;font-size:13px;}
-.lienzo-vp{overflow:auto;max-height:560px;max-width:100%;border-radius:6px;}
+.lienzo-vp{overflow-x:auto;max-width:100%;border-radius:6px;}  /* sin tope de alto: el banner se despliega entero y lo demás baja */
 .lienzo-vp .lienzo-stage{margin:0 auto;}
 .lienzo-head .lz-tit .lz-badge{font-size:13px;font-weight:600;color:#fff;background:var(--navy,#040764);border-radius:999px;padding:3px 10px;}
 .lienzo-head .lz-ayuda{font-size:13px;color:var(--ink3,#5b6178);display:flex;align-items:center;gap:6px;}
@@ -1534,7 +1534,7 @@ button,input,select,textarea{font-family:inherit;}
       <span class="ico crumb-sep" data-ic="chevright" data-icsize="13px"></span>
       <span class="crumb-pieza crumb-edit" id="crumb-pieza" onclick="renombrarPiezaActual()" title="Clic para renombrar la creatividad">Creatividad</span>
       <span id="ed-chip"></span>
-      <span class="sync-status" id="sync-status" title="Estado de guardado en la nube">—</span>
+      <span class="sync-status" id="sync-status" title="Cada cambio se guarda solo: al instante en este equipo y en ~1 s en la nube">—</span>
       <div class="tb-spacer"></div>
       <button class="tb-act sec" onclick="guardarProyectoAhora()" title="Guardar el proyecto ahora"><span class="ico" data-ic="nube"></span> Guardar</button>
       <button class="tb-act primary" onclick="abrirExportar()" title="Exportar / descargar"><span class="ico" data-ic="exportar"></span> Exportar</button>
@@ -2278,7 +2278,7 @@ function setSyncEstado(txt, cls){
 }
 function guardarEnNubeDebounced(){
   clearTimeout(_saveTimer);
-  setSyncEstado("Sin guardar", "pend");
+  setSyncEstado("Cambios pendientes…", "pend");
   _saveTimer = setTimeout(guardarEnNube, 1200);
 }
 async function guardarEnNube(){
@@ -2291,8 +2291,8 @@ async function guardarEnNube(){
       headers:{ "Content-Type":"application/json" },
       body: JSON.stringify({ workspace })   // se sube el espacio completo (proyectos + marcas + banner)
     });
-    if(r.ok){ setSyncEstado("Guardado", "ok"); }
-    else { setSyncEstado("Solo local", "err"); }
+    if(r.ok){ setSyncEstado("Todo guardado · "+new Date().toLocaleTimeString("es-CL",{hour:"2-digit",minute:"2-digit"}), "ok"); }
+    else { setSyncEstado("Guardado solo en este equipo", "err"); }
   }catch(e){ setSyncEstado("Sin conexión", "err"); }
   finally{ _guardando = false; }
 }
