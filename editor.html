@@ -1104,10 +1104,94 @@ button,input,select,textarea{font-family:inherit;}
 .export-row .download{padding:6px 12px;border:1px solid var(--bdr);border-radius:6px;background:var(--white);cursor:pointer;font-size:13px;color:var(--primary);font-weight:500;font-family:var(--f);transition:all .14s;}
 .export-row .download:hover{background:var(--primary);color:var(--white);border-color:var(--primary);}
 
+
+/* ── Editor de email "3 zonas" (rail + bloques + lienzo + propiedades) ── */
+*{scrollbar-width:thin;scrollbar-color:#cfd6e4 transparent;}
+::-webkit-scrollbar{width:8px;height:8px;}
+::-webkit-scrollbar-track{background:transparent;}
+::-webkit-scrollbar-thumb{background:#cfd6e4;border-radius:999px;}
+::-webkit-scrollbar-thumb:hover{background:#1C73CB;}
+#ed-rail{display:none;width:60px;background:var(--white);border-right:1px solid var(--bdr);flex-direction:column;align-items:center;padding:10px 0;gap:2px;flex-shrink:0;}
+.layout.email3 #ed-rail{display:flex;}
+.layout.email3{position:relative;}
+#ed-rail button{width:52px;border:0;background:transparent;border-radius:8px;padding:8px 0 6px;font-size:10px;color:var(--ink3);cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:4px;font-family:var(--f);}
+#ed-rail button .ric{width:28px;height:28px;border-radius:7px;display:flex;align-items:center;justify-content:center;background:var(--bg);color:var(--ink);}
+#ed-rail button.on{color:var(--blue,#1C73CB);font-weight:600;}
+#ed-rail button.on .ric{background:#e8f1fb;color:var(--blue,#1C73CB);}
+#ed-rail .rail-abajo{margin-top:auto;}
+#ed-rail .rail-charb .ric{background:var(--blue,#1C73CB);color:#fff;border-radius:50%;}
+.layout.email3 .panel-tabs{display:none!important;}
+.panel-der{display:none;width:320px;flex-shrink:0;background:var(--white);border-left:1px solid var(--bdr);overflow-y:auto;}
+.layout.email3 .panel-der{display:block;}
+.layout.email3.sin-izq .panel-izq,.layout.email3.sin-izq #ed-rail ~ .panel-izq{display:none;}
+.layout.email3.sin-der .panel-der{display:none;}
+.exp-lat{position:absolute;top:14px;width:26px;height:52px;border:1px solid var(--bdr);background:var(--white);color:var(--ink3);display:none;align-items:center;justify-content:center;cursor:pointer;z-index:30;}
+.exp-lat.izq{left:60px;border-radius:0 8px 8px 0;border-left:0;}
+.exp-lat.der{right:0;border-radius:8px 0 0 8px;border-right:0;}
+.layout.email3.sin-izq .exp-lat.izq{display:flex;}
+.layout.email3.sin-der .exp-lat.der{display:flex;}
+.pd-cab{display:flex;align-items:flex-start;gap:8px;padding:13px 14px 0;}
+.pd-cab .pd-que{font-size:10px;letter-spacing:.8px;color:var(--ink3);text-transform:uppercase;font-weight:600;}
+.pd-cab h3{font-size:15px;font-weight:600;color:var(--ink);margin:3px 0 0;}
+.pd-volver{border:0;background:none;padding:4px 0 0;font-size:12px;color:var(--blue,#1C73CB);cursor:pointer;font-family:var(--f);font-weight:500;}
+.pd-col,.col-izq{margin-left:auto;width:26px;height:26px;border:1px solid var(--bdr);border-radius:7px;background:var(--white);color:var(--ink3);cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.pd-col:hover,.col-izq:hover{color:var(--blue,#1C73CB);border-color:var(--blue,#1C73CB);}
+.p3tabs{display:flex;border-bottom:1px solid var(--bdr);margin-top:10px;}
+.p3tabs button{flex:1;border:0;background:none;padding:10px 0;font-size:13px;color:var(--ink3);cursor:pointer;border-bottom:2px solid transparent;font-family:var(--f);}
+.p3tabs button.on{color:var(--ink);font-weight:600;border-bottom-color:var(--navy,#040764);}
+.p3sec{display:none;}
+.p3sec.on{display:block;}
+.p3vseg{display:flex;gap:8px;margin:6px 0 4px;}
+.p3vseg button{flex:1;border:1px solid var(--bdr);background:var(--white);border-radius:8px;padding:10px 4px;font-size:11.5px;color:var(--ink3);cursor:pointer;font-family:var(--f);}
+.p3vseg button.on{border-color:var(--blue,#1C73CB);color:var(--blue,#1C73CB);font-weight:600;background:#e8f1fb;}
+.p3hint{font-size:11.5px;color:var(--ink3);line-height:1.45;margin:6px 0 2px;font-weight:400;}
+.p3lockbtn{width:100%;border:1px solid var(--bdr);background:var(--white);border-radius:8px;padding:10px;font-size:13px;color:var(--ink2);cursor:pointer;display:flex;gap:8px;align-items:center;justify-content:center;font-family:var(--f);margin-top:6px;}
+.p3lockbtn:hover{border-color:var(--blue,#1C73CB);color:var(--blue,#1C73CB);}
+.lock-card{margin:14px 4px;background:var(--bg);border-radius:10px;padding:18px;text-align:center;}
+.lock-card .lic{width:38px;height:38px;border-radius:50%;background:var(--white);color:var(--ink3);margin:0 auto 10px;display:flex;align-items:center;justify-content:center;}
+.lock-card b{display:block;font-size:13.5px;margin-bottom:6px;color:var(--ink);}
+.lock-card p{font-size:12px;color:var(--ink3);line-height:1.5;margin:0;}
+#asunto-bar{display:none;max-width:640px;margin:16px auto 0;background:var(--white);border-radius:10px;padding:12px 16px;}
+#asunto-bar .ab-row{display:grid;grid-template-columns:104px 1fr 52px;gap:8px 10px;align-items:center;margin-bottom:8px;}
+#asunto-bar label{font-size:12px;color:var(--ink3);font-weight:500;}
+#asunto-bar input{border:1px solid var(--bdr);border-radius:8px;height:32px;padding:0 10px;font-family:var(--f);font-size:13px;color:var(--ink);width:100%;outline:none;}
+#asunto-bar input:focus{border-color:var(--blue,#1C73CB);}
+#asunto-bar small{font-size:11px;color:var(--ink3);text-align:right;font-variant-numeric:tabular-nums;}
+#asunto-bar .ab-hint{font-size:11px;color:var(--ink3);font-weight:400;line-height:1.4;}
+.blk-buscar{margin:10px 12px 2px;display:flex;align-items:center;gap:8px;background:var(--bg);border-radius:8px;padding:0 10px;height:32px;}
+.blk-buscar input{border:0;background:transparent;outline:0;flex:1;font-family:var(--f);font-size:13px;color:var(--ink);}
+#salud-correo{margin:14px;background:#F2FDFD;border-radius:10px;padding:13px;display:none;}
+#salud-correo b{font-size:13px;display:block;margin-bottom:7px;color:var(--ink);}
+#salud-correo .sld{display:flex;gap:8px;align-items:flex-start;font-size:11.5px;color:#20505a;margin-top:5px;line-height:1.4;}
+#salud-correo .okc{width:15px;height:15px;border-radius:50%;background:#B1F1F1;color:#0c4f4f;flex:none;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;}
+#salud-correo .okc.pend{background:#FDEF97;color:#7a6410;}
+.esp-grip{position:absolute;left:50%;bottom:-9px;transform:translateX(-50%);background:var(--blue,#1C73CB);color:#fff;border-radius:999px;font-size:9px;font-weight:600;padding:2px 10px;display:none;z-index:8;cursor:ns-resize;touch-action:none;font-family:var(--f);}
+.bw.selected .esp-grip,.bw:hover .esp-grip{display:block;}
+.bw-lock-ico{position:absolute;top:6px;right:6px;width:20px;height:20px;border-radius:6px;background:rgba(255,255,255,.92);color:var(--ink3);display:flex;align-items:center;justify-content:center;z-index:4;pointer-events:none;}
+.canvas-frame.dev-movil .bw .sbb-ver-desktop{opacity:.3;}
+.canvas-frame:not(.dev-movil) .bw .sbb-ver-movil{opacity:.3;}
+.hist-item{padding:11px 14px;border-bottom:1px solid var(--bg);}
+.hist-item b{font-size:12.5px;font-weight:500;display:block;color:var(--ink);}
+.hist-item small{color:var(--ink3);font-size:11px;}
+.hist-item .rest{float:right;font-size:12px;color:var(--blue,#1C73CB);font-weight:500;cursor:pointer;border:0;background:none;font-family:var(--f);}
+.hist-item.act{background:#F2FDFD;}
+.mtag-box{background:var(--bg);border-radius:10px;padding:10px 12px;margin:10px 0;}
+
 /* ═══════════════════════════════════════════════════════════════
    COMPONENT STYLES (canvas + export) — phone-widget aesthetic
    ═══════════════════════════════════════════════════════════════ */
 .sbb-page{font-family:inherit;color:inherit;background:inherit;}
+/* Visibilidad por dispositivo (por bloque): en el email exportado se respeta
+   con media query; en el editor solo se atenúa (ver CSS del chrome). */
+.sbb-ver-movil{display:none;}
+@media screen and (max-width:540px){
+  .sbb-ver-movil{display:block!important;}
+  .sbb-ver-desktop{display:none!important;}
+}
+.sbb-video-play{position:absolute;top:50%;left:50%;width:64px;height:64px;margin:-32px 0 0 -32px;border-radius:50%;background:rgba(18,23,61,.75);}
+.sbb-video-play::after{content:"";position:absolute;left:26px;top:19px;border-left:18px solid #fff;border-top:13px solid transparent;border-bottom:13px solid transparent;}
+.sbb-video-vacio{border:2px dashed #cfd6e4;border-radius:8px;padding:34px 20px;text-align:center;color:#5a6072;font-size:13px;line-height:1.5;}
+.sbb-video-cap{font-size:13px;color:inherit;padding-top:8px;text-align:center;}
 
 /* ── Composición por ZONAS (colecciones): fondo continuo + 3 zonas ── */
 /* La composición NO hereda la fuente de la app (Roboto): usa una pila sans
@@ -1568,7 +1652,16 @@ button,input,select,textarea{font-family:inherit;}
     </div>
   </header>
 
-  <div class="layout">
+  <div class="layout" id="layout">
+    <div id="ed-rail">
+      <button class="on" data-rail="bloques" onclick="railTab('bloques')"><span class="ric ico" data-ic="grid"></span>Bloques</button>
+      <button data-rail="media" onclick="railTab('media')"><span class="ric ico" data-ic="imagen"></span>Media</button>
+      <button data-rail="plantillas" onclick="railTab('plantillas')"><span class="ric ico" data-ic="plantilla"></span>Plantillas</button>
+      <button data-rail="historial" onclick="railTab('historial')"><span class="ric ico" data-ic="reloj"></span>Historial</button>
+      <button class="rail-abajo rail-charb" onclick="abrirIA()"><span class="ric ico" data-ic="estrella"></span>Char-B</button>
+    </div>
+    <button class="exp-lat izq" onclick="colPanel('izq')" title="Mostrar panel"><span class="ico" data-ic="chevright" data-icsize="13px"></span></button>
+    <button class="exp-lat der" onclick="colPanel('der')" title="Mostrar panel"><span class="ico" data-ic="chevleft" data-icsize="13px"></span></button>
     <aside class="panel-izq">
       <div class="panel-tabs">
         <button class="ptab on" id="ptab-bloques" data-tab="bloques" onclick="cambiarPanelTab('bloques')"><span class="ico" data-ic="grid"></span><span>Bloques</span></button>
@@ -1578,6 +1671,7 @@ button,input,select,textarea{font-family:inherit;}
       </div>
 
       <div class="panel-body ptab-pane" id="pane-bloques">
+        <div class="blk-buscar"><span class="ico" data-ic="buscar" data-icsize="14px"></span><input placeholder="Buscar un bloque…" oninput="filtrarBiblioteca(this.value)"></div>
         <div id="biblioteca"></div>
       </div>
 
@@ -1632,12 +1726,21 @@ button,input,select,textarea{font-family:inherit;}
         <div id="plantillas-cont"></div>
       </div>
 
+      <div class="panel-body ptab-pane" id="pane-historial" style="display:none;">
+        <div id="historial-cont"></div>
+      </div>
+
       <!-- Panel propio de la campaña Search (formato ads): no hay bloques ni
            plantillas; se navega por grupos y se exporta el CSV. -->
       <div class="panel-body ptab-pane" id="pane-ads" style="display:none;"></div>
     </aside>
 
     <section class="canvas-area" id="canvas-area">
+      <div id="asunto-bar">
+        <div class="ab-row"><label>Asunto</label><input id="ab-asunto" maxlength="150" oninput="setAsuntoPieza('asunto',this.value)"><small id="ab-c-asunto">0/60</small></div>
+        <div class="ab-row"><label>Preencabezado</label><input id="ab-pre" maxlength="200" oninput="setAsuntoPieza('preheader',this.value)"><small id="ab-c-pre">0/90</small></div>
+        <div class="ab-hint">El preencabezado acompaña al asunto en la bandeja de entrada. Se inyecta oculto en el HTML exportado.</div>
+      </div>
       <div class="canvas-frame" id="canvas-frame" data-formato="email">
         <div id="canvas">
           <div class="canvas-empty" id="canvas-empty">
@@ -1648,6 +1751,24 @@ button,input,select,textarea{font-family:inherit;}
         </div>
       </div>
     </section>
+
+    <aside class="panel-der" id="panel-der">
+      <div class="pd-cab">
+        <div style="min-width:0;">
+          <div class="pd-que" id="pd-que">Diseño general</div>
+          <h3 id="pd-titulo">Diseño general del correo</h3>
+          <button class="pd-volver" id="pd-volver" onclick="pdVolverGeneral()" style="display:none;">‹ Volver al diseño general del correo</button>
+        </div>
+        <button class="pd-col" onclick="colPanel('der')" title="Ocultar panel"><span class="ico" data-ic="chevright" data-icsize="13px"></span></button>
+      </div>
+      <div class="p3tabs" id="pd-tabs" style="display:none;">
+        <button class="on" data-p3t="contenido" onclick="setP3('contenido')">Contenido</button>
+        <button data-p3t="estilos" onclick="setP3('estilos')">Estilos</button>
+        <button data-p3t="visual" onclick="setP3('visual')">Visualización</button>
+      </div>
+      <div class="pd-cuerpo" id="pd-cuerpo"></div>
+      <div id="salud-correo"></div>
+    </aside>
   </div>
 </div>
 
@@ -2093,7 +2214,11 @@ let panelTab = "bloques";        // pestaña activa del panel izquierdo
 function cambiarPanelTab(tab){
   panelTab = tab;
   document.querySelectorAll(".panel-tabs .ptab").forEach(b => b.classList.toggle("on", b.dataset.tab === tab));
-  document.querySelectorAll(".ptab-pane").forEach(p => { p.style.display = (p.id === "pane-" + tab) ? "" : "none"; });
+  // En el modo email de 3 zonas, "Editar" y "Diseño" viven en el panel DERECHO:
+  // aquí solo se conmutan los panes que siguen en el panel izquierdo.
+  document.querySelectorAll(".panel-izq .ptab-pane").forEach(p => { p.style.display = (p.id === "pane-" + tab) ? "" : "none"; });
+  if(_email3){ document.querySelectorAll("#ed-rail button[data-rail]").forEach(b => b.classList.toggle("on", b.dataset.rail === tab)); }
+  if(tab === "historial") renderHistorialPanel();
   if(tab === "diseno" && typeof renderComposicionEditor === "function") renderComposicionEditor();
 }
 
@@ -2101,6 +2226,7 @@ function cambiarPanelTab(tab){
 function setDispositivo(d){
   dispositivo = d;
   document.querySelectorAll("#dev-seg button").forEach(b => b.classList.toggle("on", b.dataset.dev === d));
+  const fr = document.getElementById("canvas-frame"); if(fr) fr.classList.toggle("dev-movil", d === "movil");
   aplicarTema();
 }
 
@@ -2203,17 +2329,18 @@ function persistir(){
    Cada cambio pasa por persistir(); ahí registramos un snapshot del lienzo +
    tema + formato + nombre de la pieza activa. El historial se reinicia solo al
    cambiar de creatividad. Atajos: Ctrl/Cmd+Z deshace, Ctrl+Y / Ctrl+Shift+Z rehace. */
-let _undo = [], _redo = [], _undoRestoring = false, _undoPiezaId = null;
+let _undo = [], _redo = [], _undoTs = [], _undoRestoring = false, _undoPiezaId = null;
 function registrarHistorial(){
   if(_undoRestoring) return;
   const p = pieza(); if(!p) return;
   const snap = JSON.stringify({ canvas:p.canvas, tema:p.tema, formato:p.formato, nombre:p.nombre,
     composicion:p.composicion, artboards:p.artboards, esSet:p.esSet, setTipo:p.setTipo, masterFmt:p.masterFmt, activaFmt:p.activaFmt });
-  if(_undoPiezaId !== p.id){ _undo = []; _redo = []; _undoPiezaId = p.id; }  // pieza nueva → historial limpio
+  if(_undoPiezaId !== p.id){ _undo = []; _redo = []; _undoTs = []; _undoPiezaId = p.id; }  // pieza nueva → historial limpio
   if(_undo.length && _undo[_undo.length-1] === snap) return;                 // sin cambios reales
-  _undo.push(snap);
-  if(_undo.length > 120) _undo.shift();
+  _undo.push(snap); _undoTs.push(Date.now());
+  if(_undo.length > 120){ _undo.shift(); _undoTs.shift(); }
   _redo.length = 0;
+  if(panelTab === "historial") renderHistorialPanel();
 }
 function aplicarSnapshot(snap){
   const p = pieza(); if(!p || !snap) return;
@@ -2234,14 +2361,14 @@ function aplicarSnapshot(snap){
 }
 function deshacer(){
   if(_undo.length < 2){ toast("Nada que deshacer"); return; }
-  _redo.push(_undo.pop());                 // saca el estado actual
+  _redo.push(_undo.pop()); _undoTs.pop();  // saca el estado actual
   aplicarSnapshot(_undo[_undo.length-1]);  // restaura el anterior
   toast("Deshecho");
 }
 function rehacer(){
   if(!_redo.length){ toast("Nada que rehacer"); return; }
   const snap = _redo.pop();
-  _undo.push(snap);
+  _undo.push(snap); _undoTs.push(Date.now());
   aplicarSnapshot(snap);
   toast("Rehecho");
 }
@@ -2461,7 +2588,8 @@ const ICONOS_SVG = {
   sol:          { nombre:"Sol",             svg:'<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/>' },
   lluvia:       { nombre:"Lluvia",          svg:'<path d="M4 14.9A7 7 0 1 1 15.71 8h1.79a4.5 4.5 0 0 1 2.5 8.24"/><path d="M16 14v6M8 14v6M12 16v6"/>' },
   nieve:        { nombre:"Nieve",           svg:'<path d="M4 14.9A7 7 0 1 1 15.71 8h1.79a4.5 4.5 0 0 1 2.5 8.24"/><path d="M8 15h.01M8 19h.01M12 17h.01M12 21h.01M16 15h.01M16 19h.01"/>' },
-  tormenta:     { nombre:"Tormenta",        svg:'<path d="M4 14.9A7 7 0 1 1 15.71 8h1.79a4.5 4.5 0 0 1 2.5 8.24"/><path d="m13 12-3 5h4l-3 5"/>' }
+  tormenta:     { nombre:"Tormenta",        svg:'<path d="M4 14.9A7 7 0 1 1 15.71 8h1.79a4.5 4.5 0 0 1 2.5 8.24"/><path d="m13 12-3 5h4l-3 5"/>' },
+  video:        { nombre:"Video",           svg:'<polygon points="6 3 20 12 6 21 6 3"/>' }
 };
 // Rellena los placeholders <span class="ico" data-ic="clave"> con su SVG.
 function pintarIconos(){
@@ -2540,7 +2668,10 @@ function wrap(d, inner){
   // Identificador del componente: id + data-id en el HTML (para reconocerlo en consola/export).
   const cid = (d.compId||"").trim();
   const idAttr = cid ? ` id="${escAttr(cid)}" data-comp="${escAttr(cid)}"` : "";
-  return `<div${idAttr} style="${pad}${gap}${bg}${rb}display:flex;flex-direction:column;justify-content:${jV};align-items:${jH};box-sizing:border-box;width:100%;height:100%;">
+  // Visibilidad por dispositivo: la clase viaja al export (media query) y el
+  // editor la atenúa según la vista activa.
+  const verCls = d.verEn==="desktop" ? " sbb-ver-desktop" : d.verEn==="movil" ? " sbb-ver-movil" : "";
+  return `<div${idAttr} class="sbb-blk${verCls}" style="${pad}${gap}${bg}${rb}display:flex;flex-direction:column;justify-content:${jV};align-items:${jH};box-sizing:border-box;width:100%;height:100%;">
     <div style="${w}${h}max-width:100%;box-sizing:border-box;">${inner}</div>
   </div>`;
 }
@@ -2605,6 +2736,7 @@ const BLOQUES = {
     campos: [
       {key:"titulo",label:"Título (opcional)",tipo:"text"},
       {key:"contenido",label:"Contenido",tipo:"textarea"},
+      {tipo:"mergetag"},
       {grupo:"Estilo"},
       {key:"tamano",label:"Tamaño (px)",tipo:"range",min:10,max:60,step:1},
       {key:"color",label:"Color del texto (vacío = tema)",tipo:"color"},
@@ -2612,6 +2744,40 @@ const BLOQUES = {
       ...styleFields()
     ],
     render: (d) => wrap(d, `<div class="sbb-texto" style="font-size:${esc(d.tamano)}px;text-align:${esc(d.alinH)};${d.color?`color:${esc(d.color)};`:""}${d.negrita?"font-weight:600;":""}${d.italica?"font-style:italic;":""}">${d.titulo?`<h2 data-edit="titulo" data-linea="1">${esc(d.titulo)}</h2>`:""}<div data-edit="contenido">${escMultiline(d.contenido)}</div></div>`)
+  },
+  heading: {
+    cat:"Contenido", nombre:"Encabezado", icono:"", sub:"Título H1 / H2 / H3",
+    defaults: Object.assign({}, styleDefaults, { alinH:"left", padTop:"10", padBottom:"6", nivel:"h2", texto:"Escribe un título", tamano:"", color:"" }),
+    campos: [
+      {key:"texto",label:"Texto del encabezado",tipo:"text"},
+      {key:"nivel",label:"Nivel (jerarquía del título)",tipo:"select",opciones:[["h1","Título 1 (H1) · 28px"],["h2","Título 2 (H2) · 22px"],["h3","Título 3 (H3) · 18px"]]},
+      {grupo:"Estilo"},
+      {key:"tamano",label:"Tamaño (px · vacío = automático por nivel)",tipo:"text",placeholder:"auto"},
+      {key:"color",label:"Color (vacío = tema)",tipo:"color"},
+      ...styleFields()
+    ],
+    render: (d) => {
+      const nv = ["h1","h2","h3"].includes(d.nivel) ? d.nivel : "h2";
+      const tam = (d.tamano && /^\d+$/.test(String(d.tamano))) ? d.tamano : (nv==="h1" ? "28" : nv==="h2" ? "22" : "18");
+      return wrap(d, `<${nv} class="sbb-heading" data-edit="texto" data-linea="1" style="font-size:${tam}px;line-height:1.25;margin:0;font-weight:700;text-align:${esc(d.alinH)};${d.color?`color:${esc(d.color)};`:""}">${esc(d.texto)}</${nv}>`);
+    }
+  },
+  video: {
+    cat:"Contenido", nombre:"Video", icono:"", sub:"Miniatura de YouTube con Play",
+    defaults: Object.assign({}, styleDefaults, { padLeft:"0", padRight:"0", url:"", titulo:"" }),
+    campos: [
+      {key:"url",label:"Enlace del video (YouTube)",tipo:"text",placeholder:"https://www.youtube.com/watch?v=…"},
+      {key:"titulo",label:"Texto bajo el video (opcional)",tipo:"text"},
+      ...styleFields()
+    ],
+    render: (d) => {
+      const m = String(d.url||"").match(/(?:youtube\.com\/(?:watch\?v=|shorts\/|embed\/)|youtu\.be\/)([\w-]{6,})/);
+      const id = m ? m[1] : "";
+      const inner = id
+        ? `<a href="${esc(d.url)}" target="_blank" rel="noopener" class="sbb-video" style="display:block;position:relative;line-height:0;"><img src="https://img.youtube.com/vi/${esc(id)}/hqdefault.jpg" alt="${esc(d.titulo||"Ver video")}" style="width:100%;display:block;"><span class="sbb-video-play"></span></a>`
+        : `<div class="sbb-video-vacio">Pega un enlace de YouTube y aquí aparecerá la miniatura con su botón de Play, enlazada al video real</div>`;
+      return wrap(d, inner + (d.titulo ? `<div class="sbb-video-cap" data-edit="titulo">${esc(d.titulo)}</div>` : ""));
+    }
   },
   imagen: {
     cat:"Contenido", nombre:"Imagen", icono:"", sub:"Imagen ajustable",
@@ -2704,13 +2870,15 @@ const BLOQUES = {
   },
   divisor: {
     cat:"Estructura", nombre:"Divisor", icono:"", sub:"Línea horizontal",
-    defaults: Object.assign({}, styleDefaults, { padTop:"12", padBottom:"12", color:"#e5e7ea", grosor:"1", estilo:"solid" }),
+    defaults: Object.assign({}, styleDefaults, { padTop:"12", padBottom:"12", color:"#e5e7ea", grosor:"1", estilo:"solid", anchoLinea:"100" }),
     campos: [
       {tipo:"row2", izq:{key:"color",label:"Color",tipo:"color"}, der:{key:"grosor",label:"Grosor (px)",tipo:"range",min:1,max:10,step:1}},
       {key:"estilo",label:"Estilo",tipo:"select",opciones:[["solid","Sólido"],["dashed","Discontinuo"],["dotted","Punteado"]]},
+      {key:"anchoLinea",label:"Ancho de la línea (% · menos de 100 queda centrada)",tipo:"range",min:20,max:100,step:5},
       ...styleFields({h:false,v:false})
     ],
-    render: (d) => wrap(d, `<div class="sbb-divisor"><hr style="border-top-color:${esc(d.color)};border-top-width:${esc(d.grosor)}px;border-top-style:${esc(d.estilo)};"></div>`)
+    render: (d) => { const wl = (d.anchoLinea && /^\d+$/.test(String(d.anchoLinea)) && parseInt(d.anchoLinea)<100) ? `width:${parseInt(d.anchoLinea)}%;margin-left:auto;margin-right:auto;` : "";
+      return wrap(d, `<div class="sbb-divisor"><hr style="${wl}border-top-color:${esc(d.color)};border-top-width:${esc(d.grosor)}px;border-top-style:${esc(d.estilo)};"></div>`); }
   },
   espaciador: {
     cat:"Estructura", nombre:"Espaciador", icono:"", sub:"Espacio en blanco",
@@ -3733,6 +3901,7 @@ function cambiarFormato(f){
   renderTabsPiezas();
   renderPlantillasTab();  // las plantillas del panel concuerdan con el formato actual
   renderBiblioteca();     // la biblioteca oculta bloques que no aplican al formato
+  actualizarModoEmail3(); // el editor "3 zonas" solo vive en el formato email
   persistir();
 }
 
@@ -3858,6 +4027,7 @@ function editarNombre(span, id){
 
 // Ícono SVG por tipo de bloque (reemplaza los emojis de la biblioteca).
 const BLOQUE_ICONO = {
+  heading:"heading", video:"video",
   header:"heading", texto:"textoico", imagen:"imagen", cta:"cursor", imgtext:"columnas",
   divisor:"divisor", espaciador:"espaciador", diadivisor:"calendario", fechaCard:"calendario",
   evento:"reloj", mapa:"mapa", clima:"climaico", reloj:"reloj", countdown:"timer",
@@ -3873,7 +4043,7 @@ const BLOQUE_ICONO = {
 const BLOQUES_SOLO_DOC = new Set(["footer","bandaHeader","bandaHeaderBlanco","bandaFooter","bandaFooterBlanco","diadivisor","fechaCard","evento","formulario","tabla"]);
 // Curación por sección: en /email-ia la biblioteca muestra SOLO los bloques de email
 // (los del mockup + header/footer de marca + estructura básica). En /free van todos.
-const BLOQUES_EMAIL_IA = new Set(["bandaHeader","bandaHeaderBlanco","bandaFooter","bandaFooterBlanco","seccion","grid","hero","texto","imagen","cta","divisor","espaciador","features","kpi","audio","formulario","social","icono"]);
+const BLOQUES_EMAIL_IA = new Set(["bandaHeader","bandaHeaderBlanco","bandaFooter","bandaFooterBlanco","seccion","grid","hero","heading","video","texto","imagen","cta","divisor","espaciador","features","kpi","audio","formulario","social","icono"]);
 // En /ads-ia la pieza es una CAMPAÑA de texto: solo bloques de texto/datos.
 const BLOQUES_ADS_IA = new Set(["texto","tabla","divisor","espaciador","alert"]);
 function renderBiblioteca(){
@@ -4013,14 +4183,36 @@ function renderForm(){
   const f = document.getElementById("form");
   if(esComposicion(pieza())){ return renderFormTamaño(f); }   // colección por capas: ajustar el tamaño activo
   if(editandoCelda){ return renderFormCelda(f); }   // editando el bloque de una columna del grid
-  if(!seleccionado){ f.innerHTML = `<div class="form-empty"><div class="form-empty-ico">${svgIcon("editar",{size:"32px"})}</div>Selecciona un bloque del canvas<br>para editar su contenido</div>`; return; }
+  if(!seleccionado){ f.innerHTML = `<div class="form-empty"><div class="form-empty-ico">${svgIcon("editar",{size:"32px"})}</div>Selecciona un bloque del canvas<br>para editar su contenido</div>`; actualizarPanelDer(); return; }
   const item = getCanvas().find(x => x.id===seleccionado);
   if(!item){ seleccionado=null; renderForm(); return; }
   const def = BLOQUES[item.tipo];
+  if(_email3){
+    // Bloque bloqueado por la marca: el equipo solo ve la tarjeta del candado.
+    if(item.datos && item.datos.bloqueado && !esAdminUI()){
+      f.innerHTML = `<div class="lock-card"><div class="lic">${svgIcon("candado",{size:"17px"})}</div><b>${esc(def.nombre)} bloqueado por la marca</b><p>Este bloque lo define el kit de la marca. No se puede editar ni eliminar: así ninguna pieza sale sin él. Pídele el cambio a un administrador.</p></div>`;
+      actualizarPanelDer(); renderSaludEmail();
+      return;
+    }
+    // Partición del formulario en las 3 pestañas del panel derecho.
+    const iSf = def.campos.findIndex(c => c.grupo === "Identificador");
+    const cont = iSf >= 0 ? def.campos.slice(0, iSf) : def.campos.slice();
+    const estl = iSf >= 0 ? def.campos.slice(iSf).filter(c => !(c.grupo === "Identificador" || c.key === "compId")) : [];
+    let h = `<div class="form-section">`;
+    h += `<div class="p3sec" data-p3="contenido">` + (cont.map(c => renderCampo(c, item.datos)).join("") || `<div class="p3hint">Este bloque no tiene contenido editable: revisa Estilos.</div>`) + `</div>`;
+    h += `<div class="p3sec" data-p3="estilos">` + estl.map(c => renderCampo(c, item.datos)).join("") + `</div>`;
+    h += `<div class="p3sec" data-p3="visual">` + visualCamposHTML(item) + `</div>`;
+    h += `</div>`;
+    f.innerHTML = h;
+    setP3(_p3tab, true);
+    actualizarPanelDer(); renderSaludEmail();
+    return;
+  }
   let html = `<div class="form-section"><h3>${def.icono} ${def.nombre}</h3>`;
   def.campos.forEach(c => { html += renderCampo(c, item.datos); });
   html += `</div>`;
   f.innerHTML = html;
+  actualizarPanelDer();
 }
 // Formulario para el bloque de una columna del grid (con vuelta a la grilla).
 function renderFormCelda(f){
@@ -4036,6 +4228,7 @@ function renderFormCelda(f){
 }
 function cerrarEdicionCelda(){ editandoCelda = null; renderForm(); }
 function renderCampo(c, datos){
+  if(c.tipo === "mergetag") return mergeTagUI();
   if(c.grupo) return `<div class="form-group-title">${esc(c.grupo)}</div>`;
   if(c.tipo === "row2") return `<div class="form-row-2col">${renderCampoSimple(c.izq, datos)}${renderCampoSimple(c.der, datos)}</div>`;
   if(c.tipo === "gridCeldas") return renderGridCeldasCampo(datos);
@@ -4368,7 +4561,8 @@ function agregarBloque(tipo, datos, insertAt){
   seleccionado = item.id;
   persistir(); renderCanvas(); renderForm();
 }
-function eliminarBloque(id){ const p=pieza(); if(!p) return; p.canvas = p.canvas.filter(x => x.id!==id); if(seleccionado===id) seleccionado=null; persistir(); renderCanvas(); renderForm(); }
+function bloqueProtegido(id){ const it = getCanvas().find(x => x.id===id); return !!(it && it.datos && it.datos.bloqueado && !esAdminUI()); }
+function eliminarBloque(id){ const p=pieza(); if(!p) return; if(bloqueProtegido(id)){ toast("Este bloque está bloqueado por la marca"); return; } p.canvas = p.canvas.filter(x => x.id!==id); if(seleccionado===id) seleccionado=null; persistir(); renderCanvas(); renderForm(); }
 function duplicarBloque(id){
   const arr = getCanvas();
   const i = arr.findIndex(x => x.id===id);
@@ -4392,17 +4586,19 @@ function seleccionarBloque(id){
   document.querySelectorAll(".bw").forEach(b => b.classList.toggle("selected", b.dataset.id===id));
   sincronizarCodigoEditable();
   renderForm();
-  cambiarPanelTab("editar");   // al seleccionar, abre la pestaña de edición
+  if(_email3){ document.getElementById("layout").classList.remove("sin-der"); }
+  else cambiarPanelTab("editar");   // al seleccionar, abre la pestaña de edición
 }
 // Activa la edición directa (código + texto en línea) del bloque seleccionado y la apaga en los demás.
 function sincronizarCodigoEditable(){
   document.querySelectorAll(".bw .sbb-codigo, .bw [data-edit]").forEach(el => {
     const bw = el.closest(".bw");
-    el.setAttribute("contenteditable", (bw && bw.dataset.id===seleccionado) ? "true" : "false");
+    el.setAttribute("contenteditable", (bw && bw.dataset.id===seleccionado && !bloqueProtegido(seleccionado)) ? "true" : "false");
   });
 }
 function actualizarDato(key, valor){
   const item = bloqueCtx(); if(!item) return;
+  if(item.datos && item.datos.bloqueado && !esAdminUI()){ toast("Este bloque está bloqueado por la marca"); return; }
   item.datos[key] = valor;
   persistir(); renderBloqueSeleccionado();
 }
@@ -4573,7 +4769,7 @@ ${liveScript}
 <meta name="x-apple-disable-message-reformatting">
 <meta name="color-scheme" content="light dark">
 <meta name="supported-color-schemes" content="light dark">
-<title>${esc(p.nombre)}</title>
+<title>${esc(p.asunto || p.nombre)}</title>
 <!--[if mso]><noscript><xml><o:OfficeDocumentSettings><o:PixelsPerInch>96</o:PixelsPerInch></o:OfficeDocumentSettings></xml></noscript><![endif]-->
 ${fonts}
 <style>
@@ -4591,7 +4787,8 @@ ${css}
 </style>
 </head>
 <body style="margin:0;padding:0;background:${colorPagina};">
-${meta}
+${meta}${p.preheader ? `
+<div style="display:none;font-size:1px;line-height:1px;max-height:0;max-width:0;opacity:0;overflow:hidden;mso-hide:all;">${esc(p.preheader)}&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;</div>` : ""}
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="width:100%;background:${colorPagina};">
 <tr><td align="center" style="padding:0;">
 <!--[if mso]><table role="presentation" width="${ancho}" cellpadding="0" cellspacing="0" border="0" align="center"><tr><td><![endif]-->
@@ -4737,10 +4934,43 @@ function salirDeColeccion(){
 
 // Markup de un bloque editable (compartido entre el editor normal y el tablero).
 function bwHTML(item){
-  return `<div class="bw${seleccionado===item.id?" selected":""}" data-id="${item.id}" draggable="true"><div class="bw-handle">Mover</div><div class="bw-controls"><button class="bw-btn" onclick="moverBloque('${item.id}',-1);event.stopPropagation();">${svgIcon("chevup",{size:"14px"})}</button><button class="bw-btn" onclick="moverBloque('${item.id}',1);event.stopPropagation();">${svgIcon("chevdown",{size:"14px"})}</button><button class="bw-btn" onclick="duplicarBloque('${item.id}');event.stopPropagation();">${svgIcon("copiar",{size:"13px"})}</button><button class="bw-btn del" onclick="eliminarBloque('${item.id}');event.stopPropagation();">${svgIcon("equis",{size:"14px"})}</button></div>${BLOQUES[item.tipo].render(item.datos)}</div>`;
+  const lk = !!(item.datos && item.datos.bloqueado);
+  const prot = lk && !esAdminUI();
+  const candado = lk ? `<div class="bw-lock-ico">${svgIcon("candado",{size:"11px"})}</div>` : "";
+  if(prot) return `<div class="bw bw-lock${seleccionado===item.id?" selected":""}" data-id="${item.id}">${candado}${BLOQUES[item.tipo].render(item.datos)}</div>`;
+  return `<div class="bw${lk?" bw-lock":""}${seleccionado===item.id?" selected":""}" data-id="${item.id}" draggable="true">${candado}<div class="bw-handle">Mover</div><div class="bw-controls"><button class="bw-btn" onclick="moverBloque('${item.id}',-1);event.stopPropagation();">${svgIcon("chevup",{size:"14px"})}</button><button class="bw-btn" onclick="moverBloque('${item.id}',1);event.stopPropagation();">${svgIcon("chevdown",{size:"14px"})}</button><button class="bw-btn" onclick="duplicarBloque('${item.id}');event.stopPropagation();">${svgIcon("copiar",{size:"13px"})}</button><button class="bw-btn del" onclick="eliminarBloque('${item.id}');event.stopPropagation();">${svgIcon("equis",{size:"14px"})}</button></div>${BLOQUES[item.tipo].render(item.datos)}</div>`;
+}
+function attachEspGrip(bw, item){
+  if(!bw || bw.querySelector(".esp-grip")) return;
+  const g = document.createElement("div");
+  g.className = "esp-grip";
+  g.textContent = "⇕ " + (parseInt(item.datos.altoEsp)||0) + " px · arrastra";
+  g.addEventListener("pointerdown", (e) => {
+    e.stopPropagation(); e.preventDefault();
+    const y0 = e.clientY, h0 = parseInt(item.datos.altoEsp)||0;
+    const spacer = bw.querySelector(".sbb-spacer");
+    const mover = (ev) => {
+      const h = Math.max(0, Math.min(200, h0 + Math.round(ev.clientY - y0)));
+      item.datos.altoEsp = String(h);
+      if(spacer) spacer.style.height = h + "px";
+      g.textContent = "⇕ " + h + " px · arrastra";
+    };
+    const soltar = () => {
+      window.removeEventListener("pointermove", mover);
+      window.removeEventListener("pointerup", soltar);
+      persistir(); if(seleccionado===item.id) renderForm();
+    };
+    window.addEventListener("pointermove", mover);
+    window.addEventListener("pointerup", soltar);
+  });
+  bw.appendChild(g);
 }
 function attachBwListeners(c){
   c.querySelectorAll(".bw img").forEach(im => { im.draggable = false; });
+  c.querySelectorAll(".bw").forEach(bw => {
+    const it = getCanvas().find(x => x.id===bw.dataset.id);
+    if(it && it.tipo === "espaciador") attachEspGrip(bw, it);
+  });
   c.querySelectorAll(".bw").forEach(bw => {
     bw.addEventListener("click", (e) => { e.stopPropagation(); seleccionarBloque(bw.dataset.id); });
     bw.addEventListener("dragstart", (e) => {
@@ -5783,9 +6013,194 @@ function actualizarUISet(){
   setTab("ptab-bloques", esCap || esAds, esAds ? "La campaña Search se edita directo en su consola (clic en los textos)" : "En colecciones edita las CAPAS (Diseño global / Ajustar tamaño)");
   // Si la pestaña activa quedó bloqueada, mover a una válida.
   if(!esAds && (esCap) && (panelTab==="bloques" || panelTab==="plantillas")) cambiarPanelTab("diseno");
+  actualizarModoEmail3();
 }
 // (compat) el set ya no usa ventana; el tablero vive en el lienzo.
 function refrescarSetSiAbierto(){}
+
+/* ═══════════════ EDITOR DE EMAIL "3 ZONAS" (mockup aprobado 23-jul) ═══════════════
+   Rail (Bloques·Media·Plantillas·Historial) + bloques a la izquierda + lienzo +
+   panel DERECHO de propiedades con pestañas Contenido/Estilos/Visualización.
+   Solo aplica al formato email (documentos de bloques); el resto de modos no cambia. */
+let _email3 = false, _p3tab = "contenido";
+function esAdminUI(){ const u = window.SBB_USER; return !u || !u.rol || u.rol === "admin"; }
+function esModoEmail3(){ const p = pieza(); return !!(p && p.formato === "email" && !esComposicion(p)); }
+function actualizarModoEmail3(){
+  const on = esModoEmail3();
+  const lay = document.getElementById("layout"); if(!lay) return;
+  const paneE = document.getElementById("pane-editar"), paneD = document.getElementById("pane-diseno");
+  const cuerpo = document.getElementById("pd-cuerpo");
+  if(on && !_email3){
+    _email3 = true;
+    lay.classList.add("email3");
+    cuerpo.appendChild(paneD); cuerpo.appendChild(paneE);
+    if(panelTab !== "bloques" && panelTab !== "plantillas" && panelTab !== "historial") panelTab = "bloques";
+    cambiarPanelTab(panelTab);
+  } else if(!on && _email3){
+    _email3 = false;
+    lay.classList.remove("email3","sin-izq","sin-der");
+    const izq = document.querySelector(".panel-izq");
+    const ref = document.getElementById("pane-plantillas");
+    izq.insertBefore(paneD, ref); izq.insertBefore(paneE, ref);
+    paneD.style.display = "none"; paneE.style.display = "none";
+    cambiarPanelTab(panelTab === "historial" ? "bloques" : (panelTab || "bloques"));
+  }
+  const bar = document.getElementById("asunto-bar"); if(bar) bar.style.display = on ? "block" : "none";
+  if(on){ renderAsuntoBar(); actualizarPanelDer(); renderSaludEmail(); }
+}
+// El panel derecho decide qué muestra: el bloque seleccionado o el Diseño general.
+function actualizarPanelDer(){
+  if(!_email3) return;
+  const paneE = document.getElementById("pane-editar"), paneD = document.getElementById("pane-diseno");
+  const hayBloque = !!seleccionado || !!editandoCelda;
+  paneD.style.display = hayBloque ? "none" : "";
+  paneE.style.display = hayBloque ? "" : "none";
+  const item = (seleccionado && !editandoCelda) ? getCanvas().find(x => x.id === seleccionado) : null;
+  document.getElementById("pd-que").textContent = hayBloque ? "Estás editando" : "Diseño general";
+  document.getElementById("pd-titulo").textContent = item ? (BLOQUES[item.tipo] ? BLOQUES[item.tipo].nombre : "Bloque")
+    : (editandoCelda ? "Columna de la grilla" : "Diseño general del correo");
+  document.getElementById("pd-volver").style.display = hayBloque ? "" : "none";
+  const conTabs = !!item && !(item.datos && item.datos.bloqueado && !esAdminUI());
+  document.getElementById("pd-tabs").style.display = conTabs ? "flex" : "none";
+}
+function pdVolverGeneral(){
+  seleccionado = null; editandoCelda = null;
+  document.querySelectorAll(".bw").forEach(b => b.classList.remove("selected"));
+  renderForm();
+}
+function setP3(t, sinRepintar){
+  _p3tab = t;
+  document.querySelectorAll("#pd-tabs button").forEach(b => b.classList.toggle("on", b.dataset.p3t === t));
+  document.querySelectorAll("#form .p3sec").forEach(sec => sec.classList.toggle("on", sec.dataset.p3 === t));
+}
+function visualCamposHTML(item){
+  const v = (item.datos && item.datos.verEn) || "";
+  const btn = (val, lab, ic) => `<button class="${v === val ? "on" : ""}" onclick="actualizarDato('verEn','${val}')">${svgIcon(ic,{size:"14px"})}<br>${lab}</button>`;
+  let h = `<div class="form-group-title">Este bloque se muestra en</div>
+  <div class="p3vseg">${btn("","Ambos","monitor")}${btn("desktop","Escritorio","monitor")}${btn("movil","Solo móvil","movilico")}</div>
+  <div class="p3hint">"Solo móvil" lo oculta en escritorio, y al revés. Gmail, Apple Mail y la mayoría lo respetan; Outlook de escritorio muestra siempre ambos.</div>`;
+  h += renderCampo({key:"compId", label:"Nombre / id del componente (para reconocerlo)", tipo:"text", placeholder:"ej. hero-principal"}, item.datos);
+  if(esAdminUI()){
+    h += `<div class="form-group-title">Bloqueo de marca (solo admin)</div>
+    <button class="p3lockbtn" onclick="toggleBloqueoBloque()">${svgIcon("candado",{size:"13px"})} ${item.datos.bloqueado ? "Desbloquear este bloque" : "Bloquear edición para el equipo"}</button>
+    <div class="p3hint">Un bloque bloqueado no se puede editar ni eliminar por usuarios limitados (ideal para header y footer legales).</div>`;
+  }
+  return h;
+}
+function toggleBloqueoBloque(){
+  const item = bloqueCtx(); if(!item) return;
+  item.datos.bloqueado = !item.datos.bloqueado;
+  persistir(); renderCanvas(); renderForm();
+  toast(item.datos.bloqueado ? "Bloque bloqueado para el equipo" : "Bloque desbloqueado");
+}
+// Rail izquierdo: pestañas del panel (Media abre la biblioteca real).
+function railTab(t){
+  document.getElementById("layout").classList.remove("sin-izq");
+  if(t === "media"){ abrirImagenes(); return; }
+  cambiarPanelTab(t);
+}
+function colPanel(lado){
+  const lay = document.getElementById("layout");
+  lay.classList.toggle(lado === "izq" ? "sin-izq" : "sin-der");
+}
+// Asunto y preencabezado de la pieza (solo email).
+function renderAsuntoBar(){
+  const p = pieza(); if(!p) return;
+  const a = document.getElementById("ab-asunto"), pr = document.getElementById("ab-pre");
+  if(a && document.activeElement !== a) a.value = p.asunto || "";
+  if(pr && document.activeElement !== pr) pr.value = p.preheader || "";
+  _contadorAsunto("ab-c-asunto", (p.asunto||"").length, 60);
+  _contadorAsunto("ab-c-pre", (p.preheader||"").length, 90);
+}
+function _contadorAsunto(id, n, max){
+  const el = document.getElementById(id); if(!el) return;
+  el.textContent = n + "/" + max;
+  el.style.color = n > max ? "var(--magenta,#C7147E)" : "";
+  el.style.fontWeight = n > max ? "600" : "";
+}
+function setAsuntoPieza(k, v){
+  const p = pieza(); if(!p) return;
+  p[k] = v;
+  _contadorAsunto(k === "asunto" ? "ab-c-asunto" : "ab-c-pre", v.length, k === "asunto" ? 60 : 90);
+  persistir(); renderSaludEmail();
+}
+// Salud del correo: verificaciones honestas y automáticas.
+function renderSaludEmail(){
+  const el = document.getElementById("salud-correo"); if(!el) return;
+  const p = pieza();
+  if(!_email3 || !p){ el.style.display = "none"; return; }
+  const cv = getCanvas() || [];
+  const it = (ok, txt) => `<div class="sld"><span class="okc${ok ? "" : " pend"}">${ok ? "✓" : "!"}</span>${txt}</div>`;
+  const conFoto = cv.filter(b => b.tipo === "imagen");
+  const sinAlt = conFoto.filter(b => !(b.datos.alt||"").trim()).length;
+  const ctas = cv.filter(b => b.tipo === "cta").length;
+  let peso = 0; try{ peso = Math.round(generarHTMLDePieza(p).length / 1024); }catch(_){}
+  el.innerHTML = `<b>Salud del correo</b>`
+    + it(true, "Estilos embebidos y fotos con URL absoluta: no se caen al pegarlo en HubSpot u otra plataforma")
+    + it(!!(p.asunto||"").trim() && !!(p.preheader||"").trim(), (p.asunto||"").trim() ? ((p.preheader||"").trim() ? "Asunto y preencabezado definidos" : "Falta el preencabezado (arriba del correo)") : "Falta el asunto (arriba del correo)")
+    + (conFoto.length ? it(sinAlt === 0, sinAlt === 0 ? "Todas las fotos tienen texto alternativo" : `${sinAlt} foto${sinAlt>1?"s":""} sin texto alternativo (pestaña Contenido)`) : "")
+    + (ctas > 1 ? it(false, `Hay ${ctas} botones CTA: en email convierte mejor UNO solo al final`) : "")
+    + (peso ? it(peso < 400, `Peso del HTML: ${peso} KB${peso >= 400 ? " · Gmail recorta sobre ~100 KB de HTML, revisa" : " · carga rápida"}`) : "");
+  el.style.display = "";
+}
+// Historial de versiones de la sesión (del deshacer, con hora) + restaurar.
+function renderHistorialPanel(){
+  const cont = document.getElementById("historial-cont"); if(!cont) return;
+  if(!_undo.length){ cont.innerHTML = `<div class="form-empty" style="padding:30px 16px;">Aún no hay cambios registrados en esta sesión.</div>`; return; }
+  const fmtH = (ts) => new Date(ts).toLocaleTimeString("es-CL",{hour:"2-digit",minute:"2-digit"});
+  let h = `<div class="p3hint" style="margin:12px 14px 6px;">Versiones de esta sesión de trabajo (cada cambio queda registrado). Restaurar no borra nada: la versión actual queda en el historial.</div>`;
+  for(let i = _undo.length - 1; i >= 0 && i >= _undo.length - 30; i--){
+    const actual = i === _undo.length - 1;
+    h += `<div class="hist-item${actual ? " act" : ""}">${actual ? "" : `<button class="rest" onclick="restaurarVersion(${i})">Restaurar</button>`}<b>${fmtH(_undoTs[i]||Date.now())} · versión ${i+1}</b><small>${actual ? "Versión actual" : "Clic en Restaurar para volver a este punto"}</small></div>`;
+  }
+  cont.innerHTML = h;
+}
+function restaurarVersion(i){
+  if(!_undo[i]) return;
+  const snap = _undo[i];
+  aplicarSnapshot(snap);
+  _undo.push(snap); _undoTs.push(Date.now());
+  renderHistorialPanel();
+  toast("Versión restaurada");
+}
+// Buscador de la biblioteca de bloques.
+function filtrarBiblioteca(q){
+  q = String(q||"").toLowerCase().trim();
+  const cont = document.getElementById("biblioteca"); if(!cont) return;
+  cont.querySelectorAll(".tile").forEach(t => { t.style.display = (!q || t.textContent.toLowerCase().includes(q)) ? "" : "none"; });
+  cont.querySelectorAll(".cat-title").forEach(cat => {
+    let el = cat.nextElementSibling, alguno = false;
+    while(el && !el.classList.contains("cat-title")){ if(el.classList.contains("tile") && el.style.display !== "none") alguno = true; el = el.nextElementSibling; }
+    cat.style.display = alguno ? "" : "none";
+  });
+}
+// Variables de personalización de la plataforma de envío (con texto de respaldo).
+const MERGE_TAGS = {
+  hubspot:  { nombre:"contact.firstname", apellido:"contact.lastname", email:"contact.email" },
+  mailchimp:{ nombre:"FNAME", apellido:"LNAME", email:"EMAIL" },
+  sfmc:     { nombre:"FirstName", apellido:"LastName", email:"EmailAddress" }
+};
+function mergeTagUI(){
+  return `<div class="mtag-box"><div class="form-group-title" style="margin-top:0;">Variable de personalización</div>
+  <div class="form-row"><label>Plataforma que enviará el correo</label><select id="mtag-plat" class="dz-sel"><option value="hubspot">HubSpot</option><option value="mailchimp">Mailchimp</option><option value="sfmc">Salesforce Marketing Cloud</option></select></div>
+  <div class="form-row"><label>Variable</label><select id="mtag-var" class="dz-sel"><option value="nombre">Nombre</option><option value="apellido">Apellido</option><option value="email">Email</option></select></div>
+  <div class="form-row"><label>Si el contacto no tiene el dato, mostrar</label><input type="text" id="mtag-fb" class="dz-inp" placeholder="ej. Hola"></div>
+  <button class="dz-btn-link" onclick="insertarMergeTag()">Insertar al final del contenido</button></div>`;
+}
+function insertarMergeTag(){
+  const item = bloqueCtx(); if(!item) return;
+  const plat = (document.getElementById("mtag-plat")||{}).value || "hubspot";
+  const v = (document.getElementById("mtag-var")||{}).value || "nombre";
+  const fb = ((document.getElementById("mtag-fb")||{}).value || "").trim();
+  const campo = MERGE_TAGS[plat][v];
+  let tok;
+  if(plat === "hubspot")   tok = fb ? `{{ ${campo} || "${fb}" }}` : `{{ ${campo} }}`;
+  else if(plat === "mailchimp") tok = fb ? `*|IF:${campo}|**|${campo}|**|ELSE:|*${fb}*|END:IF|*` : `*|${campo}|*`;
+  else tok = `%%${campo}%%`;
+  item.datos.contenido = ((item.datos.contenido||"") + " " + tok).trim();
+  persistir(); renderCanvas(); renderForm();
+  toast("Variable insertada: la plataforma de envío la reemplaza por el dato real");
+}
 
 function abrirExportar(){
   if(!proyecto || proyecto.piezas.length === 0) return;
