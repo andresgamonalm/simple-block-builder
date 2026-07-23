@@ -848,6 +848,10 @@ button,input,select,textarea{font-family:inherit;}
 .cmp-scope-seg button.on{background:var(--navy,#040764);color:#fff;}
 .cmp-scope-hint{margin:9px 2px 0;font-size:12px;line-height:1.5;color:var(--ink2,#3a4056);}
 .cmp-scope-hint b{color:var(--navy,#040764);}
+.cmp-ed .cmp-parte{margin:12px 2px 3px;font-size:11.5px;font-weight:700;color:var(--navy,#040764);}
+.cmp-ed .cmp-parte small{font-weight:400;color:var(--ink3,#5b6178);}
+.cmp-ed .cmp-hint-lienzo{margin:12px 2px;padding:8px 10px;background:#F2FDFD;border-radius:8px;font-size:11.5px;line-height:1.5;color:var(--ink2,#3b3b3b);display:flex;gap:7px;align-items:flex-start;}
+.cmp-ed .cmp-hint-lienzo .ico{color:#1DA4A4;flex-shrink:0;margin-top:1px;}
 .cmp-ed .cmp-zona-sec{margin:16px 0 4px;padding:7px 9px;background:var(--bg2,#f3f4f8);border:1px solid var(--bdr);border-radius:7px;display:flex;align-items:center;justify-content:space-between;font-size:12px;font-weight:700;color:var(--ink,#222);transition:box-shadow .2s,border-color .2s;}
 .cmp-ed .cmp-zona-sec.zona-foco{border-color:var(--blue,#1C73CB);box-shadow:0 0 0 3px rgba(28,115,203,.2);}
 .cmp-ed .cmp-zona-sec .zlbl{display:flex;align-items:center;gap:6px;}
@@ -4935,7 +4939,7 @@ function seleccionarZonaLienzo(fmt, i){
   const p=pieza(); p.activaFmt=fmt; renderForm(); cambiarPanelTab("editar");
   // Busca la sección de la zona por su NOMBRE (el orden del formulario no calza
   // con el índice de zona: hay "Burbujas decorativas" antes de Logo).
-  const claves = ["Logo","Texto","Call to action"];
+  const claves = ["Logo","Texto","Botón (CTA)"];
   const nom = claves[i]||"";
   setTimeout(()=>{
     let sec=null;
@@ -5132,6 +5136,12 @@ function compEditorHTML(p, fmt, ctx){
   h+=`<div class="cmp-row"><label>Tipo</label><select onchange="${S('fondo.tipo','this.value')};${RE}">${[['color','Color'],['imagen','Imagen']].map(([v,l])=>`<option value="${v}" ${fondoTipo===v?'selected':''}>${l}</option>`).join('')}</select></div>`;
   if(fondoTipo==='color') h+=`<div class="cmp-row">${colorInp('fondo.color','#0e2748')}${hexInp('fondo.color')}</div><div class="cmp-row"><div class="cmp-sw-row" title="Colores de tu marca (solo marca)">${swatchesColor('fondo.color',isOv?fmt:null)}</div></div>`;
   else h+=imgBlock('fondo.imagen');
+  // Tipografía: se elige UNA sola vez para todo el banner (título, bajada y CTA
+  // usan la misma). Solo en el Diseño global (no por tamaño).
+  if(!isOv){
+    const fuenteG = getPath(C,'zonas.texto.fuente')||'';
+    h+=`<div class="dz-sec">Tipografía del banner</div><div class="cmp-row"><select onchange="setComp('zonas.texto.fuente',this.value);setComp('zonas.cta.fuente',this.value);renderComposicionEditor()">${FUENTES.map(([v,l])=>`<option value="${esc(v)}" ${fuenteG===v?'selected':''}>${esc(l)}</option>`).join('')}</select></div>`;
+  }
   // Burbujas decorativas (círculos de color que asoman por los bordes, estilo campaña digital).
   const decoVis = getPath(C,'deco.visible')===true;
   h+=`<div class="cmp-zona-sec"><span class="zlbl">${svgIcon("paleta",{size:"14px"})} Burbujas decorativas</span><button class="cmp-eye${decoVis?'':' off'}" onclick="toggleExtraComp('deco.visible',${isOv?`'${fmt}'`:'null'})" title="Mostrar/ocultar burbujas de color">${svgIcon("ojo",{size:"13px"})}</button></div>`;
@@ -5140,8 +5150,7 @@ function compEditorHTML(p, fmt, ctx){
     h+=`<div class="cmp-row"><label>Color 2</label>${colorInp('deco.color2','#2f80ed')}${hexInp('deco.color2')}</div>`;
     h+=`<div class="cmp-row"><div class="cmp-sw-row">${swatchesColor('deco.color1',isOv?fmt:null)}</div></div>`;
   }
-  const prop=getPath(C,'prop')||[25,50,25];
-  h+=`<div class="dz-sec">Espacio de cada zona · escribe el %</div><div class="cmp-prop">`+['Logo','Texto','CTA'].map((l,i)=>`<div class="pcol"><span>${l}</span><div class="pnum"><input type="number" min="0" max="100" value="${parseInt(prop[i])||0}" oninput="${NUM('prop.'+i,0,100)}" onchange="${NUM('prop.'+i,0,100)};${RE}"><i>%</i></div></div>`).join('')+`</div>`;
+  h+=`<div class="cmp-hint-lienzo">${svgIcon("info",{size:"12px"})} El <b>espacio de cada zona</b> se ajusta arrastrando los divisores directamente en el banner de arriba.</div>`;
   h+=`<div class="dz-sec">Márgenes del banner (px)</div>`;
   h+=`<div class="cmp-row"><label>Arriba</label>${rng('margen.t',0,200,0)}<label style="min-width:auto;margin-left:10px">Abajo</label>${rng('margen.b',0,200,0)}</div>`;
   h+=`<div class="cmp-row"><label>Izquierda</label>${rng('margen.l',0,200,0)}<label style="min-width:auto;margin-left:10px">Derecha</label>${rng('margen.r',0,200,0)}</div>`;
@@ -5151,15 +5160,17 @@ function compEditorHTML(p, fmt, ctx){
   h+=miniaturasBiblioteca('zonas.logo.url', isOv?fmt:null);
   h+=`<div class="cmp-row"><label>Alto</label>${rng('zonas.logo.alto',16,160,48)}</div><div class="cmp-row"><label>Ancho máx</label>${rng('zonas.logo.maxw',15,100,70)}</div>`;
   h+=zonaSec('texto','Texto','documento')+alinRow('texto')+zonaBg('texto');
-  h+=`<div class="cmp-row"><label>Tipografía</label>${selFuente('zonas.texto.fuente')}</div>`;
-  h+=`<div class="cmp-row"><label>Etiqueta</label><input type="text" placeholder="Píldora sobre el titular (ej. Seguro)" value="${escAttr(getPath(C,'zonas.texto.etiqueta.texto')||'')}" oninput="${S('zonas.texto.etiqueta.texto','this.value')}"></div>`;
-  h+=`<div class="cmp-row"><label>Etq. color</label>${colorInp('zonas.texto.etiqueta.color','#3d55a8')}${colorInp('zonas.texto.etiqueta.colorTexto','#ffffff')}<label style="min-width:auto;margin-left:10px">Tam.</label>${rng('zonas.texto.etiqueta.tamano',8,20,11)}</div>`;
-  h+=`<div class="cmp-row"><input type="text" placeholder="Tu titular aquí" value="${escAttr(getPath(C,'zonas.texto.titular.texto')||'')}" oninput="${S('zonas.texto.titular.texto','this.value')}"></div>`;
-  h+=`<div class="cmp-row"><label>Tít. tam.</label>${rng('zonas.texto.titular.tamano',12,60,26)}${colorInp('zonas.texto.titular.color','#ffffff')}<label style="min-width:auto;margin-left:10px">Estilo</label>${togBtns('zonas.texto.titular')}</div>`;
-  h+=`<div class="cmp-row"><textarea placeholder="Texto de apoyo breve" oninput="${S('zonas.texto.cuerpo.texto','this.value')}">${esc(getPath(C,'zonas.texto.cuerpo.texto')||'')}</textarea></div>`;
-  h+=`<div class="cmp-row"><label>Cuerpo tam.</label>${rng('zonas.texto.cuerpo.tamano',9,32,13)}${colorInp('zonas.texto.cuerpo.color','#ffffff')}<label style="min-width:auto;margin-left:10px">Estilo</label>${togBtns('zonas.texto.cuerpo')}</div>`;
-  h+=zonaSec('cta','Call to action','compartir')+alinRow('cta')+zonaBg('cta');
-  h+=`<div class="cmp-row"><label>Tipografía</label>${selFuente('zonas.cta.fuente')}</div>`;
+  // Cada parte del texto, individualizada y con su nombre claro.
+  h+=`<div class="cmp-parte">Epígrafe <small>(píldora chica sobre el título)</small></div>`;
+  h+=`<div class="cmp-row"><input type="text" placeholder="Ej. Seguro Auto (opcional)" value="${escAttr(getPath(C,'zonas.texto.etiqueta.texto')||'')}" oninput="${S('zonas.texto.etiqueta.texto','this.value')}"></div>`;
+  h+=`<div class="cmp-row"><label>Color</label>${colorInp('zonas.texto.etiqueta.color','#3d55a8')}${colorInp('zonas.texto.etiqueta.colorTexto','#ffffff')}<label style="min-width:auto;margin-left:10px">Tam.</label>${rng('zonas.texto.etiqueta.tamano',8,20,11)}</div>`;
+  h+=`<div class="cmp-parte">Título</div>`;
+  h+=`<div class="cmp-row"><input type="text" placeholder="El mensaje principal" value="${escAttr(getPath(C,'zonas.texto.titular.texto')||'')}" oninput="${S('zonas.texto.titular.texto','this.value')}"></div>`;
+  h+=`<div class="cmp-row"><label>Tamaño</label>${rng('zonas.texto.titular.tamano',12,60,26)}${colorInp('zonas.texto.titular.color','#ffffff')}<label style="min-width:auto;margin-left:10px">Estilo</label>${togBtns('zonas.texto.titular')}</div>`;
+  h+=`<div class="cmp-parte">Bajada <small>(texto de apoyo)</small></div>`;
+  h+=`<div class="cmp-row"><textarea placeholder="Una frase breve de apoyo" oninput="${S('zonas.texto.cuerpo.texto','this.value')}">${esc(getPath(C,'zonas.texto.cuerpo.texto')||'')}</textarea></div>`;
+  h+=`<div class="cmp-row"><label>Tamaño</label>${rng('zonas.texto.cuerpo.tamano',9,32,13)}${colorInp('zonas.texto.cuerpo.color','#ffffff')}<label style="min-width:auto;margin-left:10px">Estilo</label>${togBtns('zonas.texto.cuerpo')}</div>`;
+  h+=zonaSec('cta','Botón (CTA)','compartir')+alinRow('cta')+zonaBg('cta');
   h+=`<div class="cmp-row"><input type="text" placeholder="Texto del botón" value="${escAttr(getPath(C,'zonas.cta.texto')||'')}" oninput="${S('zonas.cta.texto','this.value')}"></div>`;
   h+=`<div class="cmp-row"><input type="text" placeholder="Link (https://…)" value="${escAttr(getPath(C,'zonas.cta.url')||'')}" onchange="${S('zonas.cta.url','this.value')}"></div>`;
   h+=`<div class="cmp-row"><label>Colores</label>${colorInp('zonas.cta.colorFondo','#2f80ed')}${colorInp('zonas.cta.colorTexto','#ffffff')}<label style="min-width:auto;margin-left:10px">Estilo</label>${togBtns('zonas.cta')}</div>`;
