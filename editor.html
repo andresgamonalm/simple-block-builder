@@ -5797,6 +5797,7 @@ function abrirExportar(){
       <div class="export-list">
         <div class="export-row"><label><div><div class="pn">Keywords + negativas</div><div class="pf">${d.grupos.length} grupo${d.grupos.length!==1?"s":""} · ${nKw} keywords · ${nNeg} negativas</div></div></label><button class="download" onclick="descargarCSVKeywords()">${svgIcon("exportar",{size:"13px"})} CSV</button></div>
         <div class="export-row"><label><div><div class="pn">Anuncios (RSA)</div><div class="pf">${nTit} titulares · rutas y URL final incluidas</div></div></label><button class="download" onclick="descargarCSVAnuncios()">${svgIcon("exportar",{size:"13px"})} CSV</button></div>
+        ${(d.sitelinks||[]).length ? `<div class="export-row"><label><div><div class="pn">Sitelinks</div><div class="pf">${d.sitelinks.length} enlaces extra bajo el anuncio</div></div></label><button class="download" onclick="descargarCSVSitelinks()">${svgIcon("exportar",{size:"13px"})} CSV</button></div>` : ""}
         <div class="export-row"><label><div><div class="pn">Resumen legible</div><div class="pf">La campaña completa en un HTML para revisar o compartir</div></div></label><button class="download" onclick="descargarPieza('${actual.id}')">${svgIcon("exportar",{size:"13px"})} HTML</button></div>
       </div>
       <div class="modal-foot" style="margin-top:18px;border-top:1px solid #e5e7ea;padding-top:14px;"><button onclick="cerrarModal('export')">Cerrar</button></div>`;
@@ -5910,6 +5911,21 @@ function descargarCSVAnuncios(){
   });
   _descargarCSV(slugify(camp)+"-anuncios.csv", filas);
   toast("CSV de anuncios descargado");
+}
+function descargarCSVSitelinks(){
+  const p = pieza(); const d = p && p.adsData; if(!d || !(d.sitelinks||[]).length){ toast("La campaña no tiene sitelinks"); return; }
+  const camp = d.nombre || p.nombre || "Campaña";
+  // Cabeceras que Google Ads Editor reconoce para extensiones de enlace.
+  const filas = [["Campaign","Sitelink text","Description line 1","Description line 2","Final URL"]];
+  // Una URL relativa (/cotizar) se completa con el dominio de la landing.
+  let base = ""; try{ base = new URL(d.urlFinal).origin; }catch(e){}
+  d.sitelinks.forEach(s => {
+    const u = String(s.url||"");
+    const abs = /^https?:\/\//i.test(u) ? u : (base && u.startsWith("/") ? base + u : u);
+    filas.push([camp, String(s.texto||"").slice(0,25), String(s.desc1||"").slice(0,35), String(s.desc2||"").slice(0,35), abs]);
+  });
+  _descargarCSV(slugify(camp)+"-sitelinks.csv", filas);
+  toast("CSV de sitelinks descargado");
 }
 
 function abrirImportar(){ document.getElementById("import-html").value=""; document.getElementById("modal-import").classList.add("show"); }
@@ -7661,7 +7677,7 @@ function insertarAdsIA(data, marca){
   asegurarProyectoIA();
   const p = { id:uid(), nombre:_deslug(String(data.nombre||"Campaña Search")), campana:"General", formato:"ads", canvas:[],
     tema: { font:"Roboto", primary:"#1c73cb", text:"#12173d", bg:"#ffffff", bgPagina:"", ancho:"", radio:"0", gap:"0" },
-    adsData: { nombre:_deslug(data.nombre||""), urlFinal:data.urlFinal||"", grupos:data.grupos||[], negativas:data.negativas||[] } };
+    adsData: { nombre:_deslug(data.nombre||""), urlFinal:data.urlFinal||"", grupos:data.grupos||[], negativas:data.negativas||[], sitelinks:data.sitelinks||[] } };
   proyecto.piezas.push(p); proyecto.activa = p.id;
   adsVista = "res";
   document.getElementById("galeria").classList.remove("show");
@@ -7787,13 +7803,61 @@ function adsVistaResumen(d){
       <div style="font-size:12px;color:#1c73cb;font-weight:500;">Ver grupo completo →</div>
     </div>`).join("");
   const negs = d.negativas||[];
+  const sls = d.sitelinks||[];
   return `
     <div class="adsc-resumen">${cards}</div>
     <div class="adsc-card">
+      <h3>Sitelinks · enlaces extra bajo el anuncio <button class="adsc-copy" onclick="adsAgregarSitelink()">+ Añadir</button></h3>
+      ${sls.length ? sls.map((s,i)=>`
+        <div class="adsc-item" style="gap:10px;">
+          <div style="min-width:0;flex:1;">
+            <span class="tx" style="font-weight:600;color:#040764;" contenteditable="true" data-p="sitelinks.${i}.texto" onblur="adsEditar(this)" spellcheck="false">${esc(s.texto||"")}</span>
+            <span class="adsc-cnt ${String(s.texto||"").length>25?"mal":""}">${String(s.texto||"").length}/25</span>
+            <div style="font-size:12px;color:#5b6178;margin-top:2px;">
+              <span class="tx" contenteditable="true" data-p="sitelinks.${i}.desc1" onblur="adsEditar(this)" spellcheck="false">${esc(s.desc1||"")}</span> ·
+              <span class="tx" contenteditable="true" data-p="sitelinks.${i}.desc2" onblur="adsEditar(this)" spellcheck="false">${esc(s.desc2||"")}</span>
+            </div>
+            <div style="font-size:11.5px;color:#1c73cb;margin-top:2px;"><span class="tx" contenteditable="true" data-p="sitelinks.${i}.url" onblur="adsEditar(this)" spellcheck="false">${esc(s.url||"")}</span></div>
+          </div>
+          <button class="adsc-copy" style="flex:none;" title="Quitar sitelink" onclick="adsQuitarSitelink(${i})">✕</button>
+        </div>`).join("") : `<div style="font-size:12.5px;color:#5b6178;">Char-B los propone desde los enlaces reales de tu landing al generar la campaña, o agrégalos a mano.</div>`}
+      <p class="adsc-nota">Límites de Google: texto ≤ 25 caracteres, cada descripción ≤ 35. Van en su propio CSV al exportar.</p>
+    </div>
+    <div class="adsc-card" style="margin-top:18px;">
       <h3>Negativas de campaña · búsquedas por las que NO quieres pagar <button class="adsc-copy" onclick="adsCopiar('negativas')">Copiar</button></h3>
       ${negs.length ? `<div class="adsc-chips">${negs.map(n=>`<span class="adsc-neg">${esc(n)}</span>`).join("")}</div>` : `<div style="font-size:12.5px;color:#5b6178;">Sin negativas de campaña.</div>`}
       <p class="adsc-nota">Van incluidas en el CSV de keywords como concordancia de frase negativa: bloquean cualquier búsqueda que las contenga.</p>
     </div>`;
+}
+// ── Sitelinks: alta y baja manual (los textos se editan con clic, como todo) ──
+function adsAgregarSitelink(){
+  const p = pieza(); const d = p && p.adsData; if(!d) return;
+  (d.sitelinks = d.sitelinks || []).push({ texto:"Nuevo enlace", desc1:"", desc2:"", url:"/" });
+  persistir(); renderAdsCampana();
+}
+function adsQuitarSitelink(i){
+  const p = pieza(); const d = p && p.adsData; if(!d || !d.sitelinks) return;
+  d.sitelinks.splice(i,1);
+  persistir(); renderAdsCampana();
+}
+// ── Pedir a Char-B más keywords para UN grupo (respetando su intención) ──
+async function adsPedirMasKeywords(gi){
+  const p = pieza(); const d = p && p.adsData; const g = d && d.grupos && d.grupos[gi]; if(!g) return;
+  const btn = document.getElementById("ads-maskw-"+gi);
+  if(btn){ btn.disabled = true; btn.textContent = "Char-B está buscando…"; }
+  try{
+    const r = await fetch("/api/ia", { method:"POST", credentials:"include", headers:{ "Content-Type":"application/json" },
+      body: JSON.stringify({ modo:"mas-keywords", grupo:{ nombre:g.nombre, intencion:g.intencion, keywords:g.keywords||[] }, brief:{ que:d.nombre||p.nombre||"", ctaUrl:d.urlFinal||"" } }) });
+    const data = await r.json().catch(()=>null);
+    if(!r.ok || !data || !data.ok){ toast((data && data.error) || "Char-B no pudo ampliar el grupo"); return; }
+    const vistos = new Set((g.keywords||[]).map(k=>String(k.t||"").toLowerCase()));
+    const nuevas = (data.keywords||[]).filter(k=>k.t && !vistos.has(k.t.toLowerCase()));
+    if(!nuevas.length){ toast("No llegaron keywords nuevas"); return; }
+    g.keywords = (g.keywords||[]).concat(nuevas);
+    persistir(); renderAdsCampana();
+    toast(nuevas.length+" keywords nuevas en el grupo");
+  }catch(e){ toast("Sin conexión con Char-B"); }
+  finally{ const b = document.getElementById("ads-maskw-"+gi); if(b){ b.disabled = false; } }
 }
 function adsVistaGrupo(d, gi){
   const g = d.grupos[gi]; if(!g) return "";
@@ -7821,7 +7885,8 @@ function adsVistaGrupo(d, gi){
         <div class="adsc-card">
           <h3>Keywords · ${(g.keywords||[]).length} <button class="adsc-copy" onclick="adsCopiar('keywords',${gi})">Copiar</button></h3>
           ${kws}
-          <p class="adsc-nota">Clic en la etiqueta para alternar [Exacta] ↔ "Frase". La concordancia amplia no existe aquí. Los textos se editan con un clic.</p>
+          <button class="adsc-btn" id="ads-maskw-${gi}" style="width:100%;justify-content:center;margin-top:10px;" onclick="adsPedirMasKeywords(${gi})">${svgIcon("estrella",{size:"13px"})} Pedir más keywords a Char-B</button>
+          <p class="adsc-nota">Clic en la etiqueta para alternar [Exacta] ↔ "Frase". La concordancia amplia no existe aquí. Los textos se editan con un clic. Char-B amplía el grupo sin salirse de su intención.</p>
         </div>
         ${(g.negativas||[]).length?`
         <div class="adsc-card" style="margin-top:18px;">

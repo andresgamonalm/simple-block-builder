@@ -84,6 +84,7 @@ async function generar({ request, env }) {
   const necesita = body.producto === 'ads' ? 'ads'
                  : body.producto === 'banner' ? 'banner'
                  : (body.modo === 'textos' || body.modo === 'imagen') ? 'banner'
+                 : body.modo === 'mas-keywords' ? 'ads'
                  : body.modo === 'concepto' ? null   // lo valida el orquestador pieza a pieza
                  : 'email';
   if (necesita && !tienePermiso(sesion, necesita)) {
@@ -181,6 +182,37 @@ async function generar({ request, env }) {
     const key = `ia/${Date.now()}-${slug}.png`;
     await env.IMAGENES.put(key, bin, { httpMetadata: { contentType: "image/png" } });
     return json({ ok: true, url: "/api/upload?k=" + encodeURIComponent(key), nombre: "IA · " + slug.replace(/-/g, " ") });
+  }
+
+  // Modo "mas-keywords": amplía UN grupo existente de una campaña Search.
+  // La consola lo pide con el grupo completo; se devuelven keywords NUEVAS
+  // (sin repetir las que ya hay), solo exacta/frase, con el vocabulario de la landing.
+  if (body.modo === 'mas-keywords') {
+    const g = body.grupo || {};
+    const existentes = (Array.isArray(g.keywords) ? g.keywords : []).map(k => String((k && k.t) || '').toLowerCase().trim()).filter(Boolean);
+    if (!g.nombre && !g.intencion) return json({ ok: false, error: 'Falta el grupo a ampliar.' }, 400);
+    const refsK = await leerReferencias([brief.ctaUrl].concat(Array.isArray(brief.refs) ? brief.refs : []));
+    const prompt = [
+      'Eres un especialista senior en Google Ads (Search). Amplía las keywords de UN grupo de anuncios existente.',
+      'Devuelve EXCLUSIVAMENTE este JSON: { "keywords": [ { "t": "keyword en minúsculas", "tipo": "exacta" | "frase" } ] }',
+      'REGLAS DURAS:',
+      `- El grupo es "${String(g.nombre || '')}" y su intención de búsqueda es: ${String(g.intencion || '(la que sugiere el nombre)')}. TODAS las keywords nuevas deben calzar con ESA MISMA intención (no abras temas nuevos).`,
+      '- Entrega 8 a 15 keywords NUEVAS. PROHIBIDO repetir o variar trivialmente las que ya existen (lista abajo).',
+      '- "tipo" SOLO "exacta" o "frase" (la amplia está prohibida). Minúsculas, 2 a 5 palabras, como busca la gente de verdad (singular/plural, sinónimos, "online"/"precio"/"chile" cuando aplique).',
+      '- Usa el VOCABULARIO REAL de la landing cuando exista el extracto.',
+      existentes.length ? 'KEYWORDS QUE YA EXISTEN (no las repitas):\n' + existentes.join(' · ') : '',
+      refsK.texto ? '\nEXTRACTO DE LA LANDING:\n' + refsK.texto.slice(0, 4000) : '',
+      brief.que ? `\nCONTEXTO de la campaña: ${brief.que}` : ''
+    ].filter(Boolean).join('\n');
+    const { parsed, error } = await llamarGemini(env, prompt, 1536);
+    if (error) return json({ ok: false, error }, 500);
+    const setEx = new Set(existentes);
+    const nuevas = (Array.isArray(parsed && parsed.keywords) ? parsed.keywords : []).map(k => ({
+      t: String((k && k.t) || '').toLowerCase().replace(/^[\["'+]+|[\]"']+$/g, '').replace(/\s+/g, ' ').trim(),
+      tipo: (k && k.tipo === 'frase') ? 'frase' : 'exacta'
+    })).filter(k => k.t && !setEx.has(k.t) && (setEx.add(k.t), true)).slice(0, 15);
+    if (!nuevas.length) return json({ ok: false, error: 'La IA no encontró keywords nuevas para esta intención.' }, 500);
+    return json({ ok: true, keywords: nuevas });
   }
 
   if (!brief.que || !String(brief.que).trim()) {
