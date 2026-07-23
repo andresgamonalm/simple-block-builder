@@ -1829,6 +1829,7 @@ button,input,select,textarea{font-family:inherit;}
       <button class="primary" onclick="agregarImagen()">Agregar</button>
     </div>
     <div class="img-prev" id="img-prev" style="display:none"><img id="img-prev-el" alt=""><span>Previsualización</span></div>
+    <div style="display:flex;justify-content:flex-end;margin:10px 0 0;"><button class="btn-sec danger" onclick="vaciarBiblioteca()">Vaciar biblioteca guardada</button></div>
     <div class="img-grid" id="img-grid"></div>
     </div>
   </div>
@@ -6849,6 +6850,16 @@ function agregarImagen(){
   toast("Imagen agregada a la biblioteca");
 }
 // Subir archivos a R2 vía /api/upload. Cada uno queda en la biblioteca con su URL.
+// Limpia SOLO la lista guardada en tu biblioteca (workspace.imagenes). No borra
+// los archivos del bucket de Cloudflare: esos siguen listándose desde R2.
+function vaciarBiblioteca(){
+  const n = (workspace.imagenes||[]).length;
+  if(!n){ toast("La biblioteca ya está vacía"); return; }
+  if(!confirm(`¿Quitar las ${n} imágenes de tu biblioteca guardada?\n\nSolo limpia la lista; los archivos que tengas en tu bucket de Cloudflare NO se borran y seguirán apareciendo abajo.`)) return;
+  workspace.imagenes = [];
+  persistir(); renderImagenes();
+  toast("Biblioteca vaciada");
+}
 function soltarImagenes(e){ e.preventDefault(); const z=document.getElementById("img-subir"); if(z) z.classList.remove("drag"); subirImagenes(e.dataTransfer && e.dataTransfer.files); }
 // Optimiza una imagen pesada antes de subirla: la reduce a máx 1600px de lado y
 // la recomprime (JPG calidad 0.85; PNG se conserva por la transparencia). SVG/GIF
