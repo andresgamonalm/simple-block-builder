@@ -1903,9 +1903,8 @@ button,input,select,textarea{font-family:inherit;}
 
         <!-- HERO Char-B (réplica de la gráfica) -->
         <section class="hero-charb">
-          <button class="cb-edit" onclick="editarBanner()" title="Editar el título"><span class="ico" data-ic="editar" data-icsize="14px"></span></button>
           <div class="hc-top">
-            <span class="hc-mascot"><svg viewBox="0 0 40 40" width="30" height="30" aria-hidden="true"><path d="M7 5h26a5 5 0 0 1 5 5v15a5 5 0 0 1-5 5H17l-8 6v-6H7a5 5 0 0 1-5-5V10a5 5 0 0 1 5-5z" fill="#1C73CB"/><circle cx="15.5" cy="17.5" r="2.5" fill="#fff"/><circle cx="25" cy="17.5" r="2.5" fill="#fff"/></svg></span>
+            <span class="hc-mascot"><img class="charb-face" alt="Char-B" style="width:30px;height:34px;object-fit:contain;"></span>
             <h2 class="hc-title" id="banner-titulo">Char-B, tu asistente de IA</h2>
           </div>
           <div class="hc-prompt">
@@ -6142,9 +6141,15 @@ function renderProyectos(){ renderProyectosPage(); }
 function renderCreatividades(){ renderProyectosPage(); }
 
 function renderHome(){
-  const nombre = (workspace.perfil && workspace.perfil.nombre) || "";
+  // Saludo con nombre: perfil > usuario del login (capitalizado) > "Hola".
+  const u = window.SBB_USER || {};
+  const cap = (s)=> s ? s.charAt(0).toUpperCase()+s.slice(1) : "";
+  const nombre = (workspace.perfil && workspace.perfil.nombre) || cap(u.usuario||"");
   const sal = document.getElementById("home-saludo");
   if(sal) sal.textContent = nombre ? ("Hola, "+nombre) : "Hola";
+  // La cara de Char-B en todos sus avatares (hero, modal, etc.).
+  const face = document.querySelector(".fab-charb");
+  if(face && face.src) document.querySelectorAll("img.charb-face").forEach(i => { if(!i.src) i.src = face.src; });
   const hoy = new Date();
   const f = document.getElementById("home-fecha");
   if(f) f.textContent = DIAS_ES[hoy.getDay()].charAt(0).toUpperCase()+DIAS_ES[hoy.getDay()].slice(1)+" "+hoy.getDate()+" de "+MESES_ES[hoy.getMonth()]+" · aquí está tu taller de creatividades";
