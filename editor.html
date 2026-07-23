@@ -7538,6 +7538,26 @@ function insertarBannerIA(data, marca){
   }
   // OFERTA en la burbuja (colores desde los acentos de la marca).
   const oferta = data.burbuja ? String(data.burbuja).slice(0,40).trim() : "";
+  // VARIEDAD ENTRE CAMPAÑAS: cada campaña toma una RECETA de diagramación
+  // (estable por nombre) — alineación, burbuja, deco, velo y proporciones —
+  // para que 12 campañas no salgan con la misma gráfica clonada.
+  let _h=0; const _seed=String(data.nombre||data.titular||oferta||"x");
+  for(let i=0;i<_seed.length;i++) _h=(_h*31+_seed.charCodeAt(i))>>>0;
+  const RECETAS=[
+    {alinH:"left",   pos:"tr", deco:false, velo:40, prop:[25,50,25]},
+    {alinH:"center", pos:"tl", deco:true,  velo:52, prop:[22,53,25]},
+    {alinH:"left",   pos:"br", deco:true,  velo:30, prop:[25,48,27]},
+    {alinH:"center", pos:"tr", deco:false, velo:58, prop:[20,55,25]}
+  ];
+  // hash + rotación por nº de piezas: dos campañas seguidas nunca repiten receta.
+  const _rot=(typeof todasLasPiezas==='function'? todasLasPiezas().length : 0);
+  const R=RECETAS[_rot%RECETAS.length];   // rotación pura: campañas consecutivas SIEMPRE distintas
+  setPath(comp,"zonas.texto.alinH", R.alinH);
+  setPath(comp,"zonas.cta.alinH", R.alinH);
+  setPath(comp,"fondo.imagen.oscurecer", R.velo);
+  setPath(comp,"prop", R.prop.slice());
+  if(R.deco) setPath(comp,"deco.visible", true);
+  if(oferta) setPath(comp,"burbuja.pos", R.pos);
   if(oferta){
     setPath(comp,"burbuja.visible", true);
     setPath(comp,"burbuja.texto", oferta);
@@ -7562,6 +7582,18 @@ function insertarBannerIA(data, marca){
   p.tema = tema;
   p.esSet=true; p.setTipo="display-desktop"; p.masterFmt=cfg.master; p.activaFmt=cfg.master; p.formato=cfg.master;
   p.canvas=[]; p.composicion=comp; p.artboards=cfg.fmts.map(fmt=>({fmt}));
+  // VARIANTES por formato (como las campañas display reales: la burbuja no va
+  // igual en todos): fuera en franjas bajas y cuadrados chicos (se come el
+  // banner), centro-derecha en verticales, abajo-derecha en el 1200x1200.
+  if(oferta){
+    p.artboards.forEach(ab=>{
+      const F2=FORMATOS[ab.fmt]; if(!F2) return;
+      const fam=familiaDeFormato(ab.fmt);
+      if(fam==="franja" || Math.max(F2.ancho,F2.alto)<=250) ab.ov={burbuja:{visible:false}};
+      else if(fam==="vertical") ab.ov={burbuja:{pos:"cr"}};
+      else if(ab.fmt==="display-1200x1200") ab.ov={burbuja:{pos:"br"}};
+    });
+  }
   proyecto.activa = p.id;
   document.getElementById("galeria").classList.remove("show");
   activarPieza(p.id);
