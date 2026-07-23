@@ -554,9 +554,9 @@ button,input,select,textarea{font-family:inherit;}
 /* FAB Crear con IA */
 /* Char-B: asistente flotante — botón circular pequeño con la mascota (llamita),
    plano y discreto (sin sombras ni degradados, DEC-008). */
-.fab-ia{position:fixed;right:22px;bottom:22px;z-index:320;width:52px;height:52px;padding:0;border:none;border-radius:50%;background:var(--navy);cursor:pointer;display:none;align-items:center;justify-content:center;transition:transform .15s ease,background .15s ease;}
+.fab-ia{position:fixed;right:22px;bottom:22px;z-index:320;width:52px;height:52px;padding:0;border:1px solid var(--bdr,#e4e8f0);border-radius:50%;background:#F5F5F5;cursor:pointer;display:none;align-items:center;justify-content:center;transition:transform .15s ease,background .15s ease;}
 .dash.show .fab-ia{display:flex;}
-.fab-ia:hover{background:var(--primary-d);transform:scale(1.07);}
+.fab-ia:hover{background:#eceef3;transform:scale(1.07);}
 /* Mascota Char-B: imagen provista por el usuario, ajustada dentro del círculo. */
 .fab-charb{width:30px;height:34px;object-fit:contain;display:block;pointer-events:none;}
 .fab-ia:focus-visible{outline:2px solid #378CE3;outline-offset:2px;}
@@ -1879,7 +1879,7 @@ button,input,select,textarea{font-family:inherit;}
     </div>
   </main>
   <button class="fab-ia" id="fab-ia" onclick="abrirIA()" title="Char-B · tu asistente de creatividades" aria-label="Abrir el asistente Char-B">
-    <img class="fab-charb" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADgAAABABAMAAAC92amBAAAAGFBMVEXwdhYAAAD4dQjwdhXwdhX/AAD//wD/pwEw0LfjAAAACHRSTlP9AA1enwEBA4zHynAAAAKDSURBVHjafZVBTxNBFMd/M7tFCNTuLrQxRmkrd6DRg8EDW/DkhZLIGQ5+Mj+AGC9eDGA8qgkeDB4EWgxIDHQHFKjS3fWwu+223eVdZpLf/t97897MW2ESWHVzvD69LwyHrmkjwTq0a+16P59cqeXjVgeKQCl8axdAn97HnNnqgWLppRu5mlTCD/cSgPk3EcPdrzi1uFKIU+J5ZEVMuXo/znAtowv1s+0eSLHWddvnFbSc31E+zfYyXMPuwI9GH6RYAkAHxHY/fJ+Pyjd0ddUP5VHk9trtZ7gTETQGQsLoWgj90iA0XgcxxdzbQXgggiIITw1C/bYPSFYTvNLO2YDIn/9NgFSUAinHkhhfbEArDKkkKA9dkJlSolJcA5q/kwi9O8Ot8A4lWKlzwRJsMwNST4HaiY0ctZOhO/OVNCF8yBoSlQLblbPUhGAjdwOkke4WPGnfICW/dgO0JlKRLj0/XShlOvSlP5+u1EbUbD2FCUkt7aB6EVOUUmDFkuRTlAuNJUzreXIyZtmUeFuJcHJZIakm3uqFs3XQRpRxnODUMVogqSW8XX1yQgEi7zaBh9meyJWjf0FtBUB2ZyrWWNl4FpTIkicAZYVVfhd5HQsmo1wMkm2IF83PDx4BLE61y0EeouwHdS9T3XIwwUE0pTYWTJOwtI3MujNfcBxHN1eQVnCglVfhyVy73rioXsx9bx3O7t0dagFaPZxt3uNvLahf7sEwxzP2NiDGT/uGLBh+XY63ASk6zyoX9e7PLMIF0Aqddp7nwg/9H5faLQDZraxXCPcZn/Zv+p59KWy778M9A9BjPdn4FKzXRhNDATLWjXYxim9jAGh27Nb+Cv+Xw0odZDz4DxtJuQs2IXG0AAAAAElFTkSuQmCC" alt="" aria-hidden="true">
+    <img class="fab-charb" src="data:image/png;base64,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" alt="" aria-hidden="true">
   </button>
   <nav class="mtabs" id="mtabs">
     <button data-view="home" onclick="dashIr('home')" title="Inicio"><span class="ico" data-ic="casa" data-icsize="20px"></span></button>
@@ -5269,34 +5269,83 @@ function piezaDeArtboard(p, ab){
   const fmt = FORMATOS[ab.fmt];
   return { nombre: `${p.nombre}-${fmt.ancho}x${fmt.alto}`, formato: ab.fmt, canvas: ab.canvas || [], tema: p.tema, _orient: ab.orient || "columna" };
 }
-function exportarArtboard(fmt){
+// ── Empaquetado ZIP (puro JS, método "store", sin dependencias) ──────────
+function _crc32(bytes){ let crc=0xFFFFFFFF; for(let i=0;i<bytes.length;i++){ crc^=bytes[i]; for(let j=0;j<8;j++){ crc=(crc>>>1)^(0xEDB88320&-(crc&1)); } } return (crc^0xFFFFFFFF)>>>0; }
+function crearZipStore(files){
+  const enc=new TextEncoder(); const chunks=[]; const central=[]; let offset=0;
+  const u16=n=>[n&0xFF,(n>>>8)&0xFF]; const u32=n=>[n&0xFF,(n>>>8)&0xFF,(n>>>16)&0xFF,(n>>>24)&0xFF];
+  files.forEach(f=>{ const nameBytes=enc.encode(f.name); const data=f.data; const crc=_crc32(data);
+    const lh=new Uint8Array([].concat(u32(0x04034b50),u16(20),u16(0),u16(0),u16(0),u16(0),u32(crc),u32(data.length),u32(data.length),u16(nameBytes.length),u16(0)));
+    chunks.push(lh,nameBytes,data); const localOffset=offset; offset+=lh.length+nameBytes.length+data.length;
+    central.push({nameBytes,crc,size:data.length,localOffset}); });
+  const cd=[]; central.forEach(c=>{ const h=new Uint8Array([].concat(u32(0x02014b50),u16(20),u16(20),u16(0),u16(0),u16(0),u16(0),u32(c.crc),u32(c.size),u32(c.size),u16(c.nameBytes.length),u16(0),u16(0),u16(0),u16(0),u32(0),u32(c.localOffset))); cd.push(h,c.nameBytes); });
+  const cdStart=offset; let cdSize=0; cd.forEach(x=>cdSize+=x.length);
+  const eocd=new Uint8Array([].concat(u32(0x06054b50),u16(0),u16(0),u16(central.length),u16(central.length),u32(cdSize),u32(cdStart),u16(0)));
+  return new Blob([...chunks,...cd,eocd],{type:"application/zip"});
+}
+// Banner HTML5 VÁLIDO para Google Ads: tamaño exacto, meta ad.size, clickTag,
+// imágenes INCRUSTADAS (data:) y fuente del sistema (Arial) — sin recursos
+// externos que fallen al subirlo. (La versión sync de arriba es solo preview.)
+async function generarHTML5Banner(p, fmt){
+  const f=FORMATOS[fmt]||FORMATOS["display-300x250"]; const W=f.ancho, H=f.alto;
+  const css=cssComponentes();
+  const comp=await compConImagenesInline(composicionEfectiva(p, fmt));
+  const cta=(comp.zonas&&comp.zonas.cta&&comp.zonas.cta.url)||"";
+  const cmpHtml=renderComposicion(comp, fmt);
+  return `<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8">`+
+    `<meta name="ad.size" content="width=${W},height=${H}">`+
+    `<title>${esc(p.nombre)} ${W}x${H}</title>`+
+    `<style>*{box-sizing:border-box;margin:0;padding:0}html,body{width:${W}px;height:${H}px;overflow:hidden;font-family:Arial,Helvetica,sans-serif}a.sbb-clic{position:absolute;inset:0;z-index:99;display:block}${css}</style>`+
+    `<scr`+`ipt>var clickTag=${JSON.stringify(cta||"https://")};</scr`+`ipt></head>`+
+    `<body><!--SBB-CMP:${esc(fmt)}-->${cmpHtml}<a class="sbb-clic" href="javascript:window.open(window.clickTag)"></a></body></html>`;
+}
+async function exportarArtboard(fmt){
   const p = pieza(); if(!esSetPieza(p)) return;
   let html;
   if(esComposicion(p)){
-    html = generarHTMLDeComposicion(p, fmt);
+    html = await generarHTML5Banner(p, fmt);
   } else {
     const ab = p.artboards.find(a => a.fmt === fmt); if(!ab) return;
     if(!(ab.canvas && ab.canvas.length)){ toast("Banner vacío"); return; }
     html = generarHTMLDePieza(piezaDeArtboard(p, ab));
   }
+  const F=FORMATOS[fmt];
   const blob = new Blob([html], {type:"text/html"});
   const url = URL.createObjectURL(blob);
   const a = document.createElement("a");
-  a.href = url; a.download = `${slugify(p.nombre)}-${fmt.replace("display-","")}.html`;
+  a.href = url; a.download = `${slugify(p.nombre)}-${F.ancho}x${F.alto}.html`;
   document.body.appendChild(a); a.click(); a.remove();
   URL.revokeObjectURL(url);
-  toast(`Descargado ${FORMATOS[fmt].ancho}×${FORMATOS[fmt].alto}`);
+  toast(`Descargado ${F.ancho}×${F.alto}`);
 }
-function exportarTodoElSet(){
-  const p = pieza(); if(!esSetPieza(p)) return;
-  let i = 0;
-  p.artboards.forEach(ab => {
-    const tiene = esComposicion(p) || (ab.canvas && ab.canvas.length);
-    if(tiene){ setTimeout(() => exportarArtboard(ab.fmt), i*350); i++; }
-  });
-  if(i===0){ toast("No hay banners con contenido"); return; }
-  setTimeout(() => toast(`${i} banner${i>1?"s":""} descargado${i>1?"s":""}`), i*350 + 200);
+// Descarga TODOS los tamaños en un solo ZIP (evita el bloqueo de descargas
+// múltiples del navegador y es el formato que espera Google Ads).
+async function exportarTodoZip(){
+  const p=pieza(); if(!esSetPieza(p)) return;
+  const fmts=(p.artboards||[]).map(a=>a.fmt).filter(f=>FORMATOS[f] && (esComposicion(p) || (p.artboards.find(a=>a.fmt===f).canvas||[]).length));
+  if(!fmts.length){ toast("No hay banners con contenido"); return; }
+  const tipo=exportTipo; const slug=slugify(p.nombre);
+  toast(`Preparando ZIP con ${fmts.length} banners…`, 12000);
+  const files=[];
+  try{
+    for(const fmt of fmts){
+      const F=FORMATOS[fmt]; const nm=`${slug}-${F.ancho}x${F.alto}`;
+      if(tipo==="html"){
+        const h = esComposicion(p) ? await generarHTML5Banner(p, fmt) : generarHTMLDePieza(piezaDeArtboard(p, p.artboards.find(a=>a.fmt===fmt)));
+        files.push({ name:nm+".html", data:new TextEncoder().encode(h) });
+      } else {
+        const blob=await rasterizarComposicion(p, fmt, tipo);
+        files.push({ name:nm+"."+tipo, data:new Uint8Array(await blob.arrayBuffer()) });
+      }
+    }
+    const zip=crearZipStore(files);
+    const url=URL.createObjectURL(zip); const a=document.createElement("a");
+    a.href=url; a.download=`${slug}-banners-${tipo}.zip`;
+    document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url);
+    toast(`ZIP listo · ${files.length} banners en tamaño exacto`);
+  }catch(e){ toast("No se pudo crear el ZIP: "+(e.message||e), 5000); }
 }
+function exportarTodoElSet(){ exportarTodoZip(); }
 // ── Export a imagen (PNG/JPG) — para subir a Google Ads, redes, etc. ──────
 function blobADataURL(blob){ return new Promise((res,rej)=>{ const fr=new FileReader(); fr.onload=()=>res(fr.result); fr.onerror=rej; fr.readAsDataURL(blob); }); }
 // Convierte una URL de imagen en dataURL. Cross-origin → pasa por /api/img
@@ -5312,13 +5361,17 @@ async function compConImagenesInline(comp){
   if(c.fondo&&c.fondo.imagen&&c.fondo.imagen.url) c.fondo.imagen.url=await urlADataURL(c.fondo.imagen.url);
   if(c.zonas){ for(const zk of ["logo","texto","cta"]){ const z=c.zonas[zk]; if(!z) continue;
     if(z.imagen&&z.imagen.url) z.imagen.url=await urlADataURL(z.imagen.url);
-    if(z.url) z.url=await urlADataURL(z.url);
+    // Solo la zona LOGO tiene una imagen en `url`; en la zona CTA `url` es el
+    // ENLACE del botón (clickTag) y NO debe convertirse a data URL.
+    if(zk==="logo" && z.url) z.url=await urlADataURL(z.url);
   } }
   return c;
 }
 async function rasterizarComposicion(p, fmt, tipo){
   const f=FORMATOS[fmt]||FORMATOS["display-300x250"];
-  const W=f.ancho, H=f.alto, scale=2;
+  // Escala 1× = tamaño EXACTO en píxeles (300×250, etc.). Google Ads exige la
+  // dimensión exacta; un 2× (600×500) lo rechaza.
+  const W=f.ancho, H=f.alto, scale=1;
   const comp=await compConImagenesInline(composicionEfectiva(p, fmt));
   const css=cssComponentes();
   // foreignObject exige XHTML válido: autocerrar elementos vacíos (img/br/…).
@@ -5345,15 +5398,10 @@ async function exportarArtboardImg(fmt, tipo){
   }catch(e){ toast("No se pudo rasterizar: "+(e.message||e), 4500); }
 }
 // Dispatcher según el tipo elegido en el modal de exportación.
-let exportTipo = "html";
+let exportTipo = "png";   // por defecto imagen exacta (lo más simple para Google)
 function setExportTipo(t){ exportTipo=t; document.querySelectorAll("#export-tipo button").forEach(b=>b.classList.toggle("on", b.dataset.t===t)); }
 function exportarArtboardEn(fmt){ if(exportTipo==="html") exportarArtboard(fmt); else exportarArtboardImg(fmt, exportTipo); }
-function exportarTodoEnTipo(){
-  const p=pieza(); if(!esComposicion(p)) return;
-  if(exportTipo==="html"){ exportarTodoElSet(); return; }
-  let i=0; p.artboards.forEach(ab=>{ setTimeout(()=>exportarArtboardImg(ab.fmt, exportTipo), i*500); i++; });
-  toast(`Generando ${i} ${exportTipo.toUpperCase()}…`, 3000);
-}
+function exportarTodoEnTipo(){ exportarTodoZip(); }
 // Muestra/oculta los controles del set en la barra superior según la creatividad.
 function actualizarUISet(){
   const es = esSetPieza(pieza());
@@ -5420,8 +5468,8 @@ function abrirExportar(){
   // Colección por capas: exportar cada tamaño del set (no bloques).
   if(esComposicion(actual)){
     const sizes = (actual.artboards||[]).map(a=>a.fmt);
-    const seg = `<div class="export-tipo" id="export-tipo"><span>Formato:</span>${[['html','HTML'],['png','PNG'],['jpg','JPG']].map(([t,l])=>`<button data-t="${t}" class="${exportTipo===t?'on':''}" onclick="setExportTipo('${t}')">${l}</button>`).join('')}</div>`;
-    let h = `<p>Exporta los banners de la colección para subirlos a tu plataforma. <b>HTML</b> = banner responsivo; <b>PNG/JPG</b> = imagen estática (Google Ads, redes).</p>${seg}<p><button class="primary" onclick="exportarTodoEnTipo()">${svgIcon("exportar",{size:"13px"})} Descargar todos</button></p><div class="export-list" id="export-list">`;
+    const seg = `<div class="export-tipo" id="export-tipo"><span>Formato:</span>${[['png','PNG (imagen)'],['jpg','JPG (imagen)'],['html','HTML5']].map(([t,l])=>`<button data-t="${t}" class="${exportTipo===t?'on':''}" onclick="setExportTipo('${t}')">${l}</button>`).join('')}</div>`;
+    let h = `<p>Cada banner sale <b>individual y en su tamaño exacto</b>, listo para subir a Google Ads. <b>PNG/JPG</b> = imagen (lo más simple para Google Display y redes); <b>HTML5</b> = anuncio con enlace (incluye <code>ad.size</code> y <code>clickTag</code>, imágenes incrustadas).</p>${seg}<p><button class="primary" onclick="exportarTodoZip()">${svgIcon("exportar",{size:"13px"})} Descargar todos en un ZIP</button> <span style="font-size:12px;color:#5b6178;">un archivo por tamaño</span></p><div class="export-list" id="export-list">`;
     sizes.forEach(fmt => { const f=FORMATOS[fmt]; if(!f) return;
       h += `<div class="export-row"><label><div><div class="pn">${f.ancho}×${f.alto}${fmt===actual.masterFmt?' <span style="color:#1c73cb;font-weight:600;">· máster</span>':''}${tieneOverride(actual,fmt)?' <span class="ajtag">· ajustado</span>':''}</div><div class="pf">${esc(HINTS[fmt]?.badge||'Display')}</div></div></label><button class="download" onclick="exportarArtboardEn('${fmt}')">${svgIcon("exportar",{size:"13px"})} Descargar</button></div>`;
     });
