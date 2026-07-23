@@ -410,13 +410,19 @@ button,input,select,textarea{font-family:inherit;}
 .cb-generar:hover{background:var(--primary-d);}
 .cb-divisor{margin-top:22px;border-top:1px solid rgba(255,255,255,.12);}
 .cb-tu{font-size:12px;font-weight:600;letter-spacing:.05em;text-transform:uppercase;color:#9aa0c4;margin:20px 0 12px;}
-.cb-acciones{display:flex;gap:12px;flex-wrap:wrap;align-items:center;}
-.cb-lz{display:inline-flex;align-items:center;gap:11px;border:none;border-radius:10px;background:rgba(255,255,255,.1);color:#fff;font-family:var(--f);font-size:14px;font-weight:600;padding:11px 18px 11px 12px;cursor:pointer;transition:background .14s;}
-.cb-lz:hover{background:rgba(255,255,255,.2);}
-.cb-lz-ico{width:32px;height:32px;border-radius:8px;background:rgba(255,255,255,.14);display:inline-flex;align-items:center;justify-content:center;}
-.cb-pronto-lbl{margin-left:6px;font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:#6b73a8;}
-.cb-pronto{border:none;background:transparent;font-family:var(--f);font-size:12.5px;color:#9aa0c4;cursor:pointer;padding:4px 2px;}
-.cb-pronto:hover{color:#c3c8ee;}
+/* Lanzadores sobre el bloque navy: botón SECUNDARIO blanco con texto e ícono
+   navy (combinación autorizada). Nunca azul sobre azul ni transparencias.
+   Todos del MISMO tamaño (grid de columnas iguales). */
+.cb-acciones{display:flex;flex-direction:column;gap:12px;align-items:stretch;}
+.cb-lanzadores{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;}
+.cb-lz{display:flex;align-items:center;justify-content:center;gap:10px;border:none;border-radius:10px;background:#fff;color:#040764;font-family:var(--f);font-size:14px;font-weight:600;height:52px;padding:0 14px;cursor:pointer;transition:background .14s;}
+.cb-lz:hover{background:#eef1f6;}
+.cb-lz-ico{display:inline-flex;align-items:center;justify-content:center;color:#040764;}
+.cb-pronto-row{display:flex;align-items:center;gap:10px;}
+.cb-pronto-lbl{font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:#cdd2f0;}
+.cb-pronto{border:none;background:transparent;font-family:var(--f);font-size:13px;font-weight:500;color:#dfe3fb;cursor:pointer;padding:4px 2px;text-decoration:underline;}
+.cb-pronto:hover{color:#fff;}
+@media(max-width:760px){ .cb-lanzadores{grid-template-columns:repeat(2,1fr);} }
 /* Tus creatividades (Home) */
 .hg-head{display:flex;align-items:flex-end;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:16px;}
 .hg-head h2{font-size:17px;font-weight:600;color:var(--ink);}
@@ -1792,12 +1798,16 @@ button,input,select,textarea{font-family:inherit;}
           <div class="cb-divisor"></div>
           <div class="cb-tu">O empiézalo tú</div>
           <div class="cb-acciones">
+            <div class="cb-lanzadores">
             <button class="cb-lz" data-serv="email" onclick="irARuta('/email-ia')"><span class="cb-lz-ico"><span class="ico" data-ic="email" data-icsize="17px"></span></span>Email</button>
             <button class="cb-lz" data-serv="banner" onclick="irARuta('/gdn-ia')"><span class="cb-lz-ico"><span class="ico" data-ic="grid" data-icsize="17px"></span></span>Banner Display</button>
             <button class="cb-lz" data-serv="libre" onclick="irARuta('/free')"><span class="cb-lz-ico"><span class="ico" data-ic="documento" data-icsize="17px"></span></span>Formato libre</button>
             <button class="cb-lz" data-serv="ads" onclick="irARuta('/ads-ia')"><span class="cb-lz-ico"><span class="ico" data-ic="buscar" data-icsize="17px"></span></span>Google Search</button>
+            </div>
+            <div class="cb-pronto-row">
             <span class="cb-pronto-lbl">Pronto</span>
             <button class="cb-pronto" onclick="irARuta('/post-ia')">Post RRSS</button>
+            </div>
           </div>
         </section>
         <section class="home-galeria">
