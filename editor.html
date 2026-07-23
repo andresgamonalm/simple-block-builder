@@ -802,6 +802,15 @@ button,input,select,textarea{font-family:inherit;}
 .ab:not(.activo) .ab-frame{pointer-events:none;}
 .ab-empty{display:flex;align-items:center;justify-content:center;height:100%;color:#bbb;font-size:13px;text-align:center;padding:8px;}
 /* Editor de Diseño global (capas) */
+/* Control de ALCANCE: deja clarísimo si editas TODOS los tamaños o solo uno. */
+.cmp-scope{margin:0 0 14px;padding:12px;background:var(--navy-l,#eef1fb);border:1px solid #dfe4f2;border-radius:10px;}
+.cmp-scope-lbl{font-size:11px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:var(--ink3,#5b6178);margin-bottom:8px;}
+.cmp-scope-seg{display:flex;gap:4px;background:#fff;border:1px solid #dfe4f2;border-radius:9px;padding:3px;}
+.cmp-scope-seg button{flex:1;display:inline-flex;align-items:center;justify-content:center;gap:6px;height:34px;border:none;border-radius:7px;background:transparent;font-family:var(--f);font-size:12.5px;font-weight:600;color:var(--ink2,#3a4056);cursor:pointer;transition:background .13s,color .13s;white-space:nowrap;}
+.cmp-scope-seg button:hover{color:var(--navy,#040764);}
+.cmp-scope-seg button.on{background:var(--navy,#040764);color:#fff;}
+.cmp-scope-hint{margin:9px 2px 0;font-size:12px;line-height:1.5;color:var(--ink2,#3a4056);}
+.cmp-scope-hint b{color:var(--navy,#040764);}
 .cmp-ed .cmp-zona-sec{margin:16px 0 4px;padding:7px 9px;background:var(--bg2,#f3f4f8);border:1px solid var(--bdr);border-radius:7px;display:flex;align-items:center;justify-content:space-between;font-size:12px;font-weight:700;color:var(--ink,#222);}
 .cmp-ed .cmp-zona-sec .zlbl{display:flex;align-items:center;gap:6px;}
 .cmp-ed .cmp-bibmini{display:flex;flex-wrap:wrap;gap:4px;margin:-2px 0 7px;}
@@ -4764,7 +4773,7 @@ function renderTableroComposicion(p, c){
       <div class="ab-stage" style="width:${Math.round(f.ancho*zoom)}px;height:${Math.round(f.alto*zoom)}px;"><div class="ab-scale" style="transform:scale(${zoom});">${renderComposicion(composicionEfectiva(p, fmt), fmt)}</div></div>
     </div>`;
   };
-  let html = `<div class="tablero-hint"><b>Diseño global</b> (pestaña Diseño) = base de todos. <b>Clic en un banner</b> → ajustas SOLO ese tamaño (hereda lo que no toques).</div>`;
+  let html = `<div class="tablero-hint">${svgIcon("info",{size:"13px"})} En <b>Diseño</b> editas <b>todos los tamaños</b> a la vez. <b>Clic en un banner</b> de abajo → ajustas <b>solo ese</b> (lo que no toques sigue heredando de todos).</div>`;
   ["cuadrado","vertical","franja"].forEach(g => {
     if(!grupos[g].length) return;
     html += `<div class="tab-grupo"><div class="tab-grupo-tit">${titulos[g]}</div><div class="tablero grupo-${g}">${grupos[g].map(celda).join("")}</div></div>`;
@@ -4963,6 +4972,25 @@ function compEditorHTML(p, fmt, ctx){
   }
   return h;
 }
+// Control de ALCANCE (qué estás editando): "Todos los tamaños" vs "Solo este".
+// Hace explícito el modelo (antes los rótulos "AJUSTAR… HEREDA DEL GLOBAL" no se
+// entendían). Es la pieza clave para que un usuario NO técnico sepa qué toca.
+function compScopeHeader(fmt){
+  const p=pieza();
+  const esMaster = fmt && fmt===(p.masterFmt||"display-300x250");
+  // El máster edita el Diseño base (= todos), así que ahí "Todos" está activo.
+  const enTodos = !fmt || esMaster;
+  const F = fmt ? FORMATOS[fmt] : null;
+  const etqUno = F ? `Solo ${F.ancho}×${F.alto}` : "Un tamaño";
+  const btnUno = enTodos
+    ? `<button type="button" onclick="toast('Haz clic en cualquier banner del tablero para ajustar solo ese tamaño')">${svgIcon("grid",{size:"13px"})} ${etqUno}</button>`
+    : `<button type="button" class="on">${svgIcon("grid",{size:"13px"})} ${etqUno}</button>`;
+  const btnTodos = `<button type="button" class="${enTodos?'on':''}" onclick="cambiarPanelTab('diseno')">${svgIcon("plantilla",{size:"13px"})} Todos los tamaños</button>`;
+  const hint = enTodos
+    ? `Lo que cambies aquí se aplica a <b>todos los tamaños</b> a la vez.`
+    : `Lo que cambies aquí afecta <b>solo este tamaño</b>; los demás siguen igual.`;
+  return `<div class="cmp-scope"><div class="cmp-scope-lbl">¿Qué estás editando?</div><div class="cmp-scope-seg">${btnTodos}${btnUno}</div><p class="cmp-scope-hint">${hint}</p></div>`;
+}
 // Editor del Diseño global (3 zonas con controles por zona).
 function renderComposicionEditor(){
   const cont=document.getElementById("comp-editor"), tema=document.getElementById("diseno-tema");
@@ -4976,20 +5004,15 @@ function renderComposicionEditor(){
     `<option value="">${marcas.length?'— Aplicar marca —':'— Sin marcas (crea una) —'}</option>`+
     marcas.map(m=>`<option value="${m.id}" ${p.tema&&p.tema.marcaId===m.id?'selected':''}>${esc(m.nombre)}</option>`).join('')+
     `</select><button class="cmp-bib" onclick="abrirMarcas()" title="Gestionar marcas">${svgIcon("paleta",{size:"12px"})}</button></div>`;
-  cont.innerHTML=`<div class="cmp-ed">${marcaSel}<div class="dz-sec">Diseño global · 3 zonas</div><button class="ia-sugerir" onclick="sugerirTextosIA()">${svgIcon("estrella",{size:"13px"})} Sugerir textos con Char-B</button><button class="ia-sugerir" onclick="generarFondoIA()">${svgIcon("imagen",{size:"13px"})} Generar fondo con IA</button>${compEditorHTML(p,null,'diseno')}</div>`;
+  cont.innerHTML=`<div class="cmp-ed">${compScopeHeader(null)}${marcaSel}<div class="dz-sec">Contenido de las 3 zonas</div><button class="ia-sugerir" onclick="sugerirTextosIA()">${svgIcon("estrella",{size:"13px"})} Sugerir textos con Char-B</button><button class="ia-sugerir" onclick="generarFondoIA()">${svgIcon("imagen",{size:"13px"})} Generar fondo con IA</button>${compEditorHTML(p,null,'diseno')}</div>`;
 }
 // Panel "Ajustar este tamaño" (overrides sobre el global) en la pestaña Editar.
 function renderFormTamaño(f){
   const p=pieza(); asegurarComposicionNueva(p); const fmt=p.activaFmt; const F=FORMATOS[fmt];
   if(!fmt||!F){ f.innerHTML=`<div class="form-empty"><div class="form-empty-ico">${svgIcon("editar",{size:"32px"})}</div>Haz clic en un banner del tablero<br>para ajustar ese tamaño</div>`; return; }
-  const fam=familiaDeFormato(fmt);
   const esMaster = fmt === (p.masterFmt||"display-300x250");
-  // El MÁSTER edita el Diseño global (base de todos); los demás ajustan SOLO su tamaño.
-  const cab = esMaster
-    ? `<div class="dz-sec">Máster ${F.ancho}×${F.alto} <span style="font-weight:400;color:#1c73cb">· edita el Diseño base (todos heredan)</span></div>`
-    : `<div class="dz-sec">Ajustar ${F.ancho}×${F.alto} <span style="font-weight:400;color:#8890a8">· ${fam} · hereda del global</span></div>`;
-  const reset = esMaster ? "" : `<button class="set-aj-reset" onclick="resetTamaño('${fmt}')">Restablecer este tamaño al global</button>`;
-  f.innerHTML=`<button class="volver-celda" onclick="cambiarPanelTab('diseno')">${svgIcon("paleta",{size:"12px"})} Ir al Diseño global</button><div class="cmp-ed">${cab}${compEditorHTML(p,fmt,'form')}${reset}</div>`;
+  const reset = esMaster ? "" : `<button class="set-aj-reset" onclick="resetTamaño('${fmt}')">${svgIcon("deshacer",{size:"12px"})} Restablecer este tamaño (volver al de todos)</button>`;
+  f.innerHTML=`<div class="cmp-ed">${compScopeHeader(fmt)}${compEditorHTML(p,fmt,'form')}${reset}</div>`;
 }
 function cssComponentes(){
   const cssFull = (document.querySelector("style") && document.querySelector("style").textContent) || "";
