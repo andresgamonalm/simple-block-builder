@@ -605,6 +605,7 @@ button,input,select,textarea{font-family:inherit;}
 .py-row .rn{font-size:14px;font-weight:500;color:var(--ink);cursor:pointer;}
 .py-row .rn:hover{color:var(--blue);}
 .py-row .rs{font-size:12px;color:var(--ink3);margin-top:2px;}
+.py-crea{display:flex;align-items:center;gap:11px;min-width:0;}
 .py-piezas{font-size:13px;color:var(--ink3);}
 .st-pill{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:500;color:var(--ink2);background:#f2f3f7;border-radius:999px;padding:4px 10px;}
 .st-pill .pt{width:6px;height:6px;border-radius:50%;}
@@ -6110,7 +6111,7 @@ function renderProyectosPage(){
       const est = estadoDe(p);
       const nT = (p.esSet||p.composicion) ? (((p.artboards||[]).length||1)+" tamaños") : "1 pieza";
       return `<div class="py-row">
-        <div style="min-width:0"><div class="rn" onclick="abrirPiezaDesdeDash('${pr.id}','${p.id}')" title="Editar">${esc(p.nombre)}</div><div class="rs">${p._mod?"Actualizado "+tiempoRel(p._mod):""}</div></div>
+        <div class="py-crea"><span class="ult-ic" style="background:${WORK_BG[cat]||'#5b6178'};color:${WORK_GL[cat]||'#fff'}">${svgIcon(CAT_ICO[cat]||'documento',{size:'16px'})}</span><div style="min-width:0"><div class="rn" onclick="abrirPiezaDesdeDash('${pr.id}','${p.id}')" title="Editar">${esc(p.nombre)}</div><div class="rs">${p._mod?"Actualizado "+tiempoRel(p._mod):""}</div></div></div>
         <span>${chipDe(cat)}</span>
         <span class="py-piezas">${nT}</span>
         <span class="st-pill"><span class="pt" style="background:${est.color}"></span>${est.txt}</span>
