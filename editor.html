@@ -4478,6 +4478,16 @@ frameEl.addEventListener("drop", (e) => {
 });
 
 /* EXPORT */
+// URLs ABSOLUTAS al exportar: dentro de la app las fotos viven en rutas
+// relativas ("/api/upload?k=…"), pero fuera de ella (HubSpot, Gmail, Outlook,
+// un HTML descargado) esas rutas no existen → "las fotos se caen". Esta pasada
+// las ancla al dominio real antes de entregar cualquier HTML.
+function absolutizarURLs(html){
+  const base = (typeof location !== "undefined" && /^https?:/.test(location.origin)) ? location.origin : "https://simple-block-builder.gamonal.app";
+  return String(html)
+    .replace(/(src|href|poster|background)=(["'])\/(?!\/)/g, (m, attr, q) => `${attr}=${q}${base}/`)
+    .replace(/url\((['"]?)\/(?!\/)/g, (m, q) => `url(${q}${base}/`);
+}
 function generarHTMLDePieza(p){
   // Campaña Search: su resumen HTML sale de adsData (no de bloques).
   if(p && p.formato==="ads" && p.adsData) return generarHTMLDeAds(p);
@@ -4522,7 +4532,7 @@ function generarHTMLDePieza(p){
 <\/script>` : "";
   // ── Banners de tamaño fijo (LinkedIn / Display): salida con alto fijo ──
   if(esBanner){
-    return `<!DOCTYPE html>
+    return absolutizarURLs(`<!DOCTYPE html>
 <html lang="es"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>${esc(p.nombre)}</title>
 ${fonts}
@@ -4543,7 +4553,7 @@ ${meta}
 ${cuerpo}
 </div></div>
 ${liveScript}
-</body></html>`;
+</body></html>`);
   }
 
   // ── Email / Invitación / Libre: estructura de email "bulletproof" ──
@@ -4554,7 +4564,7 @@ ${liveScript}
     return `<!--SBB:${m}:SBB-->\n<tr><td class="sbb-cell" align="left" style="padding:0;">${BLOQUES[item.tipo].render(item.datos).trim()}</td></tr>\n<!--/SBB-->`;
   }).join("\n");
   const bp = Number(ancho) + 20; // breakpoint móvil
-  return `<!DOCTYPE html>
+  return absolutizarURLs(`<!DOCTYPE html>
 <html lang="es" xmlns="http://www.w3.org/1999/xhtml" xmlns:v="urn:schemas-microsoft-com:vml" xmlns:o="urn:schemas-microsoft-com:office:office">
 <head>
 <meta charset="UTF-8">
@@ -4596,7 +4606,7 @@ ${filas}
 </td></tr>
 </table>
 ${liveScript}
-</body></html>`;
+</body></html>`);
 }
 
 /* ═══════════════════════════════════════════════════════════════
@@ -5537,9 +5547,9 @@ function generarHTMLDeComposicion(p, fmt){
   const f=FORMATOS[fmt]||FORMATOS["display-300x250"];
   const css=cssComponentes();
   const fonts=`<link rel="preconnect" href="https://fonts.googleapis.com"><link href="https://fonts.googleapis.com/css2?family=${encodeURIComponent(p.tema.font)}:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">`;
-  return `<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8"><title>${esc(p.nombre)} · ${f.ancho}×${f.alto}</title>${fonts}
+  return absolutizarURLs(`<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8"><title>${esc(p.nombre)} · ${f.ancho}×${f.alto}</title>${fonts}
 <style>*{box-sizing:border-box;margin:0;padding:0;}body{font-family:"${p.tema.font}",Arial,sans-serif;}${css}</style></head>
-<body><!--SBB-CMP:${esc(fmt)}-->${renderComposicion(composicionEfectiva(p, fmt), fmt)}</body></html>`;
+<body><!--SBB-CMP:${esc(fmt)}-->${renderComposicion(composicionEfectiva(p, fmt), fmt)}</body></html>`);
 }
 
 function renderTablero(){
