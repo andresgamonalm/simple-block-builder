@@ -199,6 +199,28 @@ DECISIONES-VISUALES.md, según skill lineamientos-marca-gamonal):
   ORIGINAL (SVG inline; el usuario pidió Charmander — no se puede por propiedad intelectual).
   Hover: primary-d + scale. Tooltip "Char-B · tu asistente de creatividades".
 
+## Consistencia de UI (lote de 8 puntos) — jul-2026 (ESTADO ACTUAL — no rehacer)
+Correcciones del usuario sobre orden/jerarquía (DEC-011 a DEC-014 en DECISIONES-VISUALES.md):
+- **Wordmark siempre junto al logo**: dashboard (`.cnav-name`) y editor (`.ed-name`, colapsa <1280px).
+  El clic en logo+nombre va SIEMPRE al **Inicio** (`irAlInicio()` = dashIr("home")); a Proyectos se
+  llega por el breadcrumb (`ed-crumb-root`) o la barra.
+- **Barra del editor por ZONAS** con divisores `.tb-sep`: estado (sync+deshacer) · configuración de la
+  pieza (Formato / set-tools / dev-seg) · revisión+IA (Vista previa, Enviar prueba, Char-B) · archivo
+  (imágenes, importar, eliminar) · **Exportar** (único primario). `actualizarUISet()` oculta por modo:
+  ads → sin formato/dev-seg/prueba/imágenes/importar; **"Enviar prueba" solo si formato email**
+  (`btn-prueba`); colecciones → sin formato/dev-seg/importar, con set-tools ("Salir de colección" es
+  `.tb-link` terciario).
+- **Panel lateral PROPIO para Search** (`#pane-ads` + `renderPanelAds()`, clases `.adsp*`): en ads se
+  ocultan las `.panel-tabs` y el panel muestra resumen (grupos/keywords/titulares/negativas),
+  navegación por grupos **sincronizada con las píldoras** de la consola (misma `adsVista`,
+  `renderAdsCampana` repinta el panel), "Regenerar con Char-B" (magenta) y "Exportar CSV". El estado
+  vacío de la consola usa `.adsc-btn` (navy, integrado) — antes era un botón sin estilo.
+- **Bordes claros en botones claros** (regla de lineamientos): `.py-tipos button` pasó de borde navy a
+  `#cfd6e4` con hover azul; los íconos llevan el color del TIPO (mismos códigos que los chips) para
+  jerarquía sin pintar todo azul.
+- **Mascota Char-B** = silueta naranja low-poly provista por el usuario, PNG optimizado (~1 KB,
+  data URL) dentro del MISMO botón circular 52px navy plano (`.fab-charb`). No volver a la llamita.
+
 ## Módulo Google Search Ads (/ads-ia) — jul-2026 (ESTADO ACTUAL — no rehacer)
 Pedido del usuario: campañas de Search "pensando como especialista, no como Google" —
 **agrupación por INTENCIÓN de búsqueda, SOLO concordancia exacta y de frase (amplia

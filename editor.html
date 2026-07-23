@@ -349,8 +349,9 @@ button,input,select,textarea{font-family:inherit;}
 .dash.show{display:flex;}
 /* Barra superior */
 .cnav{display:flex;align-items:center;gap:22px;height:60px;padding:0 32px;background:var(--white);border-bottom:1px solid var(--bdr);flex-shrink:0;position:relative;z-index:40;}
-.cnav-brand{border:none;background:none;padding:0;cursor:pointer;display:flex;flex-shrink:0;}
+.cnav-brand{border:none;background:none;padding:0;cursor:pointer;display:flex;align-items:center;gap:10px;flex-shrink:0;}
 .cnav-logo{width:34px;height:34px;display:block;}
+.cnav-name{font-family:var(--f);font-size:15px;font-weight:600;color:var(--navy);letter-spacing:-.01em;white-space:nowrap;}
 .cnav-links{display:flex;gap:16px;height:100%;align-items:stretch;flex:1;min-width:0;}
 .cnav-link{height:100%;display:flex;align-items:center;padding:0 3px;border:none;background:transparent;font-family:var(--f);font-size:14px;font-weight:400;color:var(--ink2);border-top:2px solid transparent;border-bottom:2px solid transparent;cursor:pointer;white-space:nowrap;transition:color .13s;}
 .cnav-link:hover{color:var(--navy);}
@@ -491,6 +492,25 @@ button,input,select,textarea{font-family:inherit;}
 .adsc-resumen{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:16px;margin-bottom:18px;}
 .adsc-gcard:hover{border-color:#1c73cb;}
 .adsc-vac{padding:70px 20px;text-align:center;color:#5b6178;}
+.adsc-btn{display:inline-flex;align-items:center;gap:8px;height:40px;padding:0 18px;border:none;border-radius:8px;background:var(--navy,#040764);color:#fff;font-family:var(--f);font-size:13.5px;font-weight:600;cursor:pointer;transition:background .14s;}
+.adsc-btn:hover{background:var(--primary-d,#03055c);}
+/* Panel izquierdo de la campaña Search */
+.adsp{padding:16px 14px;display:flex;flex-direction:column;gap:8px;font-family:var(--f);}
+.adsp-sec{font-size:10.5px;font-weight:600;letter-spacing:.08em;color:var(--ink3);text-transform:uppercase;margin:6px 2px 4px;}
+.adsp-sec:first-child{margin-top:0;}
+.adsp-p{margin:0 2px 6px;font-size:12.5px;line-height:1.6;color:var(--ink2);}
+.adsp-stats{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:4px;}
+.adsp-stat{background:var(--bg);border-radius:8px;padding:9px 11px;}
+.adsp-stat b{display:block;font-size:16px;color:var(--navy);font-weight:600;}
+.adsp-stat span{font-size:11px;color:var(--ink3);}
+.adsp-item{display:flex;align-items:center;justify-content:space-between;gap:8px;width:100%;text-align:left;border:1px solid var(--bdr);border-radius:8px;background:var(--white);padding:9px 11px;font-family:var(--f);font-size:12.5px;color:var(--ink2);cursor:pointer;transition:border-color .13s,color .13s;}
+.adsp-item:hover{border-color:var(--blue,#1C73CB);color:var(--blue,#1C73CB);}
+.adsp-item.on{border-color:var(--blue,#1C73CB);background:#e7f0fb;color:var(--blue,#1C73CB);font-weight:600;}
+.adsp-item .n{font-size:11px;color:var(--ink3);flex-shrink:0;}
+.adsp-btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;width:100%;height:38px;border:1px solid var(--bdr);border-radius:8px;background:var(--white);color:var(--ink2);font-family:var(--f);font-size:12.5px;font-weight:500;cursor:pointer;transition:all .13s;}
+.adsp-btn:hover{border-color:var(--bdr2,#cfd6e4);background:var(--bg);color:var(--ink);}
+.adsp-btn.ia{color:var(--magenta,#b318a3);}
+.adsp-btn.ia:hover{border-color:var(--magenta,#b318a3);background:var(--magenta-l,#f7e6f4);color:var(--magenta,#b318a3);}
 .adsc-nota{font-size:11.5px;color:#5b6178;margin:10px 0 0;line-height:1.5;}
 .hg-meta{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:11px 4px 0;}
 .hg-nom{font-size:13.5px;font-weight:500;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
@@ -532,12 +552,15 @@ button,input,select,textarea{font-family:inherit;}
 .fab-ia{position:fixed;right:22px;bottom:22px;z-index:320;width:52px;height:52px;padding:0;border:none;border-radius:50%;background:var(--navy);cursor:pointer;display:none;align-items:center;justify-content:center;transition:transform .15s ease,background .15s ease;}
 .dash.show .fab-ia{display:flex;}
 .fab-ia:hover{background:var(--primary-d);transform:scale(1.07);}
+/* Mascota Char-B: imagen provista por el usuario, ajustada dentro del círculo. */
+.fab-charb{width:30px;height:34px;object-fit:contain;display:block;pointer-events:none;}
 .fab-ia:focus-visible{outline:2px solid #378CE3;outline-offset:2px;}
 /* Selector inline "¿Qué vas a crear?" dentro de cada proyecto (DEC-009). */
 .py-tipos{display:flex;align-items:center;gap:8px;flex-wrap:wrap;background:var(--bg);border-radius:8px;padding:12px 14px;margin:12px 20px 6px;}
 .py-tipos .pt-lbl{font-size:12.5px;font-weight:600;color:var(--ink2);margin-right:4px;}
-.py-tipos button{display:inline-flex;align-items:center;gap:7px;height:40px;padding:0 14px;border:1px solid var(--navy);border-radius:8px;background:var(--white);color:var(--navy);font-family:var(--f);font-size:13px;font-weight:500;cursor:pointer;}
-.py-tipos button:hover{background:#F5F5F5;}
+.py-tipos button{display:inline-flex;align-items:center;gap:7px;height:40px;padding:0 14px;border:1px solid var(--bdr2,#cfd6e4);border-radius:8px;background:var(--white);color:var(--ink,#12173d);font-family:var(--f);font-size:13px;font-weight:500;cursor:pointer;transition:border-color .13s,color .13s;}
+.py-tipos button:hover{border-color:var(--blue,#1C73CB);color:var(--blue,#1C73CB);}
+.py-tipos button .ico{display:inline-flex;}
 /* Acción destructiva de la página = terciaria (bajo énfasis), nunca compite con el primario. */
 .py-borrartodo{display:inline-flex;align-items:center;gap:6px;margin:18px 2px 0;border:none;background:none;color:#545454;font-family:var(--f);font-size:12.5px;cursor:pointer;padding:6px 4px;}
 .py-borrartodo:hover{color:var(--magenta);}
@@ -1275,8 +1298,11 @@ button,input,select,textarea{font-family:inherit;}
 .topbar{display:flex;align-items:center;justify-content:space-between;gap:14px;height:58px;padding:0 18px;}
 .ed-left{display:flex;align-items:center;gap:7px;min-width:0;overflow:hidden;}
 .ed-right{display:flex;align-items:center;gap:7px;flex-shrink:0;}
-.ed-back{border:none;background:none;padding:0;cursor:pointer;display:flex;margin-right:4px;flex-shrink:0;}
+.ed-back{border:none;background:none;padding:0;cursor:pointer;display:flex;align-items:center;gap:9px;margin-right:4px;flex-shrink:0;}
 .ed-logo{width:30px;height:30px;display:block;}
+.ed-name{font-family:var(--f);font-size:13.5px;font-weight:600;color:var(--navy,#040764);letter-spacing:-.01em;white-space:nowrap;}
+.tb-link{border:none;background:none;padding:6px 8px;font-family:var(--f);font-size:12px;color:var(--ink3);cursor:pointer;white-space:nowrap;flex-shrink:0;}
+.tb-link:hover{color:var(--blue,#1C73CB);}
 .ed-crumb-root{border:none;background:transparent;color:var(--ink4);font-size:13px;cursor:pointer;font-family:var(--f);padding:0;flex-shrink:0;}
 .ed-crumb-root:hover{color:var(--blue);}
 #ed-chip{flex-shrink:0;display:inline-flex;margin-left:2px;}
@@ -1294,6 +1320,7 @@ button,input,select,textarea{font-family:inherit;}
 .topbar .crumb-camp{max-width:150px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex-shrink:1;}
 .topbar .crumb-pieza{flex-shrink:0;}
 @media(max-width:1560px){ .topbar .tb-txt{display:none;} .tb-btn{gap:0;} }
+@media(max-width:1280px){ .topbar .ed-name{display:none;} }
 </style>
 </head>
 <body>
@@ -1301,9 +1328,11 @@ button,input,select,textarea{font-family:inherit;}
   <!-- Cabecera del editor (Propuesta C): una sola fila, breadcrumb + acciones. -->
   <header class="topbar">
     <div class="ed-left">
-      <button class="ed-back" onclick="abrirGaleria()" title="Volver a Proyectos">
+      <button class="ed-back" onclick="irAlInicio()" title="Ir al Inicio">
         <svg class="ed-logo" viewBox="0 0 40 40"><rect width="40" height="40" rx="10" fill="#040764"/><rect x="9" y="10" width="22" height="5" rx="2.5" fill="#FCE865"/><rect x="9" y="19" width="9.5" height="11" rx="2.4" fill="#1C73CB"/><rect x="21.5" y="19" width="9.5" height="11" rx="2.4" fill="#20B6B6"/></svg>
+        <span class="ed-name">Simple Block Builder</span>
       </button>
+      <span class="tb-sep"></span>
       <button class="ed-crumb-root" onclick="abrirGaleria()">Proyectos</button>
       <span class="ico crumb-sep" data-ic="chevright" data-icsize="13px"></span>
       <span class="crumb-camp crumb-edit" id="crumb-proyecto" onclick="renombrarProyectoDesdeEditor()" title="Clic para renombrar el proyecto">Proyecto</span>
@@ -1313,27 +1342,31 @@ button,input,select,textarea{font-family:inherit;}
       <button class="tb-btn icon-only" onclick="nuevaPiezaPrompt()" title="Nueva creatividad en este proyecto"><span class="ico" data-ic="mas"></span></button>
     </div>
     <div class="ed-right">
+      <!-- Zonas fijas (misma lógica en todos los modos): estado · configuración
+           de la pieza · revisión · IA · archivo · acción principal. -->
       <span class="sync-status" id="sync-status" title="Estado de guardado en la nube">—</span>
       <button class="tb-btn icon-only" onclick="deshacer()" title="Deshacer (Ctrl+Z)"><span class="ico" data-ic="deshacer"></span></button>
+      <span class="tb-sep"></span>
       <div class="tb-group" id="tb-formato">
         <span class="tb-label">Formato</span>
         <select id="fmt" onchange="cambiarFormato(this.value)"></select>
       </div>
       <span id="set-tools" style="display:none">
-        <button class="tb-btn" onclick="aplicarMasterATodos()" title="Aplicar el contenido del máster (300×250) a todos los tamaños"><span class="ico" data-ic="grid"></span> Aplicar máster a todos</button>
-        <button class="tb-btn" onclick="abrirExportar()" title="Descargar todos los banners (HTML, PNG o JPG)"><span class="ico" data-ic="exportar"></span> Descargar todos</button>
-        <button class="tb-btn" onclick="salirDeColeccion()" title="Volver a un banner único (queda el máster)"><span class="ico" data-ic="chevright"></span> Salir de colección</button>
+        <button class="tb-btn" onclick="aplicarMasterATodos()" title="Aplicar el diseño del máster a todos los tamaños"><span class="ico" data-ic="grid"></span><span class="tb-txt"> Aplicar máster a todos</span></button>
+        <button class="tb-link" onclick="salirDeColeccion()" title="Volver a un banner único (queda el máster)">Salir de colección</button>
       </span>
       <div class="dev-seg" id="dev-seg" title="Vista de dispositivo">
         <button data-dev="desktop" class="on" onclick="setDispositivo('desktop')" title="Escritorio"><span class="ico" data-ic="monitor"></span></button>
         <button data-dev="tablet" onclick="setDispositivo('tablet')" title="Tablet"><span class="ico" data-ic="tablet"></span></button>
         <button data-dev="movil" onclick="setDispositivo('movil')" title="Móvil"><span class="ico" data-ic="movilico"></span></button>
       </div>
+      <span class="tb-sep"></span>
       <button class="tb-btn" onclick="abrirPreviewActual()" title="Vista previa"><span class="ico" data-ic="ojo"></span><span class="tb-txt"> Vista previa</span></button>
-      <button class="tb-btn" onclick="abrirEnvioPrueba()" title="Enviar prueba por correo"><span class="ico" data-ic="enviar"></span><span class="tb-txt"> Enviar prueba</span></button>
+      <button class="tb-btn" id="btn-prueba" onclick="abrirEnvioPrueba()" title="Enviar prueba por correo"><span class="ico" data-ic="enviar"></span><span class="tb-txt"> Enviar prueba</span></button>
       <button class="tb-btn ia-btn" onclick="abrirIA()" title="Generar con Char-B (IA)"><span class="ico" data-ic="estrella"></span><span class="tb-txt"> Char-B</span></button>
-      <button class="tb-btn icon-only" onclick="abrirImagenes()" title="Biblioteca de imágenes"><span class="ico" data-ic="imagen"></span></button>
-      <button class="tb-btn icon-only" onclick="abrirImportar()" title="Importar HTML"><span class="ico" data-ic="subir"></span></button>
+      <span class="tb-sep"></span>
+      <button class="tb-btn icon-only" id="btn-imagenes" onclick="abrirImagenes()" title="Biblioteca de imágenes"><span class="ico" data-ic="imagen"></span></button>
+      <button class="tb-btn icon-only" id="btn-importar" onclick="abrirImportar()" title="Importar HTML"><span class="ico" data-ic="subir"></span></button>
       <button class="tb-btn danger icon-only" onclick="eliminarPiezaActual()" title="Eliminar esta creatividad"><span class="ico" data-ic="basura"></span></button>
       <button class="tb-btn primary" onclick="abrirExportar()"><span class="ico" data-ic="exportar"></span> Exportar</button>
     </div>
@@ -1402,6 +1435,10 @@ button,input,select,textarea{font-family:inherit;}
       <div class="panel-body ptab-pane" id="pane-plantillas" style="display:none;">
         <div id="plantillas-cont"></div>
       </div>
+
+      <!-- Panel propio de la campaña Search (formato ads): no hay bloques ni
+           plantillas; se navega por grupos y se exporta el CSV. -->
+      <div class="panel-body ptab-pane" id="pane-ads" style="display:none;"></div>
     </aside>
 
     <section class="canvas-area" id="canvas-area">
@@ -1638,6 +1675,7 @@ button,input,select,textarea{font-family:inherit;}
   <header class="cnav" id="cnav">
     <button class="cnav-brand" onclick="dashIr('home')" title="Inicio · Simple Block Builder">
       <svg class="cnav-logo" viewBox="0 0 40 40"><rect width="40" height="40" rx="10" fill="#040764"/><rect x="9" y="10" width="22" height="5" rx="2.5" fill="#FCE865"/><rect x="9" y="19" width="9.5" height="11" rx="2.4" fill="#1C73CB"/><rect x="21.5" y="19" width="9.5" height="11" rx="2.4" fill="#20B6B6"/></svg>
+      <span class="cnav-name">Simple Block Builder</span>
     </button>
     <nav class="cnav-links" id="cnav-links">
       <button class="cnav-link" data-view="home" onclick="dashIr('home')">Inicio</button>
@@ -1778,7 +1816,7 @@ button,input,select,textarea{font-family:inherit;}
     </div>
   </main>
   <button class="fab-ia" id="fab-ia" onclick="abrirIA()" title="Char-B · tu asistente de creatividades" aria-label="Abrir el asistente Char-B">
-    <svg viewBox="0 0 32 32" width="28" height="28" aria-hidden="true"><path d="M16 3.2c.8 3.4 3.4 5.5 5.3 8 1.6 2.1 2.7 4.3 2.7 6.9a8 8 0 1 1-16 0c0-2.6 1.1-4.8 2.7-6.9 1.9-2.5 4.5-4.6 5.3-8z" fill="#FCE865"/><circle cx="13.2" cy="18.6" r="1.5" fill="#040764"/><circle cx="18.8" cy="18.6" r="1.5" fill="#040764"/><path d="M13.4 22.2c1.6 1.5 3.6 1.5 5.2 0" stroke="#040764" stroke-width="1.6" stroke-linecap="round" fill="none"/></svg>
+    <img class="fab-charb" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADgAAABABAMAAAC92amBAAAAGFBMVEXwdhYAAAD4dQjwdhXwdhX/AAD//wD/pwEw0LfjAAAACHRSTlP9AA1enwEBA4zHynAAAAKDSURBVHjafZVBTxNBFMd/M7tFCNTuLrQxRmkrd6DRg8EDW/DkhZLIGQ5+Mj+AGC9eDGA8qgkeDB4EWgxIDHQHFKjS3fWwu+223eVdZpLf/t97897MW2ESWHVzvD69LwyHrmkjwTq0a+16P59cqeXjVgeKQCl8axdAn97HnNnqgWLppRu5mlTCD/cSgPk3EcPdrzi1uFKIU+J5ZEVMuXo/znAtowv1s+0eSLHWddvnFbSc31E+zfYyXMPuwI9GH6RYAkAHxHY/fJ+Pyjd0ddUP5VHk9trtZ7gTETQGQsLoWgj90iA0XgcxxdzbQXgggiIITw1C/bYPSFYTvNLO2YDIn/9NgFSUAinHkhhfbEArDKkkKA9dkJlSolJcA5q/kwi9O8Ot8A4lWKlzwRJsMwNST4HaiY0ctZOhO/OVNCF8yBoSlQLblbPUhGAjdwOkke4WPGnfICW/dgO0JlKRLj0/XShlOvSlP5+u1EbUbD2FCUkt7aB6EVOUUmDFkuRTlAuNJUzreXIyZtmUeFuJcHJZIakm3uqFs3XQRpRxnODUMVogqSW8XX1yQgEi7zaBh9meyJWjf0FtBUB2ZyrWWNl4FpTIkicAZYVVfhd5HQsmo1wMkm2IF83PDx4BLE61y0EeouwHdS9T3XIwwUE0pTYWTJOwtI3MujNfcBxHN1eQVnCglVfhyVy73rioXsx9bx3O7t0dagFaPZxt3uNvLahf7sEwxzP2NiDGT/uGLBh+XY63ASk6zyoX9e7PLMIF0Aqddp7nwg/9H5faLQDZraxXCPcZn/Zv+p59KWy778M9A9BjPdn4FKzXRhNDATLWjXYxim9jAGh27Nb+Cv+Xw0odZDz4DxtJuQs2IXG0AAAAAElFTkSuQmCC" alt="" aria-hidden="true">
   </button>
   <nav class="mtabs" id="mtabs">
     <button data-view="home" onclick="dashIr('home')" title="Inicio"><span class="ico" data-ic="casa" data-icsize="20px"></span></button>
@@ -5097,17 +5135,34 @@ function exportarTodoEnTipo(){
 function actualizarUISet(){
   const es = esSetPieza(pieza());
   const esCap = esComposicion(pieza());
-  const tools = document.getElementById("set-tools"); if(tools) tools.style.display = es ? "" : "none";
-  const fmt = document.getElementById("tb-formato"); if(fmt) fmt.style.display = es ? "none" : "";
-  const dev = document.getElementById("dev-seg"); if(dev) dev.style.display = es ? "none" : "";
-  if(typeof renderComposicionEditor === "function") renderComposicionEditor();
-  // Bloqueos coherentes: en colecciones no se editan bloques sueltos ni plantillas.
   const esAds = pieza() && pieza().formato==="ads";
+  const esEmail = pieza() && pieza().formato==="email";
+  const tools = document.getElementById("set-tools"); if(tools) tools.style.display = es ? "" : "none";
+  // Zonas de la barra por modo (misma lógica siempre): el formato y la vista de
+  // dispositivo solo aplican a documentos; "Enviar prueba" solo a email; en la
+  // campaña Search no hay imágenes ni importación de HTML.
+  const fmt = document.getElementById("tb-formato"); if(fmt) fmt.style.display = (es || esAds) ? "none" : "";
+  const dev = document.getElementById("dev-seg"); if(dev) dev.style.display = (es || esAds) ? "none" : "";
+  const prueba = document.getElementById("btn-prueba"); if(prueba) prueba.style.display = esEmail ? "" : "none";
+  const bimg = document.getElementById("btn-imagenes"); if(bimg) bimg.style.display = esAds ? "none" : "";
+  const bimp = document.getElementById("btn-importar"); if(bimp) bimp.style.display = (esAds || es) ? "none" : "";
+  if(typeof renderComposicionEditor === "function") renderComposicionEditor();
+  // Panel izquierdo: la campaña Search tiene SU panel (no bloques/plantillas,
+  // que no existen ahí); el resto usa las pestañas de siempre.
+  const tabs = document.querySelector(".panel-tabs"); if(tabs) tabs.style.display = esAds ? "none" : "";
+  const paneAds = document.getElementById("pane-ads"); if(paneAds) paneAds.style.display = esAds ? "" : "none";
+  if(esAds){
+    document.querySelectorAll(".ptab-pane").forEach(p => { if(p.id !== "pane-ads") p.style.display = "none"; });
+    if(typeof renderPanelAds === "function") renderPanelAds();
+  } else {
+    cambiarPanelTab(panelTab || "bloques");
+  }
+  // Bloqueos coherentes: en colecciones no se editan bloques sueltos ni plantillas.
   const setTab = (id, bloq, titulo) => { const t=document.getElementById(id); if(t){ t.disabled=bloq; t.classList.toggle("disabled",bloq); t.title=bloq?titulo:""; } };
   setTab("ptab-plantillas", es || esAds, esAds ? "La campaña Search se genera con Char-B y se edita en su consola" : "No aplica en colecciones (edita cada banner del tablero)");
   setTab("ptab-bloques", esCap || esAds, esAds ? "La campaña Search se edita directo en su consola (clic en los textos)" : "En colecciones edita las CAPAS (Diseño global / Ajustar tamaño)");
   // Si la pestaña activa quedó bloqueada, mover a una válida.
-  if((esCap || esAds) && (panelTab==="bloques" || panelTab==="plantillas")) cambiarPanelTab("diseno");
+  if(!esAds && (esCap) && (panelTab==="bloques" || panelTab==="plantillas")) cambiarPanelTab("diseno");
 }
 // (compat) el set ya no usa ventana; el tablero vive en el lienzo.
 function refrescarSetSiAbierto(){}
@@ -5637,8 +5692,11 @@ function tiposProyectoHTML(prId){
     ["ads","ads","buscar","Google Search"],
     ["libre","libre","documento","Formato libre"]
   ].filter(([serv])=>puede(serv));
+  // El ícono lleva el color del TIPO (mismo código de color que los chips
+  // EMAIL/DISPLAY/POST/ADS/LIBRE) para que la jerarquía se lea de un vistazo.
+  const colorTipo = { email:"#1c73cb", "display-300x250":"#149a9a", "linkedin-post":"#149a9a", ads:"#040764", libre:"#b318a3" };
   return `<div class="py-tipos"><span class="pt-lbl">¿Qué vas a crear aquí?</span>${tipos.map(([serv,fmt,ico,lbl]) =>
-    `<button onclick="proyectoVistoId='${prId}';crearDesde('${fmt}')">${svgIcon(ico,{size:"15px"})} ${lbl}</button>`).join("")}</div>`;
+    `<button onclick="proyectoVistoId='${prId}';crearDesde('${fmt}')"><span style="color:${colorTipo[fmt]||"#5b6178"};display:inline-flex;">${svgIcon(ico,{size:"15px"})}</span> ${lbl}</button>`).join("")}</div>`;
 }
 // ── ADMIN: los proyectos de LOS DEMÁS usuarios (solo lectura, con dueño) ──
 let _espaciosOtros = null;   // null = no cargado · [] = cargado
@@ -6854,15 +6912,51 @@ function insertarAdsIA(data, marca){
 // buscador; negativas aparte) + los inventarios con contador de Ads Editor.
 let adsVista = "res";
 function adsIrVista(v){ adsVista = String(v); renderAdsCampana(); }
+// Panel izquierdo propio del formato ads: resumen de la campaña, navegación
+// por grupos (sincronizada con las píldoras de la consola) y acciones.
+function renderPanelAds(){
+  const el = document.getElementById("pane-ads"); if(!el) return;
+  const p = pieza();
+  if(!p || p.formato !== "ads"){ el.innerHTML = ""; return; }
+  const d = p.adsData;
+  if(!d || !(d.grupos||[]).length){
+    el.innerHTML = `<div class="adsp">
+      <div class="adsp-sec">Campaña de Google Search</div>
+      <p class="adsp-p">Aquí no se arma con bloques: Char-B genera los grupos por intención de búsqueda, las keywords (solo exacta y de frase, nada de amplia), las negativas y los anuncios. Después editas todo en la consola haciendo clic sobre los textos.</p>
+      <button class="adsc-btn" style="width:100%;justify-content:center;" onclick="abrirIA()">${svgIcon("estrella",{size:"14px"})} Generar con Char-B</button>
+    </div>`;
+    return;
+  }
+  const G = d.grupos;
+  const nKw = G.reduce((a,g)=>a+(g.keywords||[]).length,0);
+  const nTit = G.reduce((a,g)=>a+(g.titulares||[]).length,0);
+  const nNeg = (d.negativas||[]).length + G.reduce((a,g)=>a+(g.negativas||[]).length,0);
+  el.innerHTML = `<div class="adsp">
+    <div class="adsp-sec">Campaña</div>
+    <div class="adsp-stats">
+      <div class="adsp-stat"><b>${G.length}</b><span>grupos</span></div>
+      <div class="adsp-stat"><b>${nKw}</b><span>keywords</span></div>
+      <div class="adsp-stat"><b>${nTit}</b><span>titulares</span></div>
+      <div class="adsp-stat"><b>${nNeg}</b><span>negativas</span></div>
+    </div>
+    <div class="adsp-sec">Grupos de anuncios</div>
+    <button class="adsp-item ${adsVista==="res"?"on":""}" onclick="adsIrVista('res')"><span>Vista general</span></button>
+    ${G.map((g,i)=>`<button class="adsp-item ${String(i)===String(adsVista)?"on":""}" onclick="adsIrVista('${i}')"><span>${esc(_deslug(g.nombre))}</span><span class="n">${(g.keywords||[]).length} kw</span></button>`).join("")}
+    <div class="adsp-sec">Acciones</div>
+    <button class="adsp-btn ia" onclick="abrirIA()">${svgIcon("estrella",{size:"13px"})} Regenerar con Char-B</button>
+    <button class="adsp-btn" onclick="abrirExportar()">${svgIcon("exportar",{size:"13px"})} Exportar CSV para Google Ads</button>
+  </div>`;
+}
 function renderAdsCampana(){
   const c = document.getElementById("canvas");
   ajustarFrameParaSet(false);
   const p = pieza(); const d = p && p.adsData;
+  renderPanelAds();
   if(!d || !(d.grupos||[]).length){
     c.innerHTML = `<div class="adsc"><div class="adsc-vac"><span style="color:#1c73cb;">${svgIcon("buscar",{size:"40px"})}</span>
       <h2 style="margin:14px 0 6px;font-size:17px;color:#040764;font-weight:600;">Tu campaña de Google Search parte aquí</h2>
       <p style="margin:0 0 18px;font-size:13px;line-height:1.6;">Char-B arma los grupos por intención de búsqueda, las keywords<br>(solo exacta y frase, nada de amplia), las negativas y los anuncios.</p>
-      <button class="primary" onclick="abrirIA()" style="cursor:pointer;">Generar campaña con Char-B</button></div></div>`;
+      <button class="adsc-btn" onclick="abrirIA()">${svgIcon("estrella",{size:"14px"})} Generar campaña con Char-B</button></div></div>`;
     return;
   }
   const G = d.grupos;
@@ -7031,6 +7125,12 @@ function abrirGaleria(){
   if(proyecto){ proyectoVistoId = proyecto.id; dashView = "proyectos"; }
   document.getElementById("galeria").classList.add("show");
   renderGaleria();
+}
+// El logo (con el nombre) SIEMPRE lleva al Inicio, tanto en el dashboard como
+// en el editor; a Proyectos se llega por el breadcrumb o la barra superior.
+function irAlInicio(){
+  if(proyecto) proyectoVistoId = proyecto.id;
+  dashIr("home");
 }
 function cerrarGaleria(){ if(esMovil()) return; document.getElementById("galeria").classList.remove("show"); }
 function abrirCreacion(id){
