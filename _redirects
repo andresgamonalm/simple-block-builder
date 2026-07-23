@@ -14,10 +14,15 @@
 /proyectos     /editor.html 200
 /imagenes      /editor.html 200
 /email-ia      /editor.html 200
+/email-ia/*   /editor.html 200
 /gdn-ia        /editor.html 200
+/gdn-ia/*   /editor.html 200
 /free          /editor.html 200
+/free/*   /editor.html 200
 /post-ia       /editor.html 200
+/post-ia/*   /editor.html 200
 /ads-ia        /editor.html 200
+/ads-ia/*   /editor.html 200
 /marcas        /editor.html 200
 /papelera      /editor.html 200
 /permisos      /editor.html 200

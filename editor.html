@@ -6589,12 +6589,23 @@ function crearDesde(formato){
   }
   proyecto = pr;
   const cat = categoriaDe(formato);
+  // NOMBRE propio desde el inicio: define el proyecto y el path (URL) de la pieza.
+  const _fecha = new Date().toLocaleDateString("es-CL",{day:"2-digit",month:"short"});
+  const _sug = (cat==="Banners"?"Campaña Display ":cat==="Ads"?"Campaña Search ":cat==="Email"?"Email ":cat==="Post"?"Post ":"Pieza ")+_fecha;
+  let nom = null; try{ nom = prompt("Nombre de esta creatividad (será también su dirección):", _sug); }catch(_){}
+  nom = (nom===null? _sug : String(nom).trim()) || _sug;
+  if(/^Proyecto \d+$/.test(pr.nombre||"")) pr.nombre = nom;
   // Formatos visuales de tamaño fijo → modelo de capas (colección). Documentos → bloques.
-  if(cat === "Banners"){ crearComposicion("display-desktop"); return; }
-  if(cat === "Post"){ crearComposicion("social"); return; }
-  crearPieza(formato, `${cat==="Ads" ? "Campaña Search" : cat} ${pr.piezas.length+1}`);
+  if(cat === "Banners" || cat === "Post"){
+    crearComposicion(cat==="Banners" ? "display-desktop" : "social");
+    const pz = pieza(); if(pz){ pz.nombre = nom; persistir(); if(typeof renderTabsPiezas==="function") renderTabsPiezas(); }
+    setURL(rutaDeProducto(pz)+"/"+slugDe(nom));
+    return;
+  }
+  crearPieza(formato, nom);
   document.getElementById("galeria").classList.remove("show");
   activarPieza(proyecto.activa);
+  setURL(rutaDeProducto(pieza())+"/"+slugDe(nom));
 }
 function nuevaCreatividadPrompt(){
   const pr = proyectoPorId(proyectoVistoId); if(!pr){ toast("Abre un proyecto primero"); return; }
@@ -7946,11 +7957,17 @@ const RUTAS_MENU = {
 };
 let _rutaActual = "/home";   // ruta de la sección de edición en curso (para que la URL no se pise)
 function normRuta(p){ return "/" + String(p||"").replace(/^\/+|\/+$/g,"").toLowerCase(); }
+function slugDe(s){ return String(s||"").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/[^a-z0-9]+/g,"-").replace(/^-+|-+$/g,"").slice(0,40)||"pieza"; }
 function setURL(ruta){ if(window.history && history.pushState){ try{ if(location.pathname!==ruta) history.pushState(null,"",ruta); }catch(_){} } }
 function irARuta(ruta){
   ruta = normRuta(ruta);
   if(RUTAS_MENU[ruta]){ setURL(ruta); RUTAS_MENU[ruta](); return; }
-  const cfg = RUTAS_PRODUCTO[ruta];
+  let slugPieza = null, rutaBase = ruta;
+  if(!RUTAS_PRODUCTO[ruta] && !RUTAS_MENU[ruta]){
+    const seg = ruta.split("/").filter(Boolean);
+    if(seg.length>=2 && RUTAS_PRODUCTO["/"+seg[0]]){ rutaBase = "/"+seg[0]; slugPieza = seg.slice(1).join("-"); }
+  }
+  const cfg = RUTAS_PRODUCTO[rutaBase];
   if(cfg && cfg.pronto){ toast(cfg.nombre + ": próximamente"); return; }
   if(cfg && cfg.serv && !puede(cfg.serv)){ toast("Tu usuario no tiene acceso a este servicio"); return; }
   if(cfg){ _rutaActual = ruta; setURL(ruta); crearDesde(cfg.tipo); return; }
@@ -7961,17 +7978,24 @@ function aplicarRutaInicial(){
   const ruta = normRuta(location.pathname);
   if(ruta==="/" || ruta==="/home") return;   // comportamiento normal
   if(RUTAS_MENU[ruta]){ RUTAS_MENU[ruta](); return; }
-  const cfg = RUTAS_PRODUCTO[ruta];
+  let slugPieza = null, rutaBase = ruta;
+  if(!RUTAS_PRODUCTO[ruta] && !RUTAS_MENU[ruta]){
+    const seg = ruta.split("/").filter(Boolean);
+    if(seg.length>=2 && RUTAS_PRODUCTO["/"+seg[0]]){ rutaBase = "/"+seg[0]; slugPieza = seg.slice(1).join("-"); }
+  }
+  const cfg = RUTAS_PRODUCTO[rutaBase];
   if(cfg && cfg.pronto){ toast(cfg.nombre + ": próximamente"); return; }
   if(cfg && cfg.serv && !puede(cfg.serv)){ toast("Tu usuario no tiene acceso a este servicio"); setURL("/home"); return; }
-  if(cfg) restaurarSeccion(ruta);
+  if(cfg) restaurarSeccion(rutaBase, slugPieza);
 }
 // Entra a una sección REABRIENDO la última pieza que tenías ahí (no crea una nueva
 // en cada recarga). Si no existe ninguna de esa sección, recién entonces crea una.
-function restaurarSeccion(ruta){
+function restaurarSeccion(ruta, slug){
   const cfg = RUTAS_PRODUCTO[ruta]; if(!cfg || cfg.pronto) return false;
   _rutaActual = ruta;
   let pr=null, p=null;
+  // 0) deep-link con nombre: /seccion/mi-campana → abre ESA pieza.
+  if(slug){ for(const PR of (workspace.proyectos||[])){ for(const P of (PR.piezas||[])){ if(rutaDeProducto(P)===ruta && slugDe(P.nombre)===slug){ pr=PR; p=P; } } } }
   // 1) la última pieza abierta, si coincide con la sección
   try{ const u=JSON.parse(localStorage.getItem("sbb-ultima")||"null"); if(u){ pr=proyectoPorId(u.pr); p=pr&&(pr.piezas||[]).find(x=>x.id===u.p); if(!(p && rutaDeProducto(p)===ruta)){ pr=null; p=null; } } }catch(_){}
   // 2) si no, cualquier pieza de esa sección (la última encontrada)
@@ -8062,14 +8086,14 @@ document.getElementById("canvas-area").addEventListener("click", (e) => {
     let destino;
     if(enHome){ destino = urlDeVista(dashView); _rutaActual = destino; }
     // Editando: la URL es SIEMPRE la sección de la pieza (email-ia/gdn-ia/free).
-    else { destino = rutaDeProducto(pieza()) || _rutaActual || "/home"; _rutaActual = destino; }
+    else { const _p=pieza(); const _r=rutaDeProducto(_p) || _rutaActual || "/home"; destino = _p&&_p.nombre ? _r+"/"+slugDe(_p.nombre) : _r; _rutaActual = _r; }
     if(location.pathname !== destino){ try{ history.replaceState(null, "", destino); }catch(_){} }
   }
   new MutationObserver(sincronizarRuta).observe(gal, { attributes:true, attributeFilter:["class"] });
   window.addEventListener("popstate", () => {
     const ruta = (location.pathname||"").replace(/\/+$/,"") || "/";
     // Si vuelves a una sección de producto, sigues editando (no salgas).
-    if(RUTAS_PRODUCTO[ruta]) return;
+    if(RUTAS_PRODUCTO[ruta] || RUTAS_PRODUCTO["/"+ruta.split("/")[1]]) return;
     if(!gal.classList.contains("show")) volverAProyectos();
   });
   sincronizarRuta();
