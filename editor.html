@@ -4672,7 +4672,7 @@ function zonaContenido(zk, z, px){
     const est = (o)=> `${o.negrita?'font-weight:700;':''}${o.italica?'font-style:italic;':''}`;
     // Etiqueta de producto (píldora chica sobre el titular, ej. "Seguro").
     const etEl = et.texto ? `<div><span class="cmp-etq" style="font-size:${px(et.tamano,11)}px;padding:${px(4,4)}px ${px(10,10)}px;background:${esc(et.color||'rgba(255,255,255,.18)')};color:${esc(et.colorTexto||ti.color||'#fff')};${fam}">${esc(et.texto)}</span></div>` : "";
-    const tiEl = ti.texto ? `<div class="cmp-tit" style="font-size:${px(ti.tamano,26)}px;color:${esc(ti.color||'#fff')};text-align:${alinText(z.alinH)};${fam}${est(ti)}">${esc(ti.texto)}</div>` : "";
+    const tiEl = ti.texto ? `<div class="cmp-tit" style="font-size:${px(ti.tamano,26)}px;color:${esc(ti.color||'#fff')};text-align:${alinText(z.alinH)};${fam}${est(ti)}">${escMultiline(ti.texto)}</div>` : "";
     const cuEl = cu.texto ? `<div class="cmp-cue" style="font-size:${px(cu.tamano,13)}px;color:${esc(cu.color||'#fff')};text-align:${alinText(z.alinH)};${fam}${est(cu)}">${escMultiline(cu.texto)}</div>` : "";
     return etEl+tiEl+cuEl;
   }
