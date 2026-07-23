@@ -24,6 +24,7 @@ export default {
   usuarios: [
     {
       usuario: "andres",
+      nombre: "Andrés",
       rol: "admin",
       permisos: ["*"],
       workspace: "hola@andresgamonal.com",
@@ -31,6 +32,7 @@ export default {
     },
     {
       usuario: "lorena",
+      nombre: "Lorena",
       rol: "limitado",
       permisos: ["email", "banner", "ads", "libre"],
       workspace: "ws-lorena",

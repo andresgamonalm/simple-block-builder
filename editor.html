@@ -1932,22 +1932,22 @@ button,input,select,textarea{font-family:inherit;}
         <section class="crear-sec">
           <div class="crear-head"><h2>¿Qué vas a crear?</h2><a class="crear-ver" onclick="dashIr('proyectos')">Ver plantillas →</a></div>
           <div class="crear-cards">
-            <button class="crc" data-serv="email" onclick="irARuta('/email-ia')">
+            <button class="crc" data-serv="email" onclick="crearTrabajoHome('email','/email-ia')">
               <span class="crc-ic email"><span class="ico" data-ic="email" data-icsize="20px"></span></span>
               <div class="crc-t">Email</div><div class="crc-d">Newsletters y correos por bloques.</div>
               <div class="crc-cta">Crear <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M5 12h14M13 6l6 6-6 6"/></svg></div>
             </button>
-            <button class="crc" data-serv="banner" onclick="irARuta('/gdn-ia')">
+            <button class="crc" data-serv="banner" onclick="crearTrabajoHome('display-300x250','/gdn-ia')">
               <span class="crc-ic display"><span class="ico" data-ic="grid" data-icsize="20px"></span></span>
               <div class="crc-t">Banner Display</div><div class="crc-d">Colección de tamaños para Google Ads.</div>
               <div class="crc-cta">Crear <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M5 12h14M13 6l6 6-6 6"/></svg></div>
             </button>
-            <button class="crc" data-serv="ads" onclick="irARuta('/ads-ia')">
+            <button class="crc" data-serv="ads" onclick="crearTrabajoHome('ads','/ads-ia')">
               <span class="crc-ic ads"><span class="ico" data-ic="buscar" data-icsize="20px"></span></span>
               <div class="crc-t">Google Search</div><div class="crc-d">Keywords y anuncios listos para exportar.</div>
               <div class="crc-cta">Crear <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M5 12h14M13 6l6 6-6 6"/></svg></div>
             </button>
-            <button class="crc" data-serv="libre" onclick="irARuta('/free')">
+            <button class="crc" data-serv="libre" onclick="crearTrabajoHome('libre','/free')">
               <span class="crc-ic libre"><span class="ico" data-ic="editar" data-icsize="20px"></span></span>
               <div class="crc-t">Formato libre</div><div class="crc-d">Lienzo abierto con todos los bloques.</div>
               <div class="crc-cta">Crear <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M5 12h14M13 6l6 6-6 6"/></svg></div>
@@ -6180,7 +6180,7 @@ function renderHome(){
   // Saludo con nombre: perfil > usuario del login (capitalizado) > "Hola".
   const u = window.SBB_USER || {};
   const cap = (s)=> s ? s.charAt(0).toUpperCase()+s.slice(1) : "";
-  const nombre = (workspace.perfil && workspace.perfil.nombre) || cap(u.usuario||"");
+  const nombre = (workspace.perfil && workspace.perfil.nombre) || u.nombre || cap(u.usuario||"");
   const sal = document.getElementById("home-saludo");
   if(sal) sal.textContent = nombre ? ("Hola, "+nombre) : "Hola";
   // La cara de Char-B en todos sus avatares (hero, modal, etc.).
@@ -6577,6 +6577,7 @@ function duplicarCreatividad(id){
 }
 
 // Crear una creatividad en el proyecto abierto (o crea/pide uno antes) y abrir el editor.
+function crearTrabajoHome(fmt, ruta){ _rutaActual = ruta; crearDesde(fmt); }
 function crearDesde(formato){
   let pr = proyectoPorId(proyectoVistoId);
   if(!pr){

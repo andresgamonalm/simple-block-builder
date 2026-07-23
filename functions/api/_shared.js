@@ -165,7 +165,7 @@ export async function getSesion(request, env) {
   return sesionDe(u);
 }
 function sesionDe(u) {
-  return { usuario: u.usuario, rol: (u.rol === 'admin') ? 'admin' : 'limitado', permisos: Array.isArray(u.permisos) ? u.permisos : [], ws: u.workspace || u.usuario, limiteIA: (typeof u.limiteIA === 'number') ? u.limiteIA : null };
+  return { usuario: u.usuario, nombre: u.nombre || null, rol: (u.rol === 'admin') ? 'admin' : 'limitado', permisos: Array.isArray(u.permisos) ? u.permisos : [], ws: u.workspace || u.usuario, limiteIA: (typeof u.limiteIA === 'number') ? u.limiteIA : null };
 }
 // ── Tope de consultas de IA por usuario (contado en D1, no manipulable desde
 //    el cliente). Protege los créditos de Gemini. null = sin tope. ──────────

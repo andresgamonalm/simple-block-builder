@@ -8,6 +8,7 @@ export async function onRequestGet({ request, env }) {
   const out = {
     ok: true,
     usuario: s.usuario,
+    nombre: s.nombre || null,
     email: s.usuario,             // compat: la UI vieja muestra "email"
     rol: s.rol,
     permisos: s.permisos,
