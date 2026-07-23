@@ -397,32 +397,35 @@ button,input,select,textarea{font-family:inherit;}
 .home-head{margin-bottom:20px;}
 .home-head h1{font-size:30px;font-weight:600;letter-spacing:-.02em;color:var(--ink);}
 .home-sub{font-size:14.5px;color:var(--ink3);margin-top:4px;}
-.crear-band{position:relative;background:var(--navy);border-radius:14px;padding:30px 32px;margin-bottom:28px;}
-.cb-edit{position:absolute;top:14px;right:14px;width:30px;height:30px;border:none;border-radius:8px;background:rgba(255,255,255,.1);color:#c3c8ee;cursor:pointer;display:flex;align-items:center;justify-content:center;}
-.cb-edit:hover{background:rgba(255,255,255,.2);color:#fff;}
+/* Bloque "Empieza aquí" en DOS zonas dentro de una misma tarjeta:
+   arriba navy (idea + Generar azulino como Char-B), abajo banda teal
+   con los 4 lanzadores blancos. Input y botones alineados a la MISMA
+   cuadrícula (mismo padding lateral). */
+.crear-band{position:relative;border-radius:14px;overflow:hidden;margin-bottom:28px;}
+.cb-top{background:var(--navy);padding:28px 32px 30px;}
+.cb-bottom{background:#B1F1F1;padding:20px 32px 24px;}
+.cb-edit{position:absolute;top:14px;right:14px;width:30px;height:30px;border:none;border-radius:8px;background:#11457A;color:#dfe3fb;cursor:pointer;display:flex;align-items:center;justify-content:center;}
+.cb-edit:hover{background:#1C73CB;color:#fff;}
 .cb-eyebrow{font-size:12px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--yellow);margin-bottom:10px;}
-.cb-titulo{font-size:26px;font-weight:600;color:#fff;letter-spacing:-.01em;line-height:1.15;margin-bottom:20px;max-width:620px;}
+.cb-titulo{font-size:26px;font-weight:600;color:#fff;letter-spacing:-.01em;line-height:1.15;margin-bottom:20px;}
 .cb-sub{font-size:13.5px;color:#b9bee0;margin:-12px 0 18px;max-width:620px;line-height:1.5;}
-.cb-prompt{display:flex;background:#fff;border-radius:11px;padding:6px 6px 6px 16px;align-items:center;gap:10px;max-width:680px;}
-.cb-spark{color:var(--magenta);opacity:.75;}
-.cb-prompt input{flex:1;min-width:0;border:none;outline:none;font-family:var(--f);font-size:14px;color:var(--ink);background:transparent;}
-.cb-generar{border:none;border-radius:8px;background:var(--navy);color:#fff;font-family:var(--f);font-size:13px;font-weight:600;padding:10px 20px;cursor:pointer;white-space:nowrap;}
-.cb-generar:hover{background:var(--primary-d);}
-.cb-divisor{margin-top:22px;border-top:1px solid rgba(255,255,255,.12);}
-.cb-tu{font-size:12px;font-weight:600;letter-spacing:.05em;text-transform:uppercase;color:#9aa0c4;margin:20px 0 12px;}
-/* Lanzadores sobre el bloque navy: botón SECUNDARIO blanco con texto e ícono
-   navy (combinación autorizada). Nunca azul sobre azul ni transparencias.
-   Todos del MISMO tamaño (grid de columnas iguales). */
-.cb-acciones{display:flex;flex-direction:column;gap:12px;align-items:stretch;}
+.cb-prompt{display:flex;background:#fff;border-radius:10px;padding:6px 6px 6px 16px;align-items:center;gap:10px;}
+.cb-spark{color:var(--magenta);opacity:.75;flex-shrink:0;}
+.cb-prompt input{flex:1;min-width:0;border:none;outline:none;font-family:var(--f);font-size:14px;color:var(--ink);background:transparent;height:38px;}
+.cb-generar{border:none;border-radius:8px;background:#1C73CB;color:#fff;font-family:var(--f);font-size:13.5px;font-weight:600;height:40px;padding:0 22px;cursor:pointer;white-space:nowrap;transition:background .14s;}
+.cb-generar:hover{background:#11457A;}
+.cb-tu{font-size:12px;font-weight:600;letter-spacing:.05em;text-transform:uppercase;color:#11457A;margin:0 0 12px;}
+/* Lanzadores: botón blanco con texto e ícono azulino, TODOS del mismo tamaño,
+   sobre la banda teal claro (sin disrupción visual). */
 .cb-lanzadores{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;}
-.cb-lz{display:flex;align-items:center;justify-content:center;gap:10px;border:none;border-radius:10px;background:#fff;color:#040764;font-family:var(--f);font-size:14px;font-weight:600;height:52px;padding:0 14px;cursor:pointer;transition:background .14s;}
-.cb-lz:hover{background:#eef1f6;}
-.cb-lz-ico{display:inline-flex;align-items:center;justify-content:center;color:#040764;}
-.cb-pronto-row{display:flex;align-items:center;gap:10px;}
-.cb-pronto-lbl{font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:#cdd2f0;}
-.cb-pronto{border:none;background:transparent;font-family:var(--f);font-size:13px;font-weight:500;color:#dfe3fb;cursor:pointer;padding:4px 2px;text-decoration:underline;}
-.cb-pronto:hover{color:#fff;}
-@media(max-width:760px){ .cb-lanzadores{grid-template-columns:repeat(2,1fr);} }
+.cb-lz{display:flex;align-items:center;justify-content:flex-start;gap:11px;border:none;border-radius:10px;background:#fff;color:#040764;font-family:var(--f);font-size:14px;font-weight:600;height:54px;padding:0 18px;cursor:pointer;transition:background .14s;}
+.cb-lz:hover{background:#F5F5F5;}
+.cb-lz-ico{display:inline-flex;align-items:center;justify-content:center;color:#1C73CB;flex-shrink:0;}
+.cb-pronto-row{display:flex;align-items:center;gap:8px;margin-top:14px;}
+.cb-pronto-lbl{font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:#11457A;}
+.cb-pronto{border:none;background:transparent;font-family:var(--f);font-size:13px;font-weight:500;color:#11457A;cursor:pointer;padding:4px 2px;text-decoration:underline;}
+.cb-pronto:hover{color:#040764;}
+@media(max-width:760px){ .cb-lanzadores{grid-template-columns:repeat(2,1fr);} .cb-top,.cb-bottom{padding-left:18px;padding-right:18px;} }
 /* Tus creatividades (Home) */
 .hg-head{display:flex;align-items:flex-end;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:16px;}
 .hg-head h2{font-size:17px;font-weight:600;color:var(--ink);}
@@ -1820,27 +1823,28 @@ button,input,select,textarea{font-family:inherit;}
       <div class="dash-page" id="pg-home">
         <div class="home-head"><h1 id="home-saludo">Hola</h1><p class="home-sub" id="home-fecha"></p></div>
         <section class="crear-band">
-          <button class="cb-edit" onclick="editarBanner()" title="Editar los textos de este bloque"><span class="ico" data-ic="editar" data-icsize="14px"></span></button>
-          <div class="cb-eyebrow">Empieza aquí</div>
-          <h2 class="cb-titulo" id="banner-titulo">¿Qué vas a crear hoy?</h2>
-          <p class="cb-sub" id="banner-sub" style="display:none"></p>
-          <div class="cb-prompt">
-            <span class="cb-spark ico" data-ic="estrella" data-icsize="17px"></span>
-            <input id="cb-idea" placeholder="Describe tu idea y deja que la IA la arme…" onkeydown="if(event.key==='Enter')generarDesdeIdea()">
-            <button class="cb-generar" onclick="generarDesdeIdea()">Generar</button>
+          <div class="cb-top">
+            <button class="cb-edit" onclick="editarBanner()" title="Editar los textos de este bloque"><span class="ico" data-ic="editar" data-icsize="14px"></span></button>
+            <div class="cb-eyebrow">Empieza aquí</div>
+            <h2 class="cb-titulo" id="banner-titulo">¿Qué vas a crear hoy?</h2>
+            <p class="cb-sub" id="banner-sub" style="display:none"></p>
+            <div class="cb-prompt">
+              <span class="cb-spark ico" data-ic="estrella" data-icsize="17px"></span>
+              <input id="cb-idea" placeholder="Describe tu idea y deja que Char-B lo haga por ti" onkeydown="if(event.key==='Enter')generarDesdeIdea()">
+              <button class="cb-generar" onclick="generarDesdeIdea()">Generar</button>
+            </div>
           </div>
-          <div class="cb-divisor"></div>
-          <div class="cb-tu">O empiézalo tú</div>
-          <div class="cb-acciones">
+          <div class="cb-bottom">
+            <div class="cb-tu">O avanza tú mismo</div>
             <div class="cb-lanzadores">
-            <button class="cb-lz" data-serv="email" onclick="irARuta('/email-ia')"><span class="cb-lz-ico"><span class="ico" data-ic="email" data-icsize="17px"></span></span>Email</button>
-            <button class="cb-lz" data-serv="banner" onclick="irARuta('/gdn-ia')"><span class="cb-lz-ico"><span class="ico" data-ic="grid" data-icsize="17px"></span></span>Banner Display</button>
-            <button class="cb-lz" data-serv="libre" onclick="irARuta('/free')"><span class="cb-lz-ico"><span class="ico" data-ic="documento" data-icsize="17px"></span></span>Formato libre</button>
-            <button class="cb-lz" data-serv="ads" onclick="irARuta('/ads-ia')"><span class="cb-lz-ico"><span class="ico" data-ic="buscar" data-icsize="17px"></span></span>Google Search</button>
+            <button class="cb-lz" data-serv="email" onclick="irARuta('/email-ia')"><span class="cb-lz-ico"><span class="ico" data-ic="email" data-icsize="18px"></span></span>Email Marketing</button>
+            <button class="cb-lz" data-serv="banner" onclick="irARuta('/gdn-ia')"><span class="cb-lz-ico"><span class="ico" data-ic="grid" data-icsize="18px"></span></span>Google Display</button>
+            <button class="cb-lz" data-serv="ads" onclick="irARuta('/ads-ia')"><span class="cb-lz-ico"><span class="ico" data-ic="buscar" data-icsize="18px"></span></span>Google Search</button>
+            <button class="cb-lz" data-serv="libre" onclick="irARuta('/free')"><span class="cb-lz-ico"><span class="ico" data-ic="editar" data-icsize="18px"></span></span>Formato Libre</button>
             </div>
             <div class="cb-pronto-row">
-            <span class="cb-pronto-lbl">Pronto</span>
-            <button class="cb-pronto" onclick="irARuta('/post-ia')">Post RRSS</button>
+              <span class="cb-pronto-lbl">Próximamente</span>
+              <button class="cb-pronto" onclick="irARuta('/post-ia')">Post RRSS</button>
             </div>
           </div>
         </section>
