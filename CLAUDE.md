@@ -14,6 +14,7 @@ Backend: funciones en **`functions/api/`** (auth por magic link + JWT, persisten
 
 ## Acuerdos de trabajo (IMPORTANTE)
 1. **Trabajar directo en `main` y `git push origin HEAD:main`.** El usuario NO quiere ramas/duplicados. (La rama `claude/app-review-debugging-DQlgG` existe y va en paralelo, pero el objetivo es main.)
+   - **Matiz (23-jul-2026, orden del usuario):** los cambios de **funcionalidad** van directo a main; los cambios de **interfaz o layout** se presentan PRIMERO como mockup, el usuario aprueba, y recién entonces se implementan.
 2. **Verificar SIEMPRE con Playwright antes de pushear.** Chromium en `/opt/pw-browsers/chromium-1194/chrome-linux/chrome`. Patrón: server `http` local que sirve `editor.html` + mocks de `/api/whoami` y `/api/proyectos`; manejar la app por `page.evaluate` llamando a las funciones globales. **Las imágenes externas (placehold.co) están BLOQUEADAS en el sandbox** → servir un SVG local desde el server de prueba.
 3. Subir solo cuando pasa la verificación. Mostrar capturas (SendUserFile) al usuario.
 4. No pegar secretos en el repo ni en el chat.
