@@ -41,7 +41,7 @@ export default {
     },
     {
       usuario: "cristian",
-      nombre: "Cristian",
+      nombre: "CharB",
       rol: "limitado",
       permisos: ["email", "banner", "ads", "libre"],
       workspace: "ws-cristian",
