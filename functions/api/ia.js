@@ -376,6 +376,8 @@ async function generarBanner({ env, brief, marca, imagenes, refsTxt }) {
     '- Español de Chile, claro y persuasivo. Nada de placeholders ni texto de relleno.',
     '- LÍMITES: titular ≤ 6 palabras; cuerpo ≤ 14 palabras; cta ≤ 3 palabras.',
     '- "burbuja": usa el gancho EXACTO del brief abreviado (empieza con el número si lo hay: "2 Cuotas Gratis"). NUNCA inventes una oferta: sin gancho va "".',
+    '- CLAVE: la OFERTA va SOLO en la burbuja. El "titular" NO puede repetir la oferta: si la burbuja dice "2 Cuotas Gratis", el titular debe comunicar la PROPUESTA DE VALOR o el beneficio (ej. "Tu auto siempre protegido", "Maneja tranquilo"), nunca "2 Cuotas Gratis" otra vez.',
+    '- "titular" y "cuerpo" no deben decir lo mismo: el titular engancha, el cuerpo suma un beneficio o razón concreta distinta.',
     '- "etiqueta": el nombre del producto, NO la marca (la marca ya está en el logo).',
     '- El "cta" debe reflejar la ACCIÓN del brief.',
     '- "imagen": elige la URL EXACTA de la biblioteca cuya descripción mejor calce con el brief; si ninguna calza, deja "".',

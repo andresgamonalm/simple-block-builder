@@ -956,9 +956,14 @@ button,input,select,textarea{font-family:inherit;}
 .sbb-page{font-family:inherit;color:inherit;background:inherit;}
 
 /* ── Composición por ZONAS (colecciones): fondo continuo + 3 zonas ── */
-.cmp{position:relative;overflow:hidden;font-family:inherit;box-sizing:border-box;}
+/* La composición NO hereda la fuente de la app (Roboto): usa una pila sans
+   real (Arial por defecto, como Zurich). Cada zona puede sobrescribirla. */
+.cmp{position:relative;overflow:hidden;font-family:Arial,"Helvetica Neue",Helvetica,sans-serif;box-sizing:border-box;-webkit-font-smoothing:antialiased;}
 .cmp .cmp-bg{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:0;}
 .cmp .cmp-veil{position:absolute;inset:0;z-index:0;}
+/* Velo de LEGIBILIDAD: cuando el fondo es una foto, un degradado navy garantiza
+   contraste del texto (el texto suele ir centrado/abajo-izquierda). */
+.cmp .cmp-scrim{position:absolute;inset:0;z-index:0;pointer-events:none;background:linear-gradient(105deg,rgba(8,14,28,.62) 0%,rgba(8,14,28,.34) 48%,rgba(8,14,28,.12) 100%),linear-gradient(0deg,rgba(8,14,28,.55) 0%,rgba(8,14,28,0) 55%);}
 .cmp .cmp-zonas{position:absolute;inset:0;display:flex;z-index:1;}
 .cmp .cmp-zonas.col{flex-direction:column;}
 .cmp .cmp-zonas.row{flex-direction:row;}
@@ -967,8 +972,10 @@ button,input,select,textarea{font-family:inherit;}
 .cmp .cmp-zona .cmp-zveil{position:absolute;inset:0;z-index:0;}
 .cmp .cmp-zin{position:relative;z-index:1;display:flex;flex-direction:column;gap:4px;min-width:0;max-width:100%;}
 .cmp .cmp-logo{display:block;object-fit:contain;}
-.cmp .cmp-tit{font-weight:800;line-height:1.12;letter-spacing:-.01em;word-break:break-word;}
-.cmp .cmp-cue{line-height:1.3;opacity:.95;word-break:break-word;}
+/* Arial no tiene grosor 800: pedir 800 lo "sintetiza" y sale estirado/feo. Se
+   usa 700 (bold real) con una sombra sutil para separar del fondo. */
+.cmp .cmp-tit{font-weight:700;line-height:1.14;letter-spacing:-.005em;word-break:break-word;text-shadow:0 1px 3px rgba(8,14,28,.28);}
+.cmp .cmp-cue{line-height:1.32;opacity:.96;word-break:break-word;text-shadow:0 1px 2px rgba(8,14,28,.22);}
 .cmp .cmp-cta{display:inline-block;font-weight:700;text-decoration:none;white-space:nowrap;}
 /* Estilo "campaña digital" (análisis de anuncios reales): burbujas decorativas de
    color detrás de las zonas, burbuja circular de OFERTA sobre todo, y etiqueta
@@ -4657,12 +4664,14 @@ function decoBurbujasHTML(deco, W, H){
 function burbujaHTML(bu, px, W, H){
   let dia = Math.max(34, px(bu.tamano, 96));
   dia = Math.min(dia, Math.round(H*0.8), Math.round(W*0.5));
-  const bg = bu.color || "#D9E05F", fg = bu.colorTexto || "#0E2748";
+  const bg = bu.color || "#FFF773", fg = bu.colorTexto || "#23366F";
   const t = String(bu.texto||"").trim();
   const m = t.match(/^(\$?\d[\d.,]*%?)\s+([\s\S]+)$/);
+  // Estilo Zurich: número MUY grande y protagonista, texto chico y compacto
+  // debajo. Si no hay número, el texto va en 2-3 líneas centradas.
   const inner = m
-    ? `<span class="bnum" style="font-size:${Math.round(dia*0.36)}px;">${esc(m[1])}</span><span class="btxt" style="font-size:${Math.round(dia*0.14)}px;">${esc(m[2])}</span>`
-    : `<span class="btxt" style="font-size:${Math.round(dia*0.16)}px;">${esc(t)}</span>`;
+    ? `<span class="bnum" style="font-size:${Math.round(dia*0.5)}px;">${esc(m[1])}</span><span class="btxt" style="font-size:${Math.round(dia*0.135)}px;">${esc(m[2])}</span>`
+    : `<span class="btxt" style="font-size:${Math.round(dia*0.17)}px;">${esc(t)}</span>`;
   const off = Math.max(4, Math.round(dia*0.09));
   const pos = bu.pos || "tr";
   const P = pos==="tl" ? `top:${off}px;left:${off}px;` : pos==="bl" ? `bottom:${off}px;left:${off}px;`
@@ -4678,7 +4687,10 @@ function renderComposicion(comp, fmt){
   const px=(v,base)=>Math.round((parseFloat(v)||base)*escF);
   const c=comp||{}; const fondo=c.fondo||{}; const prop=(c.prop&&c.prop.length===3)?c.prop:[25,50,25]; const Z=c.zonas||{};
   const bgColor = fondo.color || "#0e2748";
-  const fondoLayer = (fondo.tipo==="imagen") ? capaImagenHTML(fondo.imagen, "cmp-bg") : "";
+  const esFoto = fondo.tipo==="imagen" && fondo.imagen && fondo.imagen.url;
+  const fondoLayer = esFoto ? capaImagenHTML(fondo.imagen, "cmp-bg") : "";
+  // Velo de legibilidad SOLO sobre foto (garantiza contraste del texto blanco).
+  const scrim = esFoto ? `<div class="cmp-scrim"></div>` : "";
   const pad=px("12",12);
   const zonaHTML=(zk,i)=>{
     const z=Object.assign({bg:"hereda",alinH:"left",alinV:"center",visible:true}, Z[zk]||{});
@@ -4693,7 +4705,7 @@ function renderComposicion(comp, fmt){
   const mpad=`${px(mg.t,0)}px ${px(mg.r,0)}px ${px(mg.b,0)}px ${px(mg.l,0)}px`;
   const deco = (c.deco && c.deco.visible===true) ? decoBurbujasHTML(c.deco, W, H) : "";
   const burbuja = (c.burbuja && c.burbuja.visible===true && c.burbuja.texto) ? burbujaHTML(c.burbuja, px, W, H) : "";
-  return `<div class="cmp" style="width:${W}px;height:${H}px;background:${esc(bgColor)};">${fondoLayer}${deco}<div class="cmp-zonas ${fila?'row':'col'}" style="padding:${mpad};box-sizing:border-box;">${zonas}</div>${burbuja}</div>`;
+  return `<div class="cmp" style="width:${W}px;height:${H}px;background:${esc(bgColor)};">${fondoLayer}${scrim}${deco}<div class="cmp-zonas ${fila?'row':'col'}" style="padding:${mpad};box-sizing:border-box;">${zonas}</div>${burbuja}</div>`;
 }
 // ── Custom por tamaño (overrides sobre el Diseño global) ──
 function ovDeFmt(p, fmt){ const ab=(p.artboards||[]).find(a=>a.fmt===fmt); if(!ab) return {}; ab.ov=ab.ov||{}; return ab.ov; }
@@ -6291,7 +6303,15 @@ function aplicarMarca(id){
     // Banner por zonas: aplica la identidad al diseño global.
     const C=p.composicion;
     setPath(C,"fondo.color", m.secondary);
+    // Fuente de la marca (Arial en Zurich) en las zonas de texto y CTA — si no,
+    // el banner heredaría la Roboto de la app y el titular se vería estirado.
+    const fontMarca = m.fontTitulo || m.fontCuerpo || "";
+    if(fontMarca){ setPath(C,"zonas.texto.fuente", fontMarca); setPath(C,"zonas.cta.fuente", fontMarca); }
     const fondoOsc = (C.fondo && C.fondo.tipo==="imagen") ? true : esColorOscuro(m.secondary);
+    // Si el fondo es una foto, asegura un velo mínimo para que el texto se lea.
+    if(C.fondo && C.fondo.tipo==="imagen" && C.fondo.imagen && (parseInt(C.fondo.imagen.oscurecer)||0) < 30){
+      setPath(C,"fondo.imagen.oscurecer","40");
+    }
     const logoMarca = logoDeMarca(m, fondoOsc);
     if(logoMarca){ setPath(C,"zonas.logo.url", logoMarca); setPath(C,"zonas.logo.visible", true); }
     setPath(C,"zonas.cta.colorFondo", m.cta);
@@ -6879,6 +6899,32 @@ function insertarPiezaIA(data, formato, marca){
 }
 // Banner: la IA devuelve la composición de 3 zonas; creamos la colección Display
 // (máster 300x250 + todos los tamaños) con ese contenido.
+// Quita del titular la oferta que ya vive en la burbuja (evita "2 Cuotas Gratis"
+// repetido). Normaliza acentos/mayúsculas y recorta frases redundantes.
+function _quitarOfertaDelTitular(titular, oferta){
+  const norm = s => String(s).toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g,"").replace(/[^\w\s]/g," ").replace(/\s+/g," ").trim();
+  const limpiaBordes = s => s.replace(/^[\s.,;:¡!¿?·|"'-]+/,"").replace(/[\s.,;:·|"'-]+$/,"").trim();
+  const no = norm(oferta);
+  if(!no) return titular;
+  // 1) Corta el titular en frases (por . ! ? · |) y descarta las que SEAN la oferta.
+  const partes = titular.split(/(?<=[.!?])\s+|\s*[·|]\s*/).map(s=>s.trim()).filter(Boolean);
+  if(partes.length > 1){
+    const limpias = partes.filter(fr => { const nf=norm(fr); return nf && nf!==no && !(nf.length<=no.length+4 && no.includes(nf)); });
+    if(limpias.length) return limpiaBordes(limpias.join(" "));
+  }
+  // 2) Sin puntuación: si la oferta es un PREFIJO/SUFIJO del titular, quítala y
+  //    conserva el resto (la propuesta de valor). Trabaja sobre las palabras.
+  const palTit = titular.split(/\s+/), palOf = oferta.split(/\s+/);
+  const igual = (a,b) => norm(a)===norm(b);
+  let ini=0, fin=palTit.length;
+  if(palTit.length>palOf.length && palOf.every((w,i)=>igual(w,palTit[i]))) ini=palOf.length;              // prefijo
+  else if(palTit.length>palOf.length && palOf.every((w,i)=>igual(w,palTit[palTit.length-palOf.length+i]))) fin=palTit.length-palOf.length;  // sufijo
+  const resto = limpiaBordes(palTit.slice(ini,fin).join(" "));
+  if(ini>0 || fin<palTit.length) return resto;
+  // 3) El titular entero es (casi) la oferta → vacío (la burbuja ya la muestra).
+  if(norm(titular)===no) return "";
+  return limpiaBordes(titular);
+}
 function insertarBannerIA(data, marca){
   asegurarProyectoIA();
   const M = marca ? normalizarMarca(marca) : null;
@@ -6890,6 +6936,9 @@ function insertarBannerIA(data, marca){
   const fondoOscuro = M ? esColorOscuro(M.secondary) : true;
   if(M){
     setPath(comp,"fondo.color", M.secondary);
+    // Fuente de la marca en las zonas (evita heredar la Roboto de la app).
+    const fontMarca = M.fontTitulo || M.fontCuerpo || "";
+    if(fontMarca){ setPath(comp,"zonas.texto.fuente", fontMarca); setPath(comp,"zonas.cta.fuente", fontMarca); }
     setPath(comp,"zonas.logo.url", logoDeMarca(M, true) || logoDeMarca(M, false));
     setPath(comp,"zonas.cta.colorFondo", M.cta);
     setPath(comp,"zonas.cta.colorTexto", M.ctaText);
@@ -6900,22 +6949,27 @@ function insertarBannerIA(data, marca){
   // Imagen elegida por la IA desde la biblioteca (si vino una URL válida).
   if(data.imagen && /^https?:\/\/|^data:/.test(data.imagen)){
     setPath(comp,"fondo.tipo","imagen"); setPath(comp,"fondo.imagen.url", data.imagen);
-    setPath(comp,"fondo.imagen.oscurecer", 45);
+    setPath(comp,"fondo.imagen.oscurecer", 48);
   }
-  if(z.titular) setPath(comp,"zonas.texto.titular.texto", String(z.titular).slice(0,80));
-  if(z.cuerpo) setPath(comp,"zonas.texto.cuerpo.texto", String(z.cuerpo).slice(0,160));
-  if(z.cta) setPath(comp,"zonas.cta.texto", String(z.cta).slice(0,40));
-  // Estilo campaña digital: etiqueta de producto sobre el titular y la OFERTA
-  // en su burbuja circular (colores desde los acentos de la marca).
-  if(z.etiqueta) setPath(comp,"zonas.texto.etiqueta.texto", String(z.etiqueta).slice(0,30));
-  if(data.burbuja){
+  // OFERTA en la burbuja (colores desde los acentos de la marca).
+  const oferta = data.burbuja ? String(data.burbuja).slice(0,40).trim() : "";
+  if(oferta){
     setPath(comp,"burbuja.visible", true);
-    setPath(comp,"burbuja.texto", String(data.burbuja).slice(0,40));
+    setPath(comp,"burbuja.texto", oferta);
     if(M && M.accent1){
       setPath(comp,"burbuja.color", M.accent1);
-      setPath(comp,"burbuja.colorTexto", esColorOscuro(M.accent1) ? "#ffffff" : (esColorOscuro(M.secondary) ? M.secondary : "#0e2748"));
+      setPath(comp,"burbuja.colorTexto", esColorOscuro(M.accent1) ? "#ffffff" : (esColorOscuro(M.secondary) ? M.secondary : "#23366F"));
     }
   }
+  // El titular NO debe repetir la oferta que ya está en la burbuja. Si la IA la
+  // repitió, la quitamos y dejamos solo la propuesta de valor.
+  let titular = z.titular ? String(z.titular).slice(0,80).trim() : "";
+  if(titular && oferta) titular = _quitarOfertaDelTitular(titular, oferta);
+  if(titular) setPath(comp,"zonas.texto.titular.texto", titular);
+  if(z.cuerpo) setPath(comp,"zonas.texto.cuerpo.texto", String(z.cuerpo).slice(0,160));
+  if(z.cta) setPath(comp,"zonas.cta.texto", String(z.cta).slice(0,40));
+  // Etiqueta de producto sobre el titular (píldora chica, ej. "Seguro Auto").
+  if(z.etiqueta) setPath(comp,"zonas.texto.etiqueta.texto", String(z.etiqueta).slice(0,30));
   if(M && M.accent1 && getPath(comp,"deco.color1")==null) setPath(comp,"deco.color1", M.accent1);
   if(M && M.accent2 && getPath(comp,"deco.color2")==null) setPath(comp,"deco.color2", M.accent2);
   const cfg = COLECCIONES["display-desktop"];
