@@ -221,6 +221,18 @@ Correcciones del usuario sobre orden/jerarquía (DEC-011 a DEC-014 en DECISIONES
 - **Mascota Char-B** = silueta naranja low-poly provista por el usuario, PNG optimizado (~1 KB,
   data URL) dentro del MISMO botón circular 52px navy plano (`.fab-charb`). No volver a la llamita.
 
+## Editor de banners: alcance claro + LIENZO de edición directa — jul-2026 (ESTADO ACTUAL — no rehacer)
+El usuario ("esta barra no se entiende nada") pidió (a) saber si edita todos los tamaños o uno, y (b) drag-and-drop estable. DEC-015.
+- **Control de ALCANCE** (`compScopeHeader(fmt)`): arriba de `renderComposicionEditor` (Diseño global) y `renderFormTamaño` (un tamaño). Segmentado "¿Qué estás editando? [Todos los tamaños] [Un tamaño]" + frase explicativa. El **máster se muestra como "Todos"** (edita el diseño base). Reemplazó los rótulos crípticos "AJUSTAR… HEREDA DEL GLOBAL"/"Ir al Diseño global".
+- **LIENZO de edición directa** (`renderLienzoEdicion(p)` + `attachLienzoInteraccion(p, root)`), arriba del tablero en `renderTableroComposicion`. Banner grande del **tamaño activo** (escala fit ≤2.2) con overlay medido del DOM real:
+  - **Zonas clicables** (`.lienzo-zona`, logo/texto/cta): clic → `seleccionarZonaLienzo(fmt,i)` abre Editar y resalta la sección por NOMBRE (el orden del form no calza con el índice: hay "Burbujas decorativas" antes de Logo).
+  - **Divisores arrastrables** (`.lienzo-div`, `arrastrarDivisor`): cambian el % de dos zonas vecinas manteniendo su suma (la 3ª no se altera). Mide rects reales (robusto a zonas ocultas).
+  - **Burbuja arrastrable** (`.lienzo-burbuja`, `arrastrarBurbuja`): imanta a 5 anclas (tl/tr/bl/br/cr).
+  - **Estable**: pointer events; el arrastre actualiza el DOM EN VIVO y **solo persiste al soltar** (nada de re-render por movimiento). `attachLienzoInteraccion` limpia el overlay al entrar (evita duplicados por varios `requestAnimationFrame` en cola). Los controles del panel siguen intactos = red de seguridad.
+  - **Alcance**: `setCompScope(fmt,path,val)`/`propScope(fmt)`/`esFmtMaster(fmt)` → escribe al Diseño global si el activo es el máster, o al override si es otro tamaño. Escribe el **array `prop` completo** (evita overrides de array sparse).
+  - NO es lienzo libre pixel-a-pixel (rompería el modelo 3 zonas × 11 tamaños con herencia); es manipulación directa con imantado, honesto y estable.
+- Verificado con arrastre real de Playwright (`veri-lienzo.js` 12/12: divisor 25→40, burbuja tr→bl, clic-zona) + `veri-scope.js` 9/9 + regresiones.
+
 ## Módulo Google Search Ads (/ads-ia) — jul-2026 (ESTADO ACTUAL — no rehacer)
 Pedido del usuario: campañas de Search "pensando como especialista, no como Google" —
 **agrupación por INTENCIÓN de búsqueda, SOLO concordancia exacta y de frase (amplia

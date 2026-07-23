@@ -801,6 +801,37 @@ button,input,select,textarea{font-family:inherit;}
 .ab-frame .sbb-hero img.bg{width:100%!important;height:100%!important;object-fit:cover;}
 .ab:not(.activo) .ab-frame{pointer-events:none;}
 .ab-empty{display:flex;align-items:center;justify-content:center;height:100%;color:#bbb;font-size:13px;text-align:center;padding:8px;}
+/* Lienzo de EDICIÓN DIRECTA: banner grande del tamaño activo donde se arrastra
+   de verdad (divisores de zona y burbuja) y se hace clic para editar. */
+.lienzo{margin:0 auto 26px;max-width:760px;}
+.lienzo-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:0 2px 12px;flex-wrap:wrap;}
+.lienzo-head .lz-tit{font-size:14px;font-weight:600;color:var(--ink,#12173d);display:flex;align-items:center;gap:9px;}
+.lienzo-head .lz-tit .lz-badge{font-size:11px;font-weight:600;color:#fff;background:var(--navy,#040764);border-radius:999px;padding:3px 10px;}
+.lienzo-head .lz-ayuda{font-size:12px;color:var(--ink3,#5b6178);display:flex;align-items:center;gap:6px;}
+.lienzo-stage{position:relative;margin:0 auto;border-radius:6px;overflow:hidden;box-shadow:0 6px 26px rgba(8,14,28,.14);background:#0e2748;}
+.lienzo-scale{position:absolute;top:0;left:0;transform-origin:top left;}
+.lienzo-ovl{position:absolute;inset:0;z-index:20;}
+/* Zonas clicables (para seleccionar y editar su contenido) */
+.lienzo-zona{position:absolute;cursor:pointer;border:2px solid transparent;border-radius:4px;transition:border-color .12s,background .12s;}
+.lienzo-zona:hover{border-color:rgba(28,115,203,.7);background:rgba(28,115,203,.08);}
+.lienzo-zona .lz-ztag{position:absolute;top:4px;left:4px;font-size:10px;font-weight:600;color:#fff;background:rgba(4,7,100,.82);border-radius:5px;padding:2px 7px;opacity:0;transition:opacity .12s;pointer-events:none;}
+.lienzo-zona:hover .lz-ztag{opacity:1;}
+/* Divisores arrastrables entre zonas */
+.lienzo-div{position:absolute;z-index:25;background:transparent;touch-action:none;}
+.lienzo-div.h{cursor:ns-resize;height:14px;margin-top:-7px;left:0;right:0;}
+.lienzo-div.v{cursor:ew-resize;width:14px;margin-left:-7px;top:0;bottom:0;}
+.lienzo-div .lz-grip{position:absolute;background:#fff;border:1.5px solid var(--blue,#1C73CB);box-shadow:0 1px 5px rgba(8,14,28,.3);border-radius:999px;opacity:.85;transition:opacity .12s,transform .12s;}
+.lienzo-div.h .lz-grip{left:50%;top:50%;width:46px;height:8px;margin:-4px 0 0 -23px;}
+.lienzo-div.v .lz-grip{top:50%;left:50%;width:8px;height:46px;margin:-23px 0 0 -4px;}
+.lienzo-div:hover .lz-grip,.lienzo-div.drag .lz-grip{opacity:1;transform:scale(1.12);}
+.lienzo-div.drag .lz-grip{background:var(--blue,#1C73CB);}
+/* Burbuja arrastrable */
+.lienzo-burbuja{position:absolute;z-index:26;cursor:grab;border-radius:50%;border:2px dashed transparent;transition:border-color .12s;touch-action:none;}
+.lienzo-burbuja:hover{border-color:rgba(28,115,203,.9);}
+.lienzo-burbuja.drag{cursor:grabbing;border-color:var(--blue,#1C73CB);}
+.lienzo-anchor{position:absolute;z-index:24;width:20px;height:20px;border-radius:50%;border:2px dashed rgba(28,115,203,.55);opacity:0;transition:opacity .12s;pointer-events:none;}
+.lienzo-stage.arrastrando-burbuja .lienzo-anchor{opacity:.9;}
+.lienzo-anchor.cerca{background:rgba(28,115,203,.25);border-style:solid;}
 /* Editor de Diseño global (capas) */
 /* Control de ALCANCE: deja clarísimo si editas TODOS los tamaños o solo uno. */
 .cmp-scope{margin:0 0 14px;padding:12px;background:var(--navy-l,#eef1fb);border:1px solid #dfe4f2;border-radius:10px;}
@@ -811,7 +842,8 @@ button,input,select,textarea{font-family:inherit;}
 .cmp-scope-seg button.on{background:var(--navy,#040764);color:#fff;}
 .cmp-scope-hint{margin:9px 2px 0;font-size:12px;line-height:1.5;color:var(--ink2,#3a4056);}
 .cmp-scope-hint b{color:var(--navy,#040764);}
-.cmp-ed .cmp-zona-sec{margin:16px 0 4px;padding:7px 9px;background:var(--bg2,#f3f4f8);border:1px solid var(--bdr);border-radius:7px;display:flex;align-items:center;justify-content:space-between;font-size:12px;font-weight:700;color:var(--ink,#222);}
+.cmp-ed .cmp-zona-sec{margin:16px 0 4px;padding:7px 9px;background:var(--bg2,#f3f4f8);border:1px solid var(--bdr);border-radius:7px;display:flex;align-items:center;justify-content:space-between;font-size:12px;font-weight:700;color:var(--ink,#222);transition:box-shadow .2s,border-color .2s;}
+.cmp-ed .cmp-zona-sec.zona-foco{border-color:var(--blue,#1C73CB);box-shadow:0 0 0 3px rgba(28,115,203,.2);}
 .cmp-ed .cmp-zona-sec .zlbl{display:flex;align-items:center;gap:6px;}
 .cmp-ed .cmp-bibmini{display:flex;flex-wrap:wrap;gap:4px;margin:-2px 0 7px;}
 .cmp-ed .cmp-bibmini .bibmini{width:34px;height:28px;padding:0;border:1px solid var(--bdr);border-radius:5px;overflow:hidden;cursor:pointer;background:var(--bg2,#f3f4f8);}
@@ -4773,13 +4805,17 @@ function renderTableroComposicion(p, c){
       <div class="ab-stage" style="width:${Math.round(f.ancho*zoom)}px;height:${Math.round(f.alto*zoom)}px;"><div class="ab-scale" style="transform:scale(${zoom});">${renderComposicion(composicionEfectiva(p, fmt), fmt)}</div></div>
     </div>`;
   };
-  let html = `<div class="tablero-hint">${svgIcon("info",{size:"13px"})} En <b>Diseño</b> editas <b>todos los tamaños</b> a la vez. <b>Clic en un banner</b> de abajo → ajustas <b>solo ese</b> (lo que no toques sigue heredando de todos).</div>`;
+  // Lienzo de edición directa del tamaño activo (arrastrar de verdad) + tablero.
+  let html = renderLienzoEdicion(p);
+  html += `<div class="tablero-hint">${svgIcon("info",{size:"13px"})} Arriba editas el tamaño activo arrastrando. Abajo están <b>todos los tamaños</b>: <b>clic en uno</b> lo activa para ajustarlo (lo que no toques hereda de todos).</div>`;
   ["cuadrado","vertical","franja"].forEach(g => {
     if(!grupos[g].length) return;
     html += `<div class="tab-grupo"><div class="tab-grupo-tit">${titulos[g]}</div><div class="tablero grupo-${g}">${grupos[g].map(celda).join("")}</div></div>`;
   });
   c.innerHTML = html;
   c.querySelectorAll(".ab").forEach(el=>el.addEventListener("click",()=>{ p.activaFmt=el.dataset.fmt; renderTablero(); renderForm(); cambiarPanelTab("editar"); }));
+  // El overlay del lienzo se mide DESPUÉS de pintar (necesita tamaños reales).
+  requestAnimationFrame(()=>{ try{ attachLienzoInteraccion(p, c); }catch(e){ console.warn("lienzo:",e); } });
   iniciarLivePreview();
 }
 // Mutadores de la composición global (por ruta, ej. "zonas.texto.titular.texto").
@@ -4792,6 +4828,143 @@ function setCompOvN(fmt, path, val, mn, mx){ setCompOv(fmt, path, String(clampN(
 // Alterna un booleano (negrita/cursiva) global o por tamaño.
 function setCompTog(path){ const p=pieza(); if(!esComposicion(p))return; setComp(path, getPath(p.composicion,path)!==true); }
 function setCompOvTog(fmt, path){ const p=pieza(); if(!esComposicion(p))return; const ef=composicionEfectiva(p,fmt); setCompOv(fmt, path, getPath(ef,path)!==true); }
+// Escribe según el ALCANCE del tamaño activo: si es el máster (o global) toca el
+// Diseño de todos; si es otro tamaño, solo su ajuste. Sin re-render (lo hace quien llama).
+function esFmtMaster(fmt){ const p=pieza(); return !fmt || fmt===(p.masterFmt||"display-300x250"); }
+function setCompScope(fmt, path, val){ if(esFmtMaster(fmt)){ const p=pieza(); if(!esComposicion(p))return; setPath(p.composicion,path,val); } else { setPath(ovDeFmt(pieza(),fmt),path,val); } }
+function propScope(fmt){ const ef=composicionEfectiva(pieza(), fmt); return (ef.prop&&ef.prop.length===3)?ef.prop.map(x=>parseFloat(x)||0):[25,50,25]; }
+
+// ── LIENZO DE EDICIÓN DIRECTA (arrastrar de verdad) ──────────────────────
+// Banner grande del tamaño activo con: zonas clicables (editar contenido),
+// divisores arrastrables (cambiar el % de cada zona) y burbuja arrastrable
+// (imanta a 5 posiciones). Aditivo: los controles del panel siguen intactos.
+function renderLienzoEdicion(p){
+  const fmt = p.activaFmt || p.masterFmt || "display-300x250";
+  const F = FORMATOS[fmt]; if(!F) return "";
+  const ef = composicionEfectiva(p, fmt);
+  const s = Math.min(760/F.ancho, 460/F.alto, 2.2);
+  const Ws = Math.round(F.ancho*s), Hs = Math.round(F.alto*s);
+  const esMaster = esFmtMaster(fmt);
+  const alcance = esMaster ? "editando TODOS los tamaños" : `editando SOLO ${F.ancho}×${F.alto}`;
+  return `<div class="lienzo" data-fmt="${fmt}" data-escala="${s}">
+    <div class="lienzo-head">
+      <div class="lz-tit"><span class="lz-badge">${F.ancho}×${F.alto}</span> ${esMaster?'Máster · '+alcance:alcance}</div>
+      <div class="lz-ayuda">${svgIcon("info",{size:"13px"})} Arrastra los <b>divisores</b> para el espacio de cada zona · arrastra la <b>burbuja</b> para moverla · <b>clic</b> en una zona para editarla</div>
+    </div>
+    <div class="lienzo-stage" style="width:${Ws}px;height:${Hs}px;">
+      <div class="lienzo-scale" style="width:${F.ancho}px;height:${F.alto}px;transform:scale(${s});">${renderComposicion(ef, fmt)}</div>
+      <div class="lienzo-ovl"></div>
+    </div>
+  </div>`;
+}
+// Mide las zonas reales y coloca zonas clicables, divisores y la burbuja. Todo
+// el arrastre actualiza el DOM en vivo y solo PERSISTE al soltar (estable).
+function attachLienzoInteraccion(p, root){
+  const wrap = root.querySelector(".lienzo"); if(!wrap) return;
+  const fmt = wrap.dataset.fmt;
+  const stage = wrap.querySelector(".lienzo-stage");
+  const ovl = wrap.querySelector(".lienzo-ovl");
+  const cmp = wrap.querySelector(".cmp");
+  if(!stage || !ovl || !cmp) return;
+  ovl.innerHTML = "";   // evita duplicados si se reengancha (varios rAF en cola)
+  const fila = (familiaDeFormato(fmt)==="franja");
+  const sr = stage.getBoundingClientRect();
+  const rel = (el)=>{ const r=el.getBoundingClientRect(); return { x:r.left-sr.left, y:r.top-sr.top, w:r.width, h:r.height }; };
+  const zonasDom = [...cmp.querySelectorAll(".cmp-zona")];
+  const nombres = ["Logo","Texto","Botón (CTA)"];
+  // 1) Zonas clicables (para editar su contenido en el panel).
+  const visibles = [];
+  zonasDom.forEach((z,i)=>{ const rc=rel(z); if(rc.w<6||rc.h<6) return; visibles.push({i,z,rc});
+    const hs=document.createElement("div"); hs.className="lienzo-zona";
+    hs.style.cssText=`left:${rc.x}px;top:${rc.y}px;width:${rc.w}px;height:${rc.h}px;`;
+    hs.innerHTML=`<span class="lz-ztag">${nombres[i]}</span>`;
+    hs.addEventListener("click",(e)=>{ e.stopPropagation(); seleccionarZonaLienzo(fmt, i); });
+    ovl.appendChild(hs);
+  });
+  // 2) Divisores entre zonas visibles consecutivas.
+  for(let k=0;k<visibles.length-1;k++){
+    const a=visibles[k], b=visibles[k+1];
+    const div=document.createElement("div"); div.className="lienzo-div "+(fila?"v":"h");
+    if(fila) div.style.left=(b.rc.x)+"px"; else div.style.top=(b.rc.y)+"px";
+    div.innerHTML=`<div class="lz-grip"></div>`;
+    arrastrarDivisor(div, fmt, a, b, fila, stage, cmp, zonasDom);
+    ovl.appendChild(div);
+  }
+  // 3) Burbuja arrastrable (si está visible).
+  const bub = cmp.querySelector(".cmp-burbuja");
+  if(bub){
+    const rc=rel(bub);
+    const h=document.createElement("div"); h.className="lienzo-burbuja";
+    h.style.cssText=`left:${rc.x}px;top:${rc.y}px;width:${rc.w}px;height:${rc.h}px;`;
+    arrastrarBurbuja(h, fmt, stage, bub);
+    ovl.appendChild(h);
+  }
+}
+function seleccionarZonaLienzo(fmt, i){
+  const p=pieza(); p.activaFmt=fmt; renderForm(); cambiarPanelTab("editar");
+  // Busca la sección de la zona por su NOMBRE (el orden del formulario no calza
+  // con el índice de zona: hay "Burbujas decorativas" antes de Logo).
+  const claves = ["Logo","Texto","Call to action"];
+  const nom = claves[i]||"";
+  setTimeout(()=>{
+    let sec=null;
+    document.querySelectorAll("#form .cmp-zona-sec").forEach(s=>{ if(!sec){ const l=s.querySelector(".zlbl"); if(l && l.textContent.trim().indexOf(nom)===0) sec=s; } });
+    if(sec){ sec.scrollIntoView({block:"center",behavior:"smooth"}); sec.classList.add("zona-foco"); setTimeout(()=>sec.classList.remove("zona-foco"),1400); }
+  }, 80);
+}
+function arrastrarDivisor(div, fmt, a, b, fila, stage, cmp, zonasDom){
+  div.addEventListener("pointerdown",(e)=>{
+    e.preventDefault(); div.classList.add("drag"); div.setPointerCapture(e.pointerId);
+    const sr=stage.getBoundingClientRect();
+    const za=zonasDom[a.i], zb=zonasDom[b.i];
+    const propA0=parseFloat(getComputedStyle(za).flexGrow)||a.rc[fila?"w":"h"];
+    const propB0=parseFloat(getComputedStyle(zb).flexGrow)||b.rc[fila?"w":"h"];
+    const suma=propA0+propB0;
+    // Rango combinado de las dos zonas (en px de pantalla).
+    const iniPx = fila ? (a.rc.x) : (a.rc.y);
+    const largo = fila ? (a.rc.w+b.rc.w) : (a.rc.h+b.rc.h);
+    const mover=(ev)=>{
+      const pos = fila ? (ev.clientX-sr.left) : (ev.clientY-sr.top);
+      let frac=(pos-iniPx)/largo; frac=Math.max(0.12,Math.min(0.88,frac));
+      const nA=+(suma*frac).toFixed(1), nB=+(suma-suma*frac).toFixed(1);
+      za.style.flexGrow=nA; zb.style.flexGrow=nB;
+      if(fila) div.style.left=(a.rc.x+largo*frac)+"px"; else div.style.top=(a.rc.y+largo*frac)+"px";
+      div._nA=nA; div._nB=nB;
+    };
+    const soltar=()=>{
+      document.removeEventListener("pointermove",mover); document.removeEventListener("pointerup",soltar);
+      div.classList.remove("drag");
+      if(div._nA!=null){ const prop=propScope(fmt).slice(); prop[a.i]=Math.round(div._nA); prop[b.i]=Math.round(div._nB);
+        setCompScope(fmt,"prop",prop); persistir(); renderTablero(); }
+    };
+    document.addEventListener("pointermove",mover); document.addEventListener("pointerup",soltar);
+  });
+}
+function arrastrarBurbuja(h, fmt, stage, bub){
+  h.addEventListener("pointerdown",(e)=>{
+    e.preventDefault(); h.classList.add("drag"); stage.classList.add("arrastrando-burbuja"); h.setPointerCapture(e.pointerId);
+    const sr=stage.getBoundingClientRect();
+    const W=sr.width, H=sr.height, bw=h.offsetWidth, bh=h.offsetHeight;
+    // Posiciones imantadas: 5 anclas (esquinas + centro-derecha).
+    const anclas={ tl:[0.02,0.02], tr:[0.98,0.02], bl:[0.02,0.98], br:[0.98,0.98], cr:[0.98,0.5] };
+    let destino="tr";
+    const mover=(ev)=>{
+      let x=ev.clientX-sr.left-bw/2, y=ev.clientY-sr.top-bh/2;
+      x=Math.max(0,Math.min(W-bw,x)); y=Math.max(0,Math.min(H-bh,y));
+      h.style.left=x+"px"; h.style.top=y+"px"; bub.style.transition="none";
+      // ancla más cercana al centro de la burbuja
+      const cx=(x+bw/2)/W, cy=(y+bh/2)/H; let mejor="tr",dmin=9;
+      for(const k in anclas){ const dx=cx-anclas[k][0], dy=cy-anclas[k][1]; const d=dx*dx+dy*dy; if(d<dmin){dmin=d;mejor=k;} }
+      destino=mejor;
+    };
+    const soltar=()=>{
+      document.removeEventListener("pointermove",mover); document.removeEventListener("pointerup",soltar);
+      h.classList.remove("drag"); stage.classList.remove("arrastrando-burbuja");
+      setCompScope(fmt,"burbuja.pos",destino); persistir(); renderTablero();
+    };
+    document.addEventListener("pointermove",mover); document.addEventListener("pointerup",soltar);
+  });
+}
 // Biblioteca: elegir imagen/logo y aplicarla a una ruta (global o por tamaño).
 function elegirImagenPath(path, fmt){ abrirImagenes(url=>{ if(fmt){ setCompOv(fmt,path,url); renderForm(); } else { setComp(path,url); renderComposicionEditor(); } }); }
 function elegirImagenComp(path){ elegirImagenPath(path, null); }
