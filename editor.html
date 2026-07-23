@@ -442,16 +442,62 @@ button,input,select,textarea{font-family:inherit;}
 .hg-ver:hover{color:var(--navy);}
 .hg-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:22px;}
 @media(max-width:1000px){.hg-grid{grid-template-columns:repeat(2,1fr);}}
+/* ── HERO Char-B (réplica gráfica) ── */
+.hero-charb{position:relative;background:var(--navy,#040764);border-radius:12px;padding:24px 26px;margin-bottom:24px;}
+.hero-charb .cb-edit{position:absolute;top:16px;right:16px;width:30px;height:30px;border:none;border-radius:8px;background:rgba(255,255,255,.12);color:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center;}
+.hc-top{display:flex;align-items:center;gap:14px;margin-bottom:18px;}
+.hc-mascot{width:48px;height:48px;border-radius:11px;background:#fff;display:flex;align-items:center;justify-content:center;flex-shrink:0;box-shadow:0 2px 8px rgba(0,0,0,.15);}
+.hc-title{color:#fff;font-size:22px;font-weight:600;letter-spacing:-.2px;}
+.hc-prompt{background:#fff;border-radius:10px;padding:3px;display:flex;}
+.hc-prompt input{flex:1;border:none;outline:none;background:transparent;font-family:var(--f);font-size:15px;color:var(--ink);padding:14px 16px;}
+.hc-actions{display:flex;justify-content:flex-end;margin-top:16px;}
+.hc-generar{background:#B1F1F1;color:var(--navy,#040764);border:none;border-radius:9px;padding:11px 28px;font-family:var(--f);font-size:14.5px;font-weight:600;cursor:pointer;transition:background .14s;}
+.hc-generar:hover{background:#98e9e9;}
+/* ── ¿Qué vas a crear? (4 tarjetas blancas) ── */
+.crear-sec{margin-bottom:26px;}
+.crear-head{display:flex;align-items:baseline;justify-content:space-between;margin-bottom:14px;}
+.crear-head h2{font-size:16px;font-weight:600;color:var(--navy);}
+.crear-ver{font-size:13px;color:var(--blue,#1c73cb);cursor:pointer;text-decoration:none;font-weight:500;}
+.crear-cards{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;}
+.crc{background:#fff;border:1px solid var(--bdr,#e6e9f0);border-radius:12px;padding:18px;text-align:left;cursor:pointer;font-family:var(--f);transition:border-color .14s,transform .14s;display:block;}
+.crc:hover{border-color:#cdd4e4;transform:translateY(-2px);}
+.crc-ic{width:44px;height:44px;border-radius:11px;display:inline-flex;align-items:center;justify-content:center;margin-bottom:12px;}
+.crc-ic.email{background:#1c73cb;color:#fff;}
+.crc-ic.display{background:#fce865;color:#08103a;}
+.crc-ic.ads{background:#c3c9d6;color:#141c3a;}
+.crc-ic.libre{background:#b318a3;color:#fff;}
+.crc-t{font-size:15px;font-weight:600;color:var(--ink);margin-bottom:4px;}
+.crc-d{font-size:12.5px;color:var(--ink3,#5b6178);line-height:1.4;margin-bottom:14px;min-height:34px;}
+.crc-cta{font-size:13px;font-weight:600;color:var(--navy);display:flex;align-items:center;gap:6px;}
+/* ── Mis últimos trabajos (tabla) ── */
+.ult-sec{background:#fff;border:1px solid var(--bdr,#e6e9f0);border-radius:12px;padding:20px 22px;}
+.ult-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;}
+.ult-head h2{font-size:16px;font-weight:600;color:var(--navy);}
+.ult-cab,.ult-row{display:grid;grid-template-columns:1fr 190px 190px 130px 44px;align-items:center;gap:12px;}
+.ult-cab{padding:0 4px 11px;font-size:10.5px;letter-spacing:.5px;text-transform:uppercase;color:var(--ink3,#5b6178);font-weight:600;border-bottom:1px solid var(--bdr,#e6e9f0);}
+.ult-row{padding:12px 4px;border-bottom:1px solid var(--bdr,#e6e9f0);}
+.ult-row:last-of-type{border-bottom:none;}
+.ult-tw{display:flex;align-items:center;gap:11px;min-width:0;}
+.ult-ic{width:34px;height:34px;border-radius:8px;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;}
+.ult-nm{font-weight:600;font-size:14px;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.ult-proj,.ult-mod{font-size:13px;color:var(--ink2,#3a4066);}
+.ult-est{font-size:13px;display:inline-flex;align-items:center;gap:7px;color:var(--ink2,#3a4066);}
+.ult-est .pt{width:7px;height:7px;border-radius:50%;flex-shrink:0;}
+.ult-go{width:34px;height:34px;border-radius:8px;background:#f2f4f9;border:1px solid var(--bdr,#e6e9f0);display:inline-flex;align-items:center;justify-content:center;cursor:pointer;color:var(--navy);}
+.ult-go:hover{background:#e9ecf3;}
+.ult-ver{text-align:center;margin-top:16px;}
+.ult-ver a{font-size:13.5px;color:var(--blue,#1c73cb);font-weight:600;cursor:pointer;text-decoration:none;}
+@media(max-width:820px){ .crear-cards{grid-template-columns:repeat(2,1fr);} .ult-cab{display:none;} .ult-row{grid-template-columns:1fr auto;gap:6px;} .ult-proj,.ult-mod{display:none;} }
 .hg-card{display:block;text-align:left;background:transparent;border:none;cursor:pointer;padding:0;font-family:var(--f);min-width:0;}
 .hg-thumb{border-radius:11px;overflow:hidden;position:relative;box-shadow:var(--sh);transition:box-shadow .16s,transform .16s;height:150px;display:flex;align-items:center;justify-content:center;}
 .hg-card:hover .hg-thumb{transform:translateY(-3px);box-shadow:var(--sh2);}
 .hg-chip{position:absolute;top:10px;left:10px;background:#fff;border-radius:999px;box-shadow:0 1px 3px rgba(4,7,100,.12);}
 .chip{display:inline-flex;align-items:center;font-size:11px;font-weight:600;letter-spacing:.04em;border-radius:999px;padding:4px 9px;}
 .chip.email{background:#e7f0fb;color:#1c73cb;}
-.chip.display{background:#fbf2b0;color:#6b5c00;}
+.chip.display{background:#e4f6f6;color:#149a9a;}
 .chip.libre{background:#f7e6f4;color:#b318a3;}
 .chip.post{background:#eef1fb;color:#040764;}
-.chip.ads{background:#e6e9f1;color:#565d73;}
+.chip.ads{background:#eef1fb;color:#040764;}
 /* ── Consola de campaña Google Search (formato ads) ──
    Diagramación de referencia: la consola de Google Ads (vista general → un tab
    por grupo de anuncios) + Google Ads Editor (inventarios con contador). */
@@ -572,7 +618,12 @@ button,input,select,textarea{font-family:inherit;}
 .dash.show .fab-ia{display:flex;}
 .fab-ia:hover{background:#eceef3;transform:scale(1.07);}
 /* Mascota Char-B: imagen provista por el usuario, ajustada dentro del círculo. */
-.fab-charb{width:30px;height:34px;object-fit:contain;display:block;pointer-events:none;}
+.fab-charb{width:30px;height:34px;object-fit:contain;display:block;pointer-events:none;position:relative;z-index:2;}
+/* Efecto de ondas alrededor de la mascota flotante (Char-B). */
+.fab-ia::before,.fab-ia::after{content:"";position:absolute;inset:-1px;border-radius:50%;border:2px solid rgba(28,115,203,.45);pointer-events:none;animation:charb-wave 2.4s ease-out infinite;}
+.fab-ia::after{animation-delay:1.2s;}
+@keyframes charb-wave{0%{transform:scale(1);opacity:.65;}80%{opacity:0;}100%{transform:scale(2);opacity:0;}}
+@media(prefers-reduced-motion:reduce){ .fab-ia::before,.fab-ia::after{animation:none;} }
 .fab-ia:focus-visible{outline:2px solid #378CE3;outline-offset:2px;}
 /* Selector inline "¿Qué vas a crear?" dentro de cada proyecto (DEC-009). */
 .py-tipos{display:flex;align-items:center;gap:8px;flex-wrap:wrap;background:var(--bg);border-radius:8px;padding:12px 14px;margin:12px 20px 6px;}
@@ -584,8 +635,8 @@ button,input,select,textarea{font-family:inherit;}
 .py-tipos button:hover{filter:brightness(.955);}
 .py-tipos button .ico{display:inline-flex;}
 .py-tipos button.t-email{background:#e7f0fb;color:#155e9e;}
-.py-tipos button.t-display{background:#fbf2b0;color:#6b5c00;}
-.py-tipos button.t-ads{background:#e6e9f1;color:#565d73;}
+.py-tipos button.t-display{background:#e4f6f6;color:#0b6b6b;}
+.py-tipos button.t-ads{background:#eef1fb;color:var(--navy,#040764);}
 .py-tipos button.t-libre{background:#f7e6f4;color:#8f1583;}
 /* Acción destructiva de la página = terciaria (bajo énfasis), nunca compite con el primario. */
 .py-borrartodo{display:inline-flex;align-items:center;gap:6px;margin:18px 2px 0;border:none;background:none;color:#545454;font-family:var(--f);font-size:12.5px;cursor:pointer;padding:6px 4px;}
@@ -1829,45 +1880,58 @@ button,input,select,textarea{font-family:inherit;}
       <!-- ── Página: Inicio ── -->
       <div class="dash-page" id="pg-home">
         <div class="home-head"><h1 id="home-saludo">Hola</h1><p class="home-sub" id="home-fecha"></p></div>
-        <section class="crear-band">
-          <div class="cb-top">
-            <button class="cb-edit" onclick="editarBanner()" title="Editar los textos de este bloque"><span class="ico" data-ic="editar" data-icsize="14px"></span></button>
-            <div class="cb-eyebrow">Empieza aquí</div>
-            <h2 class="cb-titulo" id="banner-titulo">¿Qué vas a crear hoy?</h2>
-            <p class="cb-sub" id="banner-sub" style="display:none"></p>
-            <div class="cb-prompt">
-              <span class="cb-spark ico" data-ic="estrella" data-icsize="17px"></span>
-              <input id="cb-idea" placeholder="Describe tu idea y deja que Char-B lo haga por ti" onkeydown="if(event.key==='Enter')generarDesdeIdea()">
-              <button class="cb-generar" onclick="generarDesdeIdea()">Generar</button>
-            </div>
+
+        <!-- HERO Char-B (réplica de la gráfica) -->
+        <section class="hero-charb">
+          <button class="cb-edit" onclick="editarBanner()" title="Editar el título"><span class="ico" data-ic="editar" data-icsize="14px"></span></button>
+          <div class="hc-top">
+            <span class="hc-mascot"><svg viewBox="0 0 40 40" width="30" height="30" aria-hidden="true"><path d="M7 5h26a5 5 0 0 1 5 5v15a5 5 0 0 1-5 5H17l-8 6v-6H7a5 5 0 0 1-5-5V10a5 5 0 0 1 5-5z" fill="#1C73CB"/><circle cx="15.5" cy="17.5" r="2.5" fill="#fff"/><circle cx="25" cy="17.5" r="2.5" fill="#fff"/></svg></span>
+            <h2 class="hc-title" id="banner-titulo">Char-B, tu asistente de IA</h2>
           </div>
-          <div class="cb-bottom">
-            <div class="cb-tu">O avanza tú mismo</div>
-            <div class="cb-lanzadores">
-            <button class="cb-lz" data-serv="email" onclick="irARuta('/email-ia')"><span class="cb-lz-ico"><span class="ico" data-ic="email" data-icsize="18px"></span></span>Email Marketing</button>
-            <button class="cb-lz" data-serv="banner" onclick="irARuta('/gdn-ia')"><span class="cb-lz-ico"><span class="ico" data-ic="grid" data-icsize="18px"></span></span>Google Display</button>
-            <button class="cb-lz" data-serv="ads" onclick="irARuta('/ads-ia')"><span class="cb-lz-ico"><span class="ico" data-ic="buscar" data-icsize="18px"></span></span>Google Search</button>
-            <button class="cb-lz" data-serv="libre" onclick="irARuta('/free')"><span class="cb-lz-ico"><span class="ico" data-ic="editar" data-icsize="18px"></span></span>Formato Libre</button>
-            </div>
-            <div class="cb-pronto-row">
-              <span class="cb-pronto-lbl">Próximamente</span>
-              <button class="cb-pronto" onclick="irARuta('/post-ia')">Post RRSS</button>
-            </div>
+          <div class="hc-prompt">
+            <input id="cb-idea" placeholder="Describe tu idea y deja que Char-B lo haga por ti" onkeydown="if(event.key==='Enter')generarDesdeIdea()">
+          </div>
+          <div class="hc-actions"><button class="hc-generar" onclick="generarDesdeIdea()">Generar</button></div>
+        </section>
+
+        <!-- ¿Qué vas a crear? -->
+        <section class="crear-sec">
+          <div class="crear-head"><h2>¿Qué vas a crear?</h2><a class="crear-ver" onclick="dashIr('proyectos')">Ver plantillas →</a></div>
+          <div class="crear-cards">
+            <button class="crc" data-serv="email" onclick="irARuta('/email-ia')">
+              <span class="crc-ic email"><span class="ico" data-ic="email" data-icsize="20px"></span></span>
+              <div class="crc-t">Email</div><div class="crc-d">Newsletters y correos por bloques.</div>
+              <div class="crc-cta">Crear <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M5 12h14M13 6l6 6-6 6"/></svg></div>
+            </button>
+            <button class="crc" data-serv="banner" onclick="irARuta('/gdn-ia')">
+              <span class="crc-ic display"><span class="ico" data-ic="grid" data-icsize="20px"></span></span>
+              <div class="crc-t">Banner Display</div><div class="crc-d">Colección de tamaños para Google Ads.</div>
+              <div class="crc-cta">Crear <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M5 12h14M13 6l6 6-6 6"/></svg></div>
+            </button>
+            <button class="crc" data-serv="ads" onclick="irARuta('/ads-ia')">
+              <span class="crc-ic ads"><span class="ico" data-ic="buscar" data-icsize="20px"></span></span>
+              <div class="crc-t">Google Search</div><div class="crc-d">Keywords y anuncios listos para exportar.</div>
+              <div class="crc-cta">Crear <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M5 12h14M13 6l6 6-6 6"/></svg></div>
+            </button>
+            <button class="crc" data-serv="libre" onclick="irARuta('/free')">
+              <span class="crc-ic libre"><span class="ico" data-ic="editar" data-icsize="20px"></span></span>
+              <div class="crc-t">Formato libre</div><div class="crc-d">Lienzo abierto con todos los bloques.</div>
+              <div class="crc-cta">Crear <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M5 12h14M13 6l6 6-6 6"/></svg></div>
+            </button>
           </div>
         </section>
-        <section class="home-galeria">
-          <div class="hg-head">
-            <div><h2>Tus creatividades</h2><p class="hg-total" id="hg-total"></p></div>
+
+        <!-- Mis últimos trabajos (tabla, réplica de la gráfica) -->
+        <section class="ult-sec">
+          <div class="ult-head">
+            <h2>Mis últimos trabajos</h2>
             <div class="hg-filtros" id="hg-filtros">
-              <button class="pillf on" data-f="todas" onclick="filtrarHome('todas')">Todas</button>
-              <button class="pillf" data-f="Email" onclick="filtrarHome('Email')">Email</button>
-              <button class="pillf" data-f="Banners" onclick="filtrarHome('Banners')">Display</button>
-              <button class="pillf" data-f="Ads" onclick="filtrarHome('Ads')">Search</button>
-              <button class="pillf" data-f="Formato Libre" onclick="filtrarHome('Formato Libre')">Libre</button>
-              <a class="hg-ver" id="hg-ver" onclick="dashIr('proyectos')">Ver todas →</a>
+              <button class="pillf on" data-f="todas" onclick="filtrarHome('todas')">Todos</button>
+              <button class="pillf" data-f="activos" onclick="filtrarHome('activos')">Activos</button>
+              <button class="pillf" data-f="recientes" onclick="filtrarHome('recientes')">Recientes</button>
             </div>
           </div>
-          <div class="hg-grid" id="hg-grid"></div>
+          <div id="hg-grid"></div>
         </section>
       </div>
 
@@ -5940,6 +6004,10 @@ const CHIP_TXT   = { "Email":"EMAIL", "Banners":"DISPLAY", "Post":"POST", "Forma
 const CAT_ICO    = { "Email":"email", "Banners":"grid", "Post":"compartir", "Formato Libre":"documento", "Ads":"buscar", "Otro":"documento" };
 // Fondo SÓLIDO oficial por tipo (Email azul · Display amarillo · Search gris · Libre magenta).
 const CAT_TINTE  = { "Email":"#1c73cb", "Banners":"#fce865", "Post":"#040764", "Formato Libre":"#b318a3", "Ads":"#aeb6c6", "Otro":"#aeb6c6" };
+// Íconos SÓLIDOS de la tabla de trabajos (según la gráfica): Email azul ·
+// Display turquesa (glifo navy) · Search navy · Libre magenta.
+const WORK_BG = { "Email":"#1c73cb", "Banners":"#20b6b6", "Post":"#040764", "Formato Libre":"#b318a3", "Ads":"#040764", "Otro":"#5b6178" };
+const WORK_GL = { "Email":"#ffffff", "Banners":"#053a3a", "Post":"#ffffff", "Formato Libre":"#ffffff", "Ads":"#ffffff", "Otro":"#ffffff" };
 function chipDe(cat){ return `<span class="chip ${CHIP_CLASE[cat]||"libre"}">${CHIP_TXT[cat]||"LIBRE"}</span>`; }
 function estadoDe(p){
   const listo = (p.canvas||[]).length>0 || !!p.composicion || !!p.esSet || !!(p.adsData && (p.adsData.grupos||[]).length);
@@ -5985,38 +6053,36 @@ function renderHome(){
   const f = document.getElementById("home-fecha");
   if(f) f.textContent = DIAS_ES[hoy.getDay()].charAt(0).toUpperCase()+DIAS_ES[hoy.getDay()].slice(1)+" "+hoy.getDate()+" de "+MESES_ES[hoy.getMonth()]+" · aquí está tu taller de creatividades";
   const b = workspace.banner || {};
-  const bt = document.getElementById("banner-titulo"); if(bt) bt.textContent = b.titulo || "¿Qué vas a crear hoy?";
-  const bs = document.getElementById("banner-sub"); if(bs){ bs.textContent = b.subtitulo || ""; bs.style.display = b.subtitulo ? "" : "none"; }
+  const bt = document.getElementById("banner-titulo"); if(bt && b.titulo) bt.textContent = b.titulo;
   document.querySelectorAll("#hg-filtros .pillf").forEach(x => x.classList.toggle("on", x.dataset.f===filtroHome));
-  const piezas = todasLasPiezas();
-  const total = piezas.length;
-  const tot = document.getElementById("hg-total");
-  if(tot) tot.textContent = total ? (total+" en total · las más recientes") : "Aún no tienes creatividades";
-  const ver = document.getElementById("hg-ver"); if(ver) ver.textContent = total ? ("Ver las "+total+" →") : "Ir a Proyectos →";
-  const lista = piezas
-    .filter(x => filtroHome==="todas" || categoriaDe(x.p.formato)===filtroHome)
-    .sort((a,b2)=>(b2.p._mod||b2.pr.creado||0)-(a.p._mod||a.pr.creado||0))
-    .slice(0,6);
+  const piezas = todasLasPiezas()
+    .sort((a,b2)=>(b2.p._mod||b2.pr.creado||0)-(a.p._mod||a.pr.creado||0));
+  let lista = piezas;
+  if(filtroHome==="activos") lista = piezas.filter(x => estadoDe(x.p).txt==="Listo");
+  // "todas" y "recientes" = todas (ya ordenadas por más recientes).
+  const top = lista.slice(0,6);
   const grid = document.getElementById("hg-grid"); if(!grid) return;
-  if(!lista.length){
-    grid.innerHTML = `<div class="hg-vacio">Aún no hay creatividades${filtroHome!=="todas"?" de este tipo":""}.<br>Crea la primera con los botones de arriba o con la IA.</div>`;
+  if(!top.length){
+    grid.innerHTML = `<div class="hg-vacio">Aún no hay trabajos${filtroHome!=="todas"?" en este filtro":""}.<br>Crea el primero con las tarjetas de arriba o con Char-B.</div>`;
     return;
   }
-  grid.innerHTML = lista.map(({pr,p}) => {
+  const rows = top.map(({pr,p}) => {
     const cat = categoriaDe(p.formato);
     const est = estadoDe(p);
-    const fecha = p._mod ? ("Editado "+tiempoRel(p._mod)) : esc(pr.nombre);
-    return `<button class="hg-card" onclick="abrirPiezaDesdeDash('${pr.id}','${p.id}')">
-      <div class="hg-thumb" style="background:${CAT_TINTE[cat]||"#eef1fb"}">
-        <span style="color:${CAT_COLOR[cat]||"#040764"};line-height:0">${svgIcon(CAT_ICO[cat]||"documento",{size:"44px",grosor:1.5})}</span>
-        <span class="hg-chip">${chipDe(cat)}</span>
+    const fecha = p._mod ? tiempoRel(p._mod) : (pr.creado ? tiempoRel(pr.creado) : "");
+    return `<div class="ult-row">
+      <div class="ult-tw">
+        <span class="ult-ic" style="background:${WORK_BG[cat]||"#5b6178"};color:${WORK_GL[cat]||"#fff"}">${svgIcon(CAT_ICO[cat]||"documento",{size:"17px"})}</span>
+        <div style="min-width:0"><div class="ult-nm">${esc(p.nombre)}</div><div style="margin-top:3px">${chipDe(cat)}</div></div>
       </div>
-      <div class="hg-meta">
-        <div style="min-width:0"><div class="hg-nom">${esc(p.nombre)}</div><div class="hg-fecha">${fecha}</div></div>
-        <span class="hg-estado"><span class="pt" style="background:${est.color}"></span>${est.txt}</span>
-      </div>
-    </button>`;
+      <div class="ult-proj">${esc(pr.nombre)}</div>
+      <div class="ult-mod">${fecha}</div>
+      <div class="ult-est"><span class="pt" style="background:${est.color}"></span>${est.txt}</div>
+      <button class="ult-go" onclick="abrirPiezaDesdeDash('${pr.id}','${p.id}')" title="Abrir"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M5 12h14M13 6l6 6-6 6"/></svg></button>
+    </div>`;
   }).join("");
+  const totalN = piezas.length;
+  grid.innerHTML = `<div class="ult-cab"><span>Trabajo</span><span>Proyecto</span><span>Última modificación</span><span>Estado</span><span></span></div>${rows}<div class="ult-ver"><a onclick="dashIr('proyectos')">Ver todos los trabajos (${totalN}) →</a></div>`;
 }
 function abrirPiezaDesdeDash(prId, pId){
   const pr = proyectoPorId(prId); if(!pr) return;
