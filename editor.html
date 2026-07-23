@@ -838,6 +838,16 @@ button,input,select,textarea{font-family:inherit;}
 .lienzo-anchor{position:absolute;z-index:24;width:20px;height:20px;border-radius:50%;border:2px dashed rgba(28,115,203,.55);opacity:0;transition:opacity .12s;pointer-events:none;}
 .lienzo-stage.arrastrando-burbuja .lienzo-anchor{opacity:.9;}
 .lienzo-anchor.cerca{background:rgba(28,115,203,.25);border-style:solid;}
+/* Edición de texto directa sobre el banner */
+.lienzo-edit{position:absolute;z-index:28;outline:none;cursor:text;padding:1px 2px;border-radius:4px;overflow-wrap:break-word;transition:box-shadow .12s;}
+.lienzo-edit:hover{box-shadow:0 0 0 1.5px rgba(28,115,203,.5);}
+.lienzo-edit:focus{box-shadow:0 0 0 2px var(--blue,#1C73CB);background:rgba(255,255,255,.06);}
+.lienzo-textbar{position:absolute;z-index:40;display:flex;align-items:center;gap:2px;background:#fff;border:1px solid var(--bdr,#e4e8f0);border-radius:8px;padding:4px;box-shadow:0 6px 20px rgba(8,14,28,.16);}
+.lienzo-textbar button{width:30px;height:28px;border:none;background:transparent;border-radius:6px;cursor:pointer;color:var(--ink2,#3b3b3b);font-family:var(--f);font-size:13px;font-weight:700;display:inline-flex;align-items:center;justify-content:center;}
+.lienzo-textbar button:hover{background:var(--bg,#eef1f6);color:var(--navy,#040764);}
+.lienzo-textbar .sep{width:1px;height:18px;background:var(--bdr,#e4e8f0);margin:0 3px;}
+.lienzo-quitar{position:absolute;z-index:30;width:22px;height:22px;border-radius:50%;border:none;background:var(--magenta,#B318A3);color:#fff;font-size:15px;line-height:1;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0;}
+.lienzo-quitar:hover{background:var(--magenta-d,#A11693);}
 /* Editor de Diseño global (capas) */
 /* Control de ALCANCE: deja clarísimo si editas TODOS los tamaños o solo uno. */
 .cmp-scope{margin:0 0 14px;padding:12px;background:var(--navy-l,#eef1fb);border:1px solid #dfe4f2;border-radius:10px;}
@@ -4933,7 +4943,67 @@ function attachLienzoInteraccion(p, root){
     h.style.cssText=`left:${rc.x}px;top:${rc.y}px;width:${rc.w}px;height:${rc.h}px;`;
     arrastrarBurbuja(h, fmt, stage, bub);
     ovl.appendChild(h);
+    // Botón para QUITAR la burbuja desde el propio lienzo.
+    const x=document.createElement("button"); x.type="button"; x.className="lienzo-quitar"; x.title="Quitar la burbuja"; x.textContent="×";
+    x.style.cssText=`left:${rc.x+rc.w-13}px;top:${rc.y-9}px;`;
+    x.addEventListener("pointerdown",e=>e.stopPropagation());
+    x.addEventListener("click",e=>{ e.stopPropagation(); setCompScope(fmt,"burbuja.visible",false); persistir(); renderTablero(); });
+    ovl.appendChild(x);
   }
+  // Texto editable DIRECTO sobre el banner (Título y Bajada).
+  hacerTextoEditableLienzo(cmp, ovl, stage, fmt, rel);
+}
+// Edición inline del texto en el lienzo: clic → escribir, Enter = salto de línea,
+// y una barrita con tamaño (A-/A+) y alineación (izq/centro/der).
+function hacerTextoEditableLienzo(cmp, ovl, stage, fmt, rel){
+  const partes=[
+    {sel:".cmp-tit", path:"zonas.texto.titular.texto", size:"zonas.texto.titular.tamano", mn:12, mx:60},
+    {sel:".cmp-cue", path:"zonas.texto.cuerpo.texto",  size:"zonas.texto.cuerpo.tamano",  mn:9,  mx:32}
+  ];
+  partes.forEach(pt=>{
+    const el=cmp.querySelector(pt.sel); if(!el) return;
+    const rc=rel(el); const cs=getComputedStyle(el);
+    const ed=document.createElement("div"); ed.className="lienzo-edit"; ed.contentEditable="true"; ed.spellcheck=false;
+    ed.style.cssText=`left:${rc.x-2}px;top:${rc.y-1}px;width:${rc.w+4}px;font-family:${cs.fontFamily};font-size:${cs.fontSize};font-weight:${cs.fontWeight};line-height:${cs.lineHeight};color:${cs.color};text-align:${cs.textAlign};letter-spacing:${cs.letterSpacing};`;
+    ed.textContent=el.textContent;
+    el.style.visibility="hidden";
+    ed.addEventListener("focus",()=>mostrarBarraTexto(ed, stage, fmt, pt));
+    ed.addEventListener("blur",()=>{ setTimeout(()=>{
+      if(document.activeElement && document.activeElement.closest && document.activeElement.closest(".lienzo-textbar")) return;
+      ocultarBarraTexto();
+      const val=ed.innerText.replace(/ /g," ").replace(/\n{3,}/g,"\n\n").replace(/[ \t]+\n/g,"\n").trim();
+      setCompScope(fmt, pt.path, val); persistir(); renderTablero();
+    }, 70); });
+    ovl.appendChild(ed);
+  });
+}
+function ocultarBarraTexto(){ const b=document.getElementById("lienzo-textbar"); if(b) b.remove(); }
+function mostrarBarraTexto(ed, stage, fmt, pt){
+  ocultarBarraTexto();
+  const bar=document.createElement("div"); bar.className="lienzo-textbar"; bar.id="lienzo-textbar";
+  const aln=[["left","alignLeft"],["center","alignCenter"],["right","alignRight"]];
+  bar.innerHTML=
+    `<button type="button" data-act="menos" title="Más chico">A−</button>`+
+    `<button type="button" data-act="mas" title="Más grande">A+</button>`+
+    `<span class="sep"></span>`+
+    aln.map(([a,ic])=>`<button type="button" data-aln="${a}" title="${a}">${ICONS[ic]||a}</button>`).join("");
+  // Posición: sobre el elemento editable.
+  const er=ed.getBoundingClientRect(), sr=stage.getBoundingClientRect();
+  bar.style.left=Math.max(2,(er.left-sr.left))+"px";
+  bar.style.top=Math.max(2,(er.top-sr.top-40))+"px";
+  bar.querySelectorAll("button").forEach(b=>{
+    b.addEventListener("pointerdown",e=>e.preventDefault());   // no quitar el foco del texto
+    b.addEventListener("click",e=>{
+      e.preventDefault();
+      // commit del texto actual antes de aplicar el cambio
+      const val=ed.innerText.replace(/ /g," ").replace(/\n{3,}/g,"\n\n").trim();
+      setCompScope(fmt, pt.path, val);
+      if(b.dataset.act){ const cur=parseInt(getPath(composicionEfectiva(pieza(),fmt), pt.size))||(pt.mn+pt.mx>>1); const nv=Math.max(pt.mn,Math.min(pt.mx, cur+(b.dataset.act==="mas"?2:-2))); setCompScope(fmt, pt.size, String(nv)); }
+      else if(b.dataset.aln){ setCompScope(fmt, "zonas.texto.alinH", b.dataset.aln); }
+      persistir(); renderTablero();
+    });
+  });
+  stage.querySelector(".lienzo-ovl").appendChild(bar);
 }
 function seleccionarZonaLienzo(fmt, i){
   const p=pieza(); p.activaFmt=fmt; renderForm(); cambiarPanelTab("editar");

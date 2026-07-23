@@ -230,6 +230,7 @@ El usuario ("esta barra no se entiende nada") pidió (a) saber si edita todos lo
   - **Burbuja arrastrable** (`.lienzo-burbuja`, `arrastrarBurbuja`): imanta a 5 anclas (tl/tr/bl/br/cr).
   - **Estable**: pointer events; el arrastre actualiza el DOM EN VIVO y **solo persiste al soltar** (nada de re-render por movimiento). `attachLienzoInteraccion` limpia el overlay al entrar (evita duplicados por varios `requestAnimationFrame` en cola). Los controles del panel siguen intactos = red de seguridad.
   - **Alcance**: `setCompScope(fmt,path,val)`/`propScope(fmt)`/`esFmtMaster(fmt)` → escribe al Diseño global si el activo es el máster, o al override si es otro tamaño. Escribe el **array `prop` completo** (evita overrides de array sparse).
+  - **Edición de texto DIRECTA** (`hacerTextoEditableLienzo`): Título y Bajada son `contenteditable` en su lugar sobre el banco; Enter = salto de línea (el titular se renderiza con `escMultiline`); barrita flotante (`mostrarBarraTexto`) con tamaño A−/A+ y alineación izq/centro/der (escribe `zonas.texto.*.tamano` y `zonas.texto.alinH` por alcance). La BURBUJA se quita con un botón × en el lienzo (`.lienzo-quitar`).
   - NO es lienzo libre pixel-a-pixel (rompería el modelo 3 zonas × 11 tamaños con herencia); es manipulación directa con imantado, honesto y estable.
 - Verificado con arrastre real de Playwright (`veri-lienzo.js` 12/12: divisor 25→40, burbuja tr→bl, clic-zona) + `veri-scope.js` 9/9 + regresiones.
 
