@@ -10,60 +10,67 @@
 <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;600&display=swap" rel="stylesheet">
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
-html,body{height:100%;font-family:"Roboto",Arial,sans-serif;background:#eef1f6;color:#12173d;-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale;}
-body{display:flex;min-height:100vh;}
+html,body{height:100%;font-family:"Roboto",Arial,sans-serif;background:#F5F5F5;color:#12173d;-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale;}
+body{display:flex;align-items:center;justify-content:center;min-height:100vh;padding:24px;}
 
-/* Panel del formulario */
-.lado-form{width:min(50%,620px);background:#fff;display:flex;align-items:center;justify-content:center;padding:48px 40px;}
-.form-inner{max-width:380px;width:100%;}
-.brand{display:flex;align-items:center;gap:10px;margin-bottom:26px;}
-.brand svg{width:40px;height:40px;display:block;}
-.brand-text .n{font-size:15px;font-weight:600;color:#12173d;letter-spacing:-.01em;line-height:1.1;}
-.brand-text .s{font-size:11px;color:#9aa0b5;font-weight:400;margin-top:2px;}
-h1{font-size:26px;font-weight:600;color:#12173d;letter-spacing:-.02em;margin:0 0 8px;line-height:1.2;}
-.sub{font-size:14px;color:#6b7180;line-height:1.5;margin:0 0 24px;font-weight:400;}
-label{display:block;font-size:11px;font-weight:600;color:#8b91a4;margin-bottom:6px;text-transform:uppercase;letter-spacing:.04em;}
-input[type=email]{width:100%;border:1px solid #e6e8ef;border-radius:10px;padding:12px 14px;font-size:14px;font-family:inherit;background:#fff;outline:none;transition:border-color .14s;color:#12173d;}
-input[type=email]:focus{border-color:#040764;}
-input[type=email]:disabled{opacity:.6;cursor:not-allowed;}
-.btn{width:100%;padding:13px 20px;border:none;border-radius:10px;background:#040764;color:#fff;cursor:pointer;font-size:14px;font-weight:600;font-family:inherit;margin-top:14px;transition:background .14s;display:flex;align-items:center;justify-content:center;gap:8px;}
-.btn:hover:not(:disabled){background:#0a0e57;}
+/* ── Tarjeta central: foto enmarcada (sin filtros ni capas) + formulario ── */
+.tarjeta{display:none;width:100%;max-width:960px;min-height:580px;background:#fff;border-radius:10px;box-shadow:0 12px 44px rgba(18,23,61,.10);padding:14px;grid-template-columns:44% 1fr;gap:0;}
+.tarjeta.lista{display:grid;}
+.tarjeta-foto{border-radius:10px;overflow:hidden;background:#040764;min-height:220px;}
+.tarjeta-foto img{width:100%;height:100%;object-fit:cover;object-position:center;display:block;}
+.tarjeta-foto.sin-foto img{display:none;}
+.tarjeta-foto .foto-alt{display:none;width:100%;height:100%;align-items:center;justify-content:center;}
+.tarjeta-foto.sin-foto .foto-alt{display:flex;}
+.foto-alt svg{width:72px;height:72px;}
+
+.tarjeta-form{display:flex;align-items:center;justify-content:center;padding:40px 28px;}
+.form-inner{width:100%;max-width:340px;}
+.brand{display:flex;align-items:center;justify-content:center;gap:9px;margin-bottom:22px;}
+.brand svg{width:34px;height:34px;display:block;}
+.brand .n{font-size:15px;font-weight:600;letter-spacing:-.01em;}
+h1{font-size:23px;font-weight:600;letter-spacing:-.02em;text-align:center;margin:0 0 6px;line-height:1.25;}
+h1 b{font-weight:600;color:#040764;}
+.sub{font-size:13.5px;color:#6b7180;text-align:center;line-height:1.5;margin:0 0 22px;font-weight:400;}
+
+label{display:block;font-size:11px;font-weight:600;color:#545454;margin:0 0 6px;text-transform:uppercase;letter-spacing:.05em;}
+.campo{margin-bottom:14px;}
+.campo input{width:100%;height:46px;border:1px solid #dfe2ea;border-radius:10px;padding:0 14px;font-size:14px;font-family:inherit;background:#fff;outline:none;transition:border-color .14s;color:#12173d;}
+.campo input:focus{border-color:#040764;}
+.campo input:disabled{opacity:.6;cursor:not-allowed;}
+.campo-pass{position:relative;}
+.campo-pass input{padding-right:46px;}
+.ver-pass{position:absolute;right:6px;top:50%;transform:translateY(-50%);width:34px;height:34px;border:none;background:none;cursor:pointer;color:#8b91a4;display:flex;align-items:center;justify-content:center;border-radius:8px;}
+.ver-pass:hover{color:#040764;background:#F5F5F5;}
+.ayuda{display:flex;justify-content:flex-end;margin:-6px 0 16px;}
+.ayuda span{font-size:12px;color:#6b7180;}
+
+.btn{width:100%;height:46px;border:none;border-radius:10px;background:#040764;color:#fff;cursor:pointer;font-size:14px;font-weight:600;font-family:inherit;transition:background .14s;display:flex;align-items:center;justify-content:center;gap:8px;}
+.btn:hover:not(:disabled){background:#04065A;}
+.btn:focus-visible{outline:2px solid #378CE3;outline-offset:2px;}
 .btn:disabled{opacity:.6;cursor:not-allowed;}
 .btn .spin{width:14px;height:14px;border:2px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:sp .7s linear infinite;display:none;}
 .btn.loading .spin{display:block;}
 @keyframes sp{to{transform:rotate(360deg);}}
-.alert{padding:11px 14px;border-radius:10px;font-size:12.5px;line-height:1.45;margin-bottom:16px;display:none;}
-.alert.show{display:block;}
-.alert.ok{background:#e6f6ec;color:#1c973b;}
-.alert.err{background:#f7e6f4;color:#b318a3;}
-.foot{margin-top:24px;padding-top:18px;border-top:1px solid #eceef3;font-size:12px;color:#9aa0b5;line-height:1.55;}
 
-/* Área visual (fotografía Envato — ver ENVATO_ASSETS.md) */
-.lado-visual{flex:1;position:relative;background:#eef1f6;display:flex;flex-direction:column;justify-content:flex-end;padding:48px;min-height:100vh;overflow:hidden;}
-.foto{position:absolute;inset:24px;border-radius:14px;overflow:hidden;background:#040764;}
-.foto img{width:100%;height:100%;object-fit:cover;display:block;}
-.foto .foto-alt{display:none;position:absolute;inset:0;background:#040764;color:#fff;padding:44px;flex-direction:column;justify-content:space-between;}
-.foto.sin-foto img{display:none;}
-.foto.sin-foto .foto-alt{display:flex;}
-.foto-alt .mark{width:64px;height:64px;}
-.foto-alt .grande{font-size:32px;line-height:1.15;font-weight:600;letter-spacing:-.02em;max-width:420px;}
-.foto-alt .chico{font-size:12px;color:#7e86bd;}
-.quote{position:relative;background:#040764;color:#fff;border-radius:12px;padding:20px 22px;max-width:420px;box-shadow:0 14px 30px rgba(4,7,100,.25);}
-.quote .eyebrow{font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:#FCE865;font-weight:600;margin-bottom:6px;}
-.quote .txt{font-size:18px;font-weight:500;line-height:1.35;}
+.alert{padding:11px 14px;border-radius:10px;font-size:12.5px;line-height:1.45;margin-bottom:14px;display:none;}
+.alert.show{display:block;}
+.alert.ok{background:#C2F0D3;color:#0D7332;}
+.alert.err{background:#F5D6D6;color:#760A0A;}
+.foot{margin-top:22px;font-size:12px;color:#8b91a4;line-height:1.55;text-align:center;}
 
 .splash{position:fixed;inset:0;background:#040764;display:flex;align-items:center;justify-content:center;color:#fff;z-index:10;}
 .splash .spin{width:30px;height:30px;border:2.5px solid rgba(255,255,255,.2);border-top-color:rgba(255,255,255,.85);border-radius:50%;animation:sp .7s linear infinite;}
 .splash.hidden{display:none;}
 
-@media(max-width:900px){
-  body{flex-direction:column;}
-  .lado-visual{order:1;min-height:200px;max-height:230px;padding:0;flex:none;}
-  .foto{inset:0;border-radius:0;}
-  .foto-alt{padding:22px;}
-  .foto-alt .grande{font-size:20px;}
-  .quote{display:none;}
-  .lado-form{order:2;width:100%;padding:28px 22px 40px;flex:1;align-items:flex-start;}
+/* ── Multidispositivo: tablet apila (foto arriba), móvil compacta ── */
+@media(max-width:880px){
+  .tarjeta{grid-template-columns:1fr;max-width:480px;min-height:0;}
+  .tarjeta-foto{height:190px;min-height:0;}
+  .tarjeta-form{padding:28px 18px 22px;}
+}
+@media(max-width:520px){
+  body{padding:14px;}
+  .tarjeta-foto{height:140px;}
 }
 </style>
 </head>
@@ -73,51 +80,47 @@ input[type=email]:disabled{opacity:.6;cursor:not-allowed;}
   <div class="spin"></div>
 </div>
 
-<div class="lado-form">
-  <div class="form-inner" id="card" style="display:none;">
-    <div class="brand">
-      <svg viewBox="0 0 40 40"><rect width="40" height="40" rx="10" fill="#040764"/><rect x="9" y="10" width="22" height="5" rx="2.5" fill="#FCE865"/><rect x="9" y="19" width="9.5" height="11" rx="2.4" fill="#1C73CB"/><rect x="21.5" y="19" width="9.5" height="11" rx="2.4" fill="#20B6B6"/></svg>
-      <div class="brand-text">
-        <div class="n">Simple Block Builder</div>
-        <div class="s">por Gamonal</div>
-      </div>
-    </div>
-
-    <h1>Entrar al editor</h1>
-    <p class="sub">Escribe tu usuario y tu contraseña. Sin correos ni enlaces.</p>
-
-    <div class="alert" id="alert"></div>
-
-    <form id="form" autocomplete="on">
-      <label for="usuario">Usuario</label>
-      <input type="text" id="usuario" name="username" required autocomplete="username" placeholder="tu usuario" autocapitalize="none" spellcheck="false">
-      <label for="password" style="margin-top:12px;display:block;">Contraseña</label>
-      <input type="password" id="password" name="password" required autocomplete="current-password" placeholder="tu contraseña">
-      <button type="submit" class="btn" id="btn">
-        <span class="spin"></span>
-        <span class="lbl">Entrar</span>
-      </button>
-    </form>
-
-    <div class="foot">
-      Solo usuarios autorizados pueden entrar.<br>
-      ¿Olvidaste tu contraseña? Pídele una nueva al administrador.
-    </div>
-  </div>
-</div>
-
-<div class="lado-visual">
-  <div class="foto" id="foto">
-    <img src="/assets/login/foto_login_simple_block_builder.jpg" alt="Equipo creativo eligiendo colores para un diseño" onerror="document.getElementById('foto').classList.add('sin-foto')">
+<div class="tarjeta" id="card">
+  <div class="tarjeta-foto" id="foto">
+    <img src="/assets/login/foto_login_simple_block_builder.jpg" alt="Sobres de correo ordenados sobre fondo turquesa" onerror="document.getElementById('foto').classList.add('sin-foto')">
     <div class="foto-alt">
-      <svg class="mark" viewBox="0 0 40 40"><rect width="40" height="40" rx="10" fill="#0a0e57"/><rect x="9" y="10" width="22" height="5" rx="2.5" fill="#FCE865"/><rect x="9" y="19" width="9.5" height="11" rx="2.4" fill="#1C73CB"/><rect x="21.5" y="19" width="9.5" height="11" rx="2.4" fill="#20B6B6"/></svg>
-      <div class="grande">Arma, aplica tu marca y lanza. Todo por bloques.</div>
-      <div class="chico">© Gamonal · Solo usuarios autorizados</div>
+      <svg viewBox="0 0 40 40"><rect width="40" height="40" rx="10" fill="#0a0e57"/><rect x="9" y="10" width="22" height="5" rx="2.5" fill="#FCE865"/><rect x="9" y="19" width="9.5" height="11" rx="2.4" fill="#1C73CB"/><rect x="21.5" y="19" width="9.5" height="11" rx="2.4" fill="#20B6B6"/></svg>
     </div>
   </div>
-  <div class="quote">
-    <div class="eyebrow">Estudio creativo</div>
-    <div class="txt">Email, banners y social con la identidad de cada marca, sin salir del navegador.</div>
+
+  <div class="tarjeta-form">
+    <div class="form-inner">
+      <div class="brand">
+        <svg viewBox="0 0 40 40"><rect width="40" height="40" rx="10" fill="#040764"/><rect x="9" y="10" width="22" height="5" rx="2.5" fill="#FCE865"/><rect x="9" y="19" width="9.5" height="11" rx="2.4" fill="#1C73CB"/><rect x="21.5" y="19" width="9.5" height="11" rx="2.4" fill="#20B6B6"/></svg>
+        <span class="n">Simple Block Builder</span>
+      </div>
+
+      <h1>Bienvenido a <b>tu estudio</b></h1>
+      <p class="sub">Crea emails, banners y campañas con la identidad de cada marca.</p>
+
+      <div class="alert" id="alert"></div>
+
+      <form id="form" autocomplete="on">
+        <div class="campo">
+          <label for="usuario">Usuario</label>
+          <input type="text" id="usuario" name="username" required autocomplete="username" placeholder="Escribe tu usuario" autocapitalize="none" spellcheck="false">
+        </div>
+        <div class="campo campo-pass">
+          <label for="password">Contraseña</label>
+          <input type="password" id="password" name="password" required autocomplete="current-password" placeholder="Escribe tu contraseña">
+          <button type="button" class="ver-pass" id="ver-pass" title="Mostrar u ocultar la contraseña" aria-label="Mostrar u ocultar la contraseña" style="top:auto;bottom:6px;transform:none;">
+            <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3.5-6.5 10-6.5S22 12 22 12s-3.5 6.5-10 6.5S2 12 2 12z"/><circle cx="12" cy="12" r="2.6"/></svg>
+          </button>
+        </div>
+        <div class="ayuda"><span>¿Olvidaste tu contraseña? Pídesela al administrador.</span></div>
+        <button type="submit" class="btn" id="btn">
+          <span class="spin"></span>
+          <span class="lbl">Entrar</span>
+        </button>
+      </form>
+
+      <div class="foot">Solo usuarios autorizados · © Gamonal</div>
+    </div>
   </div>
 </div>
 
@@ -133,7 +136,7 @@ input[type=email]:disabled{opacity:.6;cursor:not-allowed;}
   } catch (e) {}
 
   splash.classList.add("hidden");
-  card.style.display = "block";
+  card.classList.add("lista");
 
   // Mensajes al volver con error (p. ej. enlaces mágicos viejos, ya desactivados).
   const params = new URLSearchParams(location.search);
@@ -157,6 +160,12 @@ input[type=email]:disabled{opacity:.6;cursor:not-allowed;}
     userInput.disabled = b; passInput.disabled = b;
     btnLbl.textContent = b ? "Entrando..." : "Entrar";
   };
+
+  // Mostrar / ocultar contraseña
+  document.getElementById("ver-pass").addEventListener("click", () => {
+    passInput.type = passInput.type === "password" ? "text" : "password";
+    passInput.focus();
+  });
 
   form.addEventListener("submit", async (e) => {
     e.preventDefault();
