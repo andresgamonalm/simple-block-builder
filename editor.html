@@ -7996,8 +7996,8 @@ function restaurarSeccion(ruta, slug){
   let pr=null, p=null;
   // 0) deep-link con nombre: /seccion/mi-campana → abre ESA pieza.
   if(slug){ for(const PR of (workspace.proyectos||[])){ for(const P of (PR.piezas||[])){ if(rutaDeProducto(P)===ruta && slugDe(P.nombre)===slug){ pr=PR; p=P; } } } }
-  // 1) la última pieza abierta, si coincide con la sección
-  try{ const u=JSON.parse(localStorage.getItem("sbb-ultima")||"null"); if(u){ pr=proyectoPorId(u.pr); p=pr&&(pr.piezas||[]).find(x=>x.id===u.p); if(!(p && rutaDeProducto(p)===ruta)){ pr=null; p=null; } } }catch(_){}
+  // 1) la última pieza abierta, si coincide con la sección (SOLO si el deep-link no fijó una)
+  if(!p) try{ const u=JSON.parse(localStorage.getItem("sbb-ultima")||"null"); if(u){ pr=proyectoPorId(u.pr); p=pr&&(pr.piezas||[]).find(x=>x.id===u.p); if(!(p && rutaDeProducto(p)===ruta)){ pr=null; p=null; } } }catch(_){}
   // 2) si no, cualquier pieza de esa sección (la última encontrada)
   if(!p){ for(const PR of (workspace.proyectos||[])){ for(const P of (PR.piezas||[])){ if(rutaDeProducto(P)===ruta){ pr=PR; p=P; } } } }
   if(p && pr){
