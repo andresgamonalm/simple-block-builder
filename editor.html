@@ -293,12 +293,18 @@ button,input,select,textarea{font-family:inherit;}
 .ia-req{font-size:13px;font-weight:600;color:var(--magenta);text-transform:uppercase;letter-spacing:.04em;}
 .ia-label small{font-weight:400;color:var(--ink3);font-size:13px;}
 .ia-col small{font-weight:400;color:var(--ink3);font-size:13px;}
-/* Segmentos del asistente = chips suaves (estilo conversación, no barras navy). */
-.ia-seg{display:flex;gap:8px;flex-wrap:wrap;}
-.ia-seg button{flex:1 1 auto;border:1.5px solid var(--bdr);border-radius:22px;background:var(--white);padding:11px 14px;font-family:var(--f);font-size:14px;font-weight:500;color:var(--ink2);cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:8px;transition:background .12s,border-color .12s,color .12s;}
+/* Segmentos del asistente = chips suaves alineados al sistema (radio ≤10px,
+   misma altura, íconos con el color oficial del tipo — como el Home). */
+.ia-seg{display:flex;gap:10px;flex-wrap:wrap;}
+.ia-seg button{flex:1 1 auto;border:1px solid var(--bdr);border-radius:9px;background:var(--white);height:46px;padding:0 14px;font-family:var(--f);font-size:14px;font-weight:500;color:var(--ink2);cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:9px;transition:background .12s,border-color .12s,color .12s;}
 .ia-seg button:hover{border-color:#cfd6e4;}
 .ia-seg button.on{background:#EEF0FA;border-color:var(--navy);color:var(--navy);font-weight:600;}
 .ia-seg button .ico{width:16px;height:16px;}
+.ia-pic{width:28px;height:28px;border-radius:8px;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;}
+.ia-pic .ico{width:15px;height:15px;}
+.ia-pic.email{background:#1c73cb;color:#fff;}
+.ia-pic.display{background:#fce865;color:#08103a;}
+.ia-pic.ads{background:#aeb6c6;color:#141c3a;}
 /* Identidad de Char-B en el header + burbuja de chat (con su foto). */
 .ia-head .ia-idn{display:flex;align-items:center;gap:11px;}
 .ia-av{width:42px;height:42px;border-radius:12px;background:#EAF7F7;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
@@ -1768,9 +1774,9 @@ button,input,select,textarea{font-family:inherit;}
       <select id="ia-marca" class="dz-inp"></select>
       <label class="ia-label">¿Qué piezas necesita tu campaña? <small>(marca una o varias)</small></label>
       <div class="ia-seg" id="ia-piezas-seg">
-        <button type="button" data-p="email" class="on" onclick="iaTogglePieza('email')"><span class="ico" data-ic="email"></span> Email</button>
-        <button type="button" data-p="banner" onclick="iaTogglePieza('banner')"><span class="ico" data-ic="grid"></span> Banners Display</button>
-        <button type="button" data-p="ads" onclick="iaTogglePieza('ads')"><span class="ico" data-ic="buscar"></span> Google Search</button>
+        <button type="button" data-p="email" class="on" onclick="iaTogglePieza('email')"><span class="ia-pic email"><span class="ico" data-ic="email"></span></span> Email</button>
+        <button type="button" data-p="banner" onclick="iaTogglePieza('banner')"><span class="ia-pic display"><span class="ico" data-ic="grid"></span></span> Banner Display</button>
+        <button type="button" data-p="ads" onclick="iaTogglePieza('ads')"><span class="ia-pic ads"><span class="ico" data-ic="buscar"></span></span> Google Search</button>
       </div>
       <p id="ia-piezas-hint" style="font-size:12px;color:#8890a8;margin:6px 0 0;">Con 2 o más piezas, Char-B define primero <b>un concepto de campaña</b> y todas siguen la misma idea.</p>
       <div id="ia-tono-wrap">
