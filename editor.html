@@ -892,6 +892,7 @@ button,input,select,textarea{font-family:inherit;}
 .lienzo{margin:0 auto 26px;max-width:760px;}
 .lienzo-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:0 2px 12px;flex-wrap:wrap;}
 .lienzo-head .lz-tit{font-size:14px;font-weight:600;color:var(--ink,#12173d);display:flex;align-items:center;gap:9px;}
+.lz-zoom{color:var(--ink3,#5b6178);font-weight:400;font-size:13px;}
 .lienzo-head .lz-tit .lz-badge{font-size:13px;font-weight:600;color:#fff;background:var(--navy,#040764);border-radius:999px;padding:3px 10px;}
 .lienzo-head .lz-ayuda{font-size:13px;color:var(--ink3,#5b6178);display:flex;align-items:center;gap:6px;}
 .lienzo-stage{position:relative;margin:0 auto;border-radius:6px;overflow:hidden;box-shadow:0 6px 26px rgba(8,14,28,.14);background:#0e2748;}
@@ -5014,7 +5015,7 @@ function renderLienzoEdicion(p){
   const fmt = p.activaFmt || p.masterFmt || "display-300x250";
   const F = FORMATOS[fmt]; if(!F) return "";
   const ef = composicionEfectiva(p, fmt);
-  const s = Math.min(760/F.ancho, 460/F.alto, 2.2);
+  const s = Math.min(760/F.ancho, 460/F.alto, 1);   // nunca agrandar sobre el tamaño real
   const Ws = Math.round(F.ancho*s), Hs = Math.round(F.alto*s);
   const esMaster = esFmtMaster(fmt);
   const alcance = esMaster ? "editando TODOS los tamaños" : `editando SOLO ${F.ancho}×${F.alto}`;
@@ -5047,12 +5048,19 @@ function attachLienzoInteraccion(p, root){
     const cont = wrap.parentElement;
     const dispoW = Math.max(280, Math.min((cont ? cont.clientWidth : 760) - 24, 900));
     const dispoH = Math.max(220, Math.min(window.innerHeight - 320, 520));
-    const s2 = Math.min(dispoW/Fr.ancho, dispoH/Fr.alto, 2.2);
+    const s2 = Math.min(dispoW/Fr.ancho, dispoH/Fr.alto, 1);   // cap 1: un 300x250 se ve de 300px, no inflado
     const sc = stage.querySelector(".lienzo-scale");
     stage.style.width = Math.round(Fr.ancho*s2)+"px";
     stage.style.height = Math.round(Fr.alto*s2)+"px";
     if(sc) sc.style.transform = "scale("+s2+")";
     wrap.dataset.escala = s2;
+    // Rotula el % de vista: aclara por qué un 1200px se ve reducido en pantalla.
+    const tit = wrap.querySelector(".lz-tit");
+    if(tit){
+      let z = tit.querySelector(".lz-zoom");
+      if(!z){ z=document.createElement("span"); z.className="lz-zoom"; tit.appendChild(z); }
+      z.textContent = s2>=0.995 ? " · tamaño real" : " · vista al "+Math.round(s2*100)+"%";
+    }
   }
   const sr = stage.getBoundingClientRect();
   const rel = (el)=>{ const r=el.getBoundingClientRect(); return { x:r.left-sr.left, y:r.top-sr.top, w:r.width, h:r.height }; };
