@@ -1492,6 +1492,7 @@ button,input,select,textarea{font-family:inherit;}
         <label class="mf-full">Productos / líneas<input type="text" id="marca-productos" placeholder="Auto, Hogar, Vida, Salud, Empresas (separa con comas)"></label>
         <label>Palabras a usar<input type="text" id="marca-usar" placeholder="respaldo, tranquilidad, cobertura"></label>
         <label>Palabras a evitar<input type="text" id="marca-evitar" placeholder="barato, gratis"></label>
+        <label class="mf-full">Directrices de estilo <small>(el "manual" aprendido de la marca: la IA lo respeta SIEMPRE — diagramación, fotografía, reglas de copy)</small><textarea id="marca-directrices" rows="4" placeholder="Ej: oferta en círculo de color con el número grande; fondo azul oscuro; fotos naturales sin poses de banco de imágenes; nunca rellenar con frases genéricas."></textarea></label>
 
         <div class="mf-sec mf-full">Email: encabezado y pie <small>(base de cada email; se puede ajustar luego)</small></div>
         <label class="mf-full">Estilo del header/footer de marca <small>(la IA y "Aplicar marca" usan este)</small><select id="marca-bandaEstilo"><option value="solido">Banda sólida (color de marca, logo claro)</option><option value="blanco">Banda blanca (logo a color)</option></select></label>
@@ -5983,6 +5984,7 @@ function normalizarMarca(m){
     productos: m.productos || "",
     usar: m.usar || "",
     evitar: m.evitar || "",
+    directrices: m.directrices || "",
     headerTagline: m.headerTagline || "",
     direccion: m.direccion || "",
     copyright: m.copyright || "",
@@ -6079,7 +6081,7 @@ function resetMarcaForm(){
   set("marca-accent1","#d9c6b1"); set("marca-accent2","#a3bdcb");
   set("marca-fontTitulo","Inter"); set("marca-fontCuerpo","Inter");
   set("marca-negocio",""); set("marca-tono",""); set("marca-eslogan","");
-  set("marca-publico",""); set("marca-productos",""); set("marca-usar",""); set("marca-evitar","");
+  set("marca-publico",""); set("marca-productos",""); set("marca-usar",""); set("marca-evitar",""); set("marca-directrices","");
   set("marca-headerTagline",""); set("marca-direccion",""); set("marca-copyright",""); set("marca-unsubTexto",""); set("marca-disclaimer","");
   set("marca-web",""); set("marca-facebook",""); set("marca-instagram",""); set("marca-linkedin",""); set("marca-youtube",""); set("marca-spotify","");
   set("marca-gap",""); set("marca-radio",""); set("marca-bandaEstilo","solido");
@@ -6097,7 +6099,7 @@ function editarMarca(id){
   set("marca-accent1",m.accent1||"#d9c6b1"); set("marca-accent2",m.accent2||"#a3bdcb");
   set("marca-fontTitulo",m.fontTitulo); set("marca-fontCuerpo",m.fontCuerpo);
   set("marca-negocio",m.negocio); set("marca-tono",m.tono); set("marca-eslogan",m.eslogan);
-  set("marca-publico",m.publico); set("marca-productos",m.productos); set("marca-usar",m.usar); set("marca-evitar",m.evitar);
+  set("marca-publico",m.publico); set("marca-productos",m.productos); set("marca-usar",m.usar); set("marca-evitar",m.evitar); set("marca-directrices",m.directrices);
   set("marca-headerTagline",m.headerTagline); set("marca-direccion",m.direccion); set("marca-copyright",m.copyright); set("marca-unsubTexto",m.unsubTexto); set("marca-disclaimer",m.disclaimer);
   set("marca-web",m.web); set("marca-facebook",m.facebook); set("marca-instagram",m.instagram); set("marca-linkedin",m.linkedin); set("marca-youtube",m.youtube); set("marca-spotify",m.spotify);
   set("marca-gap",m.gap); set("marca-radio",m.radio); set("marca-bandaEstilo",m.bandaEstilo||"solido");
@@ -6115,7 +6117,7 @@ function guardarMarca(){
     accent1:g("marca-accent1"), accent2:g("marca-accent2"),
     fontTitulo:g("marca-fontTitulo"), fontCuerpo:g("marca-fontCuerpo"),
     negocio:g("marca-negocio").trim(), tono:g("marca-tono").trim(), eslogan:g("marca-eslogan").trim(),
-    publico:g("marca-publico").trim(), productos:g("marca-productos").trim(), usar:g("marca-usar").trim(), evitar:g("marca-evitar").trim(),
+    publico:g("marca-publico").trim(), productos:g("marca-productos").trim(), usar:g("marca-usar").trim(), evitar:g("marca-evitar").trim(), directrices:g("marca-directrices").trim(),
     headerTagline:g("marca-headerTagline").trim(), direccion:g("marca-direccion").trim(), copyright:g("marca-copyright").trim(), unsubTexto:g("marca-unsubTexto").trim(), disclaimer:g("marca-disclaimer").trim(),
     web:g("marca-web").trim(), facebook:g("marca-facebook").trim(), instagram:g("marca-instagram").trim(), linkedin:g("marca-linkedin").trim(), youtube:g("marca-youtube").trim(), spotify:g("marca-spotify").trim(),
     gap:g("marca-gap").trim(), radio:g("marca-radio").trim(), bandaEstilo:g("marca-bandaEstilo") };
@@ -6130,13 +6132,14 @@ function guardarMarca(){
 function rellenarMarcaZurich(){
   const set=(i,v)=>{ const e=document.getElementById(i); if(e) e.value=v; };
   set("marca-nombre","Zurich"); set("marca-empresa","Zurich Chile");
-  // Paleta del manual + campaña digital real (anuncios display 2026): principal
-  // #2167ae, fondo de banner navy profundo #1D2E7A, oferta en círculo lima
-  // #D9E05F, burbujas celestes #72CCFD. CTA rojo #e71313 del manual.
-  set("marca-primary","#2167AE"); set("marca-secondary","#1D2E7A"); set("marca-cta","#E71313");
-  set("marca-ctaText","#ffffff"); set("marca-text","#1a1a1a"); set("marca-bg","#ffffff"); set("marca-bgpagina","#F7F7F7");
-  set("marca-accent1","#D9E05F"); set("marca-accent2","#72CCFD");
-  set("marca-fontTitulo","Montserrat"); set("marca-fontCuerpo","Inter");
+  // Paleta OFICIAL del Brandbook Zurich 2024: héroe Azul Zurich #2167AE, Azul
+  // Oscuro #23366F (fondo de banners), acentos Lima #FFF773 (círculo de oferta)
+  // y Azul Claro #91BFE3 (burbujas). Blanco de Zurich #ECEEEF de fondo de página.
+  // Tipografía: Arial (alternativa oficial cuando no está Zurich Sans).
+  set("marca-primary","#2167AE"); set("marca-secondary","#23366F"); set("marca-cta","#2167AE");
+  set("marca-ctaText","#ffffff"); set("marca-text","#23366F"); set("marca-bg","#ffffff"); set("marca-bgpagina","#ECEEEF");
+  set("marca-accent1","#FFF773"); set("marca-accent2","#91BFE3");
+  set("marca-fontTitulo","Arial"); set("marca-fontCuerpo","Arial");
   // Logos oficiales subidos a R2 (color para fondo blanco, blanco para banda sólida); solo si no hay uno ya.
   const zColor="https://simple-block-builder.gamonal.app/api/upload?k=zurich/Logo-Zurich.png";
   const zBlanco="https://simple-block-builder.gamonal.app/api/upload?k=zurich/Logo-Zurich-Blanco.png";
@@ -6145,7 +6148,8 @@ function rellenarMarcaZurich(){
   if(!yaLogo("marca-logoClaro-data")){ set("marca-logoClaro-data",zBlanco); pintarLogoPrev("logoClaro",zBlanco); }
   set("marca-negocio","Aseguradora en Chile con productos 100% digitales de contratación online (seguros-personas/productos-digitales).");
   set("marca-tono","Cercano, confiable y claro; transmite respaldo y tranquilidad sin tecnicismos.");
-  set("marca-eslogan","");
+  set("marca-eslogan","Tu mejor compañía para el futuro");
+  set("marca-directrices","DIAGRAMACION (Brandbook 2024): fondo de banner Azul Oscuro #23366F o Azul Zurich #2167AE plano, sin degradados ni sombras; logo blanco arriba a la izquierda; etiqueta chica con el tipo de producto (Seguro) sobre el nombre; LA OFERTA SIEMPRE en un circulo Lima #FFF773 con el numero grande; burbujas decorativas Azul Claro #91BFE3 ancladas a los bordes (nunca flotando, nunca dos del mismo color juntas, siempre 3+ formas de escalas distintas); CTA sobrio; legal en letra chica. FOTOGRAFIA: natural estilo carrete de telefono, personas reales en un momento de compromiso, luz natural, nunca poses de banco de imagenes ni grupos posados, nada de filtros ni destellos. COPY: titulares con beneficio concreto y la oferta exacta; una idea por frase; nunca hablar de la campana misma ni rellenar con frases genericas tipo rapido-facil-online; el precio o la oferta real siempre visible cuando exista.");
   set("marca-publico","Personas y familias en Chile que contratan seguros online.");
   set("marca-productos","Seguro Celular Protegido, Seguro Auto Digital, Seguro Maneja tus km, Seguro Protección Urgencias, Viaja Protegido con Zurich, Seguro SOAP 2026");
   set("marca-usar","respaldo, tranquilidad, cobertura, protección, confianza, 100% online, contrata online");
@@ -6561,7 +6565,7 @@ async function generarConIA(){
     .map(s => (s||"").trim()).filter(s => /^https?:\/\//.test(s)).slice(0,2);
   const marca = (workspace.marcas||[]).find(m => m.id === document.getElementById("ia-marca").value) || null;
   const M = marca ? normalizarMarca(marca) : null;
-  const marcaAPI = M ? { nombre:M.nombre, empresa:M.empresa, primary:M.primary, secondary:M.secondary, cta:M.cta, ctaText:M.ctaText, text:M.text, bg:M.bg, accent1:M.accent1, accent2:M.accent2, fontTitulo:M.fontTitulo, fontCuerpo:M.fontCuerpo, logoUrl:M.logo, negocio:M.negocio, tono:M.tono, eslogan:M.eslogan, publico:M.publico, productos:M.productos, usar:M.usar, evitar:M.evitar, disclaimer:M.disclaimer } : null;
+  const marcaAPI = M ? { nombre:M.nombre, empresa:M.empresa, primary:M.primary, secondary:M.secondary, cta:M.cta, ctaText:M.ctaText, text:M.text, bg:M.bg, accent1:M.accent1, accent2:M.accent2, fontTitulo:M.fontTitulo, fontCuerpo:M.fontCuerpo, logoUrl:M.logo, negocio:M.negocio, tono:M.tono, eslogan:M.eslogan, publico:M.publico, productos:M.productos, usar:M.usar, evitar:M.evitar, directrices:M.directrices, disclaimer:M.disclaimer } : null;
   const btn = document.getElementById("ia-btn"); const est = document.getElementById("ia-estado");
   const esCampana = sel.length > 1;
   btn.disabled = true; est.className = "ia-estado loading";

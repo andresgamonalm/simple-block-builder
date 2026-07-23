@@ -286,6 +286,25 @@ todos** (con identificador del dueño en la card).
   ws-equipo, hash). Las temporales se avisaron por chat; cambiar = generador o campo `clave`.
 - Verificado con Playwright: veri-login.js 21/21 + regresiones campana 17/17, ads 32/32, zurich 14/14.
 
+## Aprendizaje Zurich (carpeta Drive) — jul-2026 (ESTADO ACTUAL — no rehacer)
+El usuario compartió su carpeta Drive (Brandbook 2024, logos digitales 2022, campañas reales
+de display/search/email, ~50 fotos corporativas). **Marco teórico completo en `ZURICH_ESTILO.md`**
+(paleta oficial con nombres+HEX, tipografía ARIAL como alternativa oficial —decisión del usuario—,
+lenguaje de formas, fotografía "carrete de teléfono", anatomía del banner, y el diagnóstico de por
+qué sus piezas actuales están mal planteadas para digital). Persistencia del aprendizaje:
+- **Campo `directrices` en la MARCA** (form + normalizarMarca + generarConIA) → `voorMarca()` (ia.js)
+  lo inyecta en TODOS los prompts. Es el mecanismo genérico de "manual aprendido" por marca.
+- **Marca Zurich en D1** actualizada: paleta oficial (primary #2167ae, secondary #23366f fondo
+  banners, accent1 #fff773 Lima oferta, accent2 #91bfe3, bgPagina #eceeef, text #23366f, CTA
+  #2167ae — el rojo e71313 NO es del manual 2024), Arial/Arial, eslogan real "Tu mejor compañía
+  para el futuro", directrices completas. Plantilla `rellenarMarcaZurich` igual.
+- **Anti-reglas de Search** (de sus anuncios malos reales, OCR): prohibido meta-copy ("esta
+  campaña fue creada para convertir"), keyword stuffing, relleno "rápido-fácil-online",
+  productos sin relación en la descripción → REGLAS DURAS en generarAds (universales).
+- Pendiente del usuario: subir logos (Drive Logo-Digital/Large: Horz_Blue y Horz_ZurichWhite)
+  a Marcas→Zurich y las Fotos-Propias a la Biblioteca (nombres ya descriptivos). Drive y
+  producción están bloqueados desde el sandbox (proxy) — no se pudo subir por él.
+
 ## Roadmap / pendientes
 **Pendientes activos (jun-2026):** (1) confirmar/cerrar la **franja blanca en verticales** (esperando captura del caso exacto); (2) **bloques más ricos** para email (features con ícono en círculo de color, secciones con fondo, hero con degradado, tarjetas con sombra — SIN redondeo por defecto); (3) afinar, si se pide, qué tipografías/recursos extra muestran **/gdn-ia** y **/free**; (4) encender **/post-ia** y **/ads-ia** cuando toque.
 0. ✅ **(a) PLANTILLAS POR TIPO DE EMAIL — HECHO.** El nuevo `generarEmail` (ia.js) pide a la IA **solo el copy estructurado** `{ nombre, titular, intro, oferta, beneficios:[{icono,titulo,texto}]×3, cierre, cta, imagen }` y el **código arma el esqueleto** según `brief.tipo`: **comercial** = hero(titular sobre foto) → alert(oferta) → texto(intro) → features → espaciador → cta; **corporativo/informativo** = hero → texto(intro) → features → divisor → texto(cierre) → cta (sin alert agresivo); sin foto → título de texto en vez de hero. Íconos validados/distintos (lista `ICONOS_VALIDOS`), titulares sin punto (`sinPuntoFinal`), **un solo CTA al final**. Más rápido (maxTokens 2048, sin pedir maquetación). El cliente (`generarConIA`) ya no duplica fotos (la red de seguridad solo inserta hero si NO hay ningún bloque visual). Verificado con Playwright (10/10 PASS). **Pendiente (b):** bloques más ricos (features con ícono en círculo de color, secciones con fondo, hero con degradado, tarjetas con sombra) — SIN redondeo por defecto. Idea futura: pedir 1-2 emails "bien diseñados" como referencia para clonar el estándar.
