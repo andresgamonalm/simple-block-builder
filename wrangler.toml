@@ -11,7 +11,7 @@ database_id   = "3b91f996-d02d-45b1-8f21-820f2e97bd19"
 # El código usa el binding IMAGENES (functions/api/upload.js).
 [[r2_buckets]]
 binding     = "IMAGENES"
-bucket_name = "simple-builder-block-img"
+bucket_name = "zurich-chile"
 
 # Variables NO sensibles. Se administran aquí (no en el dashboard).
 # ACCESOS: los usuarios (nombre + contraseña + permisos) viven en usuarios.js
