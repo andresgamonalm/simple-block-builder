@@ -7834,8 +7834,8 @@ function adsVistaResumen(d){
       <p class="adsc-nota">Límites de Google: texto ≤ 25 caracteres, cada descripción ≤ 35. Van en su propio CSV al exportar.</p>
     </div>
     <div class="adsc-card" style="margin-top:18px;">
-      <h3>Negativas de campaña · búsquedas por las que NO quieres pagar <button class="adsc-copy" onclick="adsCopiar('negativas')">Copiar</button></h3>
-      ${negs.length ? `<div class="adsc-chips">${negs.map(n=>`<span class="adsc-neg">${esc(n)}</span>`).join("")}</div>` : `<div style="font-size:12.5px;color:#5b6178;">Sin negativas de campaña.</div>`}
+      <h3>Negativas de campaña · búsquedas por las que NO quieres pagar <button class="adsc-copy" onclick="adsAgregarEn('negativas')">+ Añadir</button> <button class="adsc-copy" onclick="adsCopiar('negativas')">Copiar</button></h3>
+      ${negs.length ? `<div class="adsc-chips">${negs.map((n,ni)=>`<span class="adsc-neg"><span class="tx" contenteditable="true" data-p="negativas.${ni}" onblur="adsEditar(this)" spellcheck="false">${esc(n)}</span> <span style="cursor:pointer;opacity:.6;" title="Quitar" onclick="adsQuitarDe('negativas',${ni})">✕</span></span>`).join("")}</div>` : `<div style="font-size:12.5px;color:#5b6178;">Sin negativas de campaña.</div>`}
       <p class="adsc-nota">Van incluidas en el CSV de keywords como concordancia de frase negativa: bloquean cualquier búsqueda que las contenga.</p>
     </div>`;
 }
@@ -7873,15 +7873,17 @@ function adsVistaGrupo(d, gi){
   const g = d.grupos[gi]; if(!g) return "";
   const host = String(d.urlFinal||"").replace(/^https?:\/\//,"").split("/")[0] || "tusitio.cl";
   const badge = (len,max)=>`<span class="adsc-cnt ${len>max?"mal":""}" title="caracteres usados / máximo de Google">${len}/${max}</span>`;
+  const quitar = (fn)=>`<button class="adsc-copy" style="flex:none;padding:2px 7px;" title="Quitar" onclick="${fn}">✕</button>`;
   const kws = (g.keywords||[]).map((k,ki)=>`
     <div class="adsc-kw">
       <span class="k tx" contenteditable="true" data-p="grupos.${gi}.keywords.${ki}.t" onblur="adsEditar(this)" spellcheck="false">${esc(k.t)}</span>
       <button class="adsc-tipo ${k.tipo==="frase"?"frase":"exacta"}" onclick="adsToggleKw(${gi},${ki})" title="Clic para alternar la concordancia">${k.tipo==="frase"?'"Frase"':"[Exacta]"}</button>
+      ${quitar(`adsQuitarDe('grupos.${gi}.keywords',${ki})`)}
     </div>`).join("");
   const tits = (g.titulares||[]).map((t,i)=>`
-    <div class="adsc-item"><span class="tx" contenteditable="true" data-p="grupos.${gi}.titulares.${i}" onblur="adsEditar(this)" spellcheck="false">${esc(t)}</span>${badge(t.length,30)}</div>`).join("");
+    <div class="adsc-item"><span class="tx" contenteditable="true" data-p="grupos.${gi}.titulares.${i}" onblur="adsEditar(this)" spellcheck="false">${esc(t)}</span>${badge(t.length,30)}${quitar(`adsQuitarDe('grupos.${gi}.titulares',${i})`)}</div>`).join("");
   const descs = (g.descripciones||[]).map((t,i)=>`
-    <div class="adsc-item"><span class="tx" contenteditable="true" data-p="grupos.${gi}.descripciones.${i}" onblur="adsEditar(this)" spellcheck="false">${esc(t)}</span>${badge(t.length,90)}</div>`).join("");
+    <div class="adsc-item"><span class="tx" contenteditable="true" data-p="grupos.${gi}.descripciones.${i}" onblur="adsEditar(this)" spellcheck="false">${esc(t)}</span>${badge(t.length,90)}${quitar(`adsQuitarDe('grupos.${gi}.descripciones',${i})`)}</div>`).join("");
   const ruta = host + (g.path1?" › "+g.path1:"") + (g.path2?" › "+g.path2:"");
   return `
     <div class="adsc-intent">
@@ -7893,16 +7895,15 @@ function adsVistaGrupo(d, gi){
     <div class="adsc-grid">
       <div>
         <div class="adsc-card">
-          <h3>Keywords · ${(g.keywords||[]).length} <button class="adsc-copy" onclick="adsCopiar('keywords',${gi})">Copiar</button></h3>
+          <h3>Keywords · ${(g.keywords||[]).length} <button class="adsc-copy" onclick="adsAgregarEn('grupos.${gi}.keywords')">+ Añadir</button> <button class="adsc-copy" onclick="adsCopiar('keywords',${gi})">Copiar</button></h3>
           ${kws}
           <button class="adsc-btn" id="ads-maskw-${gi}" style="width:100%;justify-content:center;margin-top:10px;" onclick="adsPedirMasKeywords(${gi})">${svgIcon("estrella",{size:"13px"})} Pedir más keywords a Char-B</button>
           <p class="adsc-nota">Clic en la etiqueta para alternar [Exacta] ↔ "Frase". La concordancia amplia no existe aquí. Los textos se editan con un clic. Char-B amplía el grupo sin salirse de su intención.</p>
         </div>
-        ${(g.negativas||[]).length?`
         <div class="adsc-card" style="margin-top:18px;">
-          <h3>Negativas del grupo <button class="adsc-copy" onclick="adsCopiar('negativasGrupo',${gi})">Copiar</button></h3>
-          <div class="adsc-chips">${g.negativas.map(n=>`<span class="adsc-neg">${esc(n)}</span>`).join("")}</div>
-        </div>`:""}
+          <h3>Negativas del grupo <button class="adsc-copy" onclick="adsAgregarEn('grupos.${gi}.negativas')">+ Añadir</button> <button class="adsc-copy" onclick="adsCopiar('negativasGrupo',${gi})">Copiar</button></h3>
+          ${(g.negativas||[]).length?`<div class="adsc-chips">${g.negativas.map((n,ni)=>`<span class="adsc-neg"><span class="tx" contenteditable="true" data-p="grupos.${gi}.negativas.${ni}" onblur="adsEditar(this)" spellcheck="false">${esc(n)}</span> <span style="cursor:pointer;opacity:.6;" title="Quitar" onclick="adsQuitarDe('grupos.${gi}.negativas',${ni})">✕</span></span>`).join("")}</div>`:`<div style="font-size:12.5px;color:#5b6178;">Sin negativas en este grupo.</div>`}
+        </div>
       </div>
       <div>
         <div class="adsc-serp">
@@ -7914,12 +7915,12 @@ function adsVistaGrupo(d, gi){
           <div class="adsc-rota"><span class="dot"></span> Google combina y <b>rota</b> tus titulares y descripciones (anuncio adaptable). Aquí ves cómo va cambiando.</div>
         </div>
         <div class="adsc-card">
-          <h3>Titulares · ${(g.titulares||[]).length} <span class="lim">máx 30 caracteres</span> <button class="adsc-copy" onclick="adsCopiar('titulares',${gi})">Copiar</button></h3>
+          <h3>Titulares · ${(g.titulares||[]).length} <span class="lim">máx 30 caracteres</span> <button class="adsc-copy" onclick="adsAgregarEn('grupos.${gi}.titulares')">+ Añadir</button> <button class="adsc-copy" onclick="adsCopiar('titulares',${gi})">Copiar</button></h3>
           ${tits}
           <p class="adsc-nota">Google combina y rota estos titulares (anuncio adaptable RSA). El contador en rojo marca los que exceden el límite.</p>
         </div>
         <div class="adsc-card" style="margin-top:18px;">
-          <h3>Descripciones · ${(g.descripciones||[]).length} <span class="lim">máx 90</span> <button class="adsc-copy" onclick="adsCopiar('descripciones',${gi})">Copiar</button></h3>
+          <h3>Descripciones · ${(g.descripciones||[]).length} <span class="lim">máx 90</span> <button class="adsc-copy" onclick="adsAgregarEn('grupos.${gi}.descripciones')">+ Añadir</button> <button class="adsc-copy" onclick="adsCopiar('descripciones',${gi})">Copiar</button></h3>
           ${descs}
         </div>
       </div>
@@ -7935,6 +7936,21 @@ function adsToggleKw(gi, ki){
   const p = pieza(); if(!p || !p.adsData) return;
   const k = ((p.adsData.grupos||[])[gi]||{}).keywords; if(!k || !k[ki]) return;
   k[ki].tipo = k[ki].tipo==="frase" ? "exacta" : "frase";
+  persistir(); renderAdsCampana();
+}
+// Alta y baja manual en cualquier lista de la campaña (keywords, titulares,
+// descripciones, negativas de grupo o de campaña). La ruta apunta a adsData.
+function adsAgregarEn(ruta){
+  const p = pieza(); const d = p && p.adsData; if(!d) return;
+  let lista = getPath(d, ruta);
+  if(!Array.isArray(lista)){ lista = []; setPath(d, ruta, lista); }
+  lista.push(/\.keywords$/.test(ruta) ? { t:"nueva keyword", tipo:"exacta" } : /negativas$/.test(ruta) ? "nueva negativa" : /titulares$/.test(ruta) ? "Nuevo titular" : "Nueva descripción");
+  persistir(); renderAdsCampana();
+}
+function adsQuitarDe(ruta, i){
+  const p = pieza(); const d = p && p.adsData; if(!d) return;
+  const lista = getPath(d, ruta); if(!Array.isArray(lista) || !(i>=0 && i<lista.length)) return;
+  lista.splice(i, 1);
   persistir(); renderAdsCampana();
 }
 function adsCopiar(que, gi){
