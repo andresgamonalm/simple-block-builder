@@ -1,0 +1,122 @@
+<!doctype html><html lang="es"><head><meta charset="utf-8">
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{background:#f4f6fa;font-family:Arial,Helvetica,sans-serif;padding:28px}
+  h1{font-size:19px;color:#23366f;font-weight:700;margin-bottom:4px}
+  .sub{font-size:13px;color:#5b6178;margin-bottom:22px}
+  .grid{display:grid;grid-template-columns:repeat(4,300px);gap:26px 22px}
+  .item{width:300px}
+  .cap{font-size:11.5px;color:#23366f;font-weight:700;margin-bottom:6px}
+  .cap span{font-weight:400;color:#6b7288}
+  .b{width:300px;height:250px;position:relative;overflow:hidden;background:#23366f}
+  /* "fotos" simuladas con degradados (en la app van fotos reales) */
+  .f1{position:absolute;inset:0;background:linear-gradient(160deg,#8fb4d6 0%,#5b83ab 45%,#2f4a63 100%)}
+  .f1::after{content:"";position:absolute;left:0;right:0;bottom:0;height:30%;background:linear-gradient(180deg,rgba(45,62,80,.35),rgba(30,42,56,.75))}
+  .f2{position:absolute;inset:0;background:linear-gradient(200deg,#c8d6e4 0%,#7d99b5 55%,#3d566e 100%)}
+  .veil{position:absolute;inset:0;background:linear-gradient(0deg,rgba(35,54,111,.86) 0%,rgba(35,54,111,.35) 55%,rgba(35,54,111,.12) 100%)}
+  .veilL{position:absolute;inset:0;background:linear-gradient(90deg,rgba(35,54,111,.92) 0%,rgba(35,54,111,.72) 45%,rgba(35,54,111,0) 85%)}
+  .logo{position:absolute;top:12px;left:14px;color:#fff;font-size:13px;font-weight:700;letter-spacing:.3px;z-index:5}
+  .logo.d{color:#23366f}
+  .tag{display:inline-block;font-size:8.5px;letter-spacing:.7px;text-transform:uppercase;padding:3px 7px;background:rgba(255,255,255,.22);color:#fff;margin-bottom:6px}
+  .tag.d{background:#91bfe3;color:#23366f}
+  .t{font-size:21px;line-height:1.12;font-weight:700;color:#fff}
+  .t.d{color:#23366f}
+  .p{font-size:11.5px;line-height:1.35;margin-top:5px;color:rgba(255,255,255,.9)}
+  .p.d{color:#4a5578}
+  .cta{display:inline-block;margin-top:10px;background:#2167ae;color:#fff;font-size:11px;font-weight:700;padding:8px 15px}
+  .cta.y{background:#fff773;color:#23366f}
+  .z{position:absolute;z-index:4}
+  /* 1 foto a sangre */
+  .L1 .z{left:16px;right:16px;bottom:14px}
+  /* 2 split horizontal */
+  .L2 .top{position:absolute;top:0;left:0;right:0;height:52%}
+  .L2 .bot{position:absolute;bottom:0;left:0;right:0;height:48%;background:#23366f;padding:14px 16px}
+  /* 3 split vertical */
+  .L3 .rt{position:absolute;top:0;right:0;bottom:0;width:44%}
+  .L3 .lf{position:absolute;top:0;left:0;bottom:0;width:56%;background:#23366f;padding:16px 14px;display:flex;flex-direction:column;justify-content:center}
+  /* 4 color plano + forma */
+  .L4{background:#23366f}
+  .L4 .sh{position:absolute;width:230px;height:230px;border-radius:50%;background:#2167ae;right:-70px;top:-60px}
+  .L4 .sh2{position:absolute;width:120px;height:120px;border-radius:50%;background:#91bfe3;left:-45px;bottom:-45px;opacity:.85}
+  .L4 .z{left:16px;right:16px;top:50%;transform:translateY(-42%)}
+  /* 5 banda inferior */
+  .L5 .bar{position:absolute;left:0;right:0;bottom:0;height:34%;background:#23366f;display:flex;align-items:center;justify-content:space-between;padding:0 14px}
+  .L5 .tt{position:absolute;left:16px;right:16px;top:44px}
+  /* 6 oferta protagonista */
+  .L6{background:#23366f}
+  .L6 .circ{position:absolute;width:150px;height:150px;border-radius:50%;background:#fff773;right:-18px;top:52px;display:flex;flex-direction:column;align-items:center;justify-content:center;color:#23366f}
+  .L6 .num{font-size:40px;font-weight:700;line-height:1}
+  .L6 .lbl{font-size:10px;font-weight:700;text-align:center;line-height:1.15;margin-top:1px}
+  .L6 .z{left:16px;top:74px;width:150px}
+  /* 7 producto recortado */
+  .L7{background:#eceeef}
+  .L7 .ph{position:absolute;right:0;top:0;bottom:0;width:132px;background:linear-gradient(165deg,#8fb4d6,#3d566e);clip-path:polygon(26% 0,100% 0,100% 100%,0 100%)}
+  .L7 .z{left:16px;top:56px;width:150px}
+  /* 8 franja */
+  .fr{width:728px;height:90px;background:#23366f;position:relative;display:flex;align-items:center;padding:0 16px;gap:16px}
+  .fr .lg{color:#fff;font-size:14px;font-weight:700;flex:0 0 auto}
+  .fr .tx{flex:1;color:#fff;font-size:15px;font-weight:700;line-height:1.15}
+  .fr .tx small{display:block;font-size:10.5px;font-weight:400;color:rgba(255,255,255,.85);margin-top:2px}
+  .fr .cta{margin:0}
+  .fr .cr{position:relative;flex:0 0 auto;width:70px;height:70px;border-radius:50%;background:#fff773;display:flex;flex-direction:column;align-items:center;justify-content:center;color:#23366f}
+  .fr .cr b{font-size:20px;line-height:1}
+  .fr .cr i{font-size:7px;font-style:normal;font-weight:700;text-align:center;line-height:1.1}
+  /* 9 vertical */
+  .vt{width:160px;height:600px;background:#23366f;position:relative;overflow:hidden}
+  .vt .ph{position:absolute;top:0;left:0;right:0;height:42%;background:linear-gradient(160deg,#8fb4d6,#3d566e)}
+  .vt .z{position:absolute;left:14px;right:14px;top:46%}
+  .row2{display:flex;gap:22px;align-items:flex-start;margin-top:26px;flex-wrap:wrap}
+</style></head><body>
+
+<h1>Sistema de layouts propuesto — banners display</h1>
+<div class="sub">Paleta real de Zurich (navy #23366f · azul #2167ae · lima #fff773 · celeste #91bfe3). Las fotos van simuladas con degradados; en la app son fotos reales de la biblioteca. Cada uno es una ESTRUCTURA distinta, no una variación de la misma.</div>
+
+<div class="grid">
+
+  <div class="item"><div class="cap">1 · Foto a sangre <span>— el clásico</span></div>
+    <div class="b L1"><div class="f1"></div><div class="veil"></div><div class="logo">ZURICH</div>
+      <div class="z"><span class="tag">Seguro Auto</span><div class="t">Tu auto protegido,<br>pase lo que pase</div><a class="cta">Cotiza hoy</a></div></div></div>
+
+  <div class="item"><div class="cap">2 · Split horizontal <span>— foto arriba, color abajo</span></div>
+    <div class="b L2"><div class="top"><div class="f1"></div></div><div class="logo">ZURICH</div>
+      <div class="bot"><span class="tag">Seguro Auto</span><div class="t" style="font-size:18px">Maneja tranquilo<br>todo el año</div><a class="cta">Cotiza hoy</a></div></div></div>
+
+  <div class="item"><div class="cap">3 · Split vertical <span>— bloque de color + foto</span></div>
+    <div class="b L3"><div class="rt"><div class="f2"></div></div>
+      <div class="lf"><span class="tag" style="align-self:flex-start">Seguro Auto</span><div class="t" style="font-size:19px">Cobertura<br>total desde<br>hoy</div><a class="cta" style="align-self:flex-start">Cotizar</a></div>
+      <div class="logo">ZURICH</div></div></div>
+
+  <div class="item"><div class="cap">4 · Color plano + formas <span>— sin foto</span></div>
+    <div class="b L4"><div class="sh"></div><div class="sh2"></div><div class="logo">ZURICH</div>
+      <div class="z"><span class="tag">Seguro Auto</span><div class="t">Protege lo que<br>más te importa</div><div class="p">Cobertura completa, sin papeleo.</div><a class="cta y">Cotiza hoy</a></div></div></div>
+
+  <div class="item"><div class="cap">5 · Banda inferior <span>— foto + franja sólida</span></div>
+    <div class="b L5"><div class="f1"></div><div class="veil" style="opacity:.55"></div><div class="logo">ZURICH</div>
+      <div class="tt"><div class="t" style="font-size:20px">Tu auto siempre<br>respaldado</div></div>
+      <div class="bar"><div style="color:#fff;font-size:11.5px;line-height:1.25">Cobertura total<br><span style="opacity:.8">Choque, robo y terceros</span></div><a class="cta y" style="margin:0">Cotizar</a></div></div></div>
+
+  <div class="item"><div class="cap">6 · Oferta protagonista <span>— estilo campaña Zurich</span></div>
+    <div class="b L6"><div class="logo">ZURICH</div><div class="circ"><span class="num">2</span><span class="lbl">CUOTAS<br>GRATIS</span></div>
+      <div class="z"><span class="tag">Seguro Auto</span><div class="t" style="font-size:19px">Tu auto<br>protegido</div><a class="cta y">Cotiza hoy</a></div></div></div>
+
+  <div class="item"><div class="cap">7 · Producto recortado <span>— fondo claro</span></div>
+    <div class="b L7"><div class="ph"></div><div class="logo d">ZURICH</div>
+      <div class="z"><span class="tag d">Seguro Auto</span><div class="t d" style="font-size:19px">Cotiza en<br>3 minutos</div><div class="p d">Sin papeleo ni llamadas.</div><a class="cta">Cotizar</a></div></div></div>
+
+  <div class="item"><div class="cap">8 · Texto protagonista <span>— titular grande, sin foto</span></div>
+    <div class="b" style="background:#2167ae"><div class="logo">ZURICH</div>
+      <div class="z" style="left:16px;right:16px;top:64px"><div class="t" style="font-size:30px;line-height:1.05">Maneja<br>tranquilo</div><div class="p" style="margin-top:8px">Cobertura total desde $9.990 al mes.</div><a class="cta y">Cotiza hoy</a></div></div></div>
+
+</div>
+
+<div class="row2">
+  <div><div class="cap">9 · Franja <span>— 728×90, todo en fila</span></div>
+    <div class="fr"><div class="lg">ZURICH</div><div class="tx">Tu auto protegido, pase lo que pase<small>Cobertura total · Choque, robo y daños a terceros</small></div><div class="cr"><b>2</b><i>CUOTAS<br>GRATIS</i></div><a class="cta y">Cotiza hoy</a></div>
+  </div>
+  <div><div class="cap">10 · Vertical <span>— 160×600</span></div>
+    <div class="vt"><div class="ph"></div><div class="logo">ZURICH</div>
+      <div class="z"><span class="tag">Seguro Auto</span><div class="t" style="font-size:19px">Tu auto<br>protegido,<br>pase lo<br>que pase</div><div class="p">Cobertura total, sin papeleo.</div><a class="cta y">Cotiza hoy</a></div></div>
+  </div>
+</div>
+
+</body></html>
