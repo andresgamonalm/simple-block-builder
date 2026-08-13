@@ -28,8 +28,9 @@ así que una prueba podía sobrescribir tu espacio real. Quedó cerrado en
 
 Dos seguros, tomados el 13 de agosto de 2026 antes de tocar nada:
 
-1. **El código**: etiqueta `produccion-2026-08-13` en el commit `2f72775`.
-   Vuelve todo a como estaba con un comando.
+1. **El código**: rama congelada `respaldo-produccion-2026-08-13`, apuntando al
+   commit `2f72775`. Nadie escribe ahí nunca; es la foto del día. Vuelve todo a
+   como estaba con un comando.
 2. **Tus datos**: fila `backup-20260813:hola@andresgamonal.com` en la base de
    producción — copia exacta de tu espacio (202.276 bytes). Ya existía otro
    respaldo del 22 de julio, que se conserva.
