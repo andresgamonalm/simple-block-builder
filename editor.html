@@ -7927,7 +7927,7 @@ async function generarConIA(){
     // Enlace del CTA: lo fija el usuario (la IA no lo inventa).
     if(ctaUrl && pz){
       if(esComposicion(pz)){ setComp("zonas.cta.url", ctaUrl); }
-      else { (pz.canvas||[]).forEach(b=>{ if(b.tipo==="cta") b.datos.url=ctaUrl; if(b.tipo==="hero"&&b.datos.ctaTexto) b.datos.ctaUrl=ctaUrl; }); }
+      else { (pz.canvas||[]).forEach(b=>{ if(b.tipo==="cta") b.datos.url=ctaUrl; if(b.tipo==="hero"&&b.datos.ctaTexto) b.datos.ctaUrl=ctaUrl; if(b.tipo==="seccion"&&b.datos.botonTexto) b.datos.botonUrl=ctaUrl; }); }
     }
     persistir(); if(esComposicion(pz)) renderTablero(); else renderCanvas();
     }   // fin del for por pieza

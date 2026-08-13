@@ -201,7 +201,7 @@ async function generar({ request, env }) {
       '- "tipo" SOLO "exacta" o "frase" (la amplia está prohibida). Minúsculas, 2 a 5 palabras, como busca la gente de verdad (singular/plural, sinónimos, "online"/"precio"/"chile" cuando aplique).',
       '- Usa el VOCABULARIO REAL de la landing cuando exista el extracto.',
       existentes.length ? 'KEYWORDS QUE YA EXISTEN (no las repitas):\n' + existentes.join(' · ') : '',
-      refsK.texto ? '\nEXTRACTO DE LA LANDING:\n' + refsK.texto.slice(0, 4000) : '',
+      refsK.texto ? '\nEXTRACTO DE LA LANDING:\n' + refsK.texto.slice(0, 2000) : '',
       brief.que ? `\nCONTEXTO de la campaña: ${brief.que}` : ''
     ].filter(Boolean).join('\n');
     const { parsed, error } = await llamarGemini(env, prompt, 1536);
@@ -228,16 +228,18 @@ async function generar({ request, env }) {
     const refsTxt2 = refs2.texto;
     const prompt = [
       `Eres director creativo de ${mk ? (mk.nombre || mk.empresa) : 'la marca'}. Define el CONCEPTO de una campaña multicanal (email + banners display + anuncios de Google Search).`,
+      '',
+      encargoDelUsuario(brief),
+      '',
       'Devuelve EXCLUSIVAMENTE este JSON (sin texto extra):',
       '{ "nombre": "nombre corto de la campaña (máx 5 palabras)", "idea": "la idea central en 1 frase", "titular": "titular maestro, máx 7 palabras, SIN punto final", "mensajes": [ "3 mensajes clave, máx 10 palabras cada uno" ] }',
       'Reglas: español de Chile; el concepto debe funcionar igual de bien en un email, un banner chico y un anuncio de texto; respeta el gancho EXACTO si existe (no inventes cifras ni fechas).',
       'VOZ DE MARCA:',
       voorMarca(mk),
-      refsTxt2 ? 'CONTEXTO de las URLs de referencia (úsalo para el vocabulario y la propuesta de valor):\n' + refsTxt2 : '',
-      'BRIEF:',
-      reglasBrief(brief, refs2.promos)
+      refsTxt2 ? 'CONTEXTO de las URLs de referencia (material de apoyo, NO es el encargo):\n' + refsTxt2 : '',
+      reglasBrief(brief, refs2.promos, 'concepto')
     ].filter(Boolean).join('\n');
-    const { parsed, error } = await llamarGemini(env, prompt, 1024);
+    const { parsed, error } = await llamarGemini(env, prompt, 1024, 0.9, { modelo: modeloCopy(env), pensar: -1 });
     if (error) return json({ ok: false, error }, 500);
     const c = parsed || {};
     const mensajes = (Array.isArray(c.mensajes) ? c.mensajes : []).map(m => String(m).replace(/\s+/g, ' ').trim().slice(0, 120)).filter(Boolean).slice(0, 4);
@@ -285,28 +287,47 @@ function voorMarca(marca) {
   ].filter(Boolean).join('\n');
 }
 
-// ── Reglas duras del brief (comunes) ──────────────────────────────────────
-function reglasBrief(brief, promos) {
+// ── LO QUE PIDIÓ EL USUARIO ───────────────────────────────────────────────
+// Va SIEMPRE al principio del prompt, antes de cualquier contexto. Antes iba al
+// final, después de ~9.000 caracteres de texto raspado de la landing: pesaba el
+// 0,6% del prompt y en la práctica se ignoraba. Lo que la persona escribe es la
+// instrucción de mayor rango, no una nota al pie.
+function encargoDelUsuario(brief) {
+  const out = ['════ EL ENCARGO (lo que te pidió la persona — MANDA sobre todo lo demás) ════',
+               `QUÉ NECESITA: ${brief.que}`];
+  if (brief.accion) out.push(`ACCIÓN que debe provocar: ${brief.accion}`);
+  if (brief.gancho) out.push(`GANCHO / OFERTA, textual: "${brief.gancho}" — úsalo TAL CUAL. No inventes otras cifras, fechas ni precios.`);
+  const n = brief.notas && String(brief.notas).trim();
+  if (n) out.push(
+    `INDICACIONES EXPRESAS (son ÓRDENES, no sugerencias — si alguna choca con una regla de estilo de más abajo, GANA la indicación):\n  » ${n}`);
+  out.push('═════════════════════════════════════════════════════════════════════════════');
+  return out.join('\n');
+}
+
+// ── Reglas de redacción, por PRODUCTO ─────────────────────────────────────
+// Antes había un solo bloque común para email, banner y Search. Eso metía
+// reglas de email ("un solo CTA al final", bloques "hero"/"alert") dentro de los
+// prompts de banner y de Google Search, donde esos conceptos no existen — y
+// además se contradecía con la regla de la burbuja: le ordenaba poner el gancho
+// en el titular Y le prohibía poner el gancho en el titular, en el mismo prompt.
+function reglasBrief(brief, promos, producto) {
   const tipo = brief.tipo || 'comercial';
-  const newsletter = tipo === 'newsletter';
-  const vende = tipo === 'comercial';
-  const out = [`OBJETIVO / lo que necesito: ${brief.que}`];
-  // Colocación del CTA: SOLO al final, salvo newsletter (que puede llevar uno por sección).
-  out.push(newsletter
-    ? 'Es un NEWSLETTER: varias secciones de novedades; puedes incluir un CTA por sección.'
-    : 'UN SOLO CTA y SIEMPRE al final de la pieza (nunca arriba ni en el medio).');
-  out.push(vende
-    ? `Texto del CTA basado en "${brief.accion || 'Saber más'}": imperativo + adverbio de tiempo/lugar (ej.: "Cotiza hoy", "Cotizar aquí", "Contrata ahora"). Máx 3 palabras.`
-    : `Texto del CTA basado en "${brief.accion || 'Saber más'}": claro y sobrio, sin urgencia (ej.: "Conoce más", "Más información"). Máx 3 palabras.`);
-  out.push('Los TITULARES y las frases sobre imágenes NUNCA terminan en punto.');
-  out.push('ORTOGRAFÍA: escribe en español correcto y revisado — tildes/acentos donde corresponde, mayúscula inicial, y signos ¿? ¡! de apertura y cierre bien puestos. Revisa el texto antes de responder: CERO faltas de ortografía.');
-  if (brief.gancho) {
-    out.push(`GANCHO/OFERTA EXACTO (úsalo TAL CUAL, NO inventes otros números/fechas/precios): ${brief.gancho}`);
-    out.push(`DESTACA el gancho de forma MUY visible y al PRINCIPIO: ponlo en el TITULAR principal (hero) bien grande, y además resáltalo en un bloque "alert" (o un divisor con color de marca) cerca del inicio. Que sea lo primero que se vea.`);
-  } else if (promos && promos.length) {
-    out.push(`El brief no trae gancho, pero la LANDING muestra estas promociones VIGENTES: ${promos.join(' · ')}. Puedes usarlas TAL CUAL (sin cambiar cifras ni condiciones) como oferta destacada. NO inventes ninguna otra cifra, precio ni fecha.`);
-  } else out.push('Sin oferta numérica: NO inventes precios, porcentajes ni fechas.');
-  if (brief.notas && String(brief.notas).trim()) out.push(`INDICACIONES ADICIONALES del usuario (respétalas): ${String(brief.notas).trim()}`);
+  const out = [];
+  if (producto === 'email') {
+    out.push(tipo === 'newsletter'
+      ? 'Es un NEWSLETTER: varias secciones de novedades; puedes incluir un CTA por sección.'
+      : 'UN SOLO CTA y SIEMPRE al final de la pieza (nunca arriba ni en el medio).');
+    out.push(tipo === 'comercial'
+      ? `Texto del CTA basado en "${brief.accion || 'Saber más'}": imperativo + adverbio de tiempo/lugar (ej.: "Cotiza hoy", "Contrata ahora"). Máx 3 palabras.`
+      : `Texto del CTA basado en "${brief.accion || 'Saber más'}": claro y sobrio, sin urgencia (ej.: "Conoce más"). Máx 3 palabras.`);
+    if (brief.gancho) out.push(`El gancho va DESTACADO y arriba: en el titular principal y repetido como oferta después de la foto.`);
+  }
+  out.push('Los TITULARES nunca terminan en punto.');
+  out.push('ORTOGRAFÍA: español de Chile correcto — tildes donde corresponde, mayúscula inicial, signos ¿? ¡! de apertura y cierre. CERO faltas.');
+  if (!brief.gancho) {
+    if (promos && promos.length) out.push(`El encargo no trae gancho, pero la LANDING muestra estas promociones VIGENTES: ${promos.join(' · ')}. Puedes usarlas TAL CUAL (sin cambiar cifras ni condiciones). NO inventes ninguna otra.`);
+    else out.push('Sin oferta numérica: NO inventes precios, porcentajes ni fechas.');
+  }
   return out.join('\n');
 }
 // Directriz de redacción según el TIPO (comercial = vende; corporativo/informativo/newsletter = más blando).
@@ -432,13 +453,13 @@ async function leerReferencias(refs) {
       } catch { clearTimeout(t); return null; }
     };
     let html = await bajar(UA_NAVEGADOR);
-    let extracto = html ? extraerTextoPagina(html, 4500) : '';
+    let extracto = html ? extraerTextoPagina(html, 1800) : '';
     // Landing renderizada por JS (casi sin texto) → reintenta como Googlebot:
     // muchos sitios sirven una versión pre-renderizada a los bots.
     if (!extracto || extracto.length < 250) {
       const html2 = await bajar({ ...UA_NAVEGADOR, 'User-Agent': 'Mozilla/5.0 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)' });
       if (html2) {
-        const ex2 = extraerTextoPagina(html2, 4500);
+        const ex2 = extraerTextoPagina(html2, 1800);
         if (ex2.length > extracto.length) { html = html2; extracto = ex2; }
       }
     }
@@ -451,7 +472,7 @@ async function leerReferencias(refs) {
   };
   const partes = await Promise.all(urls.map((u, i) => leerUna(u, i === 0)));
   return {
-    texto: partes.map(p => p.trozo).join('\n\n').slice(0, 9000),
+    texto: partes.map(p => p.trozo).join('\n\n').slice(0, 2500),   // era 9000: ahogaba el encargo del usuario
     promos: partes.flatMap(p => p.promos).slice(0, 4),
     enlaces: partes.flatMap(p => p.enlaces).slice(0, 12)
   };
@@ -477,21 +498,52 @@ function extraerJSON(texto) {
   }
   return undefined;
 }
-async function llamarGemini(env, promptOrParts, maxTokens, temp) {
-  const model = env.GEMINI_MODEL || 'gemini-2.5-flash';
+// Dos gamas de modelo, según la tarea:
+//   COPY (escribir el aviso)  → el modelo que RAZONA. Encontrar el ángulo de un
+//     titular exige descartar las tres ideas obvias antes de escribir; eso es
+//     justamente lo que hace el "pensamiento" del modelo.
+//   MECÁNICO (corrector, ampliar keywords) → el modelo rápido y barato basta.
+// Ambos se pueden forzar por variable de entorno sin tocar código.
+const modeloCopy    = env => env.GEMINI_MODEL_COPY || env.GEMINI_MODEL || 'gemini-2.5-pro';
+const modeloRapido  = env => env.GEMINI_MODEL      || 'gemini-2.5-flash';
+
+// opts: { modelo, pensar, timeout }
+//   pensar = presupuesto de razonamiento. -1 = dinámico (el modelo decide),
+//   0 = sin pensar (tareas mecánicas). Antes estaba fijo en 0 para TODO, que es
+//   la razón principal de que el copy saliera genérico: se le apagaba la cabeza.
+async function llamarGemini(env, promptOrParts, maxTokens, temp, opts) {
+  const o = opts || {};
+  const model = o.modelo || modeloRapido(env);
+  const pensar = (typeof o.pensar === 'number') ? o.pensar : 0;
   const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${encodeURIComponent(env.GEMINI_API_KEY)}`;
-  const ctl = new AbortController(); const timer = setTimeout(() => ctl.abort(), 40000);
-  // Acepta un prompt de texto o un array de "parts" (texto + imágenes inlineData).
   const partesEntrada = Array.isArray(promptOrParts) ? promptOrParts : [{ text: promptOrParts }];
+  const genCfg = { responseMimeType: 'application/json', temperature: (typeof temp === 'number' ? temp : 0.7), maxOutputTokens: maxTokens || 4096 };
+
+  // Pensar cuesta tokens de salida: si no se amplía el tope, el modelo gasta el
+  // presupuesto razonando y devuelve vacío (el bug que llevó a apagarlo del todo).
+  const cuerpoCon = (conThinking) => {
+    const g = { ...genCfg };
+    if (conThinking) { g.thinkingConfig = { thinkingBudget: pensar }; if (pensar !== 0) g.maxOutputTokens = (maxTokens || 4096) * 3; }
+    else g.thinkingConfig = { thinkingBudget: 0 };
+    return JSON.stringify({ contents: [{ role: 'user', parts: partesEntrada }], generationConfig: g });
+  };
+
+  const pedir = async (cuerpo, ms) => {
+    const ctl = new AbortController(); const timer = setTimeout(() => ctl.abort(), ms);
+    try { return await fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, signal: ctl.signal, body: cuerpo }); }
+    finally { clearTimeout(timer); }
+  };
+
+  const espera = o.timeout || (pensar !== 0 ? 90000 : 40000);
   let res;
   try {
-    res = await fetch(url, {
-      method: 'POST', headers: { 'Content-Type': 'application/json' }, signal: ctl.signal,
-      body: JSON.stringify({ contents: [{ role: 'user', parts: partesEntrada }], generationConfig: { responseMimeType: 'application/json', temperature: (typeof temp === 'number' ? temp : 0.7), maxOutputTokens: maxTokens || 4096, thinkingConfig: { thinkingBudget: 0 } } })
-    });
+    res = await pedir(cuerpoCon(true), espera);
+    // Si el modelo o la cuenta no aceptan este thinkingBudget, se reintenta sin
+    // él en vez de fallar: la generación nunca se cae por este parámetro.
+    if (!res.ok && res.status === 400 && pensar !== 0) res = await pedir(cuerpoCon(false), 40000);
   } catch (e) {
-    return { error: (e && e.name === 'AbortError') ? `Gemini (${model}) tardó demasiado. Prueba GEMINI_MODEL=gemini-flash-latest.` : 'No se pudo contactar a Gemini: ' + (e.message || e) };
-  } finally { clearTimeout(timer); }
+    return { error: (e && e.name === 'AbortError') ? `Gemini (${model}) tardó demasiado. Prueba con GEMINI_MODEL_COPY=gemini-2.5-flash.` : 'No se pudo contactar a Gemini: ' + (e.message || e) };
+  }
   if (!res.ok) { const t = await res.text().catch(() => ''); return { error: `Gemini (${model}) respondió ${res.status}. ${t.slice(0, 400)}` }; }
   let data; try { data = await res.json(); } catch { return { error: 'Respuesta de Gemini no es JSON.' }; }
   const parts = data && data.candidates && data.candidates[0] && data.candidates[0].content && data.candidates[0].content.parts;
@@ -540,34 +592,56 @@ async function generarBanner({ env, brief, marca, imagenes, refsTxt, promos }) {
   const imgsTxt = imagenes.length
     ? imagenes.map(im => `- ${im.url}  →  ${im.nombre || '(sin descripción)'}`).join('\n')
     : '(biblioteca vacía: deja "imagen" en "")';
+  const hayOferta = !!(brief.gancho || (promos && promos.length));
   const prompt = [
     `Eres director creativo de ${marca ? (marca.nombre || marca.empresa) : 'la marca'}. Creas banners de Google Display que rinden y suenan 100% a la marca.`,
+    '',
+    // El encargo va PRIMERO. Todo lo demás es contexto de apoyo.
+    encargoDelUsuario(brief),
+    '',
     enfoqueDe(brief.tipo),
     '',
-    'Devuelve EXCLUSIVAMENTE este JSON (sin texto extra):',
-    '{ "nombre": "nombre corto de la campaña", "zonas": { "etiqueta": "<nombre corto del PRODUCTO en 1-3 palabras (ej. \\"Seguro Auto\\") o \\"\\">", "titular": "...", "cuerpo": "...", "cta": "..." }, "burbuja": "<la OFERTA en 2-4 palabras para el círculo de promo (ej. \\"2 Cuotas Gratis\\", \\"60% dcto.\\") — SOLO si el brief trae gancho/oferta, si no \\"\\">", "imagen": "<URL exacta de la biblioteca o \\"\\"> " }',
+    'PIENSA ANTES DE ESCRIBIR (no lo muestres, solo devuelve el JSON):',
+    '1. ¿Qué gana el lector? Escríbelo en una frase.',
+    '2. Propón CINCO titulares distintos por ángulo (beneficio, miedo evitado, pregunta, dato concreto, tiempo/facilidad).',
+    '3. Descarta los que podrían servirle a cualquier otra marca del rubro. Si los cinco sirven para cualquiera, escribe cinco nuevos.',
+    '4. Devuelve el mejor.',
     '',
-    'REGLAS DURAS:',
-    '- Español de Chile, claro y persuasivo. Nada de placeholders ni texto de relleno.',
-    '- LÍMITES: titular ≤ 6 palabras; cuerpo ≤ 14 palabras; cta ≤ 3 palabras.',
-    '- "burbuja": usa el gancho EXACTO del brief abreviado (empieza con el número si lo hay: "2 Cuotas Gratis"), o una promoción VIGENTE detectada en la landing, tal cual. NUNCA inventes una oferta: sin gancho ni promoción real va "".',
-    '- CLAVE: la OFERTA va SOLO en la burbuja. El "titular" NO puede repetir la oferta: si la burbuja dice "2 Cuotas Gratis", el titular debe comunicar la PROPUESTA DE VALOR o el beneficio (ej. "Tu auto siempre protegido", "Maneja tranquilo"), nunca "2 Cuotas Gratis" otra vez.',
-    '- "titular" y "cuerpo" no deben decir lo mismo: el titular engancha, el cuerpo suma un beneficio o razón concreta distinta.',
-    '- "etiqueta": el nombre del producto, NO la marca (la marca ya está en el logo).',
-    '- El "cta" debe reflejar la ACCIÓN del brief.',
-    '- "imagen": si la biblioteca tiene fotos, DEBES elegir la URL EXACTA de la que mejor calce con el brief (no la dejes vacía); solo con biblioteca vacía va "".',
-    '- NUNCA uses un logo ni un ícono como "imagen" (esos van en su propia zona, no como foto del banner).',
-    '- Respeta el tono y las palabras de la marca; NO inventes ofertas/precios/fechas.',
+    'Devuelve EXCLUSIVAMENTE este JSON (sin texto extra):',
+    '{ "nombre": "nombre corto de la campaña", "zonas": { "etiqueta": "<nombre corto del PRODUCTO en 1-3 palabras (ej. \\"Seguro Auto\\") o \\"\\">", "titular": "...", "cuerpo": "...", "cta": "..." }, "burbuja": "<la OFERTA en 2-4 palabras para el círculo de promo (ej. \\"2 Cuotas Gratis\\", \\"60% dcto.\\") — SOLO si hay oferta real, si no \\"\\">", "imagen": "<URL exacta de la biblioteca o \\"\\"> " }',
+    '',
+    'CÓMO SE REPARTE EL MENSAJE EN ESTE BANNER (importante):',
+    hayOferta
+      ? '- El banner tiene un CÍRCULO de promoción aparte. La OFERTA vive ahí y SOLO ahí ("burbuja"). El "titular" NO la repite: dice la propuesta de valor o el beneficio. Ej.: burbuja "2 Cuotas Gratis" + titular "Tu auto siempre protegido". Nunca la oferta dos veces.'
+      : '- No hay oferta que destacar: "burbuja" va vacía y el titular carga solo con el beneficio.',
+    '- "titular" y "cuerpo" no dicen lo mismo: el titular engancha, el cuerpo suma una razón concreta distinta.',
+    '- "etiqueta": el nombre del PRODUCTO, no el de la marca (la marca ya está en el logo).',
+    '',
+    'REGLAS DE ESCRITURA:',
+    '- Español de Chile. Concreto. Nada de relleno ni placeholders.',
+    '- LARGO: titular ≤ 6 palabras; cuerpo ≤ 14 palabras; cta ≤ 3 palabras. Si no cabe, REESCRIBE más corto — no lo entregues cortado a la mitad.',
+    '- El "cta" refleja la acción del encargo.',
+    '',
+    'EJEMPLOS (el nivel que se espera):',
+    'MAL  → "Zurich te ofrece la mejor cobertura del mercado"   (habla la empresa, genérico, sirve para cualquiera)',
+    'BIEN → "Tu auto protegido, pase lo que pase"               (habla al lector, concreto)',
+    'MAL  → "Descubre nuestras soluciones de protección"        (vacío, no dice nada)',
+    'BIEN → "Choca, roba o granice: estás cubierto"             (específico, imagen mental)',
+    '',
+    'IMAGEN:',
+    '- Si la biblioteca tiene fotos, DEBES elegir la URL EXACTA de la que mejor calce (no la dejes vacía); solo con biblioteca vacía va "".',
+    '- NUNCA un logo ni un ícono como foto del banner.',
     '',
     'VOZ DE MARCA:',
     voorMarca(marca),
     '',
     'BIBLIOTECA DE IMÁGENES (url → descripción):',
     imgsTxt,
-    refsTxt ? '\nCONTENIDO DE LAS URLS DE REFERENCIA — ANALÍZALO y RAZONA: identifica la propuesta de valor, beneficios, público y tono, y úsalos para escribir una pieza coherente y específica (NO copies literal, NO inventes datos que no estén):\n' + refsTxt : '',
+    refsTxt ? '\nCONTEXTO DEL SITIO (material de apoyo — NO es el encargo; úsalo para el vocabulario y la propuesta de valor, no copies literal):\n' + refsTxt : '',
     '',
-    'BRIEF:',
-    reglasBrief(brief, promos)
+    'REGLAS FINALES:',
+    reglasBrief(brief, promos, 'banner'),
+    brief.notas && String(brief.notas).trim() ? `\nRECORDATORIO — las indicaciones expresas del encargo mandan: ${String(brief.notas).trim()}` : ''
   ].filter(Boolean).join('\n');
 
   // Multimodal "light": si llegan miniaturas, la IA VE las imágenes (máx 10, una sola
@@ -583,7 +657,7 @@ async function generarBanner({ env, brief, marca, imagenes, refsTxt, promos }) {
     entrada = partes;
   }
 
-  const { parsed, error } = await llamarGemini(env, entrada, 1200);
+  const { parsed, error } = await llamarGemini(env, entrada, 1200, 0.9, { modelo: modeloCopy(env), pensar: -1 });
   if (error) return json({ ok: false, error }, 500);
   const z = (parsed && parsed.zonas) || {};
   const limpia = (s, n) => String(s || '').replace(/\s+/g, ' ').trim().split(' ').slice(0, n).join(' ');
@@ -622,40 +696,65 @@ async function generarEmail({ env, brief, marca, imagenes, refsTxt, promos }) {
 
   const prompt = [
     `Eres director creativo de ${marca ? (marca.nombre || marca.empresa) : 'la marca'}. Escribes el COPY de un email que suena 100% a la marca y convierte.`,
+    '',
+    // El encargo va PRIMERO, antes de cualquier contexto.
+    encargoDelUsuario(brief),
+    '',
     enfoqueDe(tipo),
     '',
-    'Devuelve EXCLUSIVAMENTE este JSON (sin texto extra). SOLO redactas el copy: NO maquetes, NO elijas bloques.',
+    'PIENSA ANTES DE ESCRIBIR (no lo muestres, solo devuelve el JSON):',
+    '1. ¿Qué gana el lector con esto? Una frase.',
+    '2. Escribe CINCO titulares por ángulos distintos (beneficio, problema evitado, pregunta, dato concreto, facilidad).',
+    '3. Tacha los que le servirían igual a cualquier competidor. Si se caen todos, escribe cinco nuevos.',
+    '4. Quédate con el mejor y construye el resto del copy alrededor de él.',
+    '',
+    'ELIGE ADEMÁS EL MOLDE del email (cómo se arma la pieza), el que mejor sirva a ESTE encargo:',
+    '  "oferta"     → la promoción manda: foto, banda de color con la oferta grande, razones, cierre. Para promos y descuentos.',
+    '  "beneficios" → tres razones bien contadas, sin gritar. Para producto o servicio que hay que explicar.',
+    '  "historia"   → una sola idea desarrollada en dos bandas de texto, sin lista. Para institucional y de confianza.',
+    '  "anuncio"    → directo y corto: foto grande, una frase, botón. Para novedades y recordatorios.',
+    'Si las indicaciones del encargo piden o prohíben algo (por ejemplo, "sin íconos" o "sin listas"), ELIGE el molde que lo respete: "historia" y "anuncio" no llevan iconos ni listas.',
+    '',
+    'Devuelve EXCLUSIVAMENTE este JSON (sin texto extra). Solo el COPY y el molde; la maquetación la pone el sistema.',
     '{',
-    '  "nombre": "asunto / nombre corto del email",',
+    '  "molde": "oferta" | "beneficios" | "historia" | "anuncio",',
+    '  "nombre": "asunto del correo, concreto y sin relleno (máx 9 palabras)",',
     '  "titular": "titular principal con gancho, SIN punto final, máx 8 palabras",',
     '  "intro": "1-2 frases que presentan el mensaje (máx 30 palabras)",',
     '  "oferta": "frase corta de la oferta/gancho a destacar (o \\"\\" si no hay oferta)",',
     '  "beneficios": [ { "icono": "<clave de la lista>", "titulo": "máx 4 palabras SIN punto", "texto": "máx 14 palabras" } ],',
-    '  "cierre": "frase breve de cierre o refuerzo (o \\"\\")",',
+    '  "cierre": "párrafo breve de cierre o refuerzo (o \\"\\")",',
     '  "cta": "texto del botón, imperativo, máx 3 palabras",',
     '  "imagen": "<URL EXACTA de la biblioteca que mejor calce, o \\"\\">"',
     '}',
     '',
     'REGLAS:',
     '- Español de Chile, concreto y persuasivo; nada de placeholders ni texto de relleno.',
-    '- Escribe como un AVISO publicitario, no como un comunicado: el lector debe sentir que le hablan a él (tú), no que la empresa se describe a sí misma.',
-    '- Exactamente 3 beneficios. Cada "icono" DISTINTO y relevante, de esta lista EXACTA: ' + ICONOS_VALIDOS.join(', ') + '.',
-    '- "imagen": si la biblioteca tiene fotos, DEBES elegir la URL EXACTA de la que mejor calce con el brief (no la dejes vacía); solo con biblioteca vacía va "". NUNCA un logo ni un ícono.',
-    '- Titulares y frases sobre imagen NUNCA terminan en punto.',
-    '- Respeta el tono y las palabras de la marca; NO inventes ofertas/precios/fechas.',
+    '- Escribe como un AVISO, no como un comunicado: el lector debe sentir que le hablan a él (tú), no que la empresa se describe a sí misma.',
+    '- Tres beneficios en los moldes "oferta" y "beneficios"; en "historia" y "anuncio" devuelve la lista VACÍA y desarrolla el "cierre".',
+    '- Cada "icono" DISTINTO y relevante, de esta lista EXACTA: ' + ICONOS_VALIDOS.join(', ') + '.',
+    '- Si un texto no cabe en el largo pedido, REESCRÍBELO más corto. Nunca lo entregues cortado.',
+    '- "imagen": si la biblioteca tiene fotos, DEBES elegir la URL EXACTA de la que mejor calce (no la dejes vacía); solo con biblioteca vacía va "". NUNCA un logo ni un ícono.',
+    '',
+    'EJEMPLOS (el nivel que se espera):',
+    'MAL  → "En Zurich nos complace presentarte nuestra nueva cobertura"  (comunicado, habla la empresa)',
+    'BIEN → "Tu auto protegido, pase lo que pase"                          (habla al lector)',
+    'MAL  → "Contamos con más de 150 años de experiencia"                  (dato de la empresa, al lector le da igual)',
+    'BIEN → "Cotiza en 3 minutos, sin papeleo"                             (beneficio concreto para él)',
     '',
     'VOZ DE MARCA:',
     voorMarca(marca),
     '',
     'BIBLIOTECA DE IMÁGENES (url → descripción):',
     imgsTxt,
-    refsTxt ? '\nCONTENIDO DE LAS URLS DE REFERENCIA — ANALÍZALO y RAZONA: identifica la propuesta de valor, beneficios, público y tono, y úsalos para escribir copy coherente y específico (NO copies literal, NO inventes datos que no estén):\n' + refsTxt : '',
+    refsTxt ? '\nCONTEXTO DEL SITIO (material de apoyo — NO es el encargo; úsalo para el vocabulario y la propuesta de valor, no copies literal):\n' + refsTxt : '',
     '',
-    'BRIEF:',
-    reglasBrief(brief, promos)
+    'REGLAS FINALES:',
+    reglasBrief(brief, promos, 'email'),
+    brief.notas && String(brief.notas).trim() ? `\nRECORDATORIO — las indicaciones expresas del encargo mandan sobre cualquier regla de estilo: ${String(brief.notas).trim()}` : ''
   ].filter(Boolean).join('\n');
 
-  const { parsed, error } = await llamarGemini(env, prompt, 2048);
+  const { parsed, error } = await llamarGemini(env, prompt, 2048, 0.9, { modelo: modeloCopy(env), pensar: -1 });
   if (error) return json({ ok: false, error }, 500);
 
   // ── Copy normalizado ──────────────────────────────────────────────────
@@ -689,30 +788,76 @@ async function generarEmail({ env, brief, marca, imagenes, refsTxt, promos }) {
   benes = benes.map((b, i) => ({ ico: b.ico, t: sinPuntoFinal(rev.textos[5 + i * 2]).slice(0, 40), s: rev.textos[6 + i * 2].slice(0, 140) }));
   const nombreR = rev.textos[5 + benes.length * 2].slice(0, 120) || nombreEmail;
 
-  // ── Esqueleto por TIPO (el "molde" del email) ─────────────────────────
+  // ── MOLDES del email ──────────────────────────────────────────────────
+  // Antes había UN esqueleto fijo (hero → alert → texto → features → cta) que
+  // se aplicaba a todo: por eso todos los emails salían idénticos y ninguna
+  // indicación del usuario podía cambiarlos (la estructura la decidía el código,
+  // no el prompt). Ahora la IA elige el molde y aquí se arma con el vocabulario
+  // de las plantillas buenas: BANDAS DE COLOR full-bleed (bloque "seccion"),
+  // foto limpia a todo el ancho, y el botón dentro de la banda de cierre.
+  // Nada de "hero" con texto encima (se rompe en Outlook) ni "alert" de aviso.
+  const P = marca || {};
+  const cNavy  = P.secondary || P.primary || '#23366f';   // banda oscura
+  const cClaro = P.bg || '#ffffff';                        // banda clara
+  const cTexto = P.text || '#23366f';
+  const cAcento = P.accent1 || P.primary || '#2167ae';     // banda de oferta
+  const cBoton = P.cta || P.primary || '#2167ae';
+  const cBotonTxt = P.ctaText || '#ffffff';
+  const fTit = P.fontTitulo || '';
+  const blanco = '#ffffff';
+
   const bloques = [];
   const push = (t, datos) => bloques.push({ tipo: t, datos });
-  // 1) Imagen principal → HERO (titular ENCIMA de la foto). Sin foto → título de texto.
-  if (imagen) push('hero', { imagenUrl: imagen, titulo: titularR, sub: '', ctaTexto: '', alturaHero: '340', oscurecer: '45', radioImg: '0' });
-  else        push('texto', { titulo: titularR, contenido: '', tamano: '26', negrita: true, alinH: 'center' });
-  // 2) Oferta destacada — SIEMPRE después de la foto (solo comercial la resalta en banner).
-  if (ofertaR && tipo === 'comercial') push('alert', { tipo: 'info', titulo: ofertaR, mensaje: '' });
-  // 3) Intro
-  if (introR) push('texto', { contenido: introR });
-  // 4) Beneficios (íconos distintos)
-  if (benes.length) push('features', { items: benes });
-  // 5) Respiro / cierre según el tono del tipo
-  if (tipo === 'comercial') {
-    push('espaciador', { altoEsp: '24' });
-  } else {
-    push('divisor', {});
-    if (cierreR) push('texto', { contenido: cierreR });
-    else push('espaciador', { altoEsp: '16' });
-  }
-  // 6) UN solo CTA, al final (el enlace lo fija el usuario en el cliente).
-  push('cta', { texto: ctaR, url: '' });
+  const foto = () => { if (imagen) push('imagen', { url: imagen, anchoImg: '100', radio: '0', padTop: '0', padBottom: '0', padLeft: '0', padRight: '0' }); };
+  // Banda: el primitivo de email profesional (full-bleed, con su propio color).
+  const banda = (o) => push('seccion', Object.assign({
+    bg: cClaro, colorTexto: cTexto, colorEyebrow: cBoton, alinH: 'center',
+    eyebrow: '', titulo: '', subtitulo: '', fuenteTitulo: fTit,
+    tamTitulo: '26', tamSub: '15', padV: '32', padH: '28',
+    botonTexto: '', botonUrl: '', botonVariante: 'solido', botonColor: cBoton
+  }, o));
+  const bandaCierre = (extra) => banda(Object.assign({
+    bg: cNavy, colorTexto: blanco, colorEyebrow: blanco,
+    botonTexto: ctaR, botonUrl: '', botonVariante: 'solido', botonColor: cBoton, padV: '36'
+  }, extra || {}));
 
-  return json({ ok: true, nombre: nombreR, bloques, ortografia: rev.revisado ? 'revisada' : 'sin-revisar' });
+  const molde = ['oferta', 'beneficios', 'historia', 'anuncio'].includes(c.molde)
+    ? c.molde
+    : (ofertaR && tipo === 'comercial') ? 'oferta' : (tipo === 'corporativo' ? 'historia' : 'beneficios');
+
+  if (molde === 'oferta') {
+    foto();
+    banda({ titulo: titularR, subtitulo: introR, tamTitulo: '28' });
+    if (ofertaR) banda({ bg: cAcento, colorTexto: esOscuro(cAcento) ? blanco : cTexto, titulo: ofertaR, tamTitulo: '34', padV: '26' });
+    if (benes.length) push('features', { items: benes, disposicion: 'fila', porFila: '3', orientacion: 'vertical', colorIcono: cBoton });
+    bandaCierre({ titulo: cierreR || '' });
+  } else if (molde === 'beneficios') {
+    foto();
+    banda({ titulo: titularR, subtitulo: introR, tamTitulo: '28' });
+    if (benes.length) push('features', { items: benes, disposicion: 'fila', porFila: '3', orientacion: 'vertical', colorIcono: cBoton });
+    bandaCierre({ titulo: cierreR || '' });
+  } else if (molde === 'historia') {
+    // Sin íconos y sin listas: dos bandas de texto y el cierre.
+    foto();
+    banda({ titulo: titularR, subtitulo: introR, tamTitulo: '28' });
+    if (cierreR) banda({ bg: cClaro === '#ffffff' ? '#f4f6fa' : blanco, subtitulo: cierreR, tamSub: '16', padV: '30' });
+    bandaCierre({});
+  } else {   // anuncio: directo y corto
+    foto();
+    banda({ titulo: titularR, subtitulo: introR, tamTitulo: '30', padV: '36' });
+    bandaCierre({});
+  }
+
+  return json({ ok: true, nombre: nombreR, molde, bloques, ortografia: rev.revisado ? 'revisada' : 'sin-revisar' });
+}
+// ¿El color es oscuro? (para decidir el color del texto encima). Igual criterio
+// que esColorOscuro() del editor, para que servidor y cliente coincidan.
+function esOscuro(hex) {
+  const h = String(hex || '').replace('#', '');
+  const c = h.length === 3 ? h.split('').map(x => x + x).join('') : h;
+  if (c.length !== 6) return false;
+  const r = parseInt(c.slice(0, 2), 16), g = parseInt(c.slice(2, 4), 16), b = parseInt(c.slice(4, 6), 16);
+  return (0.299 * r + 0.587 * g + 0.114 * b) < 140;
 }
 
 // ════════════ PRODUCTO 3: GOOGLE SEARCH ADS (campaña razonada) ════════════
@@ -725,6 +870,8 @@ async function generarEmail({ env, brief, marca, imagenes, refsTxt, promos }) {
 async function generarAds({ env, brief, marca, refsTxt, promos, enlaces }) {
   const prompt = [
     `Eres un especialista senior en Google Ads (Search) de ${marca ? (marca.nombre || marca.empresa) : 'la marca'}. Estructuras campañas como un profesional: por INTENCIÓN de búsqueda, con concordancias controladas y negativas. Detestas la concordancia amplia porque quema presupuesto.`,
+    '',
+    encargoDelUsuario(brief),
     '',
     'Devuelve EXCLUSIVAMENTE este JSON (sin texto extra):',
     '{',
@@ -767,11 +914,11 @@ async function generarAds({ env, brief, marca, refsTxt, promos, enlaces }) {
     (enlaces && enlaces.length) ? '\nENLACES INTERNOS REALES de la landing (candidatos a sitelinks, "texto → ruta"):\n' + enlaces.map(e => `- ${e.texto} → ${e.ruta}`).join('\n') : '',
     '',
     'BRIEF:',
-    reglasBrief(brief, promos),
+    reglasBrief(brief, promos, 'ads'),
     brief.ctaUrl ? `URL FINAL de los anuncios (landing): ${brief.ctaUrl}` : ''
   ].filter(Boolean).join('\n');
 
-  const { parsed, error } = await llamarGemini(env, prompt, 8192);
+  const { parsed, error } = await llamarGemini(env, prompt, 8192, 0.8, { modelo: modeloCopy(env), pensar: -1 });
   if (error) return json({ ok: false, error }, 500);
 
   // ── Validación dura del lado del servidor ──────────────────────────────
