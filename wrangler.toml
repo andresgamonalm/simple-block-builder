@@ -29,3 +29,34 @@ RESEND_FROM       = "Simple Block Builder <onboarding@resend.dev>"
 # Opcional (variable normal): GEMINI_MODEL (por defecto: gemini-2.5-flash)
 #
 # Para desarrollo local, defínelas en .dev.vars (ver .dev.vars.example).
+
+# ═══════════════════════════════════════════════════════════════════════
+# BORRADOR (preview) — datos SEPARADOS de producción
+#
+# Todo lo de arriba es PRODUCCIÓN (simple-block-builder.gamonal.app) y no
+# se toca. Esta sección solo aplica a los deployments de PREVIEW, que es lo
+# que Cloudflare Pages genera para cualquier rama distinta de main.
+#
+# Sin esto, el borrador escribiría en la MISMA base y el MISMO bucket que
+# producción: probar una mejora en la rama podía sobrescribir el espacio de
+# trabajo real (el guardado sincroniza el workspace completo, gana el último
+# que escribe). Con esta sección, el borrador tiene su propia base y su
+# propio bucket, y nada de lo que se pruebe ahí llega a producción.
+#
+# Los bindings NO se heredan del nivel raíz: hay que repetirlos completos.
+# ═══════════════════════════════════════════════════════════════════════
+[env.preview]
+
+[[env.preview.d1_databases]]
+binding       = "DB"
+database_name = "simple-block-builder-draft"
+database_id   = "b3aed47b-8766-410a-98f2-176175ca6a47"
+
+[[env.preview.r2_buckets]]
+binding     = "IMAGENES"
+bucket_name = "zurich-chile-draft"
+
+[env.preview.vars]
+SITE_URL          = "https://sbb-draft-mejoras.simple-block-builder.pages.dev"
+SUPER_ADMIN_EMAIL = "hola@andresgamonal.com"
+RESEND_FROM       = "Simple Block Builder <onboarding@resend.dev>"
