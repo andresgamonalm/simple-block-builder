@@ -1,0 +1,141 @@
+<meta charset="utf-8">
+<title>Catálogo Zurich</title>
+<style>
+  :root{ --navy:#23366F; --azul:#2167AE; --claro:#91BFE3; --lima:#FFF773; --coral:#F0736B;
+         --beige:#D8D2BC; --cyan:#41B6E6; --rojo:#C0392B; }
+  body{ margin:0; background:#eef1f6; font:14px/1.5 Arial,sans-serif; color:#12173d; padding:28px; }
+  h1{ font-size:22px; margin:0 0 4px; } h2{ font-size:15px; margin:26px 0 10px; color:#040764;
+      border-bottom:2px solid #040764; padding-bottom:5px; }
+  .nota{ color:#5a6478; margin:0 0 18px; max-width:760px; }
+  .fila{ display:flex; gap:22px; align-items:flex-start; flex-wrap:wrap; margin-bottom:8px; }
+  .cel{ background:#fff; border:1px solid #d8dee9; padding:9px; }
+  .rot{ font:600 11px Arial; margin-bottom:6px; color:#333; }
+  .bn{ position:relative; overflow:hidden; }
+  /* ── piezas ── */
+  .logo{ position:absolute; color:#fff; font:700 1em Arial; letter-spacing:.5px; }
+  .pill{ display:inline-block; border-radius:999px; color:#fff; white-space:nowrap; }
+  .prod{ color:#fff; font-weight:300; line-height:1.02; }
+  .circ{ position:absolute; border-radius:50%; display:flex; flex-direction:column;
+         align-items:center; justify-content:center; color:#fff; text-align:center; }
+  .num{ font-weight:400; line-height:.9; }
+  .deco{ position:absolute; border-radius:50%; }
+  .precio{ color:#fff; font-weight:400; line-height:.92; }
+  .cta{ display:inline-block; border-radius:999px; color:#fff; background:var(--rojo); font-weight:700; }
+  .legal{ color:#fff; opacity:.85; }
+  table{ border-collapse:collapse; font-size:13px; background:#fff; margin-top:6px; }
+  td,th{ border:1px solid #d8dee9; padding:5px 10px; text-align:left; }
+  th{ background:#f3f6fb; font-weight:600; }
+  code{ background:#eef1f6; padding:1px 5px; }
+</style>
+
+<h1>Catálogo de diagramaciones · derivado de las 10 piezas reales de Zurich</h1>
+<p class="nota">Cada medida está expresada como <b>porcentaje del lado corto</b> del lienzo, para que
+la misma diagramación funcione en los 11 tamaños sin reescalar a ojo. Estas son las proporciones que
+usan tus piezas; si alguna no calza con lo que ves en el original, se corrige el número y se
+re-dibuja todo el catálogo de una vez.</p>
+
+<h2>A · Producto + oferta en círculo <span style="font-weight:400;color:#5a6478">(piezas 1 y 4)</span></h2>
+<div class="fila" id="fA"></div>
+<table>
+<tr><th>Elemento</th><th>Medida (% del lado corto)</th><th>Ancla</th></tr>
+<tr><td>Margen</td><td>5,5%</td><td>—</td></tr>
+<tr><td>Logo (alto)</td><td>8%</td><td>arriba-izquierda</td></tr>
+<tr><td>Píldora de producto</td><td>texto 4%</td><td>bajo el logo</td></tr>
+<tr><td>Nombre del producto</td><td>11%</td><td>bajo la píldora</td></tr>
+<tr><td><b>Círculo de oferta</b></td><td><b>62% de diámetro</b></td><td>derecha, sale 8% por el borde</td></tr>
+<tr><td>Cifra dentro del círculo</td><td>45% del diámetro</td><td>centro del círculo</td></tr>
+<tr><td>Entradilla del círculo</td><td>11% del diámetro</td><td>sobre la cifra</td></tr>
+<tr><td>Adornos</td><td>28% · 16% · 9%</td><td>abajo, asomando por el borde</td></tr>
+</table>
+
+<h2>B · La cifra manda <span style="font-weight:400;color:#5a6478">(piezas 8 y 9)</span></h2>
+<div class="fila" id="fB"></div>
+<table>
+<tr><th>Elemento</th><th>Medida (% del lado corto)</th><th>Ancla</th></tr>
+<tr><td>Nombre del producto</td><td>14% · dos pesos (fuerte + fino)</td><td>arriba, centrado</td></tr>
+<tr><td>Píldora con el eslogan</td><td>texto 4,5%</td><td>bajo el nombre</td></tr>
+<tr><td><b>La cifra</b></td><td><b>22%</b> — el elemento más grande</td><td>centro</td></tr>
+<tr><td>Línea de apoyo</td><td>5%</td><td>bajo la cifra</td></tr>
+<tr><td>Botón</td><td>texto 6%, rojo</td><td>bajo el apoyo</td></tr>
+<tr><td>Legal</td><td>3%</td><td>abajo</td></tr>
+<tr><td>Logo</td><td>en círculo claro, 30% de diámetro</td><td>abajo-derecha, asomando</td></tr>
+<tr><td>Foto (solo en anchos)</td><td>recorte circular, 85% de diámetro</td><td>columna izquierda</td></tr>
+</table>
+
+<h2>Lo que este catálogo corrige de tu motor actual</h2>
+<table>
+<tr><th>Hoy</th><th>Catálogo</th></tr>
+<tr><td>El círculo es una insignia de esquina</td><td>Es estructural: 62% del lado corto</td></tr>
+<tr><td>Los anchos apilan igual que los cuadrados</td><td>Los anchos van a dos columnas</td></tr>
+<tr><td>La foto es fondo a sangre con velo</td><td>La foto es un recorte circular</td></tr>
+<tr><td>Contraste tipográfico 2x</td><td>De 3% a 22% = <b>7x</b></td></tr>
+<tr><td>Adornos flotando encima del texto</td><td>Asomando por el borde inferior, nunca sobre texto</td></tr>
+<tr><td>No existe "la cifra" como elemento</td><td>Es el elemento principal de la diagramación B</td></tr>
+</table>
+
+<script>
+// Dibuja las diagramaciones a escala real, con las proporciones de la tabla.
+const F = [[300,250],[1200,1200],[1200,628]];
+const pc = (lado, p) => lado * p / 100;
+
+function archA(W,H){
+  const S=Math.min(W,H), M=pc(S,5.5), D=pc(S,62);
+  const bleed=pc(S,8);
+  return `<div class="bn" style="width:${W}px;height:${H}px;background:var(--navy)">
+    <div class="deco" style="width:${pc(S,28)}px;height:${pc(S,28)}px;background:var(--beige);
+         left:${W*.42}px;bottom:${-pc(S,13)}px"></div>
+    <div class="deco" style="width:${pc(S,16)}px;height:${pc(S,16)}px;background:var(--cyan);
+         left:${W*.66}px;bottom:${-pc(S,7)}px"></div>
+    <div class="deco" style="width:${pc(S,9)}px;height:${pc(S,9)}px;background:var(--claro);
+         left:${W*.58}px;bottom:${pc(S,2)}px"></div>
+    <div class="circ" style="width:${D}px;height:${D}px;background:var(--azul);
+         right:${-bleed}px;top:${H*.5-D*.5}px;padding-right:${bleed}px;box-sizing:border-box">
+      <div style="font-size:${D*.11}px;opacity:.95">Aprovecha</div>
+      <div class="num" style="font-size:${D*.45}px">2</div>
+      <div style="font-size:${D*.2}px;line-height:1;font-weight:300">Cuotas Gratis</div>
+    </div>
+    <div class="logo" style="left:${M}px;top:${M}px;font-size:${pc(S,8)}px">Ⓩ ZURICH</div>
+    <div style="position:absolute;left:${M}px;top:${M+pc(S,14)}px;max-width:${W-D+bleed-M*2}px">
+      <span class="pill" style="background:var(--azul);font-size:${pc(S,4)}px;
+            padding:${pc(S,1.2)}px ${pc(S,3.4)}px">Seguro</span>
+      <div class="prod" style="font-size:${pc(S,11)}px;margin-top:${pc(S,2)}px">Auto Digital</div>
+      <div style="color:#fff;font-size:${pc(S,4.2)}px;font-weight:700;margin-top:${pc(S,2.5)}px">
+        Contrata en zurich.cl</div>
+    </div>
+  </div>`;
+}
+
+function archB(W,H){
+  const S=Math.min(W,H), M=pc(S,5.5), ancho=W>H*1.4;
+  const DL=pc(S,30), DF=pc(S,85);
+  const colIzq = ancho ? W*.44 : 0;
+  const foto = ancho ? `<div class="deco" style="width:${DF}px;height:${DF}px;overflow:hidden;
+      left:${-DF*.12}px;top:${H*.5-DF*.5}px;background:#7c8ba1;
+      display:flex;align-items:center;justify-content:center;color:#fff;font:600 ${pc(S,5)}px Arial">FOTO</div>` : '';
+  return `<div class="bn" style="width:${W}px;height:${H}px;background:var(--azul)">
+    ${foto}
+    <div class="deco" style="width:${pc(S,22)}px;height:${pc(S,22)}px;background:var(--navy);
+         right:${pc(S,16)}px;bottom:${-pc(S,10)}px"></div>
+    <div class="deco" style="width:${DL}px;height:${DL}px;background:#e9edf2;
+         right:${-DL*.18}px;bottom:${-DL*.18}px"></div>
+    <div style="position:absolute;left:${colIzq+M}px;top:${M}px;width:${W-colIzq-M*2}px;
+         text-align:center;color:#fff">
+      <div style="font-size:${pc(S,14)}px;line-height:1">
+        <span style="font-weight:400">SOAP</span><span style="font-weight:300;font-size:.68em">check</span></div>
+      <div style="margin-top:${pc(S,2)}px">
+        <span class="pill" style="background:var(--navy);font-size:${pc(S,4.5)}px;
+              padding:${pc(S,1.4)}px ${pc(S,3.5)}px">La actitud de los que se aseguran</span></div>
+      <div class="precio" style="font-size:${pc(S,22)}px;margin-top:${pc(S,3)}px">$8.990</div>
+      <div style="font-size:${pc(S,5)}px;font-weight:700;margin-top:${pc(S,1)}px">En Auto, Jeep y Station Wagon.</div>
+      ${ancho?'':`<div style="margin-top:${pc(S,3)}px"><span class="cta"
+            style="font-size:${pc(S,6)}px;padding:${pc(S,2)}px ${pc(S,6)}px">Cómpralo aquí</span></div>`}
+      <div class="legal" style="font-size:${pc(S,3)}px;margin-top:${pc(S,2.5)}px">
+        Bases legales y condiciones en www.zurich.cl</div>
+    </div>
+  </div>`;
+}
+
+const pinta=(id,fn)=>{ document.getElementById(id).innerHTML = F.map(([w,h])=>
+  `<div class="cel"><div class="rot">${w}×${h}</div>${fn(w,h)}</div>`).join(''); };
+pinta('fA',archA); pinta('fB',archB);
+</script>
