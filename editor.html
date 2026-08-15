@@ -5273,9 +5273,16 @@ function decoBurbujasHTML(deco, W, H){
 }
 // Burbuja circular de OFERTA (el círculo de promo). Si el texto parte con un
 // número ("2 Cuotas Gratis", "60% dcto."), el número se pinta GRANDE.
+// Diámetro real de la burbuja de oferta. Se calcula aparte porque la
+// composición necesita RESERVARLE el sitio: la burbuja va posicionada encima,
+// así que sin reserva se comía el titular y el botón en casi todos los tamaños.
+function diametroBurbuja(bu, px, W, H){
+  return Math.min(Math.max(34, px(bu.tamano, 96)), Math.round(H*0.8), Math.round(W*0.5));
+}
+// Lado del banner que ocupa la burbuja: 'l' (tl/bl) o 'r' (tr/br/cr).
+const ladoBurbuja = bu => /l$/.test(bu && bu.pos || "tr") ? "l" : "r";
 function burbujaHTML(bu, px, W, H){
-  let dia = Math.max(34, px(bu.tamano, 96));
-  dia = Math.min(dia, Math.round(H*0.8), Math.round(W*0.5));
+  const dia = diametroBurbuja(bu, px, W, H);
   const bg = bu.color || "#FFF773", fg = bu.colorTexto || "#23366F";
   const t = String(bu.texto||"").trim();
   const m = t.match(/^(\$?\d[\d.,]*%?)\s+([\s\S]+)$/);
@@ -5447,6 +5454,40 @@ function renderLayoutMarca(c, fmt, layout){
       + bajada() + boton() + `</div>`, true
   );
 }
+// ── QUE EL CONTENIDO QUEPA ──────────────────────────────────────────────
+// El renderizador devuelve un string, así que no puede medir el DOM: estima el
+// alto que ocuparán etiqueta + titular + bajada + botón y, si no cabe, baja la
+// escala. Si aun al mínimo no cabe, quita la BAJADA — que es lo que hacen los
+// banners display reales en formatos chicos: titular y botón, sin párrafo.
+// Sin esto el texto se cortaba a la mitad (300x250, 250x250, 1200x1200).
+function altoNecesario(c, W, e, resBu, sinCuerpo){
+  const Z=c.zonas||{}, T=Z.texto||{}, ti=T.titular||{}, cu=T.cuerpo||{}, et=T.etiqueta||{}, cta=Z.cta||{}, lg=Z.logo||{}, mg=c.margen||{};
+  const p=(v,b)=>Math.round((parseFloat(v)||b)*e);
+  const util = Math.max(40, W - resBu - p(mg.l,0) - p(mg.r,0) - p(12,12)*2);
+  // Ancho medio de un carácter en Arial ≈ 0.52 em. Sirve para contar líneas.
+  const lineas=(txt,fs)=>{ if(!txt) return 0;
+    const porLinea=Math.max(6, Math.floor(util/(fs*0.52)));
+    return String(txt).split("\n").reduce((n,l)=>n+Math.max(1,Math.ceil(l.length/porLinea)),0); };
+  let h=0;
+  if(lg.url) h += p(lg.alto,48) + p(12,12)*2;
+  const fTi=p(ti.tamano,26), fCu=p(cu.tamano,13), fEt=p(et.tamano,11), fCta=p(cta.tamano,13);
+  let ht=0;
+  if(et.texto) ht += fEt*1.2 + p(4,4)*2 + p(4,4);
+  if(ti.texto) ht += lineas(ti.texto,fTi)*fTi*1.18 + p(4,4);
+  if(!sinCuerpo && cu.texto) ht += lineas(cu.texto,fCu)*fCu*1.35 + p(4,4);
+  if(ht) h += ht + p(12,12)*2;
+  if(cta.texto) h += fCta*1.2 + Math.round(fCta*0.55)*2 + p(12,12)*2;
+  return h;
+}
+function ajusteQueCabe(c, W, H, esc0, fila, resBu){
+  if(fila) return { esc:esc0, sinCuerpo:false };      // las franjas reparten en horizontal
+  let e=esc0;
+  for(let i=0;i<30 && altoNecesario(c,W,e,resBu,false)>H;i++) e*=0.95;
+  if(altoNecesario(c,W,e,resBu,false)<=H && e>=0.62) return { esc:e, sinCuerpo:false };
+  e=esc0;
+  for(let i=0;i<30 && altoNecesario(c,W,e,resBu,true)>H;i++) e*=0.95;
+  return { esc:Math.max(0.5,e), sinCuerpo:true };
+}
 // Renderiza la composición (3 zonas) a un tamaño concreto.
 function renderComposicion(comp, fmt){
   // Estilo de marca: disposiciones cerradas. Si no hay layout de marca, sigue
@@ -5454,9 +5495,24 @@ function renderComposicion(comp, fmt){
   if(comp && esLayoutMarca(comp.layout)) return renderLayoutMarca(comp, fmt, comp.layout);
   const f = FORMATOS[fmt] || FORMATOS["display-300x250"];
   const W=f.ancho, H=f.alto, fila=(familiaDeFormato(fmt)==="franja");
-  const escF = fila ? Math.max(0.5, H/110) : Math.max(0.5, W/300);   // proporcional puro: 600 de ancho = 2x de 300 (sin tope)
+  // La escala manda sobre el LADO MÁS AJUSTADO, no solo sobre el ancho. Con
+  // W/300 a secas, un 1200x628 daba escala 4 (titular 104px) dentro de 628px de
+  // alto: el texto no cabía y se cortaba a la mitad. El piso sube a 0.7 porque
+  // por debajo (160x600 daba 14px de titular) el banner es ilegible.
+  const c=comp||{}; const fondo=c.fondo||{}; const prop=(c.prop&&c.prop.length===3)?c.prop:[25,50,25];
+  const escBase = fila ? Math.max(0.5, H/110) : Math.max(0.7, Math.min(W/300, H/250));
+  // La burbuja NO se encoge con el texto: la oferta manda. Va a escala base.
+  const bu0 = c.burbuja||{};
+  const hayBu = bu0.visible===true && !!String(bu0.texto||"").trim();
+  const pxB=(v,base)=>Math.round((parseFloat(v)||base)*escBase);
+  const resBu = hayBu ? diametroBurbuja(bu0, pxB, W, H) + pxB(10,10) : 0;
+  const aj = ajusteQueCabe(c, W, H, escBase, fila, resBu);
+  const escF = aj.esc;
   const px=(v,base)=>Math.round((parseFloat(v)||base)*escF);
-  const c=comp||{}; const fondo=c.fondo||{}; const prop=(c.prop&&c.prop.length===3)?c.prop:[25,50,25]; const Z=c.zonas||{};
+  let Z=c.zonas||{};
+  if(aj.sinCuerpo && Z.texto && Z.texto.cuerpo && Z.texto.cuerpo.texto)
+    Z = Object.assign({}, Z, { texto: Object.assign({}, Z.texto,
+        { cuerpo: Object.assign({}, Z.texto.cuerpo, { texto:"" }) }) });
   const bgColor = fondo.color || "#0e2748";
   const esFoto = fondo.tipo==="imagen" && fondo.imagen && fondo.imagen.url;
   const fondoLayer = esFoto ? capaImagenHTML(fondo.imagen, "cmp-bg") : "";
@@ -5469,13 +5525,23 @@ function renderComposicion(comp, fmt){
     const bg = (z.bg==="color" && z.color) ? `<div class="cmp-zbg" style="background:${esc(z.color)};"></div>`
              : (z.bg==="imagen") ? capaImagenHTML(z.imagen, "cmp-zbg") : "";
     const inner = (z.visible===false) ? "" : zonaContenido(zk, z, px);
-    return `<div class="cmp-zona" style="flex:${grow} 1 0;justify-content:${alinFlex(z.alinV)};align-items:${alinFlex(z.alinH)};padding:${pad}px;">${bg}<div class="cmp-zin" style="align-items:${alinFlex(z.alinH)};text-align:${alinText(z.alinH)};gap:${px(4,4)}px;">${inner}</div></div>`;
+    // Una zona SIN contenido no debe reservar espacio: si no, deja un hueco
+    // muerto (el logo vacío se comía el tercio superior de los verticales) y
+    // el resto queda apelotonado. Sin contenido → no crece y no pone padding.
+    const vacia = !String(inner||"").trim();
+    const g2 = vacia ? 0 : grow;
+    const p2 = vacia ? 0 : pad;
+    return `<div class="cmp-zona" style="flex:${g2} 1 0;justify-content:${alinFlex(z.alinV)};align-items:${alinFlex(z.alinH)};padding:${p2}px;">${bg}<div class="cmp-zin" style="align-items:${alinFlex(z.alinH)};text-align:${alinText(z.alinH)};gap:${px(4,4)}px;">${inner}</div></div>`;
   };
   const zonas = ["logo","texto","cta"].map((zk,i)=>zonaHTML(zk,i)).join("");
   const mg=c.margen||{};
-  const mpad=`${px(mg.t,0)}px ${px(mg.r,0)}px ${px(mg.b,0)}px ${px(mg.l,0)}px`;
+  // RESERVA para la burbuja de oferta: va posicionada encima de todo, así que
+  // el contenido tiene que apartarse de su lado. Sin esto tapaba el titular
+  // (300x250, 336x280, 1200x628) y el botón (728x90, 468x60).
+  const buIzq = hayBu && ladoBurbuja(bu0)==="l";
+  const mpad=`${px(mg.t,0)}px ${px(mg.r,0)+(hayBu&&!buIzq?resBu:0)}px ${px(mg.b,0)}px ${px(mg.l,0)+(buIzq?resBu:0)}px`;
   const deco = (c.deco && c.deco.visible===true) ? decoBurbujasHTML(c.deco, W, H) : "";
-  const burbuja = (c.burbuja && c.burbuja.visible===true && c.burbuja.texto) ? burbujaHTML(c.burbuja, px, W, H) : "";
+  const burbuja = hayBu ? burbujaHTML(bu0, pxB, W, H) : "";   // pxB = escala base: la oferta no se encoge
   return `<div class="cmp" style="width:${W}px;height:${H}px;background:${esc(bgColor)};">${fondoLayer}${scrim}${deco}<div class="cmp-zonas ${fila?'row':'col'}" style="padding:${mpad};box-sizing:border-box;">${zonas}</div>${burbuja}</div>`;
 }
 // ── Custom por tamaño (overrides sobre el Diseño global) ──
@@ -8371,9 +8437,23 @@ function insertarBannerIA(data, marca){
   // de 3 zonas de siempre.
   const LAY = { circulo:"z-circulo", corte:"z-corte", bloque:"z-bloque", tipografica:"z-tipo" };
   if(LAYOUTS_MARCA_ACTIVOS && data.layout && LAY[data.layout]) setPath(comp,"layout", LAY[data.layout]);
-  // Imagen elegida por la IA desde la biblioteca (si vino una URL válida).
-  if(data.imagen && /^https?:\/\/|^data:/.test(data.imagen)){
-    setPath(comp,"fondo.tipo","imagen"); setPath(comp,"fondo.imagen.url", data.imagen);
+  // FOTO del banner. La elige la IA de la biblioteca; si no eligió (pasa a
+  // menudo), la ponemos nosotros: un banner de color plano se ve pobre y la
+  // biblioteca está ahí. Se descartan logos e íconos, que no sirven de fondo.
+  let foto = (data.imagen && /^https?:\/\/|^data:/.test(data.imagen)) ? data.imagen : "";
+  if(!foto){
+    const cand = (workspace.imagenes||[]).filter(im =>
+      im && String(im.url||"").trim() &&
+      !/logo|icono|icon|favicon/i.test(String(im.nombre||"")+" "+String(im.url||"")));
+    if(cand.length){
+      // Estable por campaña (mismo brief → misma foto) pero distinta entre campañas.
+      let s=0; const sem=String(data.nombre||data.titular||"x");
+      for(let i=0;i<sem.length;i++) s=(s*31+sem.charCodeAt(i))>>>0;
+      foto = cand[s % cand.length].url;
+    }
+  }
+  if(foto){
+    setPath(comp,"fondo.tipo","imagen"); setPath(comp,"fondo.imagen.url", foto);
     setPath(comp,"fondo.imagen.oscurecer", 48);
   }
   // OFERTA en la burbuja (colores desde los acentos de la marca).
