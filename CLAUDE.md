@@ -408,3 +408,47 @@ Implementación del mockup aprobado por el usuario (síntesis A + Stitch + B; lo
 2. **INTERFAZ + USO + DISEÑO DEL EDITOR** (el editor de banners/bloques: claridad del panel, orden de los controles, que se entienda sin explicación — revisar con ojos de la directora, no de programador).
 3. **IA EXTERNA (Gemini, functions/api/ia.js): CALIDAD REAL del output.** Generó un banner CON FALTA DE ORTOGRAFÍA pese a la regla dura agregada en reglasBrief (23-jul) → la regla en el prompt NO basta: evaluar corrección server-side post-generación (pasada de revisión ortográfica sobre titular/cuerpo/cta/etiqueta antes de devolver, o segunda llamada de proofread), y en general subir la calidad de copy/estructura de email/banner/ads.
 4. Pruebas y pruebas: cada ajuste se verifica E2E (patrón Playwright del scratchpad: server local + mocks /api/* + diálogo #pnt-inp del nombre).
+
+## Sesión 13-15 ago 2026: calidad gráfica, estilo Zurich y pestañas de campaña (ESTADO ACTUAL — no rehacer)
+Detonante: el usuario presentó la app y su jefa encontró **MEDIOCRE** los entregables. Diagnóstico
+medido (no supuesto): el techo de calidad estaba en el **motor de composición**, no en el modelo de IA
+(los emails mejoraron sin tocar la IA). Todo lo de abajo ya está en `main`.
+
+**Acuerdo de trabajo (15-ago):** se vuelve a trabajar **directo en `main`** por orden del usuario. La rama
+`sbb-draft-mejoras` queda como borrador con base D1 y bucket R2 propios (`[env.preview]` en wrangler.toml);
+producción y borrador NO comparten datos. Puntos de retorno: rama congelada `respaldo-produccion-2026-08-13`
+(commit 2f72775) y fila D1 `backup-20260813:hola@andresgamonal.com`. Ver `BORRADOR.md`.
+
+- **LAYOUTS DE MARCA (`LAYOUTS_MARCA` en editor.html, antes de `renderComposicion`).** Cuatro diagramaciones
+  reales extraídas de las 10 piezas Zurich del usuario, NO todas con círculo (lo pidió explícitamente):
+  `z-circulo` (cifra que manda), `z-corte` (foto con corte circular), `z-bloque` (sobrio, sin curvas),
+  `z-tipo` (tipográfica, sin foto). `esLayoutMarca(l)` desvía `renderComposicion` a `renderLayoutMarca`;
+  sin layout se usa el camino de 3 zonas de siempre (intacto). `detalleDe(W,H)` suprime elementos por área
+  (franjas y tamaños chicos no cargan todo). Regla del usuario, literal: **"Usa los colores del manual de
+  marca siempre. Pero usa las figuras y disposiciones de esas gráficas que están fuera de los lineamientos."**
+  El círculo se sale del borde a propósito (`sale`) y compensa con padding para que el texto no se corte;
+  la columna de texto se calcula contra el diámetro real (no un 52% fijo). Mockup: `mockups/sistema-zurich.html`.
+- **Selector de estilo en Char-B**: `iaEstilo` ('marca' | 'libre', segmento `#ia-estilo-seg`, por defecto
+  'marca') viaja como `estilo` a `/api/ia`; el servidor elige layout coherente con el brief y lo valida.
+  En el editor, el panel de Diseño trae el mismo selector (5 opciones: Libre + los 4 de marca).
+- **PESTAÑAS DE CAMPAÑA** (bug reportado: "eliges los tres tipos y solo se abre uno"). Fila `.tb-piezas` en
+  la cabecera del editor: una pestaña por pieza del proyecto con su chip de tipo (`renderPestanasPiezas`,
+  `irAPieza`), etiqueta con el nombre de campaña si el proyecto calza `/^campa(ñ|n)a\s*·/i`, y botón **"+"**
+  (`menuNuevaPestana`/`nuevaPestana`) para agregar otro tipo a la MISMA campaña. Causa raíz del bug:
+  crear una pieza reutilizaba la pieza abierta si la creía vacía; ahora `piezaVacia(p)` es una sola función
+  que reconoce canvas, adsData, composición y asunto — y se llama SIEMPRE como `(actual && piezaVacia(actual))`.
+- **Aire entre textos del banner**: `.cmp .cmp-zin` tenía `gap:4px` fijo en CSS → en 1200×1200 los textos se
+  pegaban. Ahora el gap es inline y escala (`px(4,4)`): 4px en 300×250, 16px en 1200×1200.
+- **Alineación de la lista de features**: campo `alinItems` (decisión del usuario, con default automático).
+  El usuario rechazó la primera versión: *"Tú estás fijando el espacio y eso no está bien"*. `.sbb-features
+  li>.txt` lleva `flex:1 1 auto;min-width:0` — sin eso el text-align no tenía espacio donde actuar.
+- **Emails con moldes reales**: `generarEmail` arma el esqueleto según 4 moldes (`oferta`/`beneficios`/
+  `historia`/`anuncio`) con bandas `seccion` full-bleed; la IA solo entrega copy estructurado.
+- **`encargoDelUsuario(brief)`**: el brief del usuario va PRIMERO en el prompt y marcado como órdenes que
+  ganan por sobre las reglas de estilo (antes era el 0,6% del prompt y la IA lo ignoraba).
+- Verificado con Playwright antes de pasar a main: layouts 4×4 formatos sin fallos · zurich-e2e 8/8 ·
+  campaña-pestañas 6/6 · edición in situ 4/4 (clase `lienzo-edit`) · email, alineación y regresiones · 0 pageerrors.
+
+**Pendientes de esta línea:** analizar `mockups/Varios-Estilos/` (9 piezas, nunca se abrieron — Zurich tenía
+prioridad); que la IA VEA bien las fotos (hoy 3 de 50 en banner, 0 en email); escala tipográfica por formato;
+Ctrl+Z no cubre `adsData`; el Atrás del navegador no cambia la vista del dashboard.
