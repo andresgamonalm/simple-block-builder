@@ -1220,7 +1220,7 @@ button,input,select,textarea{font-family:inherit;}
 .cmp .cmp-zona{position:relative;display:flex;flex-direction:column;box-sizing:border-box;min-width:0;min-height:0;overflow:hidden;}
 .cmp .cmp-zona .cmp-zbg{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:0;}
 .cmp .cmp-zona .cmp-zveil{position:absolute;inset:0;z-index:0;}
-.cmp .cmp-zin{position:relative;z-index:1;display:flex;flex-direction:column;gap:4px;min-width:0;max-width:100%;}
+.cmp .cmp-zin{position:relative;z-index:1;display:flex;flex-direction:column;min-width:0;max-width:100%;}
 .cmp .cmp-logo{display:block;object-fit:contain;}
 /* Arial no tiene grosor 800: pedir 800 lo "sintetiza" y sale estirado/feo. Se
    usa 700 (bold real) con una sombra sutil para separar del fondo. */
@@ -1569,6 +1569,16 @@ button,input,select,textarea{font-family:inherit;}
 .topbar{display:flex;flex-direction:column;align-items:stretch;gap:0;height:auto;padding:0;}
 .tb-r1{display:flex;align-items:center;gap:10px;padding:9px 18px;min-width:0;}
 .tb-r2{display:flex;align-items:center;gap:8px;padding:7px 18px;background:#f5f6fa;min-width:0;overflow-x:auto;}
+/* Pestanas de las piezas del proyecto (campana con varias piezas). */
+.tb-piezas{display:flex;align-items:stretch;gap:2px;padding:0 18px;background:#f5f6fa;border-top:1px solid #e4e8f0;min-width:0;overflow-x:auto;}
+.tb-piezas .pz{display:flex;align-items:center;gap:7px;padding:8px 13px;border:0;background:none;cursor:pointer;
+  font-family:var(--f);font-size:13px;color:#5b6178;border-bottom:2px solid transparent;white-space:nowrap;max-width:260px;}
+.tb-piezas .pz:hover{color:var(--navy);background:#eef1f6;}
+.tb-piezas .pz.on{color:var(--navy);font-weight:600;border-bottom-color:var(--navy);background:#fff;}
+.tb-piezas .pz .nm{overflow:hidden;text-overflow:ellipsis;}
+.tb-piezas .pz .chip{flex:0 0 auto;}
+.tb-piezas .pz-lbl{display:flex;align-items:center;font-size:11px;font-weight:700;letter-spacing:.4px;
+  text-transform:uppercase;color:#8b91a6;padding-right:10px;margin-right:4px;border-right:1px solid #e4e8f0;}
 .tb-spacer{flex:1 1 auto;min-width:8px;}
 /* Acciones principales (nivel 1): mismo alto/ancho, colores de marca distintos. */
 .tb-act{display:inline-flex;align-items:center;justify-content:center;gap:8px;height:38px;min-width:114px;padding:0 16px;border-radius:8px;font-family:var(--f);font-size:13px;font-weight:600;cursor:pointer;border:1px solid transparent;flex-shrink:0;transition:background .14s,border-color .14s;}
@@ -1663,6 +1673,9 @@ button,input,select,textarea{font-family:inherit;}
       <button class="tb-ico" id="btn-importar" onclick="abrirImportar()" title="Importar HTML"><span class="ico" data-ic="subir"></span></button>
       <button class="tb-ico danger" onclick="eliminarPiezaActual()" title="Eliminar esta creatividad"><span class="ico" data-ic="basura"></span></button>
     </div>
+    <!-- Nivel 3: las piezas del proyecto. Solo aparece si hay mas de una
+         (una campana con email + banners + Search deja tres). -->
+    <div class="tb-piezas" id="tb-piezas" hidden></div>
   </header>
 
   <div class="layout" id="layout">
@@ -4037,6 +4050,26 @@ function renderTabsPiezas(){
   if(sp && proyecto) sp.textContent = proyecto.nombre || "Proyecto";
   const chip = document.getElementById("ed-chip");
   if(chip && p) chip.innerHTML = chipDe(categoriaDe(p.formato));
+  renderPestanasPiezas();
+}
+// Pestanas para moverse entre las piezas del proyecto sin volver al dashboard.
+// Una campana generada por Char-B deja email + banners + Search en el MISMO
+// proyecto; antes solo se abria la ultima y las otras quedaban invisibles.
+function renderPestanasPiezas(){
+  const cont = document.getElementById("tb-piezas");
+  if(!cont) return;
+  const piezas = (proyecto && proyecto.piezas) || [];
+  if(piezas.length < 2){ cont.hidden = true; cont.innerHTML = ""; return; }
+  const act = proyecto.activa;
+  cont.hidden = false;
+  cont.innerHTML = `<span class="pz-lbl">En este proyecto</span>` + piezas.map(p =>
+    `<button class="pz${p.id===act?" on":""}" onclick="irAPieza('${p.id}')" title="${escAttr(p.nombre||"Creatividad")}">`+
+    `${chipDe(categoriaDe(p.formato))}<span class="nm">${esc(p.nombre||"Creatividad")}</span></button>`).join("");
+}
+function irAPieza(id){
+  if(!proyecto || proyecto.activa === id) return;
+  activarPieza(id);
+  try{ const r = rutaDeProducto(pieza()); if(r) setURL(r + "/" + slugDe(pieza().nombre)); }catch(_){}
 }
 function editarNombre(span, id){
   span.contentEditable = "true"; span.focus();
@@ -5165,7 +5198,7 @@ function renderComposicion(comp, fmt){
     const bg = (z.bg==="color" && z.color) ? `<div class="cmp-zbg" style="background:${esc(z.color)};"></div>`
              : (z.bg==="imagen") ? capaImagenHTML(z.imagen, "cmp-zbg") : "";
     const inner = (z.visible===false) ? "" : zonaContenido(zk, z, px);
-    return `<div class="cmp-zona" style="flex:${grow} 1 0;justify-content:${alinFlex(z.alinV)};align-items:${alinFlex(z.alinH)};padding:${pad}px;">${bg}<div class="cmp-zin" style="align-items:${alinFlex(z.alinH)};text-align:${alinText(z.alinH)};">${inner}</div></div>`;
+    return `<div class="cmp-zona" style="flex:${grow} 1 0;justify-content:${alinFlex(z.alinV)};align-items:${alinFlex(z.alinH)};padding:${pad}px;">${bg}<div class="cmp-zin" style="align-items:${alinFlex(z.alinH)};text-align:${alinText(z.alinH)};gap:${px(4,4)}px;">${inner}</div></div>`;
   };
   const zonas = ["logo","texto","cta"].map((zk,i)=>zonaHTML(zk,i)).join("");
   const mg=c.margen||{};
