@@ -136,21 +136,10 @@ async function generar({ request, env }) {
       `Tono: ${brief.tono || (mk && mk.tono) || "profesional y cercano"}.`,
       `Tema/brief: ${brief.que || "(general)"}.`
     ].filter(Boolean).join("\n");
-    const model = env.GEMINI_MODEL || "gemini-2.5-flash";
-    const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${encodeURIComponent(env.GEMINI_API_KEY)}`;
-    const ctl = new AbortController(); const t = setTimeout(() => ctl.abort(), 30000);
-    let res;
-    try {
-      res = await fetch(url, { method:"POST", headers:{ "Content-Type":"application/json" }, signal:ctl.signal,
-        body: JSON.stringify({ contents:[{ role:"user", parts:[{ text:instr }] }], generationConfig:{ responseMimeType:"application/json", temperature:0.85, maxOutputTokens:1024, thinkingConfig:{ thinkingBudget:0 } } }) });
-    } catch(e) { return json({ ok:false, error:(e && e.name==="AbortError") ? `Gemini (${model}) tardó demasiado. Prueba GEMINI_MODEL=gemini-2.5-flash (o gemini-flash-latest).` : "No se pudo contactar a Gemini: "+(e.message||e) }, 500); }
-    finally { clearTimeout(t); }
-    if(!res.ok){ const tx = await res.text().catch(()=> ""); return json({ ok:false, error:`Gemini (${model}) respondió ${res.status}. ${tx.slice(0,400)}` }, 500); }
-    let data; try { data = await res.json(); } catch { return json({ ok:false, error:"Respuesta de Gemini no es JSON." }, 500); }
-    let texto = ""; const parts = data && data.candidates && data.candidates[0] && data.candidates[0].content && data.candidates[0].content.parts;
-    if(Array.isArray(parts)) texto = parts.map(p => (p && p.text) || "").join("");
-    const parsed = extraerJSON(texto);
-    if(!parsed) return json({ ok:false, error:"No se pudo interpretar la respuesta de la IA. Inicio: "+String(texto).slice(0,160) }, 500);
+    // Usa la MISMA cadena de modelos que el resto: si uno está retirado, sigue con el siguiente.
+    const { parsed, error } = await llamarGemini(env, instr, 1024, 0.85, { cadena: cadenaCopy(env) });
+    if (error) return json({ ok:false, error }, 500);
+    if (!parsed) return json({ ok:false, error:"No se pudo interpretar la respuesta de la IA." }, 500);
     // Segunda pasada: corrector ortográfico RAE.
     const rev = await corregirOrtografia(env, [String(parsed.titular||""), String(parsed.cuerpo||""), String(parsed.cta||"")]);
     return json({ ok:true, titular:rev.textos[0].slice(0,120), cuerpo:rev.textos[1].slice(0,240), cta:rev.textos[2].slice(0,40), ortografia: rev.revisado ? "revisada" : "sin-revisar" });

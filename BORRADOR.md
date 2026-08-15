@@ -47,6 +47,40 @@ Recordatorio: los secretos NO se aplican a un deployment ya publicado. Cada vez
 que agregues o cambies uno hay que volver a desplegar (basta un push) para que
 lo tome. Esto vale igual para **producción**.
 
+---
+
+## Cómo saber qué versión está publicada (30 segundos)
+
+Cuando un error no calce con lo que arreglamos, casi siempre es que **el sitio
+todavía sirve el build anterior**. Para comprobarlo, abre en el navegador:
+
+```
+https://sbb-draft-mejoras.simple-block-builder.pages.dev/api/ia?modelos=1
+```
+
+- Si responde un JSON con `cadenaCopy` y `usaraParaCopy` → **está la versión nueva**,
+  y ahí mismo ves qué modelos de Gemini tiene disponibles tu cuenta de verdad.
+- Si da error o no existe esa dirección → **sigue el build viejo**. Revisa en
+  Cloudflare → Workers & Pages → simple-block-builder → **Deployments**, filtra por
+  la rama `sbb-draft-mejoras` y mira si el último build falló o quedó en cola.
+
+Regla que aprendimos a la mala: **nunca fijar UN modelo de Gemini**. Google los
+retira para cuentas nuevas y la generación se cae entera con un 404. El código usa
+una cadena y prueba el siguiente si uno ya no existe.
+
+---
+
+## Datos cargados en el borrador (15-ago-2026)
+
+Se copiaron desde producción, solo lo necesario para poder probar:
+
+- **Marca Zurich** con la paleta oficial del Brandbook 2024, el eslogan real y las
+  directrices (lo que la IA lee como manual de marca). Logo azul incrustado en la
+  ficha; logo blanco apuntando al archivo de producción.
+- **51 fotos** de la biblioteca (50 de Drive + 1 subida).
+- **Ningún proyecto**: tus 14 creatividades reales siguen SOLO en producción. El
+  borrador parte limpio a propósito.
+
 ## Cómo se cargaron (por si hay que repetirlo)
 
 En **Cloudflare → Workers & Pages → simple-block-builder → Settings →
