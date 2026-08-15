@@ -1231,6 +1231,43 @@ button,input,select,textarea{font-family:inherit;}
    color detrás de las zonas, burbuja circular de OFERTA sobre todo, y etiqueta
    de producto (píldora chica) sobre el titular. */
 .cmp .cmp-deco{position:absolute;inset:0;z-index:0;pointer-events:none;}
+/* ── LAYOUTS DE MARCA (estilo Zurich) ───────────────────────────────────
+   Disposiciones cerradas, extraidas de las campanas reales. Conviven con el
+   modelo de 3 zonas: solo se activan si comp.layout empieza con "z-". */
+.cmp .zl{position:absolute;inset:0;overflow:hidden;}
+.cmp .zl-col{position:absolute;display:flex;flex-direction:column;z-index:6;min-width:0;}
+.cmp .zl-logo{position:absolute;z-index:9;display:flex;align-items:center;}
+.cmp .zl-logo img{display:block;object-fit:contain;}
+.cmp .zl-pil{display:inline-block;border-radius:999px;line-height:1;white-space:nowrap;align-self:flex-start;font-weight:500;}
+.cmp .zl-tit{font-weight:300;line-height:1.04;letter-spacing:-.01em;word-break:break-word;}
+.cmp .zl-baj{font-weight:400;line-height:1.3;word-break:break-word;}
+.cmp .zl-cta{display:inline-block;border-radius:999px;font-weight:700;white-space:nowrap;align-self:flex-start;text-decoration:none;}
+.cmp .zl-out{display:inline-block;border-style:solid;border-radius:999px;font-weight:300;white-space:nowrap;align-self:flex-start;}
+.cmp .zl-legal{position:absolute;z-index:7;font-weight:400;opacity:.9;}
+.cmp .zl-banda{position:absolute;left:0;display:flex;align-items:center;font-weight:700;z-index:6;white-space:nowrap;}
+/* El circulo de oferta como CONTENEDOR (no la burbuja suelta) */
+.cmp .zl-circ{position:absolute;border-radius:50%;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;z-index:5;overflow:hidden;}
+.cmp .zl-circ .ar{font-weight:400;opacity:.95;}
+.cmp .zl-of{display:flex;align-items:baseline;justify-content:center;}
+.cmp .zl-of .n{font-weight:300;line-height:.9;letter-spacing:-.03em;}
+.cmp .zl-of .u{font-weight:300;line-height:.95;}
+.cmp .zl-circ .g{font-weight:300;line-height:.98;}
+/* Foto con corte circular / dentro de circulo */
+.cmp .zl-foto{position:absolute;overflow:hidden;z-index:2;}
+.cmp .zl-foto img{width:100%;height:100%;object-fit:cover;display:block;}
+/* Bloque solido */
+.cmp .zl-bloque{position:absolute;z-index:4;display:flex;flex-direction:column;justify-content:center;}
+/* Selector de diagramacion en el panel de Diseño */
+.lay-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin:2px 0 6px;}
+.lay-grid .lay-op{border:1.5px solid #e4e8f0;background:#fff;border-radius:8px;padding:8px 9px;font-family:var(--f);
+  font-size:12px;color:#3a4066;cursor:pointer;text-align:left;line-height:1.25;}
+.lay-grid .lay-op:hover{border-color:#1c73cb;color:#040764;}
+.lay-grid .lay-op.on{border-color:#040764;background:#f2f5fc;color:#040764;font-weight:600;}
+.lay-hint{font-size:11.5px;color:#6b7288;margin-bottom:10px;line-height:1.35;}
+.ia-seg.ia-estilo{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+.ia-seg.ia-estilo button{display:block;text-align:left;padding:10px 12px;line-height:1.25;}
+.ia-seg.ia-estilo button small{display:block;font-size:11px;font-weight:400;color:#6b7288;margin-top:2px;}
+.ia-seg.ia-estilo button.on small{color:#3a4066;}
 .cmp .cmp-burbuja{position:absolute;z-index:2;border-radius:50%;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;line-height:1.05;box-sizing:border-box;overflow:hidden;}
 .cmp .cmp-burbuja .bnum{font-weight:800;line-height:.95;}
 .cmp .cmp-burbuja .btxt{font-weight:700;word-break:break-word;}
@@ -1928,6 +1965,11 @@ button,input,select,textarea{font-family:inherit;}
       <div class="ia-bubble"><span class="ia-bav"><img class="charb-face" alt=""></span><div class="ia-msg">¡Hola! Soy <b>Char-B</b> 👋 Con <b>un solo brief</b> te armo toda la campaña en la <b>voz de tu marca</b>. Cuéntame para qué marca y qué piezas necesitas.</div></div>
       <label class="ia-label">Marca <span class="ia-req">·obligatoria</span></label>
       <select id="ia-marca" class="dz-inp"></select>
+      <label class="ia-label">¿Con qué estilo lo armamos?</label>
+      <div class="ia-seg ia-estilo" id="ia-estilo-seg">
+        <button type="button" data-e="marca" class="on" onclick="iaSetEstilo('marca')">Estilo de la marca<small>Diagramaciones y colores del manual</small></button>
+        <button type="button" data-e="libre" onclick="iaSetEstilo('libre')">Estilo libre<small>Sistema abierto, paleta de la marca</small></button>
+      </div>
       <label class="ia-label">¿Qué piezas necesita tu campaña? <small>(marca una o varias)</small></label>
       <div class="ia-seg" id="ia-piezas-seg">
         <button type="button" data-p="email" class="on" onclick="iaTogglePieza('email')"><span class="ia-pic email"><span class="ico" data-ic="email"></span></span> Email</button>
@@ -5179,8 +5221,160 @@ function burbujaHTML(bu, px, W, H){
         : `top:${off}px;right:${off}px;`;
   return `<div class="cmp-burbuja" style="width:${dia}px;height:${dia}px;background:${esc(bg)};color:${esc(fg)};padding:${Math.round(dia*0.1)}px;${P}">${inner}</div>`;
 }
+// ── LAYOUTS DE MARCA (estilo Zurich) ────────────────────────────────────
+// Cuatro disposiciones extraidas de las campanas reales. Reusan el MISMO
+// modelo de datos que las 3 zonas (zonas.texto, zonas.cta, zonas.logo,
+// burbuja, deco): lo que cambia es COMO se disponen, no que se guarda.
+const LAYOUTS_MARCA = {
+  "z-circulo": { nombre:"Círculo de oferta", sub:"cuando hay una cifra que manda", necesitaOferta:true },
+  "z-corte":   { nombre:"Foto con corte circular", sub:"el producto o la persona vende", necesitaFoto:true },
+  "z-bloque":  { nombre:"Bloque y foto", sub:"sobrio, sin curvas", necesitaFoto:true },
+  "z-tipo":    { nombre:"Tipográfica", sub:"sin foto, manda el mensaje" }
+};
+const esLayoutMarca = l => !!(l && LAYOUTS_MARCA[l]);
+// Cuanto detalle cabe segun el tamano real del banner. En 320x50 no entra una
+// bajada por mucho que se encoja: se suprime, no se achica.
+function detalleDe(W, H){
+  const a = W*H;
+  if(a < 34000)  return { bajada:false, legal:false, nota:false, pildora:false, cta:H>=60 };  // 320x50, 468x60, 200x200
+  if(a < 90000)  return { bajada:false, legal:false, nota:false, pildora:true,  cta:true  };  // 250x250, 320x100
+  if(a < 200000) return { bajada:true,  legal:false, nota:true,  pildora:true,  cta:true  };  // 300x250, 336x280
+  return           { bajada:true,  legal:true,  nota:true,  pildora:true,  cta:true  };
+}
+function renderLayoutMarca(c, fmt, layout){
+  const f = FORMATOS[fmt] || FORMATOS["display-300x250"];
+  const W=f.ancho, H=f.alto;
+  const fam = familiaDeFormato(fmt), franja = fam==="franja", vert = fam==="vertical";
+  const escF = franja ? Math.max(.5, H/110) : Math.max(.5, Math.min(W,H*1.35)/300);
+  const px=(v,base)=>Math.round((parseFloat(v)||base)*escF);
+  const D = detalleDe(W,H);
+  const Z=c.zonas||{}, T=Z.texto||{}, ti=T.titular||{}, cu=T.cuerpo||{}, et=T.etiqueta||{}, cta=Z.cta||{}, lg=Z.logo||{};
+  const fondo=c.fondo||{}, bu=c.burbuja||{};
+  const bgColor = fondo.color || "#23366F";
+  const claro = !esColorOscuro(bgColor);
+  const tinta = claro ? (ti.color && ti.color!=="#ffffff" ? ti.color : "#23366F") : "#ffffff";
+  const acento = cta.colorFondo || "#2167AE";
+  const hayFoto = fondo.tipo==="imagen" && fondo.imagen && fondo.imagen.url;
+  const M = px(14,14);                              // margen del banner
+  const cap = (s,n)=>String(s||"").trim();
+  const esc2 = s=>escMultiline(cap(s));
+
+  // ── piezas reutilizables ──
+  const logoHTML = (pos)=>{
+    if(!lg.url) return "";
+    const h = px(lg.alto, 22);
+    return `<div class="zl-logo" style="${pos}"><img src="${escAttr(lg.url)}" style="height:${h}px;max-width:${px(120,120)}px;"></div>`;
+  };
+  const pildora = ()=> (D.pildora && et.texto)
+    ? `<span class="zl-pil" style="font-size:${px(et.tamano,10)}px;padding:${px(4,4)}px ${px(11,11)}px;background:${esc(et.color||acento)};color:${esc(et.colorTexto||"#fff")};">${esc(et.texto)}</span>` : "";
+  const titular = (size)=> ti.texto
+    ? `<div class="zl-tit" style="font-size:${px(ti.tamano,size||24)}px;color:${esc(tinta)};margin-top:${px(6,6)}px;">${esc2(ti.texto)}</div>` : "";
+  const bajada = ()=> (D.bajada && cu.texto)
+    ? `<div class="zl-baj" style="font-size:${px(cu.tamano,11)}px;color:${esc(tinta)};margin-top:${px(7,7)}px;opacity:.95;">${esc2(cu.texto)}</div>` : "";
+  const boton = ()=> (D.cta && cta.texto)
+    ? `<a class="zl-cta" href="${escAttr(cta.url||"#")}" target="_blank" rel="noopener" style="font-size:${px(cta.tamano,11)}px;padding:${px(8,8)}px ${px(16,16)}px;background:${esc(acento)};color:${esc(cta.colorTexto||"#fff")};margin-top:${px(11,11)}px;">${esc(cta.texto)}</a>` : "";
+  const legal = ()=> (D.legal && c.legal)
+    ? `<div class="zl-legal" style="left:${M}px;bottom:${px(9,9)}px;font-size:${px(8,8)}px;color:${esc(tinta)};">${esc(c.legal)}</div>` : "";
+  const fotoEn = (estilo)=> hayFoto
+    ? `<div class="zl-foto" style="${estilo}">${capaImagenHTML(fondo.imagen,"")}</div>` : "";
+  // Circulo de oferta: reusa comp.burbuja (numero grande + unidad + resto)
+  const circulo = (dia, pos)=>{
+    const t = cap(bu.texto);
+    if(!t) return "";
+    const m = t.match(/^(\$?\d[\d.,]*%?)\s+(\S+)\s*([\s\S]*)$/);
+    const col = bu.color || acento, colT = bu.colorTexto || "#ffffff";
+    const inner = m
+      ? `<div class="zl-of" style="gap:${px(4,4)}px;"><span class="n" style="font-size:${Math.round(dia*.30)}px">${esc(m[1])}</span><span class="u" style="font-size:${Math.round(dia*.16)}px">${esc(m[2])}</span></div>`
+        + (m[3] ? `<div class="g" style="font-size:${Math.round(dia*.16)}px">${esc(m[3])}</div>` : "")
+      : `<div class="g" style="font-size:${Math.round(dia*.13)}px;padding:0 ${Math.round(dia*.12)}px">${esc(t)}</div>`;
+    const arriba = (D.nota && bu.arriba) ? `<div class="ar" style="font-size:${Math.round(dia*.085)}px">${esc(bu.arriba)}</div>` : "";
+    return `<div class="zl-circ" style="width:${dia}px;height:${dia}px;background:${esc(col)};color:${esc(colT)};${pos}">${arriba}${inner}</div>`;
+  };
+  const deco = (c.deco && c.deco.visible===true) ? decoBurbujasHTML(c.deco, W, H) : "";
+  const fondoPlano = hayFoto ? capaImagenHTML(fondo.imagen,"cmp-bg") + `<div class="cmp-scrim"></div>` : "";
+  const envolver = (dentro, sinFondo)=>
+    `<div class="cmp" style="width:${W}px;height:${H}px;background:${esc(bgColor)};">${sinFondo?"":fondoPlano}${deco}<div class="zl">${dentro}</div>${legal()}</div>`;
+
+  // ══ FRANJA: todo en fila, para 728x90 y compania ══
+  if(franja){
+    const dia = Math.min(Math.round(H*1.25), Math.round(W*.22));
+    const saleY = Math.round(dia*.13);
+    const circ = (layout==="z-circulo") ? circulo(dia, `right:${Math.round(W*.19)}px;top:${-saleY}px;padding-top:${saleY}px;`) : "";
+    return envolver(
+      logoHTML(`left:${M}px;top:50%;transform:translateY(-50%);`) +
+      `<div class="zl-col" style="left:${px(118,118)}px;top:50%;transform:translateY(-50%);flex-direction:row;align-items:center;gap:${px(12,12)}px;right:${circ ? Math.round(W*.19)+dia+px(10,10) : px(150,150)}px;">`
+        + pildora()
+        + (ti.texto?`<div class="zl-tit" style="font-size:${px(ti.tamano,20)}px;color:${esc(tinta)};">${esc(cap(ti.texto))}</div>`:"")
+        + (D.bajada&&cu.texto?`<div class="zl-baj" style="font-size:${px(cu.tamano,10)}px;color:${esc(tinta)};">${esc(cap(cu.texto))}</div>`:"")
+      + `</div>` + circ +
+      (cta.texto?`<a class="zl-cta" href="${escAttr(cta.url||"#")}" target="_blank" rel="noopener" style="position:absolute;right:${M}px;top:50%;transform:translateY(-50%);z-index:7;font-size:${px(cta.tamano,11)}px;padding:${px(8,8)}px ${px(15,15)}px;background:${esc(acento)};color:${esc(cta.colorTexto||"#fff")};">${esc(cta.texto)}</a>`:"")
+    );
+  }
+
+  // ══ Z-CIRCULO ══
+  if(layout==="z-circulo"){
+    const dia = vert ? Math.round(W*1.06) : Math.round(Math.min(W*.62, H*.78));
+    const sale = vert ? Math.round(W*.05) : Math.round(dia*.15);
+    const pos = vert ? `left:${-sale}px;top:${Math.round(H*.42)}px;padding-left:${sale}px;`
+                     : `right:${-sale}px;top:${Math.round(H*.17)}px;padding-right:${sale}px;`;
+    return envolver(
+      logoHTML(`left:${M}px;top:${px(12,12)}px;`) +
+      circulo(dia, pos) +
+      `<div class="zl-col" style="left:${M}px;top:${px(46,46)}px;width:${vert?W-M*2:Math.max(px(90,90), (W-dia+sale)-M-px(8,8))}px;">`
+        + pildora() + titular(vert?22:25) + bajada() + (vert?boton():"") + `</div>`
+    );
+  }
+
+  // ══ Z-CORTE: foto con borde circular ══
+  if(layout==="z-corte"){
+    const ancho = vert ? W : Math.round(W*.48);
+    const foto = vert
+      ? fotoEn(`left:0;top:0;width:${W}px;height:${Math.round(H*.36)}px;`)
+      : fotoEn(`right:0;top:0;width:${ancho}px;height:${H}px;border-top-left-radius:${ancho}px;border-bottom-left-radius:${ancho}px;`);
+    const topTxt = vert ? Math.round(H*.40) : px(44,44);
+    const banda = (c.banda && c.banda.texto)
+      ? `<div class="zl-banda" style="top:${Math.round(H*.58)}px;height:${px(24,24)}px;padding:0 ${M}px;font-size:${px(13,13)}px;background:${esc(c.banda.color||acento)};color:#fff;">${esc(c.banda.texto)}</div>` : "";
+    const precio = (c.precio && c.precio.valor)
+      ? `<div class="zl-col" style="left:${M}px;top:${Math.round(H*.72)}px;width:${Math.round(W*.55)}px;">`
+        + (c.precio.label?`<div class="zl-baj" style="font-size:${px(10,10)}px;color:${esc(tinta)};">${esc(c.precio.label)}</div>`:"")
+        + `<div class="zl-out" style="font-size:${px(16,16)}px;padding:${px(4,4)}px ${px(13,13)}px;border-width:${Math.max(1,px(1.5,1.5))}px;border-color:${esc(tinta)};color:${esc(tinta)};margin-top:${px(4,4)}px;">${esc(c.precio.valor)}</div></div>` : "";
+    return envolver(
+      foto + logoHTML(`left:${M}px;top:${px(12,12)}px;`) +
+      `<div class="zl-col" style="left:${M}px;top:${topTxt}px;width:${vert?W-M*2:Math.round(W*.48)}px;">`
+        + pildora() + titular(21) + bajada() + `</div>`
+      + banda + precio + (precio?"":`<div class="zl-col" style="left:${M}px;bottom:${px(14,14)}px;">${boton()}</div>`)
+    , true);
+  }
+
+  // ══ Z-BLOQUE: dos rectangulos, sin curvas ══
+  if(layout==="z-bloque"){
+    const anchoB = vert ? W : Math.round(W*.60);
+    const foto = vert
+      ? fotoEn(`left:0;bottom:0;width:${W}px;height:${Math.round(H*.34)}px;`)
+      : fotoEn(`right:0;top:0;width:${W-anchoB}px;height:${H}px;`);
+    return envolver(
+      foto +
+      `<div class="zl-bloque" style="left:0;top:0;${vert?`right:0;height:${Math.round(H*.66)}px;`:`bottom:0;width:${anchoB}px;`}background:${esc(bgColor)};padding:${M}px;">`
+        + `<div style="height:${px(26,26)}px"></div>` + pildora() + titular(22) + bajada() + boton() + `</div>`
+      + logoHTML(`left:${M}px;top:${px(12,12)}px;`), true
+    );
+  }
+
+  // ══ Z-TIPO: sin foto, manda el mensaje ══
+  const centrado = (c.alinLayout==="center");
+  return envolver(
+    logoHTML(`left:${M}px;top:${px(12,12)}px;`) +
+    `<div class="zl-col" style="left:${M}px;right:${M}px;top:${px(52,52)}px;${centrado?"align-items:center;text-align:center;":""}">`
+      + pildora()
+      + (ti.texto?`<div class="zl-tit" style="font-size:${px(ti.tamano,30)}px;color:${esc(tinta)};margin-top:${px(8,8)}px;">${esc2(ti.texto)}</div>`:"")
+      + bajada() + boton() + `</div>`, true
+  );
+}
 // Renderiza la composición (3 zonas) a un tamaño concreto.
 function renderComposicion(comp, fmt){
+  // Estilo de marca: disposiciones cerradas. Si no hay layout de marca, sigue
+  // el modelo de 3 zonas de siempre (las piezas existentes no cambian).
+  if(comp && esLayoutMarca(comp.layout)) return renderLayoutMarca(comp, fmt, comp.layout);
   const f = FORMATOS[fmt] || FORMATOS["display-300x250"];
   const W=f.ancho, H=f.alto, fila=(familiaDeFormato(fmt)==="franja");
   const escF = fila ? Math.max(0.5, H/110) : Math.max(0.5, W/300);   // proporcional puro: 600 de ancho = 2x de 300 (sin tope)
@@ -5678,6 +5872,16 @@ function toggleExtraComp(path, fmt){
 // Editor de composición (3 zonas). fmt=null → Diseño global; fmt → ajuste por tamaño.
 // El MÁSTER edita el Diseño global (no un override): así "editar el máster" se
 // propaga a todos los que heredan, y el máster nunca queda tapado por un override.
+// Selector de DIAGRAMACION: la disposicion del banner. "Libre" = el modelo de
+// 3 zonas de siempre; las demas son las diagramaciones de marca.
+function selectorLayout(C, RE){
+  const act = esLayoutMarca(C.layout) ? C.layout : "";
+  const opt = (v,n,sub)=>`<button type="button" class="lay-op${act===v?" on":""}" onclick="setComp('layout','${v}');${RE}" title="${escAttr(sub||"")}">${esc(n)}</button>`;
+  return `<div class="dz-sec">Diagramación</div>
+    <div class="lay-grid">${opt("","Libre","Las 3 zonas de siempre: logo, texto y CTA apilados")}${
+      Object.keys(LAYOUTS_MARCA).map(k=>opt(k,LAYOUTS_MARCA[k].nombre,LAYOUTS_MARCA[k].sub)).join("")}</div>
+    <div class="lay-hint">${act?esc(LAYOUTS_MARCA[act].sub):"Disposición libre: puedes mover los divisores de cada zona."}</div>`;
+}
 function compEditorHTML(p, fmt, ctx){
   const esMaster = !!fmt && fmt === (p.masterFmt||"display-300x250");
   const isOv = !!fmt && !esMaster;
@@ -5809,7 +6013,8 @@ function renderComposicionEditor(){
     `<option value="">${marcas.length?'— Aplicar marca —':'— Sin marcas (crea una) —'}</option>`+
     marcas.map(m=>`<option value="${m.id}" ${p.tema&&p.tema.marcaId===m.id?'selected':''}>${esc(m.nombre)}</option>`).join('')+
     `</select><button class="cmp-bib" onclick="abrirMarcas()" title="Gestionar marcas">${svgIcon("paleta",{size:"12px"})}</button></div>`;
-  cont.innerHTML=`<div class="cmp-ed">${compScopeHeader(null)}${marcaSel}<div class="dz-sec">Contenido de las 3 zonas</div><button class="ia-sugerir" onclick="sugerirTextosIA()">${svgIcon("estrella",{size:"13px"})} Sugerir textos con Char-B</button><button class="ia-sugerir" onclick="generarFondoIA()">${svgIcon("imagen",{size:"13px"})} Generar fondo con IA</button>${compEditorHTML(p,null,'diseno')}</div>`;
+  const C0 = p.composicion || composicionDefault(p.tema);
+  cont.innerHTML=`<div class="cmp-ed">${compScopeHeader(null)}${marcaSel}${selectorLayout(C0,"renderComposicionEditor();renderTablero()")}<div class="dz-sec">Contenido</div><button class="ia-sugerir" onclick="sugerirTextosIA()">${svgIcon("estrella",{size:"13px"})} Sugerir textos con Char-B</button><button class="ia-sugerir" onclick="generarFondoIA()">${svgIcon("imagen",{size:"13px"})} Generar fondo con IA</button>${compEditorHTML(p,null,'diseno')}</div>`;
 }
 // Panel "Ajustar este tamaño" (overrides sobre el global) en la pestaña Editar.
 function renderFormTamaño(f){
@@ -7713,6 +7918,13 @@ function catalogoBloquesParaIA(){
 // Display por zonas) y 'ads' (Google Search: grupos + keywords + anuncios RSA).
 // Con 2+ piezas se pide antes un CONCEPTO de campaña que guía a todas.
 let iaPiezas = { email:true, banner:false, ads:false };
+// Estilo de generacion: "marca" usa las diagramaciones cerradas del manual;
+// "libre" deja el sistema abierto de siempre.
+let iaEstilo = "marca";
+function iaSetEstilo(e){
+  iaEstilo = (e==="libre") ? "libre" : "marca";
+  document.querySelectorAll("#ia-estilo-seg button").forEach(b=>b.classList.toggle("on", b.dataset.e===iaEstilo));
+}
 function iaTogglePieza(p){
   if(!(p in iaPiezas)) return;
   if(!iaPiezas[p] && !puede(p)){ toast("Tu usuario no tiene acceso a este servicio"); return; }
@@ -7906,6 +8118,7 @@ async function generarConIA(){
       body: JSON.stringify({
         producto,
         brief: { que, accion, gancho, refs, ctaUrl, tipo, notas },
+        estilo: iaEstilo,
         formato: producto==="email" ? "email" : producto==="ads" ? "ads" : "display-300x250",
         marca: marcaAPI,
         imagenes,
@@ -8076,6 +8289,10 @@ function insertarBannerIA(data, marca){
     setPath(comp,"zonas.texto.titular.color", tcol);
     setPath(comp,"zonas.texto.cuerpo.color", tcol);
   }
+  // Diagramación elegida por la IA (estilo de marca). Sin ella, el modelo
+  // de 3 zonas de siempre.
+  const LAY = { circulo:"z-circulo", corte:"z-corte", bloque:"z-bloque", tipografica:"z-tipo" };
+  if(data.layout && LAY[data.layout]) setPath(comp,"layout", LAY[data.layout]);
   // Imagen elegida por la IA desde la biblioteca (si vino una URL válida).
   if(data.imagen && /^https?:\/\/|^data:/.test(data.imagen)){
     setPath(comp,"fondo.tipo","imagen"); setPath(comp,"fondo.imagen.url", data.imagen);

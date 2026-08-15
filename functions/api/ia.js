@@ -265,7 +265,7 @@ async function generar({ request, env }) {
   const refsTxt = refs.texto, promos = refs.promos, enlaces = refs.enlaces;
 
   if (producto === 'ads') return generarAds({ env, brief, marca, refsTxt, promos, enlaces });
-  if (producto === 'banner') return generarBanner({ env, brief, marca, imagenes, refsTxt, promos });
+  if (producto === 'banner') return generarBanner({ env, brief, marca, imagenes, refsTxt, promos, estilo: body.estilo === 'marca' ? 'marca' : '' });
   return generarEmail({ env, brief, marca, imagenes, refsTxt, promos, catalogo: Array.isArray(body.catalogo) ? body.catalogo : [] });
 }
 
@@ -588,11 +588,25 @@ async function corregirOrtografia(env, textos) {
 }
 
 // ════════════ PRODUCTO 1: BANNERS DE GOOGLE DISPLAY (3 zonas) ════════════
-async function generarBanner({ env, brief, marca, imagenes, refsTxt, promos }) {
+async function generarBanner({ env, brief, marca, imagenes, refsTxt, promos, estilo }) {
   const imgsTxt = imagenes.length
     ? imagenes.map(im => `- ${im.url}  →  ${im.nombre || '(sin descripción)'}`).join('\n')
     : '(biblioteca vacía: deja "imagen" en "")';
   const hayOferta = !!(brief.gancho || (promos && promos.length));
+  const hayFoto = imagenes.length > 0;
+  // Estilo de marca: la IA ademas ELIGE la diagramacion entre cuatro cerradas.
+  const conLayout = estilo === 'marca';
+  const bloqueLayout = conLayout ? [
+    '',
+    'ELIGE TAMBIEN LA DIAGRAMACION ("layout"), la que mejor sirva a ESTE encargo:',
+    '  "circulo"     → la oferta va en un círculo grande. SOLO si hay una cifra que manda (cuotas, precio, % dcto).',
+    '  "corte"       → foto grande con borde curvo y el dato en una banda. Cuando el producto o la persona es lo que vende.' + (hayFoto ? '' : ' (NO la elijas: no hay fotos disponibles)'),
+    '  "bloque"      → bloque de color y foto al lado, sin curvas. Para mensajes institucionales o de confianza.' + (hayFoto ? '' : ' (NO la elijas: no hay fotos disponibles)'),
+    '  "tipografica" → sin foto, manda el titular. Cuando el mensaje es corto y contundente.',
+    hayOferta ? 'Hay una oferta con cifra, así que "circulo" es la opción natural — elige otra solo si tienes una razón.' 
+              : 'NO hay oferta con cifra: NO elijas "circulo".',
+    hayFoto ? '' : 'La biblioteca está vacía: elige "tipografica".'
+  ].filter(Boolean).join('\n') : '';
   const prompt = [
     `Eres director creativo de ${marca ? (marca.nombre || marca.empresa) : 'la marca'}. Creas banners de Google Display que rinden y suenan 100% a la marca.`,
     '',
@@ -608,7 +622,10 @@ async function generarBanner({ env, brief, marca, imagenes, refsTxt, promos }) {
     '4. Devuelve el mejor.',
     '',
     'Devuelve EXCLUSIVAMENTE este JSON (sin texto extra):',
-    '{ "nombre": "nombre corto de la campaña", "zonas": { "etiqueta": "<nombre corto del PRODUCTO en 1-3 palabras (ej. \\"Seguro Auto\\") o \\"\\">", "titular": "...", "cuerpo": "...", "cta": "..." }, "burbuja": "<la OFERTA en 2-4 palabras para el círculo de promo (ej. \\"2 Cuotas Gratis\\", \\"60% dcto.\\") — SOLO si hay oferta real, si no \\"\\">", "imagen": "<URL exacta de la biblioteca o \\"\\"> " }',
+    conLayout ? '{ "layout": "circulo" | "corte" | "bloque" | "tipografica", "nombre": "nombre corto de la campaña", "zonas": {'
+              : '{ "nombre": "nombre corto de la campaña", "zonas": { "etiqueta": "<nombre corto del PRODUCTO en 1-3 palabras (ej. \\"Seguro Auto\\") o \\"\\">", "titular": "...", "cuerpo": "...", "cta": "..." }, "burbuja": "<la OFERTA en 2-4 palabras para el círculo de promo (ej. \\"2 Cuotas Gratis\\", \\"60% dcto.\\") — SOLO si hay oferta real, si no \\"\\">", "imagen": "<URL exacta de la biblioteca o \\"\\"> " }',
+    '',
+    bloqueLayout,
     '',
     'CÓMO SE REPARTE EL MENSAJE EN ESTE BANNER (importante):',
     hayOferta
@@ -661,8 +678,15 @@ async function generarBanner({ env, brief, marca, imagenes, refsTxt, promos }) {
   if (error) return json({ ok: false, error }, 500);
   const z = (parsed && parsed.zonas) || {};
   const limpia = (s, n) => String(s || '').replace(/\s+/g, ' ').trim().split(' ').slice(0, n).join(' ');
+  const LAYOUTS_OK = ['circulo','corte','bloque','tipografica'];
+  let layout = (conLayout && LAYOUTS_OK.includes(parsed && parsed.layout)) ? parsed.layout : '';
+  // Coherencia: el circulo exige cifra; corte y bloque exigen foto.
+  if (layout === 'circulo' && !hayOferta) layout = hayFoto ? 'corte' : 'tipografica';
+  if ((layout === 'corte' || layout === 'bloque') && !hayFoto) layout = hayOferta ? 'circulo' : 'tipografica';
+  if (conLayout && !layout) layout = hayOferta ? 'circulo' : (hayFoto ? 'corte' : 'tipografica');
   const out = {
     ok: true,
+    layout,
     nombre: String((parsed && parsed.nombre) || brief.que).slice(0, 80),
     zonas: { etiqueta: limpia(z.etiqueta, 3), titular: limpia(z.titular, 8), cuerpo: limpia(z.cuerpo, 18), cta: limpia(z.cta, 4) },
     // La burbuja solo existe con gancho del brief o promoción REAL de la landing.
