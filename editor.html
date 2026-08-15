@@ -5301,7 +5301,14 @@ const LAYOUTS_MARCA = {
   "z-bloque":  { nombre:"Bloque y foto", sub:"sobrio, sin curvas", necesitaFoto:true },
   "z-tipo":    { nombre:"Tipográfica", sub:"sin foto, manda el mensaje" }
 };
-const esLayoutMarca = l => !!(l && LAYOUTS_MARCA[l]);
+// APAGADAS (15-ago-2026). Medido con Playwright sobre los 11 tamanos:
+//   z-circulo → sin bajada 11/11 · sin boton 6/11 · >35% vacio 9/11 (160x600: 82%)
+//   3 zonas   → sin bajada  0/11 · sin boton 0/11 · >35% vacio 0/11
+// La bajada NO se dibuja en ninguna diagramacion de marca (no existe el elemento).
+// Hasta que pasen la bateria de MEDICION (no solo "no revienta"), no se usan:
+// cualquier pieza que traiga layout guardado cae sola al camino de 3 zonas.
+const LAYOUTS_MARCA_ACTIVOS = false;
+const esLayoutMarca = l => !!(LAYOUTS_MARCA_ACTIVOS && l && LAYOUTS_MARCA[l]);
 // Cuanto detalle cabe segun el tamano real del banner. En 320x50 no entra una
 // bajada por mucho que se encoja: se suprime, no se achica.
 function detalleDe(W, H){
@@ -5945,6 +5952,7 @@ function toggleExtraComp(path, fmt){
 // Selector de DIAGRAMACION: la disposicion del banner. "Libre" = el modelo de
 // 3 zonas de siempre; las demas son las diagramaciones de marca.
 function selectorLayout(C, RE){
+  if(!LAYOUTS_MARCA_ACTIVOS) return "";   // apagadas: ver nota en esLayoutMarca
   const act = esLayoutMarca(C.layout) ? C.layout : "";
   const opt = (v,n,sub)=>`<button type="button" class="lay-op${act===v?" on":""}" onclick="setComp('layout','${v}');${RE}" title="${escAttr(sub||"")}">${esc(n)}</button>`;
   return `<div class="dz-sec">Diagramación</div>
@@ -8362,7 +8370,7 @@ function insertarBannerIA(data, marca){
   // Diagramación elegida por la IA (estilo de marca). Sin ella, el modelo
   // de 3 zonas de siempre.
   const LAY = { circulo:"z-circulo", corte:"z-corte", bloque:"z-bloque", tipografica:"z-tipo" };
-  if(data.layout && LAY[data.layout]) setPath(comp,"layout", LAY[data.layout]);
+  if(LAYOUTS_MARCA_ACTIVOS && data.layout && LAY[data.layout]) setPath(comp,"layout", LAY[data.layout]);
   // Imagen elegida por la IA desde la biblioteca (si vino una URL válida).
   if(data.imagen && /^https?:\/\/|^data:/.test(data.imagen)){
     setPath(comp,"fondo.tipo","imagen"); setPath(comp,"fondo.imagen.url", data.imagen);
