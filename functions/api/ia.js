@@ -25,8 +25,26 @@ export async function onRequestGet({ request, env }) {
     out.largoKey = (env.GEMINI_API_KEY || '').length;
     out.modelo = env.GEMINI_MODEL || 'gemini-2.5-flash';
 
+    // Lista los modelos que ESTA cuenta tiene de verdad. Google retira modelos
+    // para cuentas nuevas sin aviso, asi que en vez de adivinar, se preguntan.
+    if (u.searchParams.get('modelos') === '1') {
+      if (!env.GEMINI_API_KEY) return json({ ...out, error: 'Falta GEMINI_API_KEY.' }, 200);
+      try {
+        const r = await fetch(`https://generativelanguage.googleapis.com/v1beta/models?key=${encodeURIComponent(env.GEMINI_API_KEY)}&pageSize=200`);
+        const d = await r.json();
+        const todos = (d.models || [])
+          .filter(m => (m.supportedGenerationMethods || []).includes('generateContent'))
+          .map(m => String(m.name || '').replace('models/', ''));
+        out.disponibles = todos;
+        out.cadenaCopy = cadenaCopy(env);
+        out.cadenaRapida = cadenaRapida(env);
+        out.usaraParaCopy = out.cadenaCopy.find(m => todos.includes(m)) || '(ninguno de la cadena: se probaran igual y ganara el primero que responda)';
+        out.usaraParaMecanico = out.cadenaRapida.find(m => todos.includes(m)) || '(ninguno de la cadena)';
+      } catch (e) { out.errorModelos = e.message || String(e); }
+      return json(out, 200);
+    }
     if (u.searchParams.get('gemini') !== '1') {
-      out.nota = 'Función viva y deploy actualizado. Para probar Gemini abre /api/ia?gemini=1';
+      out.nota = 'Función viva y deploy actualizado. Modelos de tu cuenta: /api/ia?modelos=1 · Probar Gemini: /api/ia?gemini=1';
       return json(out, 200);
     }
     // El ping a Gemini no exige sesión: es solo diagnóstico y no expone la key.
@@ -239,7 +257,7 @@ async function generar({ request, env }) {
       refsTxt2 ? 'CONTEXTO de las URLs de referencia (material de apoyo, NO es el encargo):\n' + refsTxt2 : '',
       reglasBrief(brief, refs2.promos, 'concepto')
     ].filter(Boolean).join('\n');
-    const { parsed, error } = await llamarGemini(env, prompt, 1024, 0.9, { modelo: modeloCopy(env), pensar: -1 });
+    const { parsed, error } = await llamarGemini(env, prompt, 1024, 0.9, { cadena: cadenaCopy(env), pensar: -1 });
     if (error) return json({ ok: false, error }, 500);
     const c = parsed || {};
     const mensajes = (Array.isArray(c.mensajes) ? c.mensajes : []).map(m => String(m).replace(/\s+/g, ' ').trim().slice(0, 120)).filter(Boolean).slice(0, 4);
@@ -504,8 +522,17 @@ function extraerJSON(texto) {
 //     justamente lo que hace el "pensamiento" del modelo.
 //   MECÁNICO (corrector, ampliar keywords) → el modelo rápido y barato basta.
 // Ambos se pueden forzar por variable de entorno sin tocar código.
-const modeloCopy    = env => env.GEMINI_MODEL_COPY || env.GEMINI_MODEL || 'gemini-2.5-pro';
-const modeloRapido  = env => env.GEMINI_MODEL      || 'gemini-2.5-flash';
+// Google RETIRA modelos para cuentas nuevas sin aviso (le paso a esta app con
+// gemini-2.0-flash y despues con gemini-2.5-pro: 404 "no longer available to
+// new users"). Por eso no se fija UN modelo: se prueba una cadena y se usa el
+// primero que responda. Un 404 de modelo ya no rompe la generacion.
+// Para forzar uno concreto: GEMINI_MODEL_COPY (copy) o GEMINI_MODEL (mecanico).
+const CADENA_COPY   = ['gemini-flash-latest', 'gemini-2.5-flash', 'gemini-pro-latest'];
+const CADENA_RAPIDA = ['gemini-flash-latest', 'gemini-2.5-flash', 'gemini-2.5-flash-lite'];
+const cadenaCopy   = env => [env.GEMINI_MODEL_COPY, env.GEMINI_MODEL].filter(Boolean).concat(CADENA_COPY);
+const cadenaRapida = env => [env.GEMINI_MODEL].filter(Boolean).concat(CADENA_RAPIDA);
+const modeloCopy    = env => cadenaCopy(env)[0];
+const modeloRapido  = env => cadenaRapida(env)[0];
 
 // opts: { modelo, pensar, timeout }
 //   pensar = presupuesto de razonamiento. -1 = dinámico (el modelo decide),
@@ -513,7 +540,18 @@ const modeloRapido  = env => env.GEMINI_MODEL      || 'gemini-2.5-flash';
 //   la razón principal de que el copy saliera genérico: se le apagaba la cabeza.
 async function llamarGemini(env, promptOrParts, maxTokens, temp, opts) {
   const o = opts || {};
-  const model = o.modelo || modeloRapido(env);
+  // Lista de modelos a probar en orden. Si el primero ya no existe para esta
+  // cuenta (404), se pasa al siguiente en vez de fallar.
+  const cadena = o.cadena || (o.modelo ? [o.modelo] : cadenaRapida(env));
+  let ultimo = null;
+  for (let i = 0; i < cadena.length; i++) {
+    const r = await intentarGemini(env, promptOrParts, maxTokens, temp, o, cadena[i]);
+    if (!r.modeloAusente) return r;
+    ultimo = r;
+  }
+  return ultimo || { error: 'No hay ningún modelo de Gemini disponible para esta cuenta.' };
+}
+async function intentarGemini(env, promptOrParts, maxTokens, temp, o, model) {
   const pensar = (typeof o.pensar === 'number') ? o.pensar : 0;
   const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${encodeURIComponent(env.GEMINI_API_KEY)}`;
   const partesEntrada = Array.isArray(promptOrParts) ? promptOrParts : [{ text: promptOrParts }];
@@ -544,7 +582,12 @@ async function llamarGemini(env, promptOrParts, maxTokens, temp, opts) {
   } catch (e) {
     return { error: (e && e.name === 'AbortError') ? `Gemini (${model}) tardó demasiado. Prueba con GEMINI_MODEL_COPY=gemini-2.5-flash.` : 'No se pudo contactar a Gemini: ' + (e.message || e) };
   }
-  if (!res.ok) { const t = await res.text().catch(() => ''); return { error: `Gemini (${model}) respondió ${res.status}. ${t.slice(0, 400)}` }; }
+  if (!res.ok) {
+    const t = await res.text().catch(() => '');
+    // 404 = ese modelo no existe para esta cuenta → probar el siguiente.
+    if (res.status === 404) return { modeloAusente: true, error: `El modelo ${model} no está disponible para esta cuenta.` };
+    return { error: `Gemini (${model}) respondió ${res.status}. ${t.slice(0, 400)}` };
+  }
   let data; try { data = await res.json(); } catch { return { error: 'Respuesta de Gemini no es JSON.' }; }
   const parts = data && data.candidates && data.candidates[0] && data.candidates[0].content && data.candidates[0].content.parts;
   let texto = Array.isArray(parts) ? parts.map(p => (p && p.text) || '').join('') : '';
@@ -674,7 +717,7 @@ async function generarBanner({ env, brief, marca, imagenes, refsTxt, promos, est
     entrada = partes;
   }
 
-  const { parsed, error } = await llamarGemini(env, entrada, 1200, 0.9, { modelo: modeloCopy(env), pensar: -1 });
+  const { parsed, error } = await llamarGemini(env, entrada, 1200, 0.9, { cadena: cadenaCopy(env), pensar: -1 });
   if (error) return json({ ok: false, error }, 500);
   const z = (parsed && parsed.zonas) || {};
   const limpia = (s, n) => String(s || '').replace(/\s+/g, ' ').trim().split(' ').slice(0, n).join(' ');
@@ -778,7 +821,7 @@ async function generarEmail({ env, brief, marca, imagenes, refsTxt, promos }) {
     brief.notas && String(brief.notas).trim() ? `\nRECORDATORIO — las indicaciones expresas del encargo mandan sobre cualquier regla de estilo: ${String(brief.notas).trim()}` : ''
   ].filter(Boolean).join('\n');
 
-  const { parsed, error } = await llamarGemini(env, prompt, 2048, 0.9, { modelo: modeloCopy(env), pensar: -1 });
+  const { parsed, error } = await llamarGemini(env, prompt, 2048, 0.9, { cadena: cadenaCopy(env), pensar: -1 });
   if (error) return json({ ok: false, error }, 500);
 
   // ── Copy normalizado ──────────────────────────────────────────────────
@@ -942,7 +985,7 @@ async function generarAds({ env, brief, marca, refsTxt, promos, enlaces }) {
     brief.ctaUrl ? `URL FINAL de los anuncios (landing): ${brief.ctaUrl}` : ''
   ].filter(Boolean).join('\n');
 
-  const { parsed, error } = await llamarGemini(env, prompt, 8192, 0.8, { modelo: modeloCopy(env), pensar: -1 });
+  const { parsed, error } = await llamarGemini(env, prompt, 8192, 0.8, { cadena: cadenaCopy(env), pensar: -1 });
   if (error) return json({ ok: false, error }, 500);
 
   // ── Validación dura del lado del servidor ──────────────────────────────
