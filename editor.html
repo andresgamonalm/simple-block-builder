@@ -6724,14 +6724,24 @@ function descargarCSVAnuncios(){
   const maxT = Math.min(15, Math.max(...(d.grupos||[]).map(g => (g.titulares||[]).length), 0));
   const maxD = Math.min(4, Math.max(...(d.grupos||[]).map(g => (g.descripciones||[]).length), 0));
   const cab = ["Campaign","Ad Group"];
-  for(let i=1;i<=maxT;i++) cab.push("Headline "+i);
+  // Google Ads Editor lee la columna "Headline N position" para ANCLAR un titular.
+  // Los 4 fijos van anclados (1,2,3 y el 4º también en 3, que es lo que permite
+  // Google); los 11 restantes van sin posición y rotan.
+  for(let i=1;i<=maxT;i++){ cab.push("Headline "+i); cab.push("Headline "+i+" position"); }
   for(let i=1;i<=maxD;i++) cab.push("Description "+i);
   cab.push("Path 1","Path 2","Final URL");
+  const POSICION = ["1","2","3","3"];        // las 4 anclas permitidas por Google
   const filas = [cab];
   (d.grupos||[]).forEach(g => {
     const f = [camp, g.nombre];
+    const fijos = (g.titularesFijos||[]).map(t=>String(t||"").toLowerCase());
     // Límites de Google garantizados aunque el usuario haya alargado un texto al editarlo.
-    for(let i=0;i<maxT;i++) f.push(String((g.titulares||[])[i]||"").slice(0,30));
+    for(let i=0;i<maxT;i++){
+      const t = String((g.titulares||[])[i]||"").slice(0,30);
+      f.push(t);
+      const idx = t ? fijos.indexOf(t.toLowerCase()) : -1;
+      f.push(idx>=0 ? (POSICION[idx]||"") : "");
+    }
     for(let i=0;i<maxD;i++) f.push(String((g.descripciones||[])[i]||"").slice(0,90));
     f.push(String(g.path1||"").slice(0,15), String(g.path2||"").slice(0,15), d.urlFinal||"");
     filas.push(f);

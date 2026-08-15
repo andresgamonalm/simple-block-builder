@@ -939,7 +939,8 @@ async function generarAds({ env, brief, marca, refsTxt, promos, enlaces }) {
     '      "razonamiento": "por qué agrupaste así y qué esperas de este grupo (1-2 frases)",',
     '      "keywords": [ { "t": "keyword en minúsculas", "tipo": "exacta" | "frase" } ],',
     '      "negativas": [ "términos a excluir en este grupo" ],',
-    '      "titulares": [ "≤30 caracteres cada uno" ],',
+    '      "titularesFijos": [ "4 titulares ANCLADOS, ≤30 caracteres cada uno" ],',
+    '      "titulares": [ "11 titulares que ROTAN, ≤30 caracteres cada uno" ],',
     '      "descripciones": [ "≤90 caracteres cada una" ],',
     '      "path1": "ruta-1", "path2": "ruta-2"',
     '    }',
@@ -951,11 +952,15 @@ async function generarAds({ env, brief, marca, refsTxt, promos, enlaces }) {
     'REGLAS DURAS (violarlas invalida la respuesta):',
     '- "nombre" de la campaña y de cada grupo: LEGIBLES para humanos, con espacios y tildes (ej. "Cotizar seguro auto"), NUNCA-en-formato-slug-con-guiones.',
     '- 2 a 4 grupos de anuncios. Cada grupo = UNA sola intención de búsqueda (no mezcles "cotizar" con "qué es").',
-    '- Por grupo: 12 a 20 keywords. "tipo" SOLO puede ser "exacta" o "frase". La concordancia AMPLIA está PROHIBIDA.',
+    '- Por grupo: 20 a 25 keywords. MENOS DE 20 NO SIRVE. "tipo" SOLO puede ser "exacta" o "frase". La concordancia AMPLIA está PROHIBIDA.',
+    '- MEZCLA OBLIGATORIA de concordancias dentro de cada grupo: "exacta" para las búsquedas precisas y cortas (2-3 palabras, la intención exacta del grupo); "frase" para las variantes largas y de cola (4-5 palabras). Un grupo con todas exactas, o todas de frase, está MAL. Mínimo 30% de cada tipo.',
     '- CUBRE las variantes reales de cómo busca la gente dentro de esa MISMA intención: singular/plural, sinónimos, orden distinto, con "online"/"precio"/"chile" cuando aplique. Cantidad con criterio: variantes que alguien escribiría de verdad, no relleno.',
     '- Keywords en minúsculas, sin corchetes ni comillas (el tipo va en "tipo"), 2 a 5 palabras, como la gente busca de verdad (media/larga cola). Nada de keywords de 1 palabra genérica.',
     '- RAZONA las negativas: qué búsquedas parecidas NO queremos pagar (informativas si el grupo es transaccional, "gratis", "empleo", competidores si aplica...). Mínimo 5 negativas de campaña.',
-    '- Por grupo: 8 a 12 titulares ÚNICOS de MÁXIMO 30 CARACTERES (cuenta espacios) y 4 descripciones ÚNICAS de MÁXIMO 90 CARACTERES. Incluye la keyword principal en 2-3 titulares, beneficios en otros y llamada a la acción en otros. SIN punto final en titulares. Sin signos de exclamación dobles.',
+    '- TITULARES: son 15 en total, en DOS listas separadas, todos de MÁXIMO 30 CARACTERES (cuenta espacios), únicos, SIN punto final y sin exclamaciones dobles.',
+    '  · "titularesFijos": exactamente 4. Son los que SIEMPRE se muestran (van anclados en Google). Deben funcionar juntos y en este orden: 1) la marca o el producto, 2) la keyword principal del grupo, 3) el beneficio o la oferta concreta, 4) la llamada a la acción.',
+    '  · "titulares": exactamente 11. Son los que ROTAN. Cada uno un ángulo distinto (cobertura, precio, plazo, confianza, facilidad, respaldo...). NO repitas los 4 fijos ni los parafrasees.',
+    '- 4 descripciones ÚNICAS de MÁXIMO 90 CARACTERES.',
     '- El anuncio le habla AL CLIENTE, jamás habla del anuncio o de la campaña ("esta campaña fue creada para...", "si buscas X, este anuncio..." = PROHIBIDO). No repitas la misma keyword más de 2 veces entre titular y descripción.',
     '- Cada descripción dice UNA cosa CONCRETA (una cobertura, un precio, un plazo, un beneficio real). Nada de relleno tipo "rápido, fácil y online" como frase completa, ni listas de productos sin relación con el grupo.',
     '- "path1"/"path2": máximo 15 caracteres, minúsculas, sin espacios (usa guiones), relacionados con el grupo.',
@@ -992,20 +997,70 @@ async function generarAds({ env, brief, marca, refsTxt, promos, enlaces }) {
       tipo: (k && k.tipo === 'frase') ? 'frase' : 'exacta'   // amplia jamás: cualquier otra cosa cae a exacta
     })).filter(k => k.t);
     const seenK = new Set();
-    const keywords = kws.filter(k => { const key = k.t; if (seenK.has(key)) return false; seenK.add(key); return true; }).slice(0, 25);
-    const titulares = dedup((Array.isArray(g.titulares) ? g.titulares : []).map(t => sinPuntoFinal(clean(t)).slice(0, 30)).filter(Boolean)).slice(0, 15);
+    let keywords = kws.filter(k => { const key = k.t; if (seenK.has(key)) return false; seenK.add(key); return true; }).slice(0, 25);
+    // MEZCLA de concordancias. La IA tiende a devolver todo de un tipo. La regla
+    // del oficio: búsquedas cortas y precisas → exacta; cola larga → frase. Si un
+    // tipo queda bajo el 30%, se reasigna por longitud (criterio, no azar).
+    const MIN_MIX = 0.3;
+    const nFrase = keywords.filter(k => k.tipo === 'frase').length;
+    if (keywords.length >= 6 && (nFrase / keywords.length < MIN_MIX || nFrase / keywords.length > 1 - MIN_MIX)) {
+      const porLargo = keywords.slice().sort((a, b) => b.t.split(/\s+/).length - a.t.split(/\s+/).length || b.t.length - a.t.length);
+      const cuantasFrase = Math.round(keywords.length * 0.4);
+      const enFrase = new Set(porLargo.slice(0, cuantasFrase).map(k => k.t));
+      keywords = keywords.map(k => ({ t: k.t, tipo: enFrase.has(k.t) ? 'frase' : 'exacta' }));
+    }
+    // TITULARES: 4 anclados + 11 que rotan (15 = tope de Google para un RSA).
+    const limpiaTit = arr => dedup((Array.isArray(arr) ? arr : []).map(t => sinPuntoFinal(clean(t)).slice(0, 30)).filter(Boolean));
+    let fijos = limpiaTit(g.titularesFijos).slice(0, 4);
+    let rotan = limpiaTit(g.titulares).filter(t => !fijos.some(f => f.toLowerCase() === t.toLowerCase()));
+    // Si la IA ignoró la separación y mandó todo junto, se parte: los 4 primeros anclan.
+    if (!fijos.length && rotan.length) { fijos = rotan.slice(0, 4); rotan = rotan.slice(4); }
+    rotan = rotan.slice(0, 11);
+    const titulares = fijos.concat(rotan);          // compat: la consola y el CSV siguen leyendo "titulares"
     const descripciones = dedup((Array.isArray(g.descripciones) ? g.descripciones : []).map(d => clean(d).slice(0, 90)).filter(Boolean)).slice(0, 4);
     return {
       nombre: legible(g.nombre).slice(0, 60) || 'Grupo',
       intencion: clean(g.intencion).slice(0, 200),
       razonamiento: clean(g.razonamiento).slice(0, 300),
-      keywords, titulares, descripciones,
+      keywords, titulares, titularesFijos: fijos, titularesRotan: rotan, descripciones,
       negativas: dedup((Array.isArray(g.negativas) ? g.negativas : []).map(kwLimpia).filter(Boolean)).slice(0, 15),
       path1: path(g.path1), path2: path(g.path2)
     };
   }).filter(g => g.keywords.length && g.titulares.length);
 
   if (!grupos.length) return json({ ok: false, error: 'La IA no produjo grupos de anuncios válidos. Reformula el brief (di qué vendes y a quién).' }, 500);
+
+  // RELLENO de keywords: la IA suele quedarse corta aunque el prompt pida 20.
+  // Los grupos flacos se completan con UNA llamada extra (todos a la vez),
+  // manteniendo la intención de cada grupo y sin repetir lo que ya tienen.
+  const MIN_KW = 20;
+  const flacos = grupos.filter(g => g.keywords.length < MIN_KW);
+  if (flacos.length) {
+    const pedido = [
+      'Eres especialista senior en Google Ads (Search). Completa las keywords de estos grupos.',
+      'Devuelve EXCLUSIVAMENTE: { "grupos": [ { "nombre": "<el mismo nombre>", "keywords": [ { "t": "...", "tipo": "exacta" | "frase" } ] } ] }',
+      `- De cada grupo faltan keywords hasta llegar a ${MIN_KW}. Entrega SOLO las NUEVAS.`,
+      '- Misma intención del grupo. PROHIBIDO repetir o variar trivialmente las que ya tiene.',
+      '- Solo "exacta" o "frase" (amplia prohibida). Minúsculas, 2 a 5 palabras, como busca la gente: singular/plural, sinónimos, "online"/"precio"/"chile" cuando aplique.',
+      '- Cortas y precisas → exacta. Largas y de cola → frase.',
+      refsTxt ? '\nVOCABULARIO REAL de la landing (úsalo):\n' + refsTxt.slice(0, 1500) : '',
+      '\nGRUPOS:',
+      ...flacos.map(g => `- "${g.nombre}" · intención: ${g.intencion || '(la del nombre)'} · faltan ${MIN_KW - g.keywords.length} · ya tiene: ${g.keywords.map(k => k.t).join(', ')}`)
+    ].filter(Boolean).join('\n');
+    const extra = await llamarGemini(env, pedido, 4096, 0.8, { cadena: cadenaRapida(env) });
+    const lote = Array.isArray(extra.parsed && extra.parsed.grupos) ? extra.parsed.grupos : [];
+    for (const g of flacos) {
+      const src = lote.find(x => clean(x && x.nombre).toLowerCase() === g.nombre.toLowerCase()) || lote[flacos.indexOf(g)];
+      if (!src) continue;
+      const yaHay = new Set(g.keywords.map(k => k.t));
+      for (const k of (Array.isArray(src.keywords) ? src.keywords : [])) {
+        const t = kwLimpia(k && k.t);
+        if (!t || yaHay.has(t) || g.keywords.length >= 25) continue;
+        yaHay.add(t);
+        g.keywords.push({ t, tipo: (k && k.tipo === 'frase') ? 'frase' : (t.split(/\s+/).length >= 4 ? 'frase' : 'exacta') });
+      }
+    }
+  }
 
   // Sitelinks validados con los límites reales de Google Ads: texto ≤25,
   // descripciones ≤35. Se prefieren rutas reales de la landing.
