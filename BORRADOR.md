@@ -37,7 +37,17 @@ Dos seguros, tomados el 13 de agosto de 2026 antes de tocar nada:
 
 ---
 
-## Lo que falta que hagas TÚ (una sola vez, 2 minutos)
+## Estado de los secretos del entorno Preview
+
+- `GEMINI_API_KEY` — **cargada** (15-ago-2026). Char-B responde en el borrador.
+- `RESEND_KEY` — pendiente. Solo hace falta si quieres probar "Enviar prueba"
+  por correo desde el borrador; nada más depende de ella.
+
+Recordatorio: los secretos NO se aplican a un deployment ya publicado. Cada vez
+que agregues o cambies uno hay que volver a desplegar (basta un push) para que
+lo tome. Esto vale igual para **producción**.
+
+## Cómo se cargaron (por si hay que repetirlo)
 
 En **Cloudflare → Workers & Pages → simple-block-builder → Settings →
 Variables and Secrets** hay un selector **Production / Preview**. Los secretos
