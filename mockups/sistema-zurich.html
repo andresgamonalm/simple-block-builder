@@ -1,0 +1,275 @@
+<!doctype html><html lang="es"><head><meta charset="utf-8">
+<title>Sistema Zurich — banners</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:#f4f6fa;font-family:Arial,Helvetica,sans-serif;padding:30px;color:#23366f}
+h1{font-size:20px;font-weight:700;margin-bottom:4px}
+h2{font-size:14px;font-weight:700;margin:30px 0 12px;padding-top:16px;border-top:1px solid #dfe4ee}
+.sub{font-size:13px;color:#5b6178;margin-bottom:8px;max-width:1180px;line-height:1.5}
+.grid{display:flex;gap:24px;flex-wrap:wrap}
+.item{}
+.cap{font-size:11.5px;font-weight:700;margin-bottom:6px}
+.cap span{font-weight:400;color:#6b7288}
+
+/* ══ TOKENS ZURICH (paleta oficial verificada en las piezas) ══ */
+:root{
+  --navy:#23366F; --azul:#2167AE; --medio:#5495CF; --claro:#91BFE3; --celeste:#1FB1E6;
+  --arena:#DAD2BD; --paloma:#DDE4E3; --blancoz:#ECEEEF; --musgo:#77A984; --durazno:#FF7569;
+  --lima:#FFF773;
+}
+/* Lienzo */
+.b{position:relative;overflow:hidden;background:var(--navy)}
+.s300{width:300px;height:250px}
+.s728{width:728px;height:90px}
+.s160{width:160px;height:600px}
+.s1200{width:600px;height:314px}   /* 1200x628 al 50% para caber en pantalla */
+
+/* Foto simulada (en la app va foto real de la biblioteca) */
+.foto{position:absolute;inset:0;background:
+  linear-gradient(#bcd4e8 0%,#9dbcd6 38%,#7f9db8 52%,#5d7186 62%,#46566a 100%)}
+.foto::after{content:"";position:absolute;inset:0;background:
+  radial-gradient(60% 45% at 30% 68%, rgba(255,255,255,.18), transparent 70%)}
+.foto.calida{background:linear-gradient(#efe0c8 0%,#dcc39c 40%,#c2a279 55%,#8f7452 70%,#5e4c36 100%)}
+.velo{position:absolute;inset:0;background:linear-gradient(90deg,rgba(35,54,111,.88) 0%,rgba(35,54,111,.62) 48%,rgba(35,54,111,.15) 100%)}
+
+/* Logo Zurich (aproximado; en la app va el archivo real) */
+.logo{position:absolute;display:flex;align-items:center;gap:6px;z-index:9}
+.logo .z{border-radius:50%;background:#fff;color:var(--azul);display:flex;align-items:center;justify-content:center;font-weight:700;font-style:italic}
+.logo .w{color:#fff;font-weight:700;letter-spacing:1.2px}
+.logo.oscuro .z{background:var(--azul);color:#fff}
+.logo.oscuro .w{color:var(--navy)}
+
+/* Píldora de producto */
+.pil{display:inline-block;border-radius:999px;color:#fff;font-weight:400;line-height:1;white-space:nowrap}
+/* Titular: LIGHT — el rasgo tipográfico de Zurich (nunca bold) */
+.tit{font-weight:300;color:#fff;line-height:1.02;letter-spacing:-.2px}
+.tit.d{color:var(--navy)}
+.baj{font-weight:400;color:#fff;line-height:1.3}
+.baj.d{color:var(--navy)}
+.bold{font-weight:700}
+/* Píldora outline (precios) */
+.pout{display:inline-block;border:1.5px solid #fff;border-radius:999px;color:#fff;font-weight:400;white-space:nowrap}
+.pout.d{border-color:var(--navy);color:var(--navy)}
+/* Botón CTA (píldora sólida) */
+.cta{display:inline-block;border-radius:999px;background:#C84840;color:#fff;font-weight:700;white-space:nowrap}
+.cta.azul{background:var(--azul)}
+/* Círculo de oferta: el elemento firma */
+.circ{position:absolute;border-radius:50%;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;color:#fff;z-index:5}
+.circ .arriba{font-weight:400;opacity:.95}
+.circ .num{font-weight:300;line-height:.92;letter-spacing:-1px}
+.oferta{display:flex;align-items:baseline;justify-content:center;gap:5px}
+.oferta .n{font-weight:300;line-height:.9;letter-spacing:-1.5px}
+.oferta .u{font-weight:300;line-height:.95}
+.circ .g{font-weight:300;line-height:.98;margin-top:-1px}
+.circ .abajo{font-weight:400}
+/* Círculos decorativos: SIEMPRE anclados a un borde, nunca flotando */
+.deco{position:absolute;border-radius:50%;z-index:1}
+.semi{position:absolute;z-index:1}
+/* Legal */
+.legal{position:absolute;color:rgba(255,255,255,.9);font-weight:400;z-index:7}
+.legal.d{color:rgba(35,54,111,.75)}
+/* Banda tipo pincelada (destaca el modelo/producto) */
+.banda{position:absolute;background:var(--azul);color:#fff;font-weight:700;display:flex;align-items:center}
+</style></head><body>
+
+<h1>Sistema Zurich — propuesta de layouts</h1>
+<div class="sub">Extraído de las diez piezas reales que subiste, cruzado con el Brandbook 2024.
+El elemento estructural de Zurich es <b>el círculo</b>: contiene la oferta, enmarca la foto y a veces
+aloja el logo. El titular va en <b>tipografía light, nunca bold</b>. Los círculos decorativos van
+<b>anclados a los bordes</b>, nunca flotando. Las fotos aquí son simuladas.</div>
+
+<h2>Los cinco layouts, en 300×250</h2>
+
+<div class="grid">
+
+  <!-- Z1 · Círculo de oferta sobre color plano -->
+  <div class="item"><div class="cap">Z1 · Círculo de oferta <span>— el patrón principal</span></div>
+    <div class="b s300">
+      <div class="deco" style="width:74px;height:74px;background:var(--celeste);right:-22px;bottom:-24px"></div>
+      <div class="deco" style="width:44px;height:44px;background:var(--arena);right:52px;bottom:-20px"></div>
+      <div class="circ" style="width:186px;height:186px;background:var(--azul);right:-40px;top:44px">
+        <div class="arriba" style="font-size:12px">Aprovecha</div>
+        <div class="oferta"><span class="n" style="font-size:40px">2</span><span class="u" style="font-size:21px">Cuotas</span></div><div class="g" style="font-size:21px">Gratis</div>
+        <div class="pout" style="font-size:9px;padding:3px 10px;margin-top:6px">Cuotas 6 y 9</div>
+      </div>
+      <div class="logo" style="left:14px;top:12px"><span class="z" style="width:20px;height:20px;font-size:12px">Z</span><span class="w" style="font-size:12px">ZURICH</span></div>
+      <div style="position:absolute;left:14px;top:52px;width:150px;z-index:6">
+        <span class="pil" style="background:var(--medio);font-size:11px;padding:4px 12px">Seguro</span>
+        <div class="tit" style="font-size:27px;margin-top:6px">Auto<br>Digital</div>
+        <div class="baj bold" style="font-size:11px;margin-top:8px">Contrata en zurich.cl</div>
+      </div>
+    </div></div>
+
+  <!-- Z2 · Círculo de oferta sobre foto -->
+  <div class="item"><div class="cap">Z2 · El mismo, sobre foto <span>— sin cambiar la estructura</span></div>
+    <div class="b s300">
+      <div class="foto"></div><div class="velo"></div>
+      <div class="deco" style="width:74px;height:74px;background:var(--celeste);right:-22px;bottom:-24px"></div>
+      <div class="deco" style="width:44px;height:44px;background:var(--arena);right:52px;bottom:-20px"></div>
+      <div class="circ" style="width:186px;height:186px;background:var(--azul);right:-40px;top:44px">
+        <div class="arriba" style="font-size:12px">Aprovecha</div>
+        <div class="oferta"><span class="n" style="font-size:40px">2</span><span class="u" style="font-size:21px">Cuotas</span></div><div class="g" style="font-size:21px">Gratis</div>
+        <div class="pout" style="font-size:9px;padding:3px 10px;margin-top:6px">Cuotas 6 y 9</div>
+      </div>
+      <div class="logo" style="left:14px;top:12px"><span class="z" style="width:20px;height:20px;font-size:12px">Z</span><span class="w" style="font-size:12px">ZURICH</span></div>
+      <div style="position:absolute;left:14px;top:52px;width:150px;z-index:6">
+        <span class="pil" style="background:var(--medio);font-size:11px;padding:4px 12px">Seguro</span>
+        <div class="tit" style="font-size:27px;margin-top:6px">Auto<br>Digital</div>
+        <div class="baj bold" style="font-size:11px;margin-top:8px">Contrata en zurich.cl</div>
+      </div>
+    </div></div>
+
+  <!-- Z3 · Foto con corte circular -->
+  <div class="item"><div class="cap">Z3 · Foto con corte circular <span>— para producto</span></div>
+    <div class="b s300">
+      <div style="position:absolute;right:0;top:0;bottom:0;width:150px;overflow:hidden;border-top-left-radius:150px;border-bottom-left-radius:150px">
+        <div class="foto"></div></div>
+      <div class="deco" style="width:60px;height:60px;background:var(--azul);right:26px;bottom:-22px;z-index:6"></div>
+      <div class="deco" style="width:26px;height:26px;background:var(--arena);right:8px;bottom:16px;z-index:6"></div>
+      <div class="logo" style="left:14px;top:12px"><span class="z" style="width:20px;height:20px;font-size:12px">Z</span><span class="w" style="font-size:12px">ZURICH</span></div>
+      <div style="position:absolute;left:14px;top:50px;width:150px;z-index:6">
+        <div class="baj" style="font-size:10px">Contrata 100% online</div>
+        <span class="pil" style="background:var(--medio);font-size:10.5px;padding:3px 11px;margin-top:5px">Seguro</span>
+        <div class="tit" style="font-size:23px;margin-top:5px">Celular<br>Protegido</div>
+      </div>
+      <div class="banda" style="left:0;top:150px;height:26px;padding:0 14px;font-size:14px;z-index:6">Samsung S25</div>
+      <div style="position:absolute;left:14px;top:188px;z-index:6">
+        <div class="baj" style="font-size:10px">Planes desde</div>
+        <div class="pout" style="font-size:17px;padding:4px 14px;margin-top:4px;font-weight:300">$27.420<span style="font-size:10px">*</span></div>
+      </div>
+    </div></div>
+
+  <!-- Z4 · Foto en círculo -->
+  <div class="item"><div class="cap">Z4 · Foto dentro del círculo <span>— fondo azul</span></div>
+    <div class="b s300" style="background:var(--azul)">
+      <div class="deco" style="width:56px;height:56px;background:var(--navy);left:74px;bottom:-26px"></div>
+      <div class="deco" style="width:30px;height:30px;background:var(--celeste);left:120px;bottom:-14px"></div>
+      <div style="position:absolute;left:-26px;top:56px;width:150px;height:150px;border-radius:50%;overflow:hidden;z-index:4"><div class="foto"></div></div>
+      <div class="logo" style="left:14px;top:12px"><span class="z" style="width:20px;height:20px;font-size:12px">Z</span><span class="w" style="font-size:12px">ZURICH</span></div>
+      <div style="position:absolute;right:14px;top:58px;width:158px;text-align:right;z-index:6">
+        <div class="tit" style="font-size:26px">SOAP<span style="font-size:17px">check</span></div>
+        <span class="pil" style="background:var(--navy);font-size:9px;padding:4px 10px;margin-top:6px">La actitud de los que se aseguran</span>
+        <div class="tit" style="font-size:36px;margin-top:8px"><span style="font-size:20px">$</span>8.990</div>
+        <div class="baj" style="font-size:9.5px;margin-top:2px">En Auto, Jeep y Station Wagon</div>
+      </div>
+    </div></div>
+
+  <!-- Z5 · Centrado, sin foto -->
+  <div class="item"><div class="cap">Z5 · Centrado, sin foto <span>— precio protagonista</span></div>
+    <div class="b s300" style="background:var(--azul)">
+      <div class="deco" style="width:96px;height:96px;background:var(--paloma);right:-34px;bottom:-30px;z-index:2"></div>
+      <div class="deco" style="width:46px;height:46px;background:var(--navy);right:64px;bottom:-20px"></div>
+      <div style="position:absolute;left:0;right:0;top:22px;text-align:center;z-index:6">
+        <div class="tit" style="font-size:27px">SOAP<span style="font-size:18px">check</span></div>
+        <div style="margin-top:7px"><span class="pil" style="background:var(--navy);font-size:9.5px;padding:5px 14px">La actitud de los que se aseguran</span></div>
+        <div class="tit" style="font-size:47px;margin-top:10px"><span style="font-size:26px">$</span>8.990</div>
+        <div class="baj" style="font-size:10px;margin-top:1px">En Auto, Jeep y Station Wagon</div>
+        <div style="margin-top:10px"><span class="cta" style="font-size:12px;padding:8px 22px">Cómpralo aquí</span></div>
+      </div>
+      <div class="legal" style="left:0;right:0;bottom:8px;text-align:center;font-size:7px">Bases legales en www.zurich.cl</div>
+    </div></div>
+
+</div>
+
+<h2>El mismo sistema en modo claro</h2>
+<div class="sub">Cuando el fondo es claro, el logo va en azul y el texto en navy. La estructura no cambia.</div>
+<div class="grid">
+  <div class="item"><div class="cap">Z3 en arena <span>— mismo layout, modo claro</span></div>
+    <div class="b s300" style="background:var(--arena)">
+      <div style="position:absolute;right:0;top:0;bottom:0;width:150px;overflow:hidden;border-top-left-radius:150px;border-bottom-left-radius:150px">
+        <div class="foto calida"></div></div>
+      <div class="deco" style="width:60px;height:60px;background:var(--azul);right:26px;bottom:-22px;z-index:6"></div>
+      <div class="deco" style="width:26px;height:26px;background:var(--celeste);right:8px;bottom:16px;z-index:6"></div>
+      <div class="logo oscuro" style="left:14px;top:12px"><span class="z" style="width:20px;height:20px;font-size:12px">Z</span><span class="w" style="font-size:12px">ZURICH</span></div>
+      <div style="position:absolute;left:14px;top:50px;width:150px;z-index:6">
+        <div class="baj d" style="font-size:10px">Contrata 100% online</div>
+        <span class="pil" style="background:var(--medio);font-size:10.5px;padding:3px 11px;margin-top:5px">Seguro</span>
+        <div class="tit d" style="font-size:23px;margin-top:5px">Celular<br>Protegido</div>
+      </div>
+      <div class="banda" style="left:0;top:150px;height:26px;padding:0 14px;font-size:14px;z-index:6">Samsung S26</div>
+      <div style="position:absolute;left:14px;top:188px;z-index:6">
+        <div class="baj d" style="font-size:10px">Planes desde</div>
+        <div class="pout d" style="font-size:17px;padding:4px 14px;margin-top:4px;font-weight:300">$32.662<span style="font-size:10px">*</span></div>
+      </div>
+    </div></div>
+
+  <div class="item"><div class="cap">Z1 en durazno <span>— fondo de campaña</span></div>
+    <div class="b s300" style="background:var(--durazno)">
+      <div class="deco" style="width:70px;height:70px;background:var(--celeste);right:-24px;bottom:-26px"></div>
+      <div class="deco" style="width:40px;height:40px;background:var(--arena);right:50px;bottom:-18px"></div>
+      <div class="circ" style="width:176px;height:176px;background:var(--azul);right:-38px;top:48px">
+        <div class="arriba" style="font-size:10.5px">Hasta el 14 de julio</div>
+        <div class="oferta"><span class="n" style="font-size:34px">1</span><span class="u" style="font-size:19px">Cuota</span></div><div class="g" style="font-size:19px">Gratis</div>
+      </div>
+      <div class="logo" style="left:14px;top:12px"><span class="z" style="width:20px;height:20px;font-size:12px">Z</span><span class="w" style="font-size:12px">ZURICH</span></div>
+      <div style="position:absolute;left:14px;top:52px;width:150px;z-index:6">
+        <span class="pil" style="background:var(--navy);font-size:11px;padding:4px 12px">Seguro</span>
+        <div class="tit" style="font-size:26px;margin-top:6px">Auto<br>Digital</div>
+        <div class="baj" style="font-size:11px;margin-top:7px;font-weight:300">¡Aprovecha sus<br>tarifas renovadas!</div>
+      </div>
+    </div></div>
+</div>
+
+<h2>Cómo se RECOMPONE en otros formatos</h2>
+<div class="sub">No es el mismo arte escalado: cambia la disposición. En la franja el círculo se corre al borde y
+el texto se acuesta; en el vertical el círculo baja y el texto se apila; en el 1200×628 el círculo crece
+y entra la letra legal.</div>
+
+<div style="display:flex;flex-direction:column;gap:22px">
+
+  <div><div class="cap">728×90 <span>— círculo a la derecha, texto en fila</span></div>
+    <div class="b s728" style="background:var(--navy)">
+      <div class="circ" style="width:118px;height:118px;background:var(--azul);right:128px;top:-15px">
+        <div class="oferta"><span class="n" style="font-size:24px">2</span><span class="u" style="font-size:13px">Cuotas</span></div><div class="g" style="font-size:13px">Gratis</div>
+      </div>
+      <div class="deco" style="width:40px;height:40px;background:var(--celeste);right:-14px;bottom:-16px"></div>
+      <div class="logo" style="left:16px;top:50%;transform:translateY(-50%)"><span class="z" style="width:22px;height:22px;font-size:13px">Z</span><span class="w" style="font-size:13px">ZURICH</span></div>
+      <div style="position:absolute;left:148px;top:50%;transform:translateY(-50%);z-index:6;display:flex;align-items:center;gap:12px">
+        <span class="pil" style="background:var(--medio);font-size:10px;padding:3px 10px">Seguro</span>
+        <div class="tit" style="font-size:24px">Auto Digital</div>
+        <div class="baj bold" style="font-size:11px">Contrata en<br>zurich.cl</div>
+      </div>
+      <div style="position:absolute;right:16px;top:50%;transform:translateY(-50%);z-index:6"><span class="cta azul" style="font-size:11px;padding:8px 16px">Cotiza hoy</span></div>
+    </div></div>
+
+  <div style="display:flex;gap:24px;align-items:flex-start">
+    <div><div class="cap">160×600 <span>— apilado, círculo abajo</span></div>
+      <div class="b s160" style="background:var(--navy)">
+        <div class="logo" style="left:12px;top:14px"><span class="z" style="width:18px;height:18px;font-size:11px">Z</span><span class="w" style="font-size:10px">ZURICH</span></div>
+        <div style="position:absolute;left:12px;right:12px;top:56px;z-index:6">
+          <span class="pil" style="background:var(--medio);font-size:10px;padding:3px 10px">Seguro</span>
+          <div class="tit" style="font-size:24px;margin-top:6px">Auto<br>Digital</div>
+          <div class="baj bold" style="font-size:10px;margin-top:8px">Contrata en<br>zurich.cl</div>
+        </div>
+        <div class="circ" style="width:180px;height:180px;background:var(--azul);left:-10px;top:232px">
+          <div class="arriba" style="font-size:11px">Aprovecha</div>
+          <div class="oferta"><span class="n" style="font-size:38px">2</span><span class="u" style="font-size:20px">Cuotas</span></div><div class="g" style="font-size:20px">Gratis</div>
+        </div>
+        <div style="position:absolute;left:12px;right:12px;bottom:120px;text-align:center;z-index:6"><span class="cta azul" style="font-size:12px;padding:9px 20px">Cotiza hoy</span></div>
+        <div class="deco" style="width:70px;height:70px;background:var(--celeste);right:-26px;bottom:-24px"></div>
+        <div class="deco" style="width:40px;height:40px;background:var(--arena);left:-16px;bottom:12px"></div>
+      </div></div>
+
+    <div><div class="cap">1200×628 <span>— al 50%. El círculo crece y entra el legal</span></div>
+      <div class="b s1200" style="background:var(--navy)">
+        <div class="circ" style="width:250px;height:250px;background:var(--azul);right:-46px;top:32px">
+          <div class="arriba" style="font-size:14px">Aprovecha</div>
+          <div class="oferta"><span class="n" style="font-size:58px">2</span><span class="u" style="font-size:31px">Cuotas</span></div><div class="g" style="font-size:31px">Gratis</div>
+          <div class="pout" style="font-size:11px;padding:4px 14px;margin-top:8px">Cuotas 6 y 9</div>
+        </div>
+        <div class="deco" style="width:92px;height:92px;background:var(--celeste);right:-30px;bottom:-34px"></div>
+        <div class="deco" style="width:54px;height:54px;background:var(--arena);right:74px;bottom:-24px"></div>
+        <div class="logo" style="left:24px;top:20px"><span class="z" style="width:26px;height:26px;font-size:15px">Z</span><span class="w" style="font-size:16px">ZURICH</span></div>
+        <div style="position:absolute;left:24px;top:80px;width:280px;z-index:6">
+          <span class="pil" style="background:var(--medio);font-size:13px;padding:5px 15px">Seguro</span>
+          <div class="tit" style="font-size:46px;margin-top:9px">Auto Digital</div>
+          <div class="baj" style="font-size:14px;margin-top:10px;font-weight:300">¡Aprovecha sus tarifas renovadas!</div>
+          <div style="margin-top:14px"><span class="cta azul" style="font-size:13px;padding:9px 20px">Contrata 100% online</span></div>
+        </div>
+        <div class="legal" style="left:24px;bottom:14px;font-size:9px">Bases legales y condiciones en www.zurich.cl</div>
+      </div></div>
+  </div>
+
+</div>
+
+</body></html>
