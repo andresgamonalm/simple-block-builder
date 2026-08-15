@@ -1616,6 +1616,17 @@ button,input,select,textarea{font-family:inherit;}
 .tb-piezas .pz .chip{flex:0 0 auto;}
 .tb-piezas .pz-lbl{display:flex;align-items:center;font-size:11px;font-weight:700;letter-spacing:.4px;
   text-transform:uppercase;color:#8b91a6;padding-right:10px;margin-right:4px;border-right:1px solid #e4e8f0;}
+.tb-piezas .pz-lbl.camp{flex-direction:column;align-items:flex-start;justify-content:center;
+  color:#8b91a6;padding:5px 12px 5px 0;line-height:1.1;max-width:230px;}
+.tb-piezas .pz-lbl.camp b{font-size:12.5px;font-weight:600;letter-spacing:0;text-transform:none;
+  color:var(--navy);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:100%;}
+.tb-piezas .pz-mas{font-size:17px;color:#8b91a6;padding:6px 13px;font-weight:400;}
+.tb-piezas .pz-mas:hover{color:var(--navy);}
+.pz-menu{position:fixed;z-index:9500;background:#fff;border:1px solid #e4e8f0;border-radius:10px;
+  box-shadow:0 10px 28px rgba(10,14,40,.14);padding:5px;min-width:210px;}
+.pz-menu button{display:flex;align-items:center;gap:9px;width:100%;border:0;background:none;cursor:pointer;
+  padding:8px 10px;border-radius:7px;font-family:var(--f);font-size:13.5px;color:#3a4066;text-align:left;}
+.pz-menu button:hover{background:#f2f5fc;color:var(--navy);}
 .tb-spacer{flex:1 1 auto;min-width:8px;}
 /* Acciones principales (nivel 1): mismo alto/ancho, colores de marca distintos. */
 .tb-act{display:inline-flex;align-items:center;justify-content:center;gap:8px;height:38px;min-width:114px;padding:0 16px;border-radius:8px;font-family:var(--f);font-size:13px;font-weight:600;cursor:pointer;border:1px solid transparent;flex-shrink:0;transition:background .14s,border-color .14s;}
@@ -4104,9 +4115,54 @@ function renderPestanasPiezas(){
   if(piezas.length < 2){ cont.hidden = true; cont.innerHTML = ""; return; }
   const act = proyecto.activa;
   cont.hidden = false;
-  cont.innerHTML = `<span class="pz-lbl">En este proyecto</span>` + piezas.map(p =>
+  const nom = String((proyecto && proyecto.nombre) || "");
+  const esCampana = /^campa(ñ|n)a\s*·/i.test(nom);
+  const rot = esCampana
+    ? `<span class="pz-lbl camp" title="${escAttr(nom)}">Campaña<b>${esc(nom.replace(/^campa(ñ|n)a\s*·\s*/i,""))}</b></span>`
+    : `<span class="pz-lbl">En este proyecto</span>`;
+  cont.innerHTML = rot + piezas.map(p =>
     `<button class="pz${p.id===act?" on":""}" onclick="irAPieza('${p.id}')" title="${escAttr(p.nombre||"Creatividad")}">`+
-    `${chipDe(categoriaDe(p.formato))}<span class="nm">${esc(p.nombre||"Creatividad")}</span></button>`).join("");
+    `${chipDe(categoriaDe(p.formato))}<span class="nm">${esc(p.nombre||"Creatividad")}</span></button>`).join("")
+    + `<button class="pz pz-mas" onclick="menuNuevaPestana(event)" title="Agregar otra creatividad a este proyecto">+</button>`;
+}
+// El "+" de las pestanas: agrega SIEMPRE una creatividad nueva al proyecto,
+// nunca reemplaza la que tienes abierta (como una pestana de navegador).
+function menuNuevaPestana(ev){
+  if(ev) ev.stopPropagation();
+  document.querySelectorAll(".pz-menu").forEach(m=>m.remove());
+  const tipos = [["email","Email","email"],["display-300x250","Banner Display","banner"],
+                 ["ads","Google Search","ads"],["libre","Formato libre","libre"]]
+                 .filter(t=>puede(t[2]));
+  const m = document.createElement("div");
+  m.className = "pz-menu";
+  m.innerHTML = tipos.map(t=>`<button onclick="nuevaPestana('${t[0]}')">${chipDe(categoriaDe(t[0]))}<span>${t[1]}</span></button>`).join("");
+  const b = ev && ev.currentTarget;
+  const r = b ? b.getBoundingClientRect() : {left:20,bottom:120};
+  m.style.left = Math.round(r.left)+"px"; m.style.top = Math.round(r.bottom+4)+"px";
+  document.body.appendChild(m);
+  setTimeout(()=>document.addEventListener("click", function cerrar(){ m.remove(); document.removeEventListener("click", cerrar); }, {once:true}), 0);
+}
+async function nuevaPestana(formato){
+  document.querySelectorAll(".pz-menu").forEach(m=>m.remove());
+  if(!proyecto) return;
+  const cat = categoriaDe(formato);
+  const sug = (cat==="Banners"?"Banner ":cat==="Ads"?"Campaña Search ":cat==="Email"?"Email ":"Pieza ")
+            + new Date().toLocaleDateString("es-CL",{day:"2-digit",month:"short"});
+  const nom = await pedirNombreTrabajo(sug);
+  if(nom===null) return;
+  // Se crea SIEMPRE una pieza nueva: nunca se reutiliza la que está abierta.
+  if(cat==="Banners" || cat==="Post"){
+    const cfg = COLECCIONES[cat==="Banners"?"display-desktop":"social"];
+    const np = crearPieza(cfg.master, nom);
+    np.esSet=true; np.setTipo=cat==="Banners"?"display-desktop":"social"; np.masterFmt=cfg.master;
+    np.activaFmt=cfg.master; np.formato=cfg.master; np.canvas=[];
+    np.composicion=composicionDefault(np.tema); np.artboards=cfg.fmts.map(f=>({fmt:f}));
+    proyecto.activa=np.id; activarPieza(np.id); cambiarPanelTab("diseno");
+  } else {
+    crearPieza(formato, nom);
+    activarPieza(proyecto.activa);
+  }
+  try{ const r=rutaDeProducto(pieza()); if(r) setURL(r+"/"+slugDe(nom)); }catch(_){}
 }
 function irAPieza(id){
   if(!proyecto || proyecto.activa === id) return;
@@ -4976,10 +5032,24 @@ function composicionDesdeCanvas(canvas, tema){
   return comp;
 }
 // Crea una colección por capas (composición) para un set de tamaños.
+// ¿La creatividad esta REALMENTE vacia? Antes se miraba solo el lienzo de
+// bloques, y una campana de Google Search SIEMPRE lo tiene vacio (sus grupos,
+// keywords y anuncios viven en adsData). Por eso al crear un banner estando en
+// una campana de Search, la app la daba por vacia y la transformaba: la campana
+// desaparecia de la vista. Ahora cuenta como contenido cualquier cosa que el
+// usuario haya creado, sea del tipo que sea.
+function piezaVacia(p){
+  if(!p) return true;
+  if(p.canvas && p.canvas.length) return false;              // bloques
+  if(p.adsData && (p.adsData.grupos||[]).length) return false; // campana de Search
+  if(p.esSet || p.composicion) return false;                  // coleccion de banners
+  if(p.asunto || p.preheader) return false;                   // email empezado
+  return true;
+}
 function crearComposicion(tipoCol, comp){
   const cfg = COLECCIONES[tipoCol] || COLECCIONES["display-desktop"];
   const actual = pieza();
-  const p = (actual && (!actual.canvas || actual.canvas.length===0) && !actual.esSet) ? actual : crearPieza(cfg.master, cfg.nombre);
+  const p = (actual && piezaVacia(actual)) ? actual : crearPieza(cfg.master, cfg.nombre);
   p.nombre = cfg.nombre;
   p.esSet = true;
   p.setTipo = tipoCol;
@@ -6728,7 +6798,7 @@ function cargarPlantilla(tipo){
   // una pieza nueva (no destructivo).
   function getOrCreate(formato, nombre){
     const actual = pieza();
-    if(actual && (!actual.canvas || actual.canvas.length === 0)){ actual.formato = formato; actual.nombre = nombre; return actual; }
+    if(actual && piezaVacia(actual)){ actual.formato = formato; actual.nombre = nombre; return actual; }
     return crearPieza(formato, nombre);
   }
   // Set Display Desktop ADAPTABLE: una sola creatividad-máster (300×250) cuyo
