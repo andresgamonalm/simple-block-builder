@@ -1,0 +1,363 @@
+<title>Manual de Diagramación</title>
+<style>
+:root{
+  --ground:#F7F8FA; --panel:#FFFFFF; --ink:#1A1F2E; --muted:#6B7385;
+  --rule:#DFE3EB; --rule-soft:#EDF0F5; --accent:#2167AE; --accent-soft:#E7F0F8;
+  --limit:#B4453C; --limit-soft:#FBEDEC; --ok:#2E7D5B;
+  --mono:ui-monospace,"SF Mono","Cascadia Mono",Menlo,Consolas,monospace;
+  --sans:ui-sans-serif,-apple-system,"Segoe UI",system-ui,Arial,sans-serif;
+}
+@media (prefers-color-scheme:dark){ :root:not([data-theme="light"]){
+  --ground:#14161C; --panel:#1B1E26; --ink:#E8EAF0; --muted:#9AA2B4;
+  --rule:#2B3040; --rule-soft:#22262F; --accent:#6FA8DC; --accent-soft:#1D2A38;
+  --limit:#E08079; --limit-soft:#2E2020; --ok:#6BBF97;
+}}
+:root[data-theme="dark"]{
+  --ground:#14161C; --panel:#1B1E26; --ink:#E8EAF0; --muted:#9AA2B4;
+  --rule:#2B3040; --rule-soft:#22262F; --accent:#6FA8DC; --accent-soft:#1D2A38;
+  --limit:#E08079; --limit-soft:#2E2020; --ok:#6BBF97;
+}
+*{box-sizing:border-box}
+body{ margin:0; background:var(--ground); color:var(--ink); font:15px/1.6 var(--sans);
+      -webkit-font-smoothing:antialiased; }
+.wrap{ max-width:960px; margin:0 auto; padding:48px 22px 96px; }
+header{ border-bottom:2px solid var(--ink); padding-bottom:20px; margin-bottom:8px; }
+.eyebrow{ font:600 11px/1 var(--mono); letter-spacing:.16em; text-transform:uppercase;
+          color:var(--accent); margin-bottom:12px; }
+h1{ font-size:clamp(28px,5vw,42px); line-height:1.05; margin:0 0 10px; letter-spacing:-.02em;
+    font-weight:700; text-wrap:balance; }
+.sub{ color:var(--muted); max-width:62ch; margin:0; }
+h2{ font-size:20px; margin:52px 0 6px; letter-spacing:-.01em; font-weight:700; }
+h2 .n{ font:600 12px var(--mono); color:var(--accent); display:block; letter-spacing:.14em;
+       text-transform:uppercase; margin-bottom:6px; }
+h3{ font-size:15px; margin:28px 0 8px; font-weight:700; }
+p{ max-width:66ch; }
+.lede{ color:var(--muted); max-width:66ch; margin:0 0 18px; }
+.tw{ overflow-x:auto; margin:14px 0 6px; border:1px solid var(--rule); background:var(--panel); }
+table{ border-collapse:collapse; width:100%; font-size:13.5px; }
+th,td{ text-align:left; padding:8px 12px; border-bottom:1px solid var(--rule-soft); vertical-align:top; }
+th{ font:600 11px var(--mono); letter-spacing:.08em; text-transform:uppercase; color:var(--muted);
+    background:var(--rule-soft); border-bottom:1px solid var(--rule); white-space:nowrap; }
+tbody tr:last-child td{ border-bottom:none; }
+td.num,th.num{ font-family:var(--mono); font-variant-numeric:tabular-nums; white-space:nowrap; }
+td b{ font-weight:700; }
+.no{ color:var(--limit); font-weight:600; }
+.si{ color:var(--ok); font-weight:600; }
+.chip{ display:inline-block; font:600 11px var(--mono); padding:2px 7px; border:1px solid var(--rule);
+       border-radius:2px; background:var(--rule-soft); color:var(--muted); }
+.sw{ display:inline-block; width:13px; height:13px; border:1px solid rgba(0,0,0,.22);
+     vertical-align:-2px; margin-right:7px; }
+.callout{ border-left:3px solid var(--accent); background:var(--accent-soft); padding:12px 16px;
+          margin:16px 0; }
+.callout.warn{ border-left-color:var(--limit); background:var(--limit-soft); }
+.callout p{ margin:0; max-width:none; font-size:14px; }
+.formula{ font-family:var(--mono); font-size:13px; background:var(--rule-soft);
+          border:1px solid var(--rule); padding:10px 14px; margin:12px 0; overflow-x:auto; }
+.mapa{ display:flex; flex-wrap:wrap; gap:16px; align-items:flex-end; margin:18px 0 8px;
+       padding:18px; border:1px solid var(--rule); background:var(--panel); overflow-x:auto; }
+.mini{ text-align:center; flex:0 0 auto; }
+.mini .box{ background:var(--accent); opacity:.9; }
+.mini .lab{ font:600 10px var(--mono); color:var(--muted); margin-top:5px; white-space:nowrap; }
+.pri{ counter-reset:p; list-style:none; padding:0; margin:12px 0; max-width:62ch; }
+.pri li{ counter-increment:p; padding:9px 0 9px 40px; border-bottom:1px solid var(--rule-soft);
+         position:relative; }
+.pri li::before{ content:counter(p); position:absolute; left:0; top:9px; font:700 12px var(--mono);
+                 color:var(--accent); width:24px; height:24px; line-height:24px; text-align:center;
+                 border:1px solid var(--rule); background:var(--panel); }
+.pri li.never::before{ content:"—"; color:var(--limit); border-color:var(--limit); }
+footer{ margin-top:64px; padding-top:18px; border-top:1px solid var(--rule); color:var(--muted);
+        font-size:13px; }
+</style>
+
+<div class="wrap">
+<header>
+  <div class="eyebrow">Simple Block Builder · Display</div>
+  <h1>Manual de Diagramación</h1>
+  <p class="sub">Las reglas fijas de cada banner: qué lleva, cuánto mide, cuántos caracteres admite
+  y qué se cae cuando no hay sitio. Todo número de esta página está <b>calculado desde la geometría</b>
+  del formato, no elegido a mano.</p>
+</header>
+
+<div class="callout">
+  <p><b>Por qué existe este documento.</b> Mientras la app decida la diagramación en el momento,
+  cada generación es una lotería. Con estas reglas fijadas, la IA solo aporta el texto y la foto:
+  la geometría ya está resuelta y no puede romperse.</p>
+</div>
+
+<h2><span class="n">01 · Fundamento</span>La escala</h2>
+<p class="lede">Un banner no se diseña once veces. Se diseña una vez y se deriva con un factor
+<b>k</b> propio de cada familia. El factor no sale del ancho a secas — eso hacía que un 1200×628
+tuviera titulares de 104&nbsp;px dentro de 628&nbsp;px de alto.</p>
+
+<div class="formula" id="formulas"></div>
+
+<div class="mapa" id="mapa"></div>
+<p class="lede">Los once formatos a escala relativa. El color agrupa por familia: la familia decide
+la fórmula de <b>k</b>, la diagramación disponible y qué elementos caben.</p>
+
+<h2><span class="n">02 · Elementos</span>Tamaños base y límites</h2>
+<p class="lede">Medidas base en el máster 300×250 (k&nbsp;=&nbsp;1). En cualquier otro formato se
+multiplican por su <b>k</b>. El rango marca hasta dónde puede moverlo el usuario sin salirse del sistema.</p>
+
+<div class="tw"><table>
+<thead><tr><th>Elemento</th><th class="num">Base</th><th class="num">Rango</th><th class="num">Peso</th>
+<th class="num">Líneas</th><th>Regla</th></tr></thead>
+<tbody>
+<tr><td><b>Epígrafe</b> (píldora)</td><td class="num">11 px</td><td class="num">10–12</td><td class="num">700</td><td class="num">1</td><td>Nombre corto del producto. Va sobre el título.</td></tr>
+<tr><td><b>Título</b></td><td class="num">26 px</td><td class="num">24–28</td><td class="num">300</td><td class="num">3</td><td>Sin punto final. Cursiva permitida en 1–3 palabras.</td></tr>
+<tr><td><b>Bajada</b></td><td class="num">13 px</td><td class="num">12–14</td><td class="num">3</td><td class="num">3</td><td>Una idea. Se cae antes que el título.</td></tr>
+<tr><td><b>Botón</b></td><td class="num">13 px</td><td class="num">12–14</td><td class="num">700</td><td class="num">1</td><td>Nunca se cae. Verbo + complemento.</td></tr>
+<tr><td><b>Legal</b></td><td class="num">9 px</td><td class="num">8–10</td><td class="num">400</td><td class="num">2</td><td>Primero en caerse.</td></tr>
+<tr><td><b>Cifra</b> del círculo</td><td class="num">45 % ⌀</td><td class="num">42–48</td><td class="num">400</td><td class="num">1</td><td>Porcentaje del diámetro, no del lienzo.</td></tr>
+<tr><td><b>Entradilla</b> del círculo</td><td class="num">11 % ⌀</td><td class="num">10–12</td><td class="num">400</td><td class="num">1</td><td>Ej. «Aprovecha», «Hasta el 14 de julio».</td></tr>
+<tr><td><b>Palabra</b> del círculo</td><td class="num">20 % ⌀</td><td class="num">18–22</td><td class="num">300</td><td class="num">2</td><td>Ej. «Cuotas Gratis».</td></tr>
+<tr><td><b>Logo</b></td><td class="num">8 % lado corto</td><td class="num">mín. 14 px</td><td class="num">—</td><td class="num">—</td><td>Nunca se cae. Blanco sobre fondo oscuro.</td></tr>
+<tr><td><b>Margen</b></td><td class="num">5,5 % lado corto</td><td class="num">mín. 8 px</td><td class="num">—</td><td class="num">—</td><td>Igual en los cuatro lados.</td></tr>
+</tbody></table></div>
+
+<div class="callout">
+  <p><b>De dónde salen los límites de caracteres.</b> No se eligen: se calculan. Con el ancho útil
+  del formato y el cuerpo de letra ya fijados, caben tantos caracteres por línea como
+  <span style="font-family:var(--mono)">ancho ÷ (cuerpo × 0,52)</span> — 0,52&nbsp;em es el ancho
+  medio de un carácter en Arial. Multiplicado por las líneas permitidas, sale el máximo.
+  Si el texto lo supera, <b>se reescribe el texto</b>; jamás se estira el diseño.</p>
+</div>
+
+<h2><span class="n">03 · Por formato</span>Los once, con sus números</h2>
+<p class="lede">Esta es la tabla que gobierna la app. Cada celda está derivada de la escala de su
+familia; los caracteres, del ancho útil real de ese formato.</p>
+<div class="tw"><table id="tFormatos">
+<thead><tr>
+  <th>Formato</th><th>Familia</th><th class="num">k</th><th class="num">Margen</th>
+  <th class="num">Título</th><th class="num">Bajada</th><th class="num">Botón</th>
+  <th class="num">Epígrafe</th><th class="num">⌀ Círculo</th><th>Diagramación</th>
+</tr></thead><tbody></tbody></table></div>
+
+<h3>Máximo de caracteres por formato</h3>
+<div class="tw"><table id="tChars">
+<thead><tr>
+  <th>Formato</th><th class="num">Ancho útil</th><th class="num">Epígrafe</th>
+  <th class="num">Título</th><th class="num">Bajada</th><th class="num">Botón</th>
+  <th class="num">Legal</th><th class="num">Cifra</th>
+</tr></thead><tbody></tbody></table></div>
+
+<h2><span class="n">04 · Fondo</span>Capa de fondo y colores permitidos</h2>
+<p class="lede">El fondo es plano. Sin degradados, sin sombras, sin texturas — es regla del manual
+de marca, no preferencia.</p>
+
+<div class="tw"><table>
+<thead><tr><th>Color</th><th class="num">Hex</th><th>Uso</th><th>Color de texto encima</th></tr></thead>
+<tbody>
+<tr><td><span class="sw" style="background:#23366F"></span>Azul Oscuro</td><td class="num">#23366F</td><td>Fondo principal de banner</td><td>Blanco</td></tr>
+<tr><td><span class="sw" style="background:#2167AE"></span>Azul Zurich</td><td class="num">#2167AE</td><td>Fondo alternativo · botón</td><td>Blanco</td></tr>
+<tr><td><span class="sw" style="background:#F0736B"></span>Coral</td><td class="num">#F0736B</td><td>Fondo de campaña puntual</td><td>Blanco</td></tr>
+<tr><td><span class="sw" style="background:#ECEEEF"></span>Gris claro</td><td class="num">#ECEEEF</td><td>Fondo claro</td><td>Azul Oscuro</td></tr>
+<tr><td><span class="sw" style="background:#FFFFFF"></span>Blanco</td><td class="num">#FFFFFF</td><td>Fondo claro · círculo del logo</td><td>Azul Oscuro</td></tr>
+</tbody></table></div>
+
+<h3>Colores de acento — cada uno tiene un solo trabajo</h3>
+<div class="tw"><table>
+<thead><tr><th>Color</th><th class="num">Hex</th><th>Único uso permitido</th></tr></thead>
+<tbody>
+<tr><td><span class="sw" style="background:#FFF773"></span>Lima</td><td class="num">#FFF773</td><td>Círculo de oferta. <span class="no">Nunca</span> como fondo ni como texto.</td></tr>
+<tr><td><span class="sw" style="background:#91BFE3"></span>Azul claro</td><td class="num">#91BFE3</td><td>Adornos.</td></tr>
+<tr><td><span class="sw" style="background:#41B6E6"></span>Cyan</td><td class="num">#41B6E6</td><td>Adornos.</td></tr>
+<tr><td><span class="sw" style="background:#D8D2BC"></span>Beige</td><td class="num">#D8D2BC</td><td>Adornos.</td></tr>
+<tr><td><span class="sw" style="background:#C0392B"></span>Rojo</td><td class="num">#C0392B</td><td>Botón, cuando la pieza es de venta directa.</td></tr>
+</tbody></table></div>
+
+<div class="callout warn">
+  <p><b>Prohibido.</b> Texto de color sobre foto sin velo · dos adornos del mismo color tocándose ·
+  Lima como fondo de banner · degradados · sombras · más de dos tipografías · bordes redondeados
+  en fotos (el recorte es circular o recto, no «esquinas suaves»).</p>
+</div>
+
+<h2><span class="n">05 · Foto</span>Tratamiento fotográfico</h2>
+<div class="tw"><table>
+<thead><tr><th>Situación</th><th>Tratamiento</th><th class="num">Medida</th></tr></thead>
+<tbody>
+<tr><td>Foto como protagonista (anchos)</td><td>Recorte <b>circular</b>, columna izquierda, asomando por el borde</td><td class="num">⌀ 85 % del alto</td></tr>
+<tr><td>Foto de ambiente (cuadrados y grandes)</td><td>Fondo a sangre <b>con velo obligatorio</b></td><td class="num">velo 40–55 %</td></tr>
+<tr><td>Franjas y verticales estrechos</td><td><span class="no">Sin foto.</span> No hay sitio para que aporte</td><td class="num">—</td></tr>
+</tbody></table></div>
+<p>Criterio de selección, del manual: fotografía natural, personas reales en un momento de uso,
+luz natural. <span class="no">No</span> poses de banco de imágenes, no grupos posados, no filtros.</p>
+
+<h2><span class="n">06 · Círculos</span>Oferta y adornos</h2>
+<h3>Círculo de oferta</h3>
+<div class="tw"><table>
+<thead><tr><th>Regla</th><th>Valor</th></tr></thead>
+<tbody>
+<tr><td>Diámetro</td><td class="num">62 % del lado corto</td></tr>
+<tr><td>Sale por el borde</td><td class="num">8 % del lado corto</td></tr>
+<tr><td>Posición</td><td>Derecha (cuadrados) · <span class="no">no aplica</span> en franjas ni verticales estrechos</td></tr>
+<tr><td>Relleno</td><td>Azul Zurich o Lima</td></tr>
+<tr><td>Texto dentro</td><td>Blanco si el círculo es azul · Azul Oscuro si es Lima</td></tr>
+<tr><td>Condición para existir</td><td><b>Solo si hay una oferta real con cifra.</b> Sin cifra, no hay círculo</td></tr>
+<tr><td>Segundo círculo</td><td>Permitido para oferta secundaria · ⌀ 62 % del primero · blanco</td></tr>
+</tbody></table></div>
+
+<h3>Adornos</h3>
+<div class="tw"><table>
+<thead><tr><th>Regla</th><th>Valor</th></tr></thead>
+<tbody>
+<tr><td>Cantidad</td><td class="num">3 formas</td></tr>
+<tr><td>Diámetros</td><td class="num">28 % · 16 % · 9 % del lado corto</td></tr>
+<tr><td>Anclaje</td><td><b>Siempre asomando por el borde inferior.</b> Nunca flotando en el centro</td></tr>
+<tr><td>Sobre el texto</td><td><span class="no">Nunca.</span> Van por detrás y fuera de la caja de texto</td></tr>
+<tr><td>Colores</td><td>Azul claro · Cyan · Beige. Nunca dos iguales tocándose</td></tr>
+<tr><td>Se apagan en</td><td>Franjas y cualquier formato con lado corto ≤ 250 px</td></tr>
+</tbody></table></div>
+
+<h2><span class="n">07 · Prioridad</span>Qué se cae cuando no cabe</h2>
+<p class="lede">El sistema nunca corta un texto ni estira una caja. Si el contenido no entra, se
+reduce la escala; si aun al mínimo no entra, <b>se quita el elemento menos importante</b> en este orden.</p>
+<ol class="pri">
+  <li><b>Legal</b> — salvo que la campaña lo exija por ley, y entonces cae la bajada antes.</li>
+  <li><b>Bajada</b> — el título ya lleva la propuesta de valor.</li>
+  <li><b>Adornos</b> — decoran, no informan.</li>
+  <li><b>Epígrafe</b> — el nombre del producto suele estar en el título.</li>
+  <li class="never"><b>Título, botón y logo nunca se caen.</b> Si no caben, el formato no admite esa
+  diagramación y se usa otra del catálogo.</li>
+</ol>
+
+<h2><span class="n">08 · Catálogo</span>Qué diagramación vale en cada familia</h2>
+<div class="tw"><table>
+<thead><tr><th>Diagramación</th><th>Cuadrados</th><th>Verticales</th><th>Franjas</th><th>Grandes</th><th>Requiere</th></tr></thead>
+<tbody>
+<tr><td><b>A</b> · Producto + oferta en círculo</td><td class="si">Sí</td><td class="no">No</td><td class="no">No</td><td>Solo 1200×1200</td><td>Una oferta con cifra</td></tr>
+<tr><td><b>B</b> · La cifra manda</td><td class="si">Sí</td><td class="no">No</td><td class="si">Sí</td><td class="si">Sí</td><td>Un precio o cifra</td></tr>
+<tr><td><b>C</b> · Vertical</td><td class="no">No</td><td class="si">Sí</td><td class="no">No</td><td class="no">No</td><td>—</td></tr>
+<tr><td><b>D</b> · Solo mensaje</td><td class="si">Sí</td><td class="si">Sí</td><td class="si">Sí</td><td class="si">Sí</td><td>Nada. Es el recurso cuando no hay oferta ni foto</td></tr>
+</tbody></table></div>
+<div class="callout warn">
+  <p><b>Estado.</b> A y B están dibujadas y medidas. <b>C y D están por hacer</b> — C porque los
+  verticales no admiten una diagramación escalada desde el ancho, D porque hace falta un recurso
+  para campañas sin oferta. Ninguna diagramación entra al catálogo sin pasar el inspector.</p>
+</div>
+
+<h2><span class="n">09 · Inspector</span>Lo que se comprueba antes de entregar</h2>
+<p class="lede">Ninguna pieza llega al usuario sin pasar estas seis comprobaciones sobre el render real.</p>
+<div class="tw"><table>
+<thead><tr><th>Comprobación</th><th>Criterio</th></tr></thead>
+<tbody>
+<tr><td><b>Desborde</b></td><td>Ningún elemento fuera del marco</td></tr>
+<tr><td><b>Colisión</b></td><td>Ningún texto montado sobre otro ni sobre el círculo</td></tr>
+<tr><td><b>Legibilidad</b></td><td>Ningún texto bajo 9 px (formatos ≤ 250) u 11 px (el resto)</td></tr>
+<tr><td><b>Contraste</b></td><td>Texto sobre su fondo ≥ 4,5:1</td></tr>
+<tr><td><b>Completa</b></td><td>Título, botón y logo presentes</td></tr>
+<tr><td><b>Aire</b></td><td>Ninguna zona muerta &gt; 30 % del alto</td></tr>
+</tbody></table></div>
+<p>Una pieza que falla se regenera con texto más corto o con otra diagramación del catálogo.
+Si tras tres intentos sigue fallando, se entrega con el aviso — nunca en silencio.</p>
+
+<footer>
+  Derivado de las 10 piezas reales de Zurich Chile y del Brandbook 2024.
+  Todo número de esta página se calcula al abrirla; corregir un valor de origen re-calcula la tabla entera.
+</footer>
+</div>
+
+<script>
+const FORMATOS = [
+  {w:300,  h:250,  fam:'Cuadrados'}, {w:336, h:280, fam:'Cuadrados'},
+  {w:250,  h:250,  fam:'Cuadrados'}, {w:200, h:200, fam:'Cuadrados'},
+  {w:300,  h:600,  fam:'Verticales'},{w:160, h:600, fam:'Verticales'},
+  {w:728,  h:90,   fam:'Franjas'},   {w:970, h:90,  fam:'Franjas'},
+  {w:468,  h:60,   fam:'Franjas'},
+  {w:1200, h:628,  fam:'Grandes'},   {w:1200,h:1200,fam:'Grandes'}
+];
+const COLOR_FAM = {Cuadrados:'#2167AE', Verticales:'#7B5EA7', Franjas:'#2E7D5B', Grandes:'#C4762B'};
+
+// k por familia. Verticales y franjas NO se escalan por el lado corto:
+// se romperían igual que se rompían antes.
+function factor(f){
+  if(f.fam==='Franjas')    return Math.max(0.55, f.h/110);
+  if(f.fam==='Verticales') return Math.max(0.62, f.w/300);
+  return Math.max(0.70, Math.min(f.w/300, f.h/250));
+}
+const BASE = { epigrafe:11, titulo:26, bajada:13, boton:13, legal:9, margen:5.5, logo:8 };
+// Las LÍNEAS no son globales: en una franja de 90 px de alto no cabe un titular
+// de tres líneas, y permitirlo daba límites absurdos (261 caracteres en 970×90).
+const LINEAS = {
+  Cuadrados:  { epigrafe:1, titulo:3, bajada:3, boton:1, legal:2 },
+  Verticales: { epigrafe:1, titulo:3, bajada:3, boton:1, legal:2 },
+  Grandes:    { epigrafe:1, titulo:2, bajada:2, boton:1, legal:1 },
+  Franjas:    { epigrafe:1, titulo:1, bajada:1, boton:1, legal:1 }
+};
+const r1 = n => Math.round(n*100)/100;
+
+function medidas(f){
+  const k = factor(f), S = Math.min(f.w,f.h);
+  const L = LINEAS[f.fam];
+  const margen = Math.max(8, Math.round(S*BASE.margen/100));
+  // Piso de legibilidad: por debajo de esto no se encoge — o sube al piso, o el
+  // elemento se cae. Es el mismo umbral que aplica el inspector.
+  const piso = S<=250 ? 9 : 11;
+  const px = base => Math.max(piso, Math.round(base*k));
+  const pxTit = Math.round(BASE.titulo*k);          // el título nunca baja del piso igualmente
+  // El círculo solo existe donde la diagramación lo admite.
+  const circulo = (f.fam==='Cuadrados' || (f.fam==='Grandes' && f.w===f.h))
+        ? Math.round(S*0.62) : 0;
+  // El círculo se mete en el lienzo su diámetro MENOS lo que sale por el borde.
+  const sale = Math.round(S*0.08), hueco = Math.round(S*0.04);
+  const invade = circulo ? (circulo - sale + hueco) : 0;
+  const anchoUtil = Math.max(40, f.w - margen*2 - invade);
+  const chars = (fs, lineas) => Math.max(4, Math.floor(anchoUtil/(fs*0.52))*lineas);
+  const m = { k, margen, circulo, anchoUtil, piso,
+    titulo:Math.max(piso, pxTit), bajada:px(BASE.bajada), boton:px(BASE.boton),
+    epigrafe:px(BASE.epigrafe), legal:px(BASE.legal) };
+  // Un elemento que solo cabe forzándolo al piso en un formato mínimo, se cae.
+  m.cae = [];
+  if(f.fam==='Franjas' && S<=60){ m.cae.push('bajada','epígrafe'); }
+  if(f.fam==='Verticales' && f.w<=160){ m.cae.push('legal'); }
+  m.cEpigrafe = m.cae.includes('epígrafe') ? 0 : Math.min(18, chars(m.epigrafe, L.epigrafe));
+  m.cTitulo   = chars(m.titulo, L.titulo);
+  m.cBajada   = m.cae.includes('bajada')   ? 0 : chars(m.bajada, L.bajada);
+  m.cBoton    = Math.min(24, chars(m.boton, L.boton));
+  m.cLegal    = m.cae.includes('legal')    ? 0 : chars(m.legal, L.legal);
+  m.cCifra    = circulo ? 6 : 0;
+  return m;
+}
+function diagramaciones(f){
+  if(f.fam==='Verticales') return 'C';
+  if(f.fam==='Franjas')    return 'B · D';
+  if(f.fam==='Grandes')    return f.w===f.h ? 'A · B · D' : 'B · D';
+  return 'A · B · D';
+}
+
+document.getElementById('formulas').textContent =
+  'Cuadrados y grandes   k = máx(0,70 ; mín(ancho/300 , alto/250))\n' +
+  'Verticales            k = máx(0,62 ; ancho/300)      ← manda el ancho, el alto se reparte\n' +
+  'Franjas               k = máx(0,55 ; alto/110)       ← manda el alto\n\n' +
+  'Cualquier medida      valor = medida_base × k        (base = la del máster 300×250)';
+
+// Mapa de formatos a escala relativa
+document.getElementById('mapa').innerHTML = FORMATOS.map(f=>{
+  const e = 62/1200;
+  return `<div class="mini"><div class="box" style="width:${Math.max(6,f.w*e)}px;
+    height:${Math.max(5,f.h*e)}px;background:${COLOR_FAM[f.fam]}"></div>
+    <div class="lab">${f.w}×${f.h}</div></div>`;
+}).join('');
+
+const tf = document.querySelector('#tFormatos tbody');
+const tc = document.querySelector('#tChars tbody');
+FORMATOS.forEach(f=>{
+  const m = medidas(f), n = `${f.w}×${f.h}`;
+  const master = (f.w===300&&f.h===250) ? ' <span class="chip">máster</span>' : '';
+  tf.insertAdjacentHTML('beforeend', `<tr>
+    <td><b>${n}</b>${master}</td><td>${f.fam}</td><td class="num">${r1(m.k)}</td>
+    <td class="num">${m.margen} px</td><td class="num">${m.titulo} px</td>
+    <td class="num">${m.bajada} px</td><td class="num">${m.boton} px</td>
+    <td class="num">${m.epigrafe} px</td>
+    <td class="num">${m.circulo? m.circulo+' px' : '<span class="no">—</span>'}</td>
+    <td>${diagramaciones(f)}</td></tr>`);
+  tc.insertAdjacentHTML('beforeend', `<tr>
+    <td><b>${n}</b></td><td class="num">${m.anchoUtil} px</td>
+    <td class="num">${m.cEpigrafe || '<span class="no">no va</span>'}</td>
+    <td class="num">${m.cTitulo}</td>
+    <td class="num">${m.cBajada || '<span class="no">no va</span>'}</td>
+    <td class="num">${m.cBoton}</td>
+    <td class="num">${m.cLegal || '<span class="no">no va</span>'}</td>
+    <td class="num">${m.cCifra || '<span class="no">—</span>'}</td></tr>`);
+});
+</script>
