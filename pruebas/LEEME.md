@@ -29,6 +29,8 @@ servidor sirve un `/foto.svg` y un `/logo.svg` locales.
 | `geom` | La tabla de geometría cerrada calza con `mockups/flash-campaign-spec.json` en los 11 formatos. Si alguien toca una fórmula, esto lo grita. |
 | `medir` | Los 11 banners **medidos sobre el render real**: desborde, colisión, cuerpos de letra, contraste, elementos presentes y zona muerta. Corre con copy dentro de los límites y con copy que los excede. |
 | `insp` | El inspector: que corra sobre el tablero, que avise junto a la pieza, y que **detecte de verdad** una pieza rota a mano. |
+| `panel` | El **editor de banners**: cuántos controles hay que atravesar al abrir (la queja fue "es tremendamente complejo"), que escribir en un campo se vea en el banner, que la oferta encienda el círculo sola y que el legal —que antes no tenía dónde escribirse— salga en su banda. |
+| `alcance` | El **alcance del manual (§01)**: que las superficies de creación ofrezcan solo las tres plataformas de pago, que ninguna abra un lienzo vacío, y que quitar el email NO haya roto las piezas de email ya guardadas. Además las páginas del §05 (en curso · realizados · historial) y la zona horaria. |
 | `iaq` | Los límites de caracteres que se le pasan a la IA, la exclusión de logos por carpeta, el encogido antes de partir una palabra y los avisos en pantalla. |
 | `asis` | El asistente en una sola ventana: todos los campos a la vista, Limpiar y Generar en su sitio. |
 | `xls` | La planilla de Google Ads es un XLSX válido (se descomprime y se revisan sus partes) con una hoja por tipo y la columna de posición de los anclados. |

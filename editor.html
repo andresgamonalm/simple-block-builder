@@ -1040,6 +1040,73 @@ button,input,select,textarea{font-family:inherit;}
 .cmp-ed .cmp-alin button.on{background:var(--primary);color:#fff;}
 .cmp-ed .cmp-alin svg{width:15px;height:15px;}
 .cmp-ed .cmp-sw-row{display:flex;flex-wrap:wrap;gap:4px;flex:1;}
+/* ── PANEL SIMPLE del banner ──────────────────────────────────────────────
+   El panel anterior ponia ~35 controles en una sola columna, y para dejar un
+   banner listo hay que tocar seis. Aqui cada campo lleva su nombre encima y
+   ocupa el ancho completo; el resto vive en "Ajustes avanzados", cerrado. */
+.se-grupo{margin:0 0 6px;padding:0;border:none;}
+.se-h{display:flex;align-items:center;gap:8px;margin:18px 2px 10px;font-size:13px;font-weight:600;color:var(--navy,#040764);}
+.se-h .se-n{display:inline-flex;align-items:center;justify-content:center;width:19px;height:19px;border-radius:50%;background:var(--navy,#040764);color:#fff;font-size:11px;font-weight:600;flex-shrink:0;}
+.se-h:first-child{margin-top:2px;}
+.se-f{margin-bottom:11px;}
+.se-f > label{display:block;font-size:12px;font-weight:500;color:var(--ink2,#3a4056);margin:0 0 4px;}
+.se-f > label small{font-weight:400;color:var(--ink3,#8890a8);}
+.se-f input[type=text],.se-f textarea{width:100%;font-family:var(--f);font-size:13.5px;color:var(--ink,#12173d);border:1px solid #dfe4f2;border-radius:9px;padding:9px 11px;background:#fff;outline:none;transition:border-color .13s;}
+.se-f input[type=text]:focus,.se-f textarea:focus{border-color:var(--blue,#1C73CB);}
+.se-f textarea{min-height:52px;resize:vertical;line-height:1.45;}
+.se-f.se-2{display:flex;gap:7px;align-items:flex-end;}
+.se-f.se-2 > div{flex:1;min-width:0;}
+.se-nota{margin:-6px 2px 12px;font-size:11.5px;line-height:1.5;color:var(--ink3,#8890a8);}
+.se-fotos{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-bottom:9px;}
+.se-fotos button{position:relative;height:46px;padding:0;border:1px solid #dfe4f2;border-radius:8px;overflow:hidden;cursor:pointer;background:#f3f4f8;}
+.se-fotos button:hover{border-color:var(--blue,#1C73CB);}
+.se-fotos button.on{border-color:var(--navy,#040764);box-shadow:0 0 0 2px rgba(4,7,100,.18);}
+.se-fotos button img{width:100%;height:100%;object-fit:cover;display:block;}
+.se-fotos button.se-nofoto{display:flex;align-items:center;justify-content:center;font-family:var(--f);font-size:11px;font-weight:500;color:var(--ink2,#3a4056);background:#fff;line-height:1.2;text-align:center;}
+.se-acc{display:flex;gap:7px;margin-bottom:4px;}
+.se-acc button{flex:1;display:inline-flex;align-items:center;justify-content:center;gap:6px;height:36px;border:1px solid #cfd6e4;border-radius:9px;background:#fff;font-family:var(--f);font-size:12.5px;font-weight:500;color:var(--ink2,#3a4056);cursor:pointer;}
+.se-acc button:hover{border-color:var(--blue,#1C73CB);color:var(--navy,#040764);}
+.se-acc button.se-ia{border-color:#E5AACB;color:#A8206E;}
+.se-col{display:flex;align-items:center;gap:8px;margin-bottom:9px;}
+.se-col > label{font-size:12px;font-weight:500;color:var(--ink2,#3a4056);min-width:62px;flex-shrink:0;}
+.se-col input[type=color]{width:32px;height:30px;border:1px solid #dfe4f2;border-radius:7px;background:#fff;cursor:pointer;padding:0;flex-shrink:0;}
+.se-col .se-sw{display:flex;flex-wrap:wrap;gap:4px;flex:1;min-width:0;}
+.se-col .cmp-sw{width:20px;height:20px;border:1px solid rgba(0,0,0,.14);border-radius:5px;padding:0;cursor:pointer;}
+.se-avz{margin:20px 0 4px;border-top:1px solid #e4e8f0;padding-top:6px;}
+.se-avz > summary{list-style:none;cursor:pointer;display:flex;align-items:center;gap:7px;padding:9px 2px;font-size:12.5px;font-weight:500;color:var(--ink3,#5b6178);}
+.se-avz > summary::-webkit-details-marker{display:none;}
+.se-avz > summary::before{content:"";width:0;height:0;border-left:5px solid currentColor;border-top:4px solid transparent;border-bottom:4px solid transparent;transition:transform .14s;}
+.se-avz[open] > summary::before{transform:rotate(90deg) translateX(1px);}
+.se-avz > summary:hover{color:var(--navy,#040764);}
+.se-vacio{margin:2px 2px 10px;padding:10px 12px;background:#FFF8E1;border-radius:8px;font-size:12px;line-height:1.5;color:#6b5300;}
+.se-toggles{display:flex;flex-direction:column;gap:6px;}
+.se-toggles button{display:flex;align-items:center;gap:9px;height:38px;padding:0 11px;border:1px solid #dfe4f2;border-radius:9px;background:#fff;font-family:var(--f);font-size:13px;font-weight:500;color:var(--ink,#12173d);cursor:pointer;text-align:left;}
+.se-toggles button .se-tp{margin-left:auto;font-size:11.5px;font-weight:500;color:#0D7332;}
+.se-toggles button.off{color:var(--ink3,#8890a8);}
+.se-toggles button.off .se-tp{color:#8890a8;}
+/* ── Paginas En curso / Realizados / Historial (§05 del manual) ────────── */
+.cm-card{background:#fff;border:1px solid #e4e8f0;border-radius:10px;padding:15px 17px;margin-bottom:11px;}
+.cm-card.cerrada{background:#fbfcfe;}
+.cm-h{display:flex;align-items:flex-start;justify-content:space-between;gap:14px;}
+.cm-t{font-size:16px;font-weight:600;color:var(--ink,#12173d);line-height:1.3;}
+.cm-sello{display:inline-block;vertical-align:2px;margin-left:5px;padding:2px 7px;border-radius:5px;background:#C2F0D3;color:#0D7332;font-size:10.5px;font-weight:600;text-transform:uppercase;letter-spacing:.04em;}
+.cm-acc{display:flex;gap:7px;flex-shrink:0;}
+.cm-meta{margin:5px 0 0;font-size:12.5px;color:var(--ink3,#8890a8);}
+.cm-pzs{display:flex;flex-wrap:wrap;gap:7px;margin-top:11px;}
+.cm-pz{display:inline-flex;align-items:center;gap:7px;max-width:280px;padding:6px 10px;border:1px solid #dfe4f2;border-radius:8px;background:#fff;font-family:var(--f);font-size:12.5px;color:var(--ink,#12173d);cursor:pointer;}
+.cm-pz:hover{border-color:var(--blue,#1C73CB);}
+.cm-pz span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.cm-vacio{font-size:12.5px;color:var(--ink3,#8890a8);}
+.hi-h{font-size:14px;font-weight:600;color:var(--ink,#12173d);margin:0 0 12px;display:flex;align-items:baseline;gap:9px;}
+.hi-h small{font-size:12px;font-weight:400;color:var(--ink3,#8890a8);}
+.hi-p{font-size:13px;line-height:1.6;color:var(--ink2,#3a4056);margin:0;}
+.hi-tabla{overflow-x:auto;}
+.hi-tabla table{width:100%;border-collapse:collapse;font-size:13px;}
+.hi-tabla th{text-align:left;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;color:var(--ink3,#8890a8);padding:0 12px 8px 0;border-bottom:1px solid #e4e8f0;white-space:nowrap;}
+.hi-tabla td{padding:10px 12px 10px 0;border-bottom:1px solid #f0f2f7;color:var(--ink,#12173d);vertical-align:middle;}
+.hi-tabla td.hi-num{color:var(--ink2,#3a4056);white-space:nowrap;font-variant-numeric:tabular-nums;}
+.hi-lnk{border:none;background:none;padding:0;font-family:var(--f);font-size:13px;font-weight:500;color:var(--navy,#040764);cursor:pointer;text-align:left;}
+.hi-lnk:hover{color:var(--blue,#1C73CB);text-decoration:underline;}
 .cmp-ed .cmp-sw{width:18px;height:18px;border-radius:4px;border:1px solid rgba(0,0,0,.15);cursor:pointer;padding:0;}
 .cmp-ed .cmp-sw-vacio{font-size:12px;color:var(--ink3);font-style:italic;}
 .cmp-ed .cmp-hex{width:78px;font-family:Menlo,Consolas,monospace;font-size:12px;border:1px solid var(--bdr);border-radius:6px;padding:6px 7px;background:#fff;text-transform:uppercase;color:var(--ink);}
@@ -2061,10 +2128,10 @@ button,input,select,textarea{font-family:inherit;}
         <button type="button" data-e="marca" class="on" onclick="iaSetEstilo('marca')">Estilo de la marca<small>Diagramaciones y colores del manual</small></button>
         <button type="button" data-e="libre" onclick="iaSetEstilo('libre')">Estilo libre<small>Sistema abierto, paleta de la marca</small></button>
       </div>
-      <label class="ia-label">¿Qué piezas necesita tu campaña? <small>(marca una o varias)</small></label>
+      <label class="ia-label">¿En qué plataformas? <small>(marca una o varias)</small></label>
       <div class="ia-seg" id="ia-piezas-seg">
-        <button type="button" data-p="email" class="on" onclick="iaTogglePieza('email')"><span class="ia-pic email"><span class="ico" data-ic="email"></span></span> Email</button>
-        <button type="button" data-p="banner" onclick="iaTogglePieza('banner')"><span class="ia-pic display"><span class="ico" data-ic="grid"></span></span> Banner Display</button>
+        <button type="button" data-p="banner" class="on" onclick="iaTogglePieza('banner')"><span class="ia-pic display"><span class="ico" data-ic="grid"></span></span> Google Display</button>
+        <button type="button" data-p="facebook" onclick="iaTogglePieza('facebook')"><span class="ia-pic display"><span class="ico" data-ic="imagen"></span></span> Facebook Ads</button>
         <button type="button" data-p="ads" onclick="iaTogglePieza('ads')"><span class="ia-pic ads"><span class="ico" data-ic="buscar"></span></span> Google Search</button>
       </div>
       <p id="ia-piezas-hint" style="font-size:12px;color:#8890a8;margin:6px 0 0;">Con 2 o más piezas, Char-B define primero <b>un concepto de campaña</b> y todas siguen la misma idea.</p>
@@ -2157,9 +2224,11 @@ button,input,select,textarea{font-family:inherit;}
     </button>
     <nav class="cnav-links" id="cnav-links">
       <button class="cnav-link" data-view="home" onclick="dashIr('home')">Inicio</button>
-      <button class="cnav-link" data-view="proyectos" onclick="dashIr('proyectos')">Proyectos</button>
+      <button class="cnav-link" data-view="en-curso" onclick="dashIr('en-curso')">En curso</button>
+      <button class="cnav-link" data-view="realizados" onclick="dashIr('realizados')">Realizados</button>
+      <button class="cnav-link" data-view="proyectos" onclick="dashIr('proyectos')">Todos</button>
       <button class="cnav-link" data-view="marcas" onclick="dashIr('marcas')">Marcas</button>
-      <button class="cnav-link" data-view="imagenes" onclick="dashIr('imagenes')">Imágenes</button>
+      <button class="cnav-link" data-view="imagenes" onclick="dashIr('imagenes')">Fotos</button>
     </nav>
     <div class="cnav-right">
       <button class="cnav-ico" onclick="dashBuscar()" title="Buscar creatividades"><span class="ico" data-ic="buscar" data-icsize="18px"></span></button>
@@ -2167,10 +2236,10 @@ button,input,select,textarea{font-family:inherit;}
       <div class="cnav-drop">
         <button class="cnav-nueva" onclick="toggleMenuNav('menu-nueva',event)"><span class="ico" data-ic="mas" data-icsize="15px"></span><span>Nueva</span></button>
         <div class="cnav-menu" id="menu-nueva">
-          <button data-serv="email" onclick="irARuta('/email-ia')"><span class="ico" data-ic="email" data-icsize="15px"></span> Email</button>
-          <button data-serv="banner" onclick="irARuta('/gdn-ia')"><span class="ico" data-ic="grid" data-icsize="15px"></span> Banner Display</button>
-          <button data-serv="libre" onclick="irARuta('/free')"><span class="ico" data-ic="documento" data-icsize="15px"></span> Formato libre</button>
-          <button data-serv="ads" onclick="irARuta('/ads-ia')"><span class="ico" data-ic="buscar" data-icsize="15px"></span> Google Search Ads</button>
+          <button data-serv="banner" onclick="crearConIA('banner')"><span class="ico" data-ic="grid" data-icsize="15px"></span> Google Display</button>
+          <button data-serv="banner" onclick="crearConIA('facebook')"><span class="ico" data-ic="imagen" data-icsize="15px"></span> Facebook Ads</button>
+          <button data-serv="ads" onclick="crearConIA('ads')"><span class="ico" data-ic="buscar" data-icsize="15px"></span> Google Search</button>
+          <button data-serv="banner" onclick="crearConIA('todas')"><span class="ico" data-ic="estrella" data-icsize="15px"></span> Campaña completa</button>
           <div class="cnav-menu-sep"></div>
           <button onclick="crearProyecto()"><span class="ico" data-ic="biblioteca" data-icsize="15px"></span> Nuevo proyecto</button>
         </div>
@@ -2179,6 +2248,7 @@ button,input,select,textarea{font-family:inherit;}
         <button class="cnav-av" id="dash-av" onclick="toggleMenuNav('menu-cuenta',event)" title="Cuenta">·</button>
         <div class="cnav-menu der" id="menu-cuenta">
           <div class="cnav-menu-head"><div class="n" id="cuenta-rol">Cuenta</div><div class="s" id="dash-email">—</div></div>
+          <button onclick="dashIr('historial')">Historial de trabajos</button>
           <button id="menu-perm-item" onclick="dashIr('permisos')">Permisos</button>
           <button id="menu-config-item" onclick="dashIr('configuracion')">Configuración</button>
           <button onclick="dashIr('papelera')">Papelera <span class="nav-badge" id="nav-pap-badge"></span></button>
@@ -2210,31 +2280,26 @@ button,input,select,textarea{font-family:inherit;}
 
         <!-- ¿Qué vas a crear? -->
         <section class="crear-sec">
-          <div class="crear-head"><h2>¿Qué vas a crear?</h2><a class="crear-ver" onclick="dashIr('proyectos')">Ver plantillas →</a></div>
+          <div class="crear-head"><h2>¿Qué vas a crear?</h2><a class="crear-ver" onclick="dashIr('en-curso')">Proyectos en curso →</a></div>
           <div class="crear-cards">
-            <button class="crc" data-serv="email" onclick="crearTrabajoHome('email','/email-ia')">
-              <span class="crc-ic email"><span class="ico" data-ic="email" data-icsize="20px"></span></span>
-              <div class="crc-t">Email</div><div class="crc-d">Newsletters y correos por bloques.</div>
-              <div class="crc-cta">Crear <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M5 12h14M13 6l6 6-6 6"/></svg></div>
-            </button>
-            <button class="crc" data-serv="banner" onclick="crearTrabajoHome('display-300x250','/gdn-ia')">
+            <button class="crc" data-serv="banner" onclick="crearConIA('banner')">
               <span class="crc-ic display"><span class="ico" data-ic="grid" data-icsize="20px"></span></span>
-              <div class="crc-t">Banner Display</div><div class="crc-d">Colección de tamaños para Google Ads.</div>
+              <div class="crc-t">Google Display</div><div class="crc-d">Los 11 tamaños de banner, de una vez.</div>
               <div class="crc-cta">Crear <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M5 12h14M13 6l6 6-6 6"/></svg></div>
             </button>
-            <button class="crc" data-serv="banner" onclick="crearTrabajoHome('fb-1080x1350','/fb-ia')">
+            <button class="crc" data-serv="banner" onclick="crearConIA('facebook')">
               <span class="crc-ic display"><span class="ico" data-ic="imagen" data-icsize="20px"></span></span>
-              <div class="crc-t">Facebook Ads</div><div class="crc-d">Feed vertical, cuadrado y horizontal.</div>
+              <div class="crc-t">Facebook Ads</div><div class="crc-d">Imagen y los textos del anuncio.</div>
               <div class="crc-cta">Crear <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M5 12h14M13 6l6 6-6 6"/></svg></div>
             </button>
-            <button class="crc" data-serv="ads" onclick="crearTrabajoHome('ads','/ads-ia')">
+            <button class="crc" data-serv="ads" onclick="crearConIA('ads')">
               <span class="crc-ic ads"><span class="ico" data-ic="buscar" data-icsize="20px"></span></span>
-              <div class="crc-t">Google Search</div><div class="crc-d">Keywords y anuncios listos para exportar.</div>
+              <div class="crc-t">Google Search</div><div class="crc-d">Grupos, keywords y anuncios RSA.</div>
               <div class="crc-cta">Crear <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M5 12h14M13 6l6 6-6 6"/></svg></div>
             </button>
-            <button class="crc" data-serv="libre" onclick="crearTrabajoHome('libre','/free')">
-              <span class="crc-ic libre"><span class="ico" data-ic="editar" data-icsize="20px"></span></span>
-              <div class="crc-t">Formato libre</div><div class="crc-d">Lienzo abierto con todos los bloques.</div>
+            <button class="crc crc-todas" data-serv="banner" onclick="crearConIA('todas')">
+              <span class="crc-ic libre"><span class="ico" data-ic="estrella" data-icsize="20px"></span></span>
+              <div class="crc-t">Campaña completa</div><div class="crc-d">Las tres plataformas con una sola idea.</div>
               <div class="crc-cta">Crear <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M5 12h14M13 6l6 6-6 6"/></svg></div>
             </button>
           </div>
@@ -2264,13 +2329,39 @@ button,input,select,textarea{font-family:inherit;}
         </div>
         <div class="py-filtros">
           <button class="pillf on" data-f="todas" onclick="filtrarProy('todas')">Todos</button>
-          <button class="pillf" data-f="Email" onclick="filtrarProy('Email')">Email</button>
           <button class="pillf" data-f="Banners" onclick="filtrarProy('Banners')">Display</button>
+          <button class="pillf" data-f="Facebook" onclick="filtrarProy('Facebook')">Facebook</button>
           <button class="pillf" data-f="Ads" onclick="filtrarProy('Ads')">Search</button>
-          <button class="pillf" data-f="Formato Libre" onclick="filtrarProy('Formato Libre')">Libre</button>
           <input class="py-buscar" id="py-buscar" placeholder="Buscar…" oninput="buscaProy=this.value;renderProyectosPage()">
         </div>
         <div id="py-lista"></div>
+      </div>
+
+      <!-- ── Página: Proyectos en curso (§05 del manual) ── -->
+      <div class="dash-page" id="pg-encurso" style="display:none">
+        <div class="pgh">
+          <div><h1>Proyectos en curso</h1><p class="pgh-sub" id="ec-sub">Campañas abiertas · entra al editor y sigue trabajando</p></div>
+          <div class="pgh-acc">
+            <button class="btn-pri" onclick="crearConIA('todas')"><span class="ico" data-ic="estrella" data-icsize="15px"></span> Nueva campaña</button>
+          </div>
+        </div>
+        <div id="ec-lista"></div>
+      </div>
+
+      <!-- ── Página: Proyectos realizados (§05) ── -->
+      <div class="dash-page" id="pg-realizados" style="display:none">
+        <div class="pgh">
+          <div><h1>Proyectos realizados</h1><p class="pgh-sub" id="rz-sub">Campañas cerradas · se abren en solo lectura y se pueden reabrir</p></div>
+        </div>
+        <div id="rz-lista"></div>
+      </div>
+
+      <!-- ── Página: Historial de trabajos (§05) ── -->
+      <div class="dash-page" id="pg-historial" style="display:none">
+        <div class="pgh">
+          <div><h1>Historial de trabajos</h1><p class="pgh-sub">Hora de creación · accesos de los usuarios · uso del asistente</p></div>
+        </div>
+        <div id="hi-cont"></div>
       </div>
 
       <!-- ── Página: Marcas (el contenido vive en #marcas-cont y se monta aquí o en el modal) ── -->
@@ -2327,10 +2418,10 @@ button,input,select,textarea{font-family:inherit;}
     <button data-view="configuracion" onclick="dashIr('configuracion')" title="Cuenta"><span class="ico" data-ic="usuario" data-icsize="20px"></span></button>
   </nav>
   <div class="cnav-menu movil" id="menu-nueva-m">
-    <button data-serv="email" onclick="irARuta('/email-ia')"><span class="ico" data-ic="email" data-icsize="15px"></span> Email</button>
-    <button data-serv="banner" onclick="irARuta('/gdn-ia')"><span class="ico" data-ic="grid" data-icsize="15px"></span> Banner Display</button>
-    <button data-serv="libre" onclick="irARuta('/free')"><span class="ico" data-ic="documento" data-icsize="15px"></span> Formato libre</button>
-    <button data-serv="ads" onclick="irARuta('/ads-ia')"><span class="ico" data-ic="buscar" data-icsize="15px"></span> Google Search Ads</button>
+    <button data-serv="banner" onclick="crearConIA('banner')"><span class="ico" data-ic="grid" data-icsize="15px"></span> Google Display</button>
+    <button data-serv="banner" onclick="crearConIA('facebook')"><span class="ico" data-ic="imagen" data-icsize="15px"></span> Facebook Ads</button>
+    <button data-serv="ads" onclick="crearConIA('ads')"><span class="ico" data-ic="buscar" data-icsize="15px"></span> Google Search</button>
+    <button data-serv="banner" onclick="crearConIA('todas')"><span class="ico" data-ic="estrella" data-icsize="15px"></span> Campaña completa</button>
     <div class="cnav-menu-sep"></div>
     <button onclick="crearProyecto()"><span class="ico" data-ic="biblioteca" data-icsize="15px"></span> Nuevo proyecto</button>
   </div>
@@ -4153,7 +4244,9 @@ function cambiarMargen(side, valor){ const p = pieza(); if(!p) return; if(!p.tem
 function paddingPaginaCSS(t){ const m=(t&&t.margen)||{}; const T=parseInt(m.t)||0,Rr=parseInt(m.r)||0,B=parseInt(m.b)||0,L=parseInt(m.l)||0; return (T||Rr||B||L) ? `padding:${T}px ${Rr}px ${B}px ${L}px;` : ""; }
 
 function crearPieza(formato, nombre){
-  const p = { id:uid(), nombre: nombre || `Pieza ${proyecto.piezas.length+1}`, campana:"General", formato: formato||"email", canvas:[], tema: { font:"Inter", primary:"#1c73cb", text:"#1a1a1a", bg:"#ffffff", bgPagina:"", ancho:"", radio:"", gap:"0" } };
+  // _creado: hora de creación del trabajo. El manual (§05) la pide en el
+  // historial, y antes solo existía la del proyecto entero.
+  const p = { id:uid(), nombre: nombre || `Pieza ${proyecto.piezas.length+1}`, campana:"General", formato: formato||"email", canvas:[], _creado: Date.now(), tema: { font:"Inter", primary:"#1c73cb", text:"#1a1a1a", bg:"#ffffff", bgPagina:"", ancho:"", radio:"", gap:"0" } };
   proyecto.piezas.push(p);
   proyecto.activa = p.id;
   return p;
@@ -4222,12 +4315,14 @@ function renderPestanasPiezas(){
 function menuNuevaPestana(ev){
   if(ev) ev.stopPropagation();
   document.querySelectorAll(".pz-menu").forEach(m=>m.remove());
-  const tipos = [["email","Email","email"],["display-300x250","Banner Display","banner"],
-                 ["ads","Google Search","ads"],["libre","Formato libre","libre"]]
-                 .filter(t=>puede(t[2]));
+  // Las tres plataformas del alcance. Con una sola marcada, la generación cae en
+  // ESTE proyecto (no crea otro), así que el "+" agrega una plataforma a la
+  // misma campaña — y nace generada, no vacía.
+  const tipos = [["banner","display-300x250","Google Display"],["facebook","fb-1080x1350","Facebook Ads"],
+                 ["ads","ads","Google Search"]].filter(t=>puedePlat(t[0]));
   const m = document.createElement("div");
   m.className = "pz-menu";
-  m.innerHTML = tipos.map(t=>`<button onclick="nuevaPestana('${t[0]}')">${chipDe(categoriaDe(t[0]))}<span>${t[1]}</span></button>`).join("");
+  m.innerHTML = tipos.map(t=>`<button onclick="crearConIA('${t[0]}')">${chipDe(categoriaDe(t[1]))}<span>${t[2]}</span></button>`).join("");
   const b = ev && ev.currentTarget;
   const r = b ? b.getBoundingClientRect() : {left:20,bottom:120};
   m.style.left = Math.round(r.left)+"px"; m.style.top = Math.round(r.bottom+4)+"px";
@@ -6880,6 +6975,110 @@ function selectorLayout(C, RE){
       Object.keys(LAYOUTS_MARCA).map(k=>opt(k,LAYOUTS_MARCA[k].nombre,LAYOUTS_MARCA[k].sub)).join("")}</div>
     <div class="lay-hint">${act?esc(LAYOUTS_MARCA[act].sub):"Disposición libre: puedes mover los divisores de cada zona."}</div>`;
 }
+// ── PANEL SIMPLE del banner ─────────────────────────────────────────────
+// Para dejar un banner listo hay que llenar seis cosas: el titular, la bajada,
+// el botón, la oferta, el legal y la foto. El panel de antes las tenía repartidas
+// entre 35 controles (tamaños, alineaciones, proporciones, fondos por zona,
+// márgenes de cuatro lados) en una sola columna sin jerarquía, y encontrarlas
+// era el trabajo. Este panel muestra SOLO eso, con el nombre encima de cada
+// campo, y manda el resto a "Ajustes avanzados", cerrado.
+//
+// No hay un segundo modelo de datos: escribe por los MISMOS mutadores
+// (setComp / setCompOv) y respeta el alcance (global o un tamaño). El panel
+// avanzado sigue existiendo entero, así que nada de lo que ya funcionaba se
+// perdió — solo dejó de estar en primer plano.
+function compEditorSimple(p, fmt, ctx){
+  const esMaster = !!fmt && fmt === (p.masterFmt||"display-300x250");
+  const isOv = !!fmt && !esMaster;
+  const C = isOv ? composicionEfectiva(p,fmt) : (p.composicion||composicionDefault(p.tema));
+  const RE = (ctx==='form') ? "renderForm()" : "renderComposicionEditor()";
+  const F = fmt ? FORMATOS[fmt] : null;
+  const S  = (path,expr)=> isOv ? `setCompOv('${fmt}','${path}',${expr})` : `setComp('${path}',${expr})`;
+  const val = (path)=> escAttr(getPath(C,path)||"");
+  const hex = (path)=>`<input type="text" class="cmp-hex" placeholder="#hex" value="${val(path)}" onchange="${S(path,'this.value')};${RE}" style="width:74px;font-family:var(--f);font-size:11.5px;border:1px solid #dfe4f2;border-radius:7px;padding:6px 7px;text-align:center;">`;
+  const colorFila = (etq,path,def)=>`<div class="se-col"><label>${esc(etq)}</label><input type="color" value="${esc(getPath(C,path)||def)}" oninput="${S(path,'this.value')}"><div class="se-sw">${swatchesColor(path, isOv?fmt:null)}</div>${hex(path)}</div>`;
+  const campo = (etq,path,ph,extra)=>`<div class="se-f"><label>${etq}</label><input type="text" placeholder="${escAttr(ph)}" value="${val(path)}" oninput="${S(path,'this.value')}${extra||''}"></div>`;
+
+  // ── Un tamaño concreto: aquí NO se rediseña, se ajusta. Lo único que se
+  //    necesita casi siempre es esconder algo que no cabe en ese formato.
+  if(isOv){
+    const zonas = [["logo","Logo"],["texto","Textos"],["cta","Botón"]];
+    const tg = (path,nom,extra)=>{
+      const off = extra ? getPath(C,path)!==true : getPath(C,path)===false;
+      const click = extra
+        ? `toggleExtraComp('${path}','${fmt}')`
+        : `toggleCompVisOv('${fmt}','${path}')`;
+      return `<button type="button" class="${off?'off':''}" onclick="${click}">${esc(nom)}<span class="se-tp">${off?"Oculto":"Se ve"}</span></button>`;
+    };
+    let h = `<div class="se-h">${svgIcon("ojo",{size:"15px"})} ¿Qué se ve en ${F?F.ancho+"×"+F.alto:"este tamaño"}?</div>`;
+    h += `<p class="se-nota">Este tamaño toma todo del diseño general. Apaga aquí lo que no le calce, sin tocar los demás.</p>`;
+    h += `<div class="se-toggles">${zonas.map(([k,n])=>tg('zonas.'+k+'.visible',n)).join("")}`
+       + tg('burbuja.visible','Círculo de oferta',true)
+       + tg('deco.visible','Adornos',true) + `</div>`;
+    h += `<details class="se-avz"><summary>Ajustes avanzados de este tamaño (textos propios, colores, posiciones)</summary><div>${compEditorHTML(p,fmt,ctx)}</div></details>`;
+    return h;
+  }
+
+  // ── Diseño general (lo que heredan los 11 tamaños) ─────────────────────
+  let h = "";
+  // 1 · TEXTOS. En el orden en que aparecen en el banco, de arriba abajo.
+  h += `<div class="se-h"><span class="se-n">1</span> Textos</div>`;
+  h += campo(`Epígrafe <small>· la píldora chica sobre el título</small>`,'zonas.texto.etiqueta.texto',"Ej. Seguro Auto (opcional)");
+  h += campo(`Título <small>· el mensaje principal</small>`,'zonas.texto.titular.texto',"Protege lo que más quieres");
+  h += `<div class="se-f"><label>Bajada <small>· una frase de apoyo</small></label><textarea placeholder="Contrátalo en línea en 3 minutos" oninput="${S('zonas.texto.cuerpo.texto','this.value')}">${esc(getPath(C,'zonas.texto.cuerpo.texto')||'')}</textarea></div>`;
+  h += `<div class="se-f se-2"><div><label>Botón</label><input type="text" placeholder="Cotiza aquí" value="${val('zonas.cta.texto')}" oninput="${S('zonas.cta.texto','this.value')}"></div><div><label>Link del botón</label><input type="text" placeholder="https://…" value="${val('zonas.cta.url')}" onchange="${S('zonas.cta.url','this.value')}"></div></div>`;
+  // La oferta enciende el círculo sola: tener que escribir el texto Y además
+  // acordarse de un interruptor aparte era uno de los pasos que se perdían.
+  h += `<div class="se-f"><label>Oferta en círculo <small>· se enciende al escribirla</small></label><input type="text" placeholder="Ej. 60% dcto. · 2 cuotas gratis" value="${val('burbuja.texto')}" oninput="setCompOferta(this.value,null)"></div>`;
+  if(!tieneCifra(getPath(C,'burbuja.texto')||"")&&String(getPath(C,'burbuja.texto')||"").trim())
+    h += `<p class="se-nota">El círculo se muestra solo cuando la oferta trae una cifra («60%», «2 cuotas»). Sin número, el texto va en la bajada.</p>`;
+  // El legal se renderizaba en su banda inferior pero NO habia donde escribirlo.
+  h += campo(`Legal <small>· una línea, en la banda de abajo</small>`,'legal',"Ej. Sujeto a evaluación. Infórmate en zurich.cl");
+  // 2 · FOTO
+  const esFoto = (getPath(C,'fondo.tipo')||'color')==='imagen';
+  const urlAct = String(getPath(C,'fondo.imagen.url')||"");
+  const fotos = (workspace.imagenes||[]).filter(sirveComoFondo).slice(0,7);
+  h += `<div class="se-h"><span class="se-n">2</span> Foto de fondo</div>`;
+  h += `<div class="se-fotos"><button type="button" class="se-nofoto${esFoto?'':' on'}" onclick="setCompFoto('',null)" title="Fondo de color plano">Sin foto</button>`
+     + fotos.map(im=>`<button type="button" class="${esFoto&&im.url===urlAct?'on':''}" title="${escAttr(im.nombre||im.url)}" onclick="setCompFoto('${jsAttr(im.url)}',null)"><img src="${esc(im.url)}" alt=""></button>`).join("")
+     + `</div>`;
+  // Dos vacíos distintos: no tener fotos y tener solo logotipos. El segundo se
+  // explica, porque si no parece que la biblioteca esté rota.
+  if(!fotos.length){
+    const total = (workspace.imagenes||[]).length;
+    h += total
+      ? `<div class="se-vacio">En tu biblioteca hay ${total} imagen${total===1?"":"es"}, pero ninguna sirve de fondo: son logotipos o vectores. Un logo de fondo sale gigante y deformado — el logo va en su esquina. Sube una fotografía o pídele una a Char-B.</div>`
+      : `<div class="se-vacio">Tu biblioteca no tiene fotos todavía. Súbelas o pídele una a Char-B.</div>`;
+  }
+  h += `<div class="se-acc"><button type="button" onclick="elegirImagenPath('fondo.imagen.url',null)">${svgIcon("imagen",{size:"14px"})} Toda la biblioteca</button><button type="button" class="se-ia" onclick="generarFondoIA()">${svgIcon("estrella",{size:"14px"})} Generar con IA</button></div>`;
+  // 3 · COLORES. Los tres que se cambian de verdad; el resto, en avanzados.
+  h += `<div class="se-h"><span class="se-n">3</span> Colores</div>`;
+  h += colorFila("Fondo",'fondo.color','#0e2748');
+  h += colorFila("Botón",'zonas.cta.colorFondo','#2f80ed');
+  h += colorFila("Oferta",'burbuja.color','#d9e05f');
+  h += `<p class="se-nota">Los cuadraditos son la paleta de la marca aplicada. El texto se aclara u oscurece solo según el fondo.</p>`;
+  // 4 · LOGO: una sola decisión (cuál), no tres (url + alto + ancho máx).
+  h += `<div class="se-h"><span class="se-n">4</span> Logo</div>`;
+  h += `<div class="se-acc"><button type="button" onclick="usarLogoMarcaEnZona(null)">${svgIcon("paleta",{size:"14px"})} El de la marca</button><button type="button" onclick="elegirImagenPath('zonas.logo.url',null)">${svgIcon("imagen",{size:"14px"})} Elegir otro</button></div>`;
+  h += `<p class="se-nota">Va en todas las piezas y nunca se cae: si el fondo es oscuro se usa la versión clara, y su tamaño lo pone el formato.</p>`;
+  h += `<details class="se-avz"><summary>Ajustes avanzados (tipografía, tamaños, alineaciones, proporciones, márgenes, adornos)</summary><div>${compEditorHTML(p,fmt,ctx)}</div></details>`;
+  return h;
+}
+// La oferta y el círculo son una sola cosa para el usuario: al escribir se
+// enciende, al borrar se apaga. Antes eran dos pasos y el segundo se olvidaba.
+function setCompOferta(txt, fmt){
+  const t = String(txt||"");
+  if(fmt){ setCompOv(fmt,'burbuja.texto',t); setCompOv(fmt,'burbuja.visible', !!t.trim()); }
+  else   { setComp('burbuja.texto',t);       setComp('burbuja.visible', !!t.trim()); }
+}
+// "Sin foto" vuelve al fondo de color en vez de dejar una imagen vacía puesta.
+function setCompFoto(url, fmt){
+  const u = String(url||"");
+  const set = (p,v)=> fmt ? setCompOv(fmt,p,v) : setComp(p,v);
+  if(u){ set('fondo.imagen.url',u); set('fondo.tipo','imagen'); }
+  else { set('fondo.tipo','color'); }
+  if(fmt) renderForm(); else renderComposicionEditor();
+}
 function compEditorHTML(p, fmt, ctx){
   const esMaster = !!fmt && fmt === (p.masterFmt||"display-300x250");
   const isOv = !!fmt && !esMaster;
@@ -7012,7 +7211,7 @@ function renderComposicionEditor(){
     marcas.map(m=>`<option value="${m.id}" ${p.tema&&p.tema.marcaId===m.id?'selected':''}>${esc(m.nombre)}</option>`).join('')+
     `</select><button class="cmp-bib" onclick="abrirMarcas()" title="Gestionar marcas">${svgIcon("paleta",{size:"12px"})}</button></div>`;
   const C0 = p.composicion || composicionDefault(p.tema);
-  cont.innerHTML=`<div class="cmp-ed">${compScopeHeader(null)}${marcaSel}${panelFacebookHTML()}${selectorLayout(C0,"renderComposicionEditor();renderTablero()")}<div class="dz-sec">Contenido</div><button class="ia-sugerir" onclick="sugerirTextosIA()">${svgIcon("estrella",{size:"13px"})} Sugerir textos con Char-B</button><button class="ia-sugerir" onclick="generarFondoIA()">${svgIcon("imagen",{size:"13px"})} Generar fondo con IA</button>${compEditorHTML(p,null,'diseno')}</div>`;
+  cont.innerHTML=`<div class="cmp-ed">${compScopeHeader(null)}${marcaSel}${panelFacebookHTML()}${selectorLayout(C0,"renderComposicionEditor();renderTablero()")}<button class="ia-sugerir" onclick="sugerirTextosIA()">${svgIcon("estrella",{size:"13px"})} Sugerir textos con Char-B</button>${compEditorSimple(p,null,'diseno')}</div>`;
 }
 // Panel "Ajustar este tamaño" (overrides sobre el global) en la pestaña Editar.
 function renderFormTamaño(f){
@@ -7020,7 +7219,7 @@ function renderFormTamaño(f){
   if(!fmt||!F){ f.innerHTML=`<div class="form-empty"><div class="form-empty-ico">${svgIcon("editar",{size:"32px"})}</div>Haz clic en un banner del tablero<br>para ajustar ese tamaño</div>`; return; }
   const esMaster = fmt === (p.masterFmt||"display-300x250");
   const reset = esMaster ? "" : `<button class="set-aj-reset" onclick="resetTamaño('${fmt}')">${svgIcon("deshacer",{size:"12px"})} Restablecer este tamaño (volver al de todos)</button>`;
-  f.innerHTML=`<div class="cmp-ed">${compScopeHeader(fmt)}${compEditorHTML(p,fmt,'form')}${reset}</div>`;
+  f.innerHTML=`<div class="cmp-ed">${compScopeHeader(fmt)}${compEditorSimple(p,fmt,'form')}${reset}</div>`;
 }
 function cssComponentes(){
   const cssFull = (document.querySelector("style") && document.querySelector("style").textContent) || "";
@@ -7956,7 +8155,7 @@ function categoriaDe(formato){
 function proyectoPorId(id){ return workspace.proyectos.find(p => p.id === id); }
 
 /* ── Dashboard C "Portal": controlador de vistas (barra superior + páginas) ── */
-const DASH_VIEWS = { home:"pg-home", proyectos:"pg-proyectos", marcas:"pg-marcas", imagenes:"pg-imagenes", papelera:"pg-papelera", permisos:"pg-permisos", configuracion:"pg-config" };
+const DASH_VIEWS = { home:"pg-home", "en-curso":"pg-encurso", realizados:"pg-realizados", proyectos:"pg-proyectos", marcas:"pg-marcas", imagenes:"pg-imagenes", historial:"pg-historial", papelera:"pg-papelera", permisos:"pg-permisos", configuracion:"pg-config" };
 let dashView = "home";
 let filtroHome = "todas", filtroProy = "todas", buscaProy = "";
 
@@ -8027,6 +8226,9 @@ function renderGaleria(){
   Object.keys(DASH_VIEWS).forEach(v => { const el=document.getElementById(DASH_VIEWS[v]); if(el) el.style.display = (v===dashView) ? "" : "none"; });
   document.querySelectorAll(".cnav-link, .mtabs button[data-view]").forEach(b => b.classList.toggle("on", b.dataset.view===dashView));
   if(dashView==="home") renderHome();
+  else if(dashView==="en-curso") renderEnCurso();
+  else if(dashView==="realizados") renderRealizados();
+  else if(dashView==="historial") renderHistorial();
   else if(dashView==="proyectos") renderProyectosPage();
   else if(dashView==="marcas") montarMarcasEn("pagina");
   else if(dashView==="imagenes") montarImagenesEn("pagina");
@@ -8038,6 +8240,119 @@ function renderGaleria(){
 // Shims de compatibilidad con el render anterior.
 function renderProyectos(){ renderProyectosPage(); }
 function renderCreatividades(){ renderProyectosPage(); }
+
+// ── §05 · PROYECTOS EN CURSO / REALIZADOS ────────────────────────────────
+// Un proyecto es una campaña. "Realizado" = cerrado: lleva un sello `cerrado`
+// con la fecha y sale de la lista de los que están en curso. No se borra nada
+// y se reabre con un clic — cerrar es un estado, no una despedida. (Borrar
+// sigue siendo la papelera, que es otra cosa.)
+function esProyectoCerrado(pr){ return !!(pr && pr.cerrado); }
+function proyectosPorEstado(cerrados){
+  return (workspace.proyectos||[]).filter(pr => esProyectoCerrado(pr) === !!cerrados)
+    .sort((a,b)=>(b.cerrado||b.creado||0)-(a.cerrado||a.creado||0));
+}
+function cerrarProyecto(id){
+  const pr=(workspace.proyectos||[]).find(x=>x.id===id); if(!pr) return;
+  pr.cerrado = Date.now(); persistir(); renderGaleria();
+  toast(`«${pr.nombre}» pasó a realizados`);
+}
+function reabrirProyecto(id){
+  const pr=(workspace.proyectos||[]).find(x=>x.id===id); if(!pr) return;
+  delete pr.cerrado; persistir(); renderGaleria();
+  toast(`«${pr.nombre}» volvió a los proyectos en curso`);
+}
+// Tarjeta de campaña, igual en las dos páginas: qué contiene, cuándo se creó,
+// cuándo se tocó por última vez y qué se puede hacer con ella.
+function tarjetaCampanaHTML(pr, cerrado){
+  const piezas = pr.piezas||[];
+  const ultimo = piezas.reduce((m,p)=>Math.max(m, p._mod||0), 0) || pr.creado || 0;
+  const chips = piezas.length
+    ? piezas.map(p=>`<button class="cm-pz" onclick="abrirPiezaDesdeDash('${pr.id}','${p.id}')" title="${escAttr(p.nombre||"")}">${chipDe(categoriaDe(p.formato))}<span>${esc(p.nombre||"Pieza")}</span></button>`).join("")
+    : `<span class="cm-vacio">Sin piezas todavía</span>`;
+  const acc = cerrado
+    ? `<button class="btn-sec" onclick="reabrirProyecto('${pr.id}')"><span class="ico" data-ic="deshacer" data-icsize="14px"></span> Reabrir</button>`
+    : `<button class="btn-sec" onclick="cerrarProyecto('${pr.id}')"><span class="ico" data-ic="check" data-icsize="14px"></span> Marcar realizado</button>`;
+  return `<div class="cm-card${cerrado?" cerrada":""}">
+    <div class="cm-h">
+      <div class="cm-t">${esc(pr.nombre||"Proyecto")}${cerrado?` <span class="cm-sello">Realizada</span>`:""}</div>
+      <div class="cm-acc">${acc}</div>
+    </div>
+    <div class="cm-meta">${piezas.length} pieza${piezas.length===1?"":"s"} · creada ${pr.creado?fechaHora(pr.creado):"—"}${ultimo?` · última edición ${tiempoRel(ultimo)}`:""}</div>
+    <div class="cm-pzs">${chips}</div>
+  </div>`;
+}
+function renderEnCurso(){
+  const c=document.getElementById("ec-lista"); if(!c) return;
+  const prs=proyectosPorEstado(false);
+  const sub=document.getElementById("ec-sub");
+  if(sub) sub.textContent = prs.length ? `${prs.length} campaña${prs.length===1?"":"s"} abierta${prs.length===1?"":"s"} · entra al editor y sigue trabajando` : "Campañas abiertas · entra al editor y sigue trabajando";
+  c.innerHTML = prs.length ? prs.map(pr=>tarjetaCampanaHTML(pr,false)).join("")
+    : `<div class="hg-vacio">No tienes campañas abiertas.<br>Crea una con Char-B y todas sus piezas quedan en el mismo proyecto.</div>`;
+  pintarIconos();
+}
+function renderRealizados(){
+  const c=document.getElementById("rz-lista"); if(!c) return;
+  const prs=proyectosPorEstado(true);
+  const sub=document.getElementById("rz-sub");
+  if(sub) sub.textContent = prs.length ? `${prs.length} campaña${prs.length===1?"":"s"} cerrada${prs.length===1?"":"s"} · se pueden reabrir cuando quieras` : "Campañas cerradas · se abren en solo lectura y se pueden reabrir";
+  c.innerHTML = prs.length ? prs.map(pr=>tarjetaCampanaHTML(pr,true)).join("")
+    : `<div class="hg-vacio">Todavía no has cerrado ninguna campaña.<br>Cuando termines una, márcala como realizada en «En curso».</div>`;
+  pintarIconos();
+}
+// Toda hora que se muestre pasa por aquí, con la zona elegida en Configuración.
+function fechaHora(ts){
+  if(!ts) return "—";
+  try{ return new Date(ts).toLocaleString("es-CL",{day:"2-digit",month:"short",year:"numeric",hour:"2-digit",minute:"2-digit",timeZone:tzActiva()}); }
+  catch(_){ try{ return new Date(ts).toLocaleString("es-CL"); }catch(__){ return "—"; } }
+}
+// ── §05 · HISTORIAL DE TRABAJOS ──────────────────────────────────────────
+// El manual pide tres cosas: hora de creación, usuarios conectados con fecha y
+// hora, y datos de uso. Las tres se muestran con datos REALES: los trabajos
+// salen del workspace; los accesos y el uso del asistente los lleva el servidor
+// (tabla `accesos` y `ia_uso` en D1) y llegan por /api/whoami — solo al
+// administrador, que es quien ve el historial completo (§03).
+function renderHistorial(){
+  const c=document.getElementById("hi-cont"); if(!c) return;
+  const u = window.SBB_USER || {};
+  const trabajos = todasLasPiezas()
+    .map(({pr,p}) => ({ pr, p, creado: p._creado || pr.creado || 0, mod: p._mod || 0 }))
+    .sort((a,b)=>(b.mod||b.creado)-(a.mod||a.creado));
+  const filas = trabajos.slice(0,60).map(({pr,p,creado,mod}) => `<tr>
+      <td><button class="hi-lnk" onclick="abrirPiezaDesdeDash('${pr.id}','${p.id}')">${esc(p.nombre||"Pieza")}</button></td>
+      <td>${chipDe(categoriaDe(p.formato))}</td>
+      <td>${esc(pr.nombre||"—")}${esProyectoCerrado(pr)?' <span class="cm-sello">Realizada</span>':''}</td>
+      <td class="hi-num">${fechaHora(creado)}</td>
+      <td class="hi-num">${mod?fechaHora(mod):"—"}</td>
+    </tr>`).join("");
+  let h = `<div class="page-card">
+    <div class="hi-h">Trabajos <small>${trabajos.length} en total${trabajos.length>60?" · se listan los 60 más recientes":""}</small></div>
+    ${trabajos.length ? `<div class="hi-tabla"><table><thead><tr><th>Trabajo</th><th>Tipo</th><th>Proyecto</th><th>Creado</th><th>Última edición</th></tr></thead><tbody>${filas}</tbody></table></div>`
+      : `<div class="hg-vacio">Todavía no hay trabajos que registrar.</div>`}
+  </div>`;
+  // Uso propio del asistente (lo sabe el servidor y es el dato que limita).
+  const uso = u.usoIA || null;
+  if(uso){
+    h += `<div class="page-card"><div class="hi-h">Uso del asistente</div>
+      <p class="hi-p">Has usado Char-B <b>${uso.usados}</b> ${uso.usados===1?"vez":"veces"}${uso.limite?` de un tope de <b>${uso.limite}</b>`:" (sin tope)"}.</p></div>`;
+  }
+  // Accesos: dato de administrador (§03: "ve el historial completo").
+  if(u.rol==="admin"){
+    const acc = Array.isArray(u.accesos) ? u.accesos : null;
+    h += `<div class="page-card"><div class="hi-h">Accesos de los usuarios</div>`;
+    if(acc && acc.length){
+      h += `<div class="hi-tabla"><table><thead><tr><th>Usuario</th><th>Fecha y hora</th></tr></thead><tbody>`
+        + acc.slice(0,80).map(a=>`<tr><td>${esc(a.usuario||"—")}</td><td class="hi-num">${fechaHora(a.ts)}</td></tr>`).join("")
+        + `</tbody></table></div>`;
+    } else if(acc){
+      h += `<p class="hi-p">Todavía no hay accesos registrados. Se anotan desde ahora, cada vez que alguien entra.</p>`;
+    } else {
+      h += `<p class="hi-p">El registro de accesos no está disponible en esta sesión.</p>`;
+    }
+    h += `</div>`;
+  }
+  c.innerHTML = h;
+  pintarIconos();
+}
 
 function renderHome(){
   // Saludo con nombre: perfil > usuario del login (capitalizado) > "Hola".
@@ -8148,17 +8463,15 @@ let proyTiposAbierto = null;
 function toggleTiposProyecto(id){ proyTiposAbierto = (proyTiposAbierto===id) ? null : id; renderProyectosPage(); }
 function tiposProyectoHTML(prId){
   const tipos = [
-    ["email","email","email","Email"],
-    ["banner","display-300x250","grid","Banner Display"],
-    ["banner","linkedin-post","compartir","Post RRSS"],
-    ["ads","ads","buscar","Google Search"],
-    ["libre","libre","documento","Formato libre"]
-  ].filter(([serv])=>puede(serv));
+    ["banner","banner","display-300x250","grid","Google Display"],
+    ["facebook","banner","fb-1080x1350","imagen","Facebook Ads"],
+    ["ads","ads","ads","buscar","Google Search"]
+  ].filter(([plat])=>puedePlat(plat));
   // Cada tipo usa su TINTE claro de la paleta (mismo código de color que los
-  // chips EMAIL/DISPLAY/ADS/LIBRE) — la jerarquía se lee de un vistazo.
-  const claseTipo = { email:"t-email", "display-300x250":"t-display", "linkedin-post":"t-display", ads:"t-ads", libre:"t-libre" };
-  return `<div class="py-tipos"><span class="pt-lbl">¿Qué vas a crear aquí?</span>${tipos.map(([serv,fmt,ico,lbl]) =>
-    `<button class="${claseTipo[fmt]||""}" onclick="proyectoVistoId='${prId}';crearDesde('${fmt}')"><span style="display:inline-flex;">${svgIcon(ico,{size:"15px"})}</span> ${lbl}</button>`).join("")}</div>`;
+  // chips DISPLAY/FACEBOOK/ADS) — la jerarquía se lee de un vistazo.
+  const claseTipo = { "display-300x250":"t-display", "fb-1080x1350":"t-display", ads:"t-ads" };
+  return `<div class="py-tipos"><span class="pt-lbl">¿Qué vas a crear aquí?</span>${tipos.map(([plat,serv,fmt,ico,lbl]) =>
+    `<button class="${claseTipo[fmt]||""}" onclick="proyectoVistoId='${prId}';crearConIA('${plat}')"><span style="display:inline-flex;">${svgIcon(ico,{size:"15px"})}</span> ${lbl}</button>`).join("")}</div>`;
 }
 // ── ADMIN: los proyectos de LOS DEMÁS usuarios (solo lectura, con dueño) ──
 let _espaciosOtros = null;   // null = no cargado · [] = cargado
@@ -8273,8 +8586,12 @@ function renderConfigPage(){
   cont.innerHTML = `
     <div class="cfg-card"><h3>Cuenta</h3><div class="cfg-grid">
       <div><div class="cfg-lbl">Nombre (para el saludo del Inicio)</div><input class="cfg-inp" id="cfg-nombre" value="${escAttr(nombre)}" placeholder="Tu nombre"></div>
-      <div><div class="cfg-lbl">Correo</div><input class="cfg-inp" value="${escAttr(u.email||"")}" readonly></div>
-    </div></div>
+      <div><div class="cfg-lbl">Usuario</div><input class="cfg-inp" value="${escAttr(u.usuario||u.email||"")}" readonly></div>
+      <div><div class="cfg-lbl">Correo de contacto</div><input class="cfg-inp" id="cfg-contacto" value="${escAttr((workspace.perfil&&workspace.perfil.contacto)||"")}" placeholder="donde te escribimos"></div>
+      <div><div class="cfg-lbl">Zona horaria</div><select class="cfg-inp" id="cfg-tz">${ZONAS_HORARIAS.map(([v,l])=>`<option value="${esc(v)}" ${((workspace.perfil&&workspace.perfil.tz)||tzDelNavegador())===v?"selected":""}>${esc(l)}</option>`).join("")}</select></div>
+    </div>
+    <p style="font-size:12.5px;color:#5b6178;margin:12px 0 0;line-height:1.6;">Las fechas y horas del historial se muestran en esta zona. Para <b>cambiar tu contraseña</b>, usa el generador de más abajo y pásale la línea al administrador (las credenciales viven en el archivo <b>usuarios.js</b>, §03 del manual).</p>
+    </div>
     ${(cfg.resendFrom||cfg.siteUrl) ? `<div class="cfg-card"><h3>Envío de correos</h3><div class="cfg-grid">
       <div><div class="cfg-lbl">Remitente</div><input class="cfg-inp" value="${escAttr(cfg.resendFrom||"—")}" readonly></div>
       <div><div class="cfg-lbl">Sitio</div><input class="cfg-inp" value="${escAttr(cfg.siteUrl||"—")}" readonly></div>
@@ -8312,10 +8629,33 @@ async function generarLineaUsuario(){
   out.focus(); out.select();
   try{ await navigator.clipboard.writeText(linea); toast("Línea copiada al portapapeles"); }catch(_){ toast("Línea generada — cópiala del recuadro"); }
 }
+// Zona horaria: la del navegador ya viene bien la mayoría de las veces, pero el
+// manual (§05) pide poder fijarla — un equipo reparte campañas entre países y la
+// hora de un historial que miente no sirve para nada.
+const ZONAS_HORARIAS = [
+  ["America/Santiago","Chile · Santiago"],
+  ["America/Lima","Perú · Lima"],
+  ["America/Bogota","Colombia · Bogotá"],
+  ["America/Mexico_City","México · Ciudad de México"],
+  ["America/Argentina/Buenos_Aires","Argentina · Buenos Aires"],
+  ["America/Sao_Paulo","Brasil · São Paulo"],
+  ["America/New_York","EE. UU. · Nueva York"],
+  ["Europe/Madrid","España · Madrid"],
+  ["UTC","UTC"]
+];
+function tzDelNavegador(){
+  try{ const t=Intl.DateTimeFormat().resolvedOptions().timeZone; if(ZONAS_HORARIAS.some(([v])=>v===t)) return t; }catch(_){}
+  return "America/Santiago";
+}
+function tzActiva(){ return (workspace.perfil && workspace.perfil.tz) || tzDelNavegador(); }
 function guardarConfig(){
-  const n = (document.getElementById("cfg-nombre")||{}).value || "";
+  const g = (id)=> (document.getElementById(id)||{}).value || "";
   workspace.perfil = workspace.perfil || {};
-  workspace.perfil.nombre = n.trim();
+  workspace.perfil.nombre = g("cfg-nombre").trim();
+  const contacto = g("cfg-contacto").trim();
+  if(contacto && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(contacto)){ toast("Ese correo de contacto no se ve válido"); return; }
+  workspace.perfil.contacto = contacto;
+  const tz = g("cfg-tz"); if(tz) workspace.perfil.tz = tz;
   persistir();
   toast("Configuración guardada");
   renderGaleria();
@@ -8973,21 +9313,31 @@ function prefijoDeImagen(img){
 // para el que se escribe la campaña) salvo la palabra más larga, que sale del
 // tamaño MÁS ANGOSTO del set: una palabra que no cabe ahí obliga a encoger la
 // letra en ese formato. Nada de esto se elige a mano.
-function limitesParaIA(fmtMaster){
+// conOferta: si la campaña va a llevar círculo de oferta. IMPORTA MUCHO: el
+// círculo le come la mitad del ancho a la columna de texto, así que dar por
+// hecho que existe recorta el titular de TODA campaña (medido: 60 → 27
+// caracteres en Display, 38 → 12 en Facebook) aunque no haya ninguna oferta.
+// Se decide con el gancho del encargo, que es lo que enciende el círculo.
+function limitesParaIA(fmtMaster, conOferta){
   const master = fmtMaster || "display-300x250";
   const gm = geomDe(master);
-  const conCirculo = planDeBanner({ zonas:{ texto:{} }, burbuja:{ visible:true, texto:"1" } }, master, 0);
-  let palabra = conCirculo.maxChars.palabra;
-  SET_DISPLAY_DESKTOP.forEach(f => {
+  const bu = conOferta ? { visible:true, texto:"1" } : { visible:false };
+  const base = planDeBanner({ zonas:{ texto:{} }, burbuja:bu }, master, 0);
+  let palabra = base.maxChars.palabra;
+  // La palabra más larga la manda el formato MÁS ANGOSTO del set que se va a
+  // generar: en Facebook (1080 px de ancho) medir contra un 160x600 de Display
+  // recortaría el copy sin motivo.
+  const setDelMaster = (typeof esFacebookFmt==="function" && esFacebookFmt(master)) ? SET_FACEBOOK : SET_DISPLAY_DESKTOP;
+  setDelMaster.forEach(f => {
     if(!FORMATOS[f]) return;
-    const P = planDeBanner({ zonas:{ texto:{} }, burbuja:{ visible:true, texto:"1" } }, f, 0);
+    const P = planDeBanner({ zonas:{ texto:{} }, burbuja:bu }, f, 0);
     if(P.maxChars.palabra < palabra) palabra = P.maxChars.palabra;
   });
   return {
-    titulo: conCirculo.maxChars.titulo,
-    cuerpo: conCirculo.maxChars.bajada,
-    cta: conCirculo.maxChars.cta,
-    etiqueta: conCirculo.maxChars.epigrafe,
+    titulo: base.maxChars.titulo,
+    cuerpo: base.maxChars.bajada,
+    cta: base.maxChars.cta,
+    etiqueta: base.maxChars.epigrafe,
     burbuja: GEOM.topeChars.cifra + 10,
     legal: gm.maxChars.legal,
     palabra: Math.max(6, palabra)
@@ -9111,7 +9461,17 @@ function catalogoBloquesParaIA(){
 // qué PIEZAS genera de un mismo brief — 'email' (bloques), 'banner' (colección
 // Display por zonas) y 'ads' (Google Search: grupos + keywords + anuncios RSA).
 // Con 2+ piezas se pide antes un CONCEPTO de campaña que guía a todas.
-let iaPiezas = { email:true, banner:false, ads:false };
+// Las TRES plataformas del alcance (manual §01: "el producto es publicidad
+// pagada en las tres plataformas"). El email quedó FUERA DE ALCANCE: ya no se
+// ofrece en ninguna superficie de creación. La clave `email` sigue en el objeto
+// y la rama del motor sigue viva porque las piezas de email ya guardadas tienen
+// que seguir abriéndose, editándose y exportándose — nada se borra.
+const IA_PLATAFORMAS = ["banner","facebook","ads"];
+// Facebook es del mismo servicio que Display para los permisos: quien puede
+// hacer banners puede hacer los dos.
+const PERMISO_PLAT = { banner:"banner", facebook:"banner", ads:"ads", email:"email" };
+const puedePlat = (p)=> puede(PERMISO_PLAT[p] || p);
+let iaPiezas = { banner:true, facebook:false, ads:false, email:false };
 // Estilo de generacion: "marca" usa las diagramaciones cerradas del manual;
 // "libre" deja el sistema abierto de siempre.
 let iaEstilo = "marca";
@@ -9119,30 +9479,49 @@ function iaSetEstilo(e){
   iaEstilo = (e==="libre") ? "libre" : "marca";
   document.querySelectorAll("#ia-estilo-seg button").forEach(b=>b.classList.toggle("on", b.dataset.e===iaEstilo));
 }
+const iaSeleccionadas = ()=> IA_PLATAFORMAS.filter(k => iaPiezas[k]);
 function iaTogglePieza(p){
   if(!(p in iaPiezas)) return;
-  if(!iaPiezas[p] && !puede(p)){ toast("Tu usuario no tiene acceso a este servicio"); return; }
+  if(!iaPiezas[p] && !puedePlat(p)){ toast("Tu usuario no tiene acceso a este servicio"); return; }
   iaPiezas[p] = !iaPiezas[p];
-  if(!iaPiezas.email && !iaPiezas.banner && !iaPiezas.ads) iaPiezas[p] = true;   // al menos una
+  if(!iaSeleccionadas().length) iaPiezas[p] = true;   // al menos una
   iaPintaPiezas();
 }
-// Compat: selección única (la usan los deep-links por sección).
+// Compat: selección única (la usan los deep-links por sección y el Home).
 function iaSetFormato(f){
-  iaPiezas = { email:f==="email", banner:f==="banner", ads:f==="ads" };
-  if(!iaPiezas.email && !iaPiezas.banner && !iaPiezas.ads) iaPiezas.email = true;
+  iaPiezas = { banner:false, facebook:false, ads:false, email:false };
+  // "email" ya no se genera: un deep-link antiguo cae en Display, que es el
+  // producto equivalente dentro del alcance.
+  const k = IA_PLATAFORMAS.includes(f) ? f : "banner";
+  iaPiezas[k] = true;
   iaPintaPiezas();
 }
 function iaPintaPiezas(){
   // Permisos: sin acceso a un servicio, ni se ofrece ni queda marcado.
-  ["email","banner","ads"].forEach(k => { if(iaPiezas[k] && !puede(k)) iaPiezas[k] = false; });
-  if(!iaPiezas.email && !iaPiezas.banner && !iaPiezas.ads){ const primero = ["email","banner","ads"].find(k=>puede(k)); if(primero) iaPiezas[primero] = true; }
-  document.querySelectorAll("#ia-piezas-seg button").forEach(b => { b.style.display = puede(b.dataset.p) ? "" : "none"; b.classList.toggle("on", !!iaPiezas[b.dataset.p]); });
-  const tw = document.getElementById("ia-tono-wrap"); if(tw) tw.style.display = iaPiezas.email ? "" : "none";
-  // Search es 100% texto: el campo de fotos solo aplica si hay email o banner.
-  const fw = document.getElementById("ia-fotos-wrap"); if(fw) fw.style.display = (iaPiezas.email || iaPiezas.banner) ? "" : "none";
-  const n = ["email","banner","ads"].filter(k=>iaPiezas[k]).length;
+  IA_PLATAFORMAS.forEach(k => { if(iaPiezas[k] && !puedePlat(k)) iaPiezas[k] = false; });
+  if(!iaSeleccionadas().length){ const primero = IA_PLATAFORMAS.find(puedePlat); if(primero) iaPiezas[primero] = true; }
+  document.querySelectorAll("#ia-piezas-seg button").forEach(b => { b.style.display = puedePlat(b.dataset.p) ? "" : "none"; b.classList.toggle("on", !!iaPiezas[b.dataset.p]); });
+  const tw = document.getElementById("ia-tono-wrap"); if(tw) tw.style.display = "none";   // el email quedó fuera de alcance
+  // Search es 100% texto: el campo de fotos solo aplica a las piezas gráficas.
+  const fw = document.getElementById("ia-fotos-wrap"); if(fw) fw.style.display = (iaPiezas.banner || iaPiezas.facebook) ? "" : "none";
+  const n = iaSeleccionadas().length;
   const h = document.getElementById("ia-piezas-hint");
-  if(h) h.innerHTML = n>1 ? `Char-B definirá primero <b>un concepto de campaña</b> y las ${n} piezas seguirán la misma idea, en su propio proyecto.` : `Con 2 o más piezas, Char-B define primero <b>un concepto de campaña</b> y todas siguen la misma idea.`;
+  if(h) h.innerHTML = n>1 ? `Char-B definirá primero <b>un concepto de campaña</b> y las ${n} plataformas seguirán la misma idea, en su propio proyecto.` : `Con 2 o más plataformas, Char-B define primero <b>un concepto de campaña</b> y todas siguen la misma idea.`;
+}
+// Crear = generar. El manual no admite lienzo en blanco ("toda pieza nace de una
+// generación de la IA"), así que los accesos del Home abren el asistente con su
+// plataforma ya marcada en vez de dejar un banner vacío que el usuario tenga que
+// llenar control por control — que era justamente lo que hacía el editor
+// inentendible: se llegaba a una pieza en cero.
+function crearConIA(plat){
+  if(plat==="todas"){
+    iaPiezas = { banner:true, facebook:true, ads:true, email:false };
+    iaPintaPiezas();
+  } else {
+    if(!puedePlat(plat)){ toast("Tu usuario no tiene acceso a este servicio"); return; }
+    iaSetFormato(plat);
+  }
+  abrirIA(true);
 }
 /* Flujo por pasos del Asistente IA (1 Producto · 2 Brief · 3 Resultado). */
 // El asistente es UNA SOLA VENTANA: todos los campos a la vista. `iaIrPaso` ya no
@@ -9200,15 +9579,18 @@ function iaSetTono(t){
   document.getElementById("ia-tono").value = tono;
   document.querySelectorAll("#ia-tono-seg button").forEach(b => b.classList.toggle("on", b.dataset.tono===tono));
 }
-function abrirIA(){
-  // Preselección según dónde estés: dentro de una sección propone SU pieza;
-  // desde el dashboard propone la campaña completa (email + banners + search).
+// yaElegida = la plataforma ya viene decidida por quien llamó (crearConIA), así
+// que no se toca la selección.
+function abrirIA(yaElegida){
+  // Preselección según dónde estés: dentro de una sección propone SU plataforma;
+  // desde el dashboard, la campaña completa.
   const enEditor = !document.getElementById("galeria").classList.contains("show");
   const sec = enEditor && (typeof rutaDeProducto==="function") ? rutaDeProducto(pieza()) : null;
-  if(sec==="/ads-ia") iaSetFormato("ads");
+  if(yaElegida === true){ /* la eligió el acceso del Home */ }
+  else if(sec==="/ads-ia") iaSetFormato("ads");
+  else if(sec==="/fb-ia") iaSetFormato("facebook");
   else if(sec==="/gdn-ia") iaSetFormato("banner");
-  else if(sec==="/email-ia") iaSetFormato("email");
-  else { iaPiezas = { email:puede("email"), banner:puede("banner"), ads:puede("ads") }; iaPintaPiezas(); }
+  else { iaPiezas = { banner:puedePlat("banner"), facebook:puedePlat("facebook"), ads:puedePlat("ads"), email:false }; iaPintaPiezas(); }
   const ms = document.getElementById("ia-marca");
   const marcas = workspace.marcas||[];
   ms.innerHTML = (marcas.length ? "" : `<option value="">— Sin marca (crea una en Marcas) —</option>`) +
@@ -9228,8 +9610,8 @@ function abrirIA(){
 async function generarConIA(){
   const que = (document.getElementById("ia-que").value || "").trim();
   if(!que){ toast("Cuéntame qué necesitas"); return; }
-  const sel = ["email","banner","ads"].filter(k => iaPiezas[k]);
-  if(!sel.length){ toast("Marca al menos una pieza"); return; }
+  const sel = iaSeleccionadas();
+  if(!sel.length){ toast("Marca al menos una plataforma"); return; }
   const accion = (document.getElementById("ia-objetivo").value || "").trim();
   const gancho = (document.getElementById("ia-gancho").value || "").trim();
   const ctaUrl = (document.getElementById("ia-ctaurl").value || "").trim();
@@ -9247,10 +9629,10 @@ async function generarConIA(){
   // gráfica (no tiene "identidad visual"), son grupos, keywords y anuncios.
   const hint = document.getElementById("ia-hint");
   if(hint){
-    if(esCampana) hint.textContent = "Char-B está armando tu campaña (email, banners y/o Search) con una idea común. Al terminar se abre directo en el editor.";
+    if(esCampana) hint.textContent = "Char-B está armando tu campaña (Display, Facebook y/o Search) con una idea común. Al terminar se abre directo en el editor.";
     else if(sel[0]==="ads") hint.textContent = "Char-B está armando tu campaña de Google Search: grupos por intención, keywords (exacta y frase) y los anuncios. Al terminar se abre directo en el editor.";
-    else if(sel[0]==="banner") hint.textContent = "Char-B está armando tus banners con la identidad de la marca. Al terminar se abren directo en el editor.";
-    else hint.textContent = "Char-B está armando tu email con la identidad de la marca. Al terminar se abre directo en el editor.";
+    else if(sel[0]==="facebook") hint.textContent = "Char-B está armando tu anuncio de Facebook: la imagen en sus 3 tamaños y los textos del anuncio. Al terminar se abre directo en el editor.";
+    else hint.textContent = "Char-B está armando tus banners con la identidad de la marca. Al terminar se abren directo en el editor.";
   }
   btn.disabled = true; est.className = "ia-estado loading";
   est.textContent = esCampana ? `Armando la campaña (${sel.length} piezas) para «${M ? M.nombre : 'sin marca'}»…`
@@ -9260,7 +9642,7 @@ async function generarConIA(){
   // si no, toda la biblioteca + el bucket R2 (sin logos/íconos).
   const fotosElegidas = _iaFotos.length > 0;
   let biblioteca = [];
-  if(sel.includes("email") || sel.includes("banner")){
+  if(sel.some(k => k!=="ads")){
     if(fotosElegidas){
       biblioteca = _iaFotos.map(u => { const im=(workspace.imagenes||[]).find(x=>x.url===u); return { url:u, nombre: im?im.nombre:"" }; });
     } else {
@@ -9298,11 +9680,15 @@ async function generarConIA(){
     const fallas = [];
     const avisosIA = [];   // lo que el usuario TIENE que saber antes de publicar
     for(const producto of sel){
+    // Display y Facebook son la MISMA generación de banner: cambia el máster y
+    // la colección de tamaños donde se deposita.
+    const esGrafica = (producto==="banner" || producto==="facebook");
+    const masterDe = producto==="facebook" ? "fb-1080x1350" : "display-300x250";
     let imagenes = [];
     if(producto !== "ads"){   // una campaña Search es 100% texto: sin fotos
       imagenes = biblioteca.map(i => ({ url:i.url, nombre:i.nombre }));
       // Sin fotos en la biblioteca → genera una fotografía de fondo con IA (Imagen).
-      if(producto==="banner" && imagenes.length===0){
+      if(esGrafica && imagenes.length===0){
         est.textContent = "No hay fotos en tu biblioteca: generando una con IA…";
         try{
           const rf = await fetch("/api/ia", { method:"POST", credentials:"include", headers:{ "Content-Type":"application/json" },
@@ -9317,9 +9703,11 @@ async function generarConIA(){
           }
         }catch(_){}
       }
-      if(producto==="banner" && imagenes.length){
+      if(esGrafica && imagenes.length){
         est.textContent = "Mirando tus imágenes…";
-        for(const it of imagenes.slice(0,3)){ const th = await miniaturaIA(it.url, 224); if(th) it.thumb = th; }
+        // Ocho miniaturas, no tres: la IA elegía a ciegas entre 50 fotos porque
+        // solo veía las tres primeras de la lista.
+        for(const it of imagenes.slice(0,8)){ const th = await miniaturaIA(it.url, 224); if(th) it.thumb = th; }
       } else if(producto==="email" && imagenes.length && !fotosElegidas){
         // En email, descarta imágenes muy pequeñas (lado < 300px → suelen ser íconos).
         est.textContent = "Revisando imágenes…";
@@ -9328,20 +9716,25 @@ async function generarConIA(){
         imagenes = lista.filter((it,i) => !dims[i] || Math.min(dims[i].w, dims[i].h) >= 300).concat(imagenes.slice(20));
       }
     }
-    est.textContent = `Generando ${producto==="banner"?"los banners":producto==="ads"?"la campaña de Search":"el email"}…`;
+    est.textContent = `Generando ${producto==="facebook"?"el anuncio de Facebook":producto==="banner"?"los banners":producto==="ads"?"la campaña de Search":"el email"}…`;
     const r = await fetch("/api/ia", {
       method:"POST", credentials:"include", headers:{ "Content-Type":"application/json" },
       body: JSON.stringify({
-        producto,
+        // El servidor conoce tres productos: banner, ads y email. Facebook es un
+        // banner con otro máster, así que viaja como banner.
+        producto: esGrafica ? "banner" : producto,
+        plataforma: producto,
         brief: { que, accion, gancho, refs, ctaUrl, tipo, notas },
         estilo: iaEstilo,
-        formato: producto==="email" ? "email" : producto==="ads" ? "ads" : "display-300x250",
+        formato: producto==="email" ? "email" : producto==="ads" ? "ads" : masterDe,
         marca: marcaAPI,
         imagenes,
         // El ESPACIO de la pieza lo sabe el cliente (tiene la tabla de geometría):
         // se lo pasamos a la IA para que escriba copy que quepa, en vez de tener
         // que quitarle elementos al banner después para que cierre.
-        limites: producto==="banner" ? limitesParaIA() : null,
+        // El círculo solo existe si el gancho trae una cifra: si no, el titular
+        // dispone del ancho completo y no hay por qué encogerlo.
+        limites: esGrafica ? limitesParaIA(masterDe, tieneCifra(gancho)) : null,
         catalogo: producto==="email" ? catalogoBloquesParaIA() : null
       })
     });
@@ -9357,7 +9750,7 @@ async function generarConIA(){
     if(Array.isArray(data.avisos)) data.avisos.forEach(a => avisosIA.push(a));
     if(data.acortado) avisosIA.push({ tipo:"acortado",
       texto:"Algún texto no cabía en el espacio del banner y se reescribió más corto. Revisa que siga diciendo lo que querías." });
-    if(producto==="banner") insertarBannerIA(data, marca);
+    if(esGrafica) insertarBannerIA(data, marca, producto==="facebook" ? "facebook" : "display-desktop");
     else if(producto==="ads") insertarAdsIA(data, marca);
     else insertarPiezaIA(data, "email", marca);
     const pz=pieza();
@@ -9515,7 +9908,10 @@ function _quitarOfertaDelTitular(titular, oferta){
   if(norm(titular)===no) return "";
   return limpiaBordes(titular);
 }
-function insertarBannerIA(data, marca){
+// tipoCol: "display-desktop" (los 11 tamaños de Google) o "facebook" (los 3 de
+// Meta, con máster propio 1080x1350). Es la MISMA generación de banner: cambia
+// la colección de tamaños en la que se deposita.
+function insertarBannerIA(data, marca, tipoCol){
   asegurarProyectoIA();
   const M = marca ? normalizarMarca(marca) : null;
   const tema = M ? { font:M.fontCuerpo||"Inter", fontTitulo:M.fontTitulo||"Inter", primary:M.primary, text:M.text, bg:M.bg, bgPagina:M.bgPagina||"", ancho:"" }
@@ -9600,10 +9996,15 @@ function insertarBannerIA(data, marca){
   if(z.etiqueta) setPath(comp,"zonas.texto.etiqueta.texto", String(z.etiqueta).slice(0,30));
   if(M && M.accent1 && getPath(comp,"deco.color1")==null) setPath(comp,"deco.color1", M.accent1);
   if(M && M.accent2 && getPath(comp,"deco.color2")==null) setPath(comp,"deco.color2", M.accent2);
-  const cfg = COLECCIONES["display-desktop"];
-  const p = crearPieza(cfg.master, data.nombre||"Banners IA");
+  // LEGAL: el manual lo pide en cada banner y tiene su banda inferior reservada.
+  // Lo escribe la IA si el encargo trae condiciones; si no, el descargo de la marca.
+  const legal = String(data.legal || (M && M.disclaimer) || "").trim();
+  if(legal) setPath(comp,"legal", legal.slice(0,140));
+  const tipoSet = (tipoCol==="facebook") ? "facebook" : "display-desktop";
+  const cfg = COLECCIONES[tipoSet] || COLECCIONES["display-desktop"];
+  const p = crearPieza(cfg.master, data.nombre || (tipoSet==="facebook" ? "Facebook Ads IA" : "Banners IA"));
   p.tema = tema;
-  p.esSet=true; p.setTipo="display-desktop"; p.masterFmt=cfg.master; p.activaFmt=cfg.master; p.formato=cfg.master;
+  p.esSet=true; p.setTipo=tipoSet; p.masterFmt=cfg.master; p.activaFmt=cfg.master; p.formato=cfg.master;
   p.canvas=[]; p.composicion=comp; p.artboards=cfg.fmts.map(fmt=>({fmt}));
   // VARIANTES por formato (como las campañas display reales: la burbuja no va
   // igual en todos): fuera en franjas bajas y cuadrados chicos (se come el
@@ -10027,6 +10428,9 @@ function aplicarPermisosUI(){
 }
 const RUTAS_MENU = {
   "/proyectos":     () => dashVista("proyectos"),
+  "/en-curso":      () => dashVista("en-curso"),
+  "/realizados":    () => dashVista("realizados"),
+  "/historial":     () => dashVista("historial"),
   "/marcas":        () => dashVista("marcas"),
   "/imagenes":      () => dashVista("imagenes"),
   "/papelera":      () => dashVista("papelera"),

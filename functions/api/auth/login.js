@@ -2,7 +2,7 @@
 //   POST /api/auth/login { usuario, password } → cookie de sesión + { ok, usuario, rol, permisos }
 // Mismo mensaje de error exista o no el usuario (no se regala información).
 
-import { json, corsPreflight, buscarUsuario, verificarPassword, signJWT, buildSessionCookie } from '../_shared.js';
+import { json, corsPreflight, buscarUsuario, verificarPassword, signJWT, buildSessionCookie, registrarAcceso } from '../_shared.js';
 
 export const onRequestOptions = () => corsPreflight();
 
@@ -18,6 +18,10 @@ export async function onRequestPost({ request, env }) {
   const u = buscarUsuario(usuario);
   const okPass = u ? await verificarPassword(u, password) : false;
   if (!u || !okPass) return json({ ok: false, error: 'Usuario o contraseña incorrectos.' }, 401);
+
+  // Queda anotado en el historial de trabajos (§05). Si D1 no responde, el
+  // login sigue: entrar no puede depender de que se pueda escribir la bitácora.
+  try { await registrarAcceso(env, u.usuario); } catch {}
 
   const jwt = await signJWT({ u: u.usuario }, env.JWT_SECRET || 'dev-only-secret');
   return json(

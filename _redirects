@@ -13,6 +13,9 @@
 /login         /index.html  200
 /home          /editor.html 200
 /proyectos     /editor.html 200
+/en-curso      /editor.html 200
+/realizados    /editor.html 200
+/historial     /editor.html 200
 /imagenes      /editor.html 200
 /email-ia      /editor.html 200
 /email-ia/*   /editor.html 200

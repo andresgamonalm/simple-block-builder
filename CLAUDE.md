@@ -571,3 +571,67 @@ abriendo, los 5 productos creando/pintando/exportando, los 20 bloques de email c
 **Observación menor, sin corregir:** un enlace directo a una sección sin slug (`/email-ia` a secas) abre
 el diálogo de nombre sobre el dashboard y la URL queda en `/home` hasta que se confirma el nombre. Es
 transitorio y se corrige solo al crear la pieza; no se tocó el ruteo por no arriesgar más de lo que suma.
+
+## Sesión 17-ago-2026 (tarde): ALCANCE del manual + editor de banners simple (ESTADO ACTUAL)
+Reclamos del usuario, textuales: *"no entiendo por qué sigue saliendo email"*, *"el editor de los banner
+sigue siendo tremendamente complejo de usar"*, *"¿por qué te cuesta tanto tomar un trabajo de manera
+integral? vas de pedazo en pedazo"*. Se ejecutó el lote completo, no punto por punto.
+
+**ALCANCE (§01 del manual, literal: "el producto es publicidad pagada en las tres plataformas", "sin
+email marketing", "sin lienzo en blanco").** Las superficies de creación (tarjetas del Home, los dos
+menús "+ Nueva", el "+" de pestañas, el selector por proyecto) ofrecen SOLO **Google Display ·
+Facebook Ads · Google Search**, más "Campaña completa" (las tres). **Email y Formato Libre salieron de
+la creación**; sus rutas (`/email-ia`, `/free`), el motor y las piezas ya guardadas siguen intactos y
+se abren, editan y exportan — no se borró nada (prueba `alcance.js` §5). **"Sin lienzo en blanco":
+todos los accesos llaman a `crearConIA(plat)`** → abre el asistente con la plataforma marcada, ya no
+se crea una pieza vacía (`crearTrabajoHome` retirado de la UI). Ahí estaba la raíz de "el editor es
+complejísimo": se aterrizaba en un banner en cero y había que armarlo control por control.
+- **Facebook YA está en el asistente** (faltaba: era un hueco de mi trabajo anterior). `IA_PLATAFORMAS
+  = ["banner","facebook","ads"]`, `PERMISO_PLAT` (facebook usa el permiso `banner`), `puedePlat()`,
+  `iaSeleccionadas()`. `insertarBannerIA(data, marca, tipoCol)` deposita en la colección Display (11)
+  o Facebook (3, máster 1080×1350). Con UNA plataforma la pieza cae en el proyecto abierto → el "+"
+  agrega una plataforma a la MISMA campaña.
+- **LEGAL de la marca** entra solo en cada banner generado (`comp.legal` ← `data.legal` o
+  `marca.disclaimer`).
+
+**EDITOR DE BANNERS: panel nuevo `compEditorSimple(p,fmt,ctx)`.** Medido: antes **87 controles** en una
+columna sin jerarquía; ahora **25 en primer plano** y 64 guardados en `<details class="se-avz">`
+("Ajustes avanzados", cerrado). Cuatro grupos numerados: **1 Textos** (Epígrafe · Título · Bajada ·
+Botón+link · **Oferta** · **Legal**) · **2 Foto de fondo** (miniaturas clicables filtradas por
+`sirveComoFondo`, "Sin foto", biblioteca, generar con IA) · **3 Colores** (Fondo · Botón · Oferta, con
+la paleta de la marca) · **4 Logo**. Escribe por los MISMOS mutadores (`setComp`/`setCompOv`): no hay
+segundo modelo de datos y el panel viejo sigue entero.
+- **`comp.legal` NO tenía campo**: se renderizaba en su banda inferior pero no había dónde escribirlo.
+- **`setCompOferta`**: escribir la oferta enciende el círculo y borrarla lo apaga (era un paso que se
+  olvidaba). **`setCompFoto`**: "Sin foto" vuelve a `fondo.tipo:'color'`.
+- **Un tamaño concreto** (`isOv`) ya no repite el formulario entero: 5 interruptores (Logo · Textos ·
+  Botón · Círculo · Adornos) + avanzados. Lo que se apaga ahí no toca los demás tamaños.
+- Vacío honesto: si la biblioteca solo tiene logotipos, se explica (antes decía "no tienes fotos").
+
+**BUG REAL encontrado al medir: los límites que se le pasaban a la IA.** `limitesParaIA` daba por hecho
+que SIEMPRE hay círculo de oferta, y el círculo le come media columna de texto → toda campaña recibía
+**titular máx. 27 caracteres en Display y 12 en Facebook**, aunque no hubiera oferta. Ahora
+`limitesParaIA(master, conOferta)` y el cliente pasa `tieneCifra(gancho)`: sin oferta son **60 (Display)
+y 38 (Facebook)**. Además la palabra más larga se mide contra el set propio (`SET_FACEBOOK` vs
+`SET_DISPLAY_DESKTOP`) — antes Facebook se recortaba contra un 160×600 de Display. **La IA ve 8
+miniaturas, no 3.**
+
+**PÁGINAS DEL §05 (estaban pendientes).** `/en-curso` · `/realizados` · `/historial`, con su ruta en
+`_redirects`, en `DASH_VIEWS` y en `RUTAS_MENU`; nav: Inicio · En curso · Realizados · Todos · Marcas ·
+Fotos. **Proyecto = campaña**: `pr.cerrado` (sello con fecha) + `cerrarProyecto`/`reabrirProyecto` —
+cerrar es un estado reversible, no borrar (la papelera es otra cosa). **Historial**: tabla de trabajos
+con hora de creación (`p._creado`, nuevo en `crearPieza`) y última edición, uso del asistente, y
+**accesos de los usuarios** — tabla `accesos` en D1 (`registrarAcceso`/`leerAccesos` en `_shared.js`,
+escrita en `auth/login.js`, servida por `whoami` solo al admin, §03). **Configuración**: correo de
+contacto y **zona horaria** (`ZONAS_HORARIAS`, `tzActiva()`, toda hora pasa por `fechaHora()`).
+
+**Verificación (batería permanente, 16 pruebas, TODA EN VERDE):** `panel` 36/36 y `alcance` 40/40
+(nuevas, registradas en `correr-todo.sh` y `LEEME.md`) + audita-estatica 22 · login 22 · geom · medir ·
+insp 17 · iaq 13 · asis 9 · xls 10 · fb 18 · tablet 37 · migra 22 · cierres 20 · regres 9 · recorrido
+SIN HALLAZGOS. **El Chromium del entorno es `/opt/pw-browsers/chromium-1194/chrome-linux/chrome` →
+exportar `SBB_CHROMIUM` antes de correr la batería.**
+
+**Pendientes conscientes de esta línea:** (1) §12 **línea base visual** que bloquee el despliegue si un
+cambio mueve un píxel de una diagramación aprobada. (2) §04 **creación de marca conversacional** (la IA
+propone la ficha y el usuario corrige; hoy sigue siendo formulario). (3) `LAYOUTS_MARCA` sigue apagado.
+(4) En email la IA todavía no ve fotos. (5) Ctrl+Z no cubre `adsData`.

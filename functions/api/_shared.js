@@ -200,6 +200,27 @@ export async function sumarUsoIA(env, usuario) {
     await env.DB.prepare('INSERT INTO ia_uso (usuario, usados) VALUES (?,1) ON CONFLICT(usuario) DO UPDATE SET usados=usados+1').bind(usuario).run();
   } catch {}
 }
+// ── Registro de ACCESOS (§05 del manual: "usuarios conectados con fecha y
+//    hora" en el historial de trabajos). Se anota una fila por entrada. Es un
+//    dato que solo el servidor puede saber, así que vive en D1 y no en el
+//    workspace. Se conservan las últimas 500 entradas: es un historial de
+//    trabajo, no una auditoría forense, y así la tabla no crece sin freno.
+export async function registrarAcceso(env, usuario) {
+  if (!env || !env.DB || !usuario) return;
+  try {
+    await env.DB.prepare('CREATE TABLE IF NOT EXISTS accesos (id INTEGER PRIMARY KEY AUTOINCREMENT, usuario TEXT, ts INTEGER)').run();
+    await env.DB.prepare('INSERT INTO accesos (usuario, ts) VALUES (?,?)').bind(usuario, Date.now()).run();
+    await env.DB.prepare('DELETE FROM accesos WHERE id NOT IN (SELECT id FROM accesos ORDER BY id DESC LIMIT 500)').run();
+  } catch {}
+}
+export async function leerAccesos(env, limite = 100) {
+  if (!env || !env.DB) return null;          // null = no se puede saber (≠ lista vacía)
+  try {
+    await env.DB.prepare('CREATE TABLE IF NOT EXISTS accesos (id INTEGER PRIMARY KEY AUTOINCREMENT, usuario TEXT, ts INTEGER)').run();
+    const r = await env.DB.prepare('SELECT usuario, ts FROM accesos ORDER BY id DESC LIMIT ?').bind(Math.max(1, Math.min(500, limite))).all();
+    return (r && r.results) ? r.results : [];
+  } catch { return null; }
+}
 // Reinicia el contador de un usuario (para cuando el admin quiera darle más).
 export async function reiniciarUsoIA(env, usuario) {
   if (!env || !env.DB) return;

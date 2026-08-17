@@ -12,9 +12,15 @@ const T = (c, n, e) => { if (c) { ok++; console.log("  ok   " + n); } else { mal
   await pg.waitForFunction(() => typeof window.limitesParaIA === "function");
 
   console.log("\n1 · Límites que se le pasan a la IA");
-  const L = await pg.evaluate(() => limitesParaIA());
-  console.log("     " + JSON.stringify(L));
-  T(L.titulo > 10 && L.titulo < 40, "límite de titular razonable", L.titulo);
+  // El circulo de oferta le come la mitad del ancho a la columna de texto, asi que
+  // los limites se piden segun si la campana lleva oferta o no: dar por hecho que
+  // siempre la lleva recortaba el titular de TODA campana.
+  const L  = await pg.evaluate(() => limitesParaIA("display-300x250", true));   // con oferta
+  const LS = await pg.evaluate(() => limitesParaIA("display-300x250", false));  // sin oferta
+  console.log("     con oferta: " + JSON.stringify(L));
+  console.log("     sin oferta: " + JSON.stringify(LS));
+  T(L.titulo > 10 && L.titulo < 40, "con círculo de oferta, límite de titular razonable", L.titulo);
+  T(LS.titulo > L.titulo, "sin oferta el titular dispone del ancho completo", LS.titulo + " vs " + L.titulo);
   T(L.cuerpo > L.titulo, "la bajada admite más que el titular", L.cuerpo + " vs " + L.titulo);
   T(L.palabra >= 6 && L.palabra <= 12, "palabra más larga sale del formato más angosto", L.palabra);
 
