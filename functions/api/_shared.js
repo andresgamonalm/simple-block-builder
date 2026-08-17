@@ -123,9 +123,25 @@ import USUARIOS_FILE from '../../usuarios.js';
 export function listaUsuarios() {
   return (USUARIOS_FILE && Array.isArray(USUARIOS_FILE.usuarios)) ? USUARIOS_FILE.usuarios : [];
 }
+// Busca la ficha de un usuario. Acepta DOS formas de identificarse:
+//   1) el campo `usuario` ("andres") — el identificador canónico;
+//   2) su `workspace` cuando es un correo ("hola@andresgamonal.com").
+// La segunda existe porque el login por correo fue lo que hubo durante meses y la
+// memoria muscular no se cambia por decreto: entrar con el correo de siempre y
+// que diga "usuario o contraseña incorrectos" es un muro sin explicación.
+// El `usuario` MANDA: solo si no calza ninguno se prueba el correo, y únicamente
+// si identifica a UNA sola persona (si dos fichas compartieran ese workspace, la
+// búsqueda se rechaza en vez de adivinar). La contraseña se verifica igual, así
+// que esto no abre ninguna puerta: solo admite otro nombre para la misma llave.
 export function buscarUsuario(nombre) {
   const n = String(nombre || '').trim().toLowerCase();
-  return listaUsuarios().find(u => String(u.usuario || '').toLowerCase() === n) || null;
+  if (!n) return null;
+  const lista = listaUsuarios();
+  const exacto = lista.find(u => String(u.usuario || '').toLowerCase() === n);
+  if (exacto) return exacto;
+  if (n.indexOf('@') < 0) return null;              // solo se acepta alias si es un correo
+  const porCorreo = lista.filter(u => String(u.workspace || '').toLowerCase() === n);
+  return porCorreo.length === 1 ? porCorreo[0] : null;
 }
 export async function sha256Hex(str) {
   const buf = await crypto.subtle.digest('SHA-256', ENC.encode(str));

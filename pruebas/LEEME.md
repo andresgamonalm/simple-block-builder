@@ -25,6 +25,7 @@ servidor sirve un `/foto.svg` y un `/logo.svg` locales.
 | Prueba | Qué mide |
 |---|---|
 | `audita-estatica` | **Sin navegador.** Botones muertos (un `onclick` que llama a algo que no existe no da error: simplemente no hace nada), íconos que no están en el registro, y rutas del código que `_redirects` no sirve. |
+| `login` | **Sin navegador.** Que se pueda entrar con el `usuario` y también con el **correo** (el identificador que hubo durante meses), contra la lógica real de `_shared.js` y la ficha real de `usuarios.js`. Comprueba además que la contraseña siga mandando y que un correo ajeno o un workspace que no es correo NO abran nada. |
 | `geom` | La tabla de geometría cerrada calza con `mockups/flash-campaign-spec.json` en los 11 formatos. Si alguien toca una fórmula, esto lo grita. |
 | `medir` | Los 11 banners **medidos sobre el render real**: desborde, colisión, cuerpos de letra, contraste, elementos presentes y zona muerta. Corre con copy dentro de los límites y con copy que los excede. |
 | `insp` | El inspector: que corra sobre el tablero, que avise junto a la pieza, y que **detecte de verdad** una pieza rota a mano. |
