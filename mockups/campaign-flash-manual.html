@@ -96,20 +96,22 @@ footer{ margin-top:70px; padding-top:20px; border-top:1px solid var(--rule); col
   <li><a href="#p4"><span class="k">04</span> Marcas</a></li>
   <li><a href="#p5"><span class="k">05</span> Estructura de la aplicación</a></li>
   <li><a href="#p6"><span class="k">06</span> El asistente de IA</a></li>
-  <li><a href="#p7"><span class="k">07</span> El editor</a></li>
-  <li><a href="#p8"><span class="k">08</span> Google Display</a></li>
-  <li><a href="#p9"><span class="k">09</span> Facebook Ads</a></li>
-  <li><a href="#p10"><span class="k">10</span> Google Search</a></li>
-  <li><a href="#p11"><span class="k">11</span> El inspector</a></li>
-  <li><a href="#p12"><span class="k">12</span> Exportación</a></li>
-  <li><a href="#p13"><span class="k">13</span> Errores ya cometidos</a></li>
+  <li><a href="#p7"><span class="k">07</span> Cómo se instruye a la IA</a></li>
+  <li><a href="#p8"><span class="k">08</span> El editor</a></li>
+  <li><a href="#p9"><span class="k">09</span> Google Display</a></li>
+  <li><a href="#p10"><span class="k">10</span> Facebook Ads</a></li>
+  <li><a href="#p11"><span class="k">11</span> Google Search</a></li>
+  <li><a href="#p12"><span class="k">12</span> El inspector</a></li>
+  <li><a href="#p13"><span class="k">13</span> Exportación</a></li>
+  <li><a href="#p14"><span class="k">14</span> Fallos a evitar</a></li>
 </ol>
 
 <h2 id="p0"><span class="n">00 · Para quien construya esto</span>Cómo leer este manual</h2>
-<p class="lede">Este documento existe porque una versión anterior de esta aplicación falló, y falló
-de una forma concreta: <b>generaba la geometría de cada pieza en el momento</b>. Cada generación era
-distinta y ninguna se comprobaba. El resultado eran banners con el texto cortado, elementos
-superpuestos y verticales medio vacíos.</p>
+<p class="lede">La tentación al construir un generador de piezas gráficas es dejar que la IA decida
+la composición de cada una. <b>No lo hagas.</b> Una IA que decide geometría produce una pieza distinta
+cada vez, ninguna comprobable: texto cortado, elementos superpuestos, verticales medio vacíos. Este
+manual describe el camino contrario — la geometría resuelta de antemano y verificada — y por eso
+todas sus medidas son cerradas.</p>
 
 <div class="box no-">
   <span class="t">Las tres reglas de oro</span>
@@ -139,14 +141,16 @@ digitales de marca y performance para <b>tres plataformas</b>, apoyada en la API
 las directrices que entregue el usuario. La IA no inventa ofertas, precios ni fechas.</p>
 
 <div class="box no-">
-  <span class="t">Fuera de alcance — decisiones deliberadas</span>
+  <span class="t">Fuera de alcance — límites deliberados del producto</span>
   <ul>
-    <li><b>No hay email marketing.</b> Se eliminó del producto.</li>
-    <li><b>No hay animación ni video.</b> Solo imagen estática. Sin HTML5 animado, sin Reels, sin Stories.</li>
-    <li><b>No se crean piezas desde cero.</b> El usuario no puede abrir un lienzo en blanco: toda pieza
-    nace de una generación de la IA. Después puede modificarla por completo, pero no partir de nada.</li>
-    <li><b>No hay carrusel</b> de Facebook (es una pieza de 2 a 10 tarjetas, otra estructura).</li>
+    <li><b>Solo imagen estática.</b> Sin animación, sin HTML5 animado, sin video. Por tanto, sin Reels
+    y sin Stories.</li>
+    <li><b>Sin email marketing.</b> El producto es publicidad pagada en las tres plataformas de arriba.</li>
+    <li><b>Sin lienzo en blanco.</b> Toda pieza nace de una generación de la IA. El usuario después
+    la modifica por completo, pero nunca parte de cero.</li>
+    <li><b>Sin carrusel</b> de Facebook: es una pieza de 2 a 10 tarjetas, una estructura distinta.</li>
   </ul>
+  <p>Estos límites son intencionados. Acotar el producto es lo que permite garantizar el resultado.</p>
 </div>
 
 <h2 id="p2"><span class="n">02 · Infraestructura</span>Arquitectura y despliegue</h2>
@@ -169,7 +173,7 @@ las directrices que entregue el usuario. La IA no inventa ofertas, precios ni fe
 </ul>
 
 <div class="box wa">
-  <span class="t">Dos trampas de despliegue que ya nos costaron horas</span>
+  <span class="t">Dos trampas de despliegue</span>
   <p><b>Los secretos no se aplican solos.</b> Cambiar una clave en Cloudflare no afecta a un despliegue
   ya publicado. Hay que volver a desplegar — basta un empujón al repositorio — para que la tome.</p>
   <p><b>Nunca fijar un solo modelo de IA.</b> Google retira modelos sin aviso y la llamada devuelve
@@ -286,7 +290,101 @@ marcan las tres, hay tres pestañas.</p>
   motivo real del error — nunca un mensaje genérico.</p>
 </div>
 
-<h2 id="p7"><span class="n">07 · Editor</span>Modificar lo que la IA generó</h2>
+<h2 id="p7"><span class="n">07 · Instrucción</span>Cómo se instruye a la IA</h2>
+<p class="lede">La IA de Google hace exactamente dos trabajos: <b>elige</b> dentro de un catálogo
+cerrado y <b>escribe</b>. Lo que sigue no son sugerencias de prompt: son las condiciones que debe
+cumplir su salida para que se acepte.</p>
+
+<div class="box">
+  <span class="t">Regla estructural del prompt</span>
+  <p><b>El encargo del usuario va primero y manda.</b> La descripción de campaña, el gancho y los
+  comentarios se colocan al inicio del prompt y marcados como órdenes que <b>ganan sobre las reglas
+  de estilo</b>. Si el encargo queda enterrado entre reglas genéricas, la IA lo ignora y devuelve
+  copy de catálogo.</p>
+</div>
+
+<h3>A · Pulcritud gráfica</h3>
+<p class="lede">La IA no dibuja: elige diagramación, elige foto y aplica la paleta de la marca. Esas
+tres elecciones deciden si la pieza se ve profesional o amateur.</p>
+
+<h4>Elección de la fotografía</h4>
+<ul>
+  <li>La IA debe <b>ver las fotos candidatas</b>, no elegirlas por el nombre del archivo. Se le
+  entregan las miniaturas y decide mirando.</li>
+  <li>Debe elegir <b>la foto coherente con el producto</b> del encargo, no la más bonita.</li>
+  <li><b>Descartar</b> logos, íconos, capturas de pantalla y cualquier imagen con texto incrustado.</li>
+  <li>Preferir fotos con <b>una zona limpia</b> donde caiga el bloque de texto. Una foto cuyo sujeto
+  ocupa justo el lado del titular no sirve, por buena que sea.</li>
+  <li>Si el encargo no permite decidir, elegir la más neutra — <b>nunca dejar la pieza sin foto</b>
+  teniendo biblioteca disponible.</li>
+  <li>Sobre foto, el <b>velo es obligatorio</b>. Sin él, el texto blanco es una apuesta.</li>
+</ul>
+
+<h4>Coherencia de la campaña</h4>
+<ul>
+  <li>Todos los tamaños de una misma campaña comparten <b>foto, paleta y diagramación</b>. Una campaña
+  no es once piezas distintas: es una pieza en once medidas.</li>
+  <li>La variedad va <b>entre campañas</b>, no dentro de una. Dos campañas seguidas no deben salir
+  con la misma diagramación.</li>
+</ul>
+
+<h4>Limpieza de la composición</h4>
+<ul>
+  <li><b>El círculo de oferta solo existe si hay una cifra real.</b> Un círculo vacío o con una frase
+  sin número es el error gráfico más visible que puede cometer.</li>
+  <li>Nunca dos elementos decorativos <b>del mismo color tocándose</b>.</li>
+  <li>Los adornos van <b>detrás</b> del contenido y asomando por el borde. Jamás flotando en el centro
+  ni sobre el texto.</li>
+  <li>Solo colores de la paleta de la marca. <b>Ningún color inventado</b>, ni siquiera «parecido».</li>
+  <li>Un solo peso tipográfico por nivel. Nada de mezclar tres pesos en un titular.</li>
+</ul>
+
+<h3>B · Mirada comercial en los textos</h3>
+<p class="lede">El copy de un anuncio <b>vende</b>. No describe, no informa, no acompaña. Si una frase
+podría abrir la memoria anual de la empresa, está mal escrita.</p>
+
+<h4>Lo que toda pieza debe cumplir</h4>
+<ul>
+  <li><b>Responder qué gana el lector</b>, en la primera frase. No qué hace la empresa.</li>
+  <li>Hablarle <b>de tú</b>, sobre su situación, no sobre la marca.</li>
+  <li><b>El titular lleva el beneficio</b>, no el nombre del producto a secas. El nombre va en el epígrafe.</li>
+  <li><b>Una idea por frase.</b> Frases cortas y con energía.</li>
+  <li>Titulares <b>sin punto final</b>. Sin exclamaciones dobles.</li>
+  <li>Español de Chile. Respetar las palabras a usar y a evitar de la marca.</li>
+</ul>
+
+<h4>La oferta</h4>
+<ul>
+  <li>El gancho se usa <b>exactamente como lo escribió el usuario</b>. Ni redondeado, ni reformulado,
+  ni «mejorado».</li>
+  <li><b>Prohibido inventar</b> precios, plazos, descuentos, fechas o coberturas. Si no está en el
+  encargo ni en la landing, no existe.</li>
+  <li>Si hay una cifra, <b>tiene que verse</b>: es lo que hace que el anuncio funcione.</li>
+</ul>
+
+<div class="box no-">
+  <span class="t">Prohibido en el copy</span>
+  <ul>
+    <li><b>Tono de comunicado:</b> «Nos complace anunciar», «En [marca] estamos comprometidos»,
+    «Queremos informarte», «Estimado cliente».</li>
+    <li><b>Meta-copy:</b> hablar del anuncio o de la campaña dentro del propio anuncio.</li>
+    <li><b>Relleno genérico:</b> «rápido, fácil y online» como frase completa; «la mejor opción»;
+    «pensado para ti».</li>
+    <li><b>Superlativos sin respaldo:</b> «el mejor», «el número uno», salvo que el usuario lo aporte
+    y pueda sostenerlo.</li>
+  </ul>
+</div>
+
+<div class="box si-">
+  <span class="t">Ortografía — segunda pasada obligatoria</span>
+  <p>Pedir buena ortografía en el prompt <b>no basta</b>: los modelos entregan faltas igualmente.
+  Antes de devolver nada, el servidor debe hacer <b>una segunda llamada de corrección</b> sobre todos
+  los textos visibles — titulares, bajadas, botones, epígrafes, descripciones — y solo entonces
+  entregar.</p>
+  <p>Las <b>keywords no se corrigen</b>: la gente busca sin tildes y así deben quedar.</p>
+</div>
+
+<h2 id="p8"><span class="n">08 · Editor</span>Modificar lo que la IA generó</h2>
 <h4>Controles comunes a toda campaña</h4>
 <div class="tw"><table>
 <thead><tr><th>Control</th><th>Comportamiento</th></tr></thead>
@@ -360,7 +458,7 @@ aparece la propiedad correspondiente a ese elemento. No hay que buscar el contro
   a partir del momento en que toca algo, y él tiene que saberlo.</p>
 </div>
 
-<h2 id="p8"><span class="n">08 · Display</span>Google Display</h2>
+<h2 id="p9"><span class="n">09 · Display</span>Google Display</h2>
 <p class="lede">Once tamaños en cuatro familias. Un banner no se diseña once veces: se diseña una vez
 en el máster <b>300×250</b> y se deriva con un factor <b>k</b> propio de cada familia.</p>
 
@@ -469,7 +567,7 @@ En formatos anchos se parte en dos columnas con la foto en <b>recorte circular</
 <span class="no">Título, CTA y logo nunca se caen</span> — si no caben, ese formato no admite esa
 diagramación y se usa otra del catálogo.</p>
 
-<h2 id="p9"><span class="n">09 · Facebook</span>Facebook Ads · solo imagen</h2>
+<h2 id="p10"><span class="n">10 · Facebook</span>Facebook Ads · solo imagen</h2>
 <p class="lede">Tres piezas cubren Feed, Marketplace, columna derecha y Audience Network. Sin Reels,
 sin Stories, sin carrusel, sin animación.</p>
 
@@ -521,7 +619,7 @@ distintas: la gráfica y los textos.</p>
   cuanto lo supere.</p>
 </div>
 
-<h2 id="p10"><span class="n">10 · Search</span>Google Search</h2>
+<h2 id="p11"><span class="n">11 · Search</span>Google Search</h2>
 <p class="lede">Search no produce una gráfica: produce una <b>campaña estructurada</b>. Se piensa como
 especialista, no como formulario — la unidad de agrupación es la <b>intención de búsqueda</b>.</p>
 
@@ -534,6 +632,16 @@ especialista, no como formulario — la unidad de agrupación es la <b>intenció
 <tr><td><b>Extensiones</b></td><td>Sitelinks con texto y dos descripciones</td></tr>
 </tbody></table></div>
 
+<div class="box si-">
+  <span class="t">Antes de escribir una sola keyword: leer la landing</span>
+  <p>La IA <b>debe abrir y analizar la URL de destino y las de referencia</b>. De ahí salen los
+  nombres reales de los productos, la propuesta de valor, las promociones vigentes y el vocabulario
+  con el que la empresa habla de lo suyo.</p>
+  <p>Las keywords y los anuncios tienen que usar <b>ese vocabulario</b>, no sinónimos genéricos. Un
+  anuncio escrito sin leer la landing sale plano y ofrece cosas que la página no tiene.</p>
+  <p>Si una URL no se puede leer, <b>hay que decirlo</b> y no seguir como si se hubiera leído.</p>
+</div>
+
 <h3>Keywords</h3>
 <div class="tw"><table>
 <thead><tr><th>Regla</th><th>Valor</th></tr></thead>
@@ -545,6 +653,8 @@ especialista, no como formulario — la unidad de agrupación es la <b>intenció
 <tr><td>Forma</td><td>Minúsculas, sin corchetes ni comillas. Nada de keywords de una sola palabra genérica</td></tr>
 <tr><td>Cobertura</td><td>Singular y plural, sinónimos, orden distinto, con «online», «precio», «chile» cuando aplique</td></tr>
 <tr><td>Negativas</td><td>Mínimo 5 de campaña, razonadas: qué búsquedas parecidas no queremos pagar</td></tr>
+<tr><td><b>Competencia</b></td><td class="no">Prohibida. Ninguna keyword ni ningún texto puede nombrar marcas de la competencia — ni como término ni como comparación</td></tr>
+<tr><td><b>Uso de la marca propia</b></td><td>Solo <b>acompañada de un producto o de una promoción</b> («seguro auto zurich», «zurich 2 cuotas gratis»). <span class="no">Nunca la marca sola</span>: atrae a quien ya es cliente y encarece sin sumar</td></tr>
 </tbody></table></div>
 
 <div class="box wa">
@@ -567,7 +677,7 @@ especialista, no como formulario — la unidad de agrupación es la <b>intenció
 
 <p>Google muestra tres titulares y dos descripciones a la vez. El total de 15 titulares es el
 máximo que admite un anuncio adaptable; los 4 anclados ocupan las posiciones 1, 2 y 3 — y esa
-posición <b>debe viajar en el CSV de exportación</b>, o el anclaje se decide en la app y nunca llega
+posición <b>debe viajar en la planilla de exportación</b>, o el anclaje se decide en la app y nunca llega
 a Google.</p>
 
 <div class="box no-">
@@ -578,11 +688,13 @@ a Google.</p>
     <li><b>Amontonar keywords.</b> No repetir la misma más de dos veces entre titular y descripción.</li>
     <li><b>Relleno genérico</b> tipo «rápido, fácil y online» como frase completa.</li>
     <li><b>Productos sin relación</b> con la intención del grupo.</li>
+    <li><b>Nombrar a la competencia</b>, de cualquier forma.</li>
+    <li><b>La marca propia suelta</b>, sin producto ni promoción que la acompañe.</li>
     <li>Punto final en los titulares. Exclamaciones dobles.</li>
   </ul>
 </div>
 
-<h2 id="p11"><span class="n">11 · Inspector</span>La garantía de calidad</h2>
+<h2 id="p12"><span class="n">12 · Inspector</span>La garantía de calidad</h2>
 <p class="lede">Ninguna pieza llega al usuario sin pasar seis comprobaciones sobre el render real —
 no sobre el código que lo generó, sobre el resultado medido en pantalla.</p>
 
@@ -615,20 +727,27 @@ Tras tres intentos fallidos se entrega con el aviso visible — nunca en silenci
   renderizado</b>: posiciones, tamaños y colores reales.</p>
 </div>
 
-<h2 id="p12"><span class="n">12 · Salida</span>Exportación</h2>
+<h2 id="p13"><span class="n">13 · Salida</span>Exportación</h2>
 <div class="tw"><table>
 <thead><tr><th>Plataforma</th><th>Formatos</th><th>Alcance</th></tr></thead>
 <tbody>
 <tr><td>Google Display</td><td>HTML · JPG · PNG · todos</td><td>Un banner o el grupo completo</td></tr>
 <tr><td>Facebook Ads</td><td>JPG · PNG + los textos del anuncio aparte</td><td>Las tres piezas</td></tr>
-<tr><td>Google Search</td><td><b>CSV de keywords</b> y <b>CSV de anuncios</b> + resumen legible</td><td>Campaña completa</td></tr>
+<tr><td>Google Search</td><td><b>XLSX de keywords</b> y <b>XLSX de anuncios</b> + resumen legible</td><td>Campaña completa</td></tr>
 </tbody></table></div>
 
-<p>Los CSV deben llevar las cabeceras <b>en inglés</b> — son las únicas que Google Ads Editor
-reconoce — y BOM UTF-8 para que las tildes no se rompan. Los límites de caracteres se vuelven a
-recortar al exportar, por si el usuario alargó un texto al editarlo.</p>
+<div class="box no-">
+  <span class="t">Formato de las planillas</span>
+  <p>Las planillas se entregan en <b>XLSX</b>. <span class="no">Nunca en CSV.</span></p>
+</div>
+<p>Las cabeceras van <b>en inglés</b> — son las únicas que Google Ads Editor reconoce — con una hoja
+por tipo de dato: una de keywords, otra de anuncios y otra de negativas. Los límites de caracteres se
+vuelven a recortar al exportar, por si el usuario alargó un texto al editarlo.</p>
+<p>En la hoja de anuncios, cada titular lleva su <b>columna de posición</b> al lado: los cuatro
+anclados con su posición, los once que rotan en blanco. Sin esa columna el anclaje se decide en la
+aplicación y nunca llega a Google.</p>
 
-<h2 id="p13"><span class="n">13 · Aprendizaje</span>Errores ya cometidos</h2>
+<h2 id="p14"><span class="n">14 · Riesgos</span>Errores ya cometidos</h2>
 <p class="lede">Esta sección es la más valiosa del manual. Son fallos reales de la versión anterior,
 con su causa. Cada uno costó horas y una entrega mala delante de un cliente.</p>
 
