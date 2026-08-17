@@ -279,18 +279,35 @@ conversación, no un formulario ciego.</p>
   mismo origen, sin problemas de CORS y compatible con la exportación a imagen.</li>
 </ul>
 
-<h4>Carpetas y qué significa cada una</h4>
+<h4>Dos trabajos distintos, dos orígenes distintos</h4>
+<p class="lede">Una imagen puede cumplir dos funciones que no tienen nada que ver entre sí. Confundirlas
+es lo que produce banners con un logotipo gigante y deformado de fondo.</p>
 <div class="tw"><table>
-<thead><tr><th>Prefijo</th><th>Contenido</th><th>¿Candidata a foto de la IA?</th></tr></thead>
+<thead><tr><th>Función</th><th>De dónde sale</th><th>Cómo aparece en la pieza</th></tr></thead>
+<tbody>
+<tr><td><b>Fotografía de fondo</b></td><td><code>fotos-generales/</code> · <code>fotos-seguros/</code> · <code>subidas/</code></td><td>Detrás de la composición, a sangre y con velo</td></tr>
+<tr><td><b>Logotipo de la marca</b></td><td><b><code>logos/</code></b></td><td>En su esquina, a su tamaño, versión clara si el fondo es oscuro</td></tr>
+</tbody></table></div>
+
+<h4>Qué puede elegir la IA de cada carpeta</h4>
+<div class="tw"><table>
+<thead><tr><th>Prefijo</th><th>Contenido</th><th>¿Sirve como foto de fondo?</th></tr></thead>
 <tbody>
 <tr><td><code>fotos-generales/</code></td><td>Fotografía de uso libre</td><td class="si">Sí</td></tr>
 <tr><td><code>fotos-seguros/</code></td><td>Fotografía del rubro</td><td class="si">Sí, con prioridad si el encargo lo pide</td></tr>
-<tr><td><code>logos/</code></td><td>Logotipos y marcas</td><td class="no">No, nunca</td></tr>
+<tr><td><code>logos/</code></td><td>Logotipos</td><td class="no">No — su sitio es el campo «logo» de la marca</td></tr>
 <tr><td><code>subidas/</code></td><td>Lo que suben los usuarios</td><td class="si">Sí</td></tr>
 </tbody></table></div>
-<p>La exclusión de <code>logos/</code> <b>se decide por el prefijo</b>, no adivinando por el nombre
-del archivo. Es la forma mecánica y fiable de cumplir la regla de que la IA nunca use un logotipo
-como fotografía de fondo.</p>
+
+<div class="box si-">
+  <span class="t">El logotipo no está prohibido: es obligatorio</span>
+  <p><b>El logo aparece en todas las piezas</b> y nunca se cae, ni cuando falta sitio. La carpeta
+  <code>logos/</code> es precisamente <b>de donde se elige el logotipo al crear una marca</b>.</p>
+  <p>Lo único que se excluye es que un logotipo se use como <b>fotografía de fondo</b>. Si eso ocurre,
+  el resultado es una marca gigante y deformada llenando el banner con el titular encima.</p>
+  <p>La exclusión se decide <b>por el prefijo de la carpeta</b>, no adivinando por el nombre del
+  archivo — que es como se colaba antes.</p>
+</div>
 
 <div class="box wa">
   <span class="t">Biblioteca compartida</span>
@@ -381,7 +398,8 @@ tres elecciones deciden si la pieza se ve profesional o amateur.</p>
   <li>La IA debe <b>ver las fotos candidatas</b>, no elegirlas por el nombre del archivo. Se le
   entregan las miniaturas y decide mirando.</li>
   <li>Debe elegir <b>la foto coherente con el producto</b> del encargo, no la más bonita.</li>
-  <li><b>Descartar</b> logos, íconos, capturas de pantalla y cualquier imagen con texto incrustado.</li>
+  <li><b>Descartar como fondo</b> los logotipos, íconos, capturas de pantalla y cualquier imagen
+  con texto incrustado. El logotipo de la marca entra por su propio campo, no por aquí.</li>
   <li>Preferir fotos con <b>una zona limpia</b> donde caiga el bloque de texto. Una foto cuyo sujeto
   ocupa justo el lado del titular no sirve, por buena que sea.</li>
   <li>Si el encargo no permite decidir, elegir la más neutra — <b>nunca dejar la pieza sin foto</b>
