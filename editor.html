@@ -916,6 +916,17 @@ button,input,select,textarea{font-family:inherit;}
 .ia-avisos ul{margin:0;padding-left:2px;list-style:none;}
 .ia-avisos li{display:flex;gap:7px;align-items:flex-start;font-size:13px;line-height:1.5;color:#3a4056;margin-bottom:6px;}
 .ia-avisos li:last-child{margin-bottom:0;}
+/* Facebook: los textos del anuncio, con el contador contra el límite VISIBLE */
+.fb-panel{margin:4px 0 14px;padding:12px;background:#f4f7fc;border:1px solid #dfe4f2;border-radius:10px;}
+.fb-campo{margin-bottom:11px;}
+.fb-campo label{display:block;font-size:12px;font-weight:600;color:var(--ink2,#3a4056);margin-bottom:4px;}
+.fb-campo label small{font-weight:400;color:var(--ink3,#5b6178);}
+.fb-campo input,.fb-campo textarea{width:100%;box-sizing:border-box;font-family:var(--f);font-size:13px;border:1px solid var(--bdr);border-radius:7px;padding:7px 9px;background:#fff;resize:vertical;}
+.fb-count{display:inline-block;margin-top:4px;font-size:11px;font-weight:600;}
+.fb-count.ok{color:#22624a;}
+.fb-count.aviso{color:#8A6212;}
+.fb-count.mal{color:#B4453C;}
+.fb-nota{display:flex;gap:6px;align-items:flex-start;font-size:11.5px;line-height:1.5;color:var(--ink3,#5b6178);margin-top:2px;}
 .ab-frame{position:relative;overflow:hidden;display:flex;flex-direction:column;box-sizing:border-box;}
 .ab-frame.fila{flex-direction:row;align-items:center;}   /* banners anchos: bloques en fila (leaderboard) */
 .ab-frame > *{flex:1;min-height:0;}
@@ -2183,6 +2194,11 @@ button,input,select,textarea{font-family:inherit;}
             <button class="crc" data-serv="banner" onclick="crearTrabajoHome('display-300x250','/gdn-ia')">
               <span class="crc-ic display"><span class="ico" data-ic="grid" data-icsize="20px"></span></span>
               <div class="crc-t">Banner Display</div><div class="crc-d">Colección de tamaños para Google Ads.</div>
+              <div class="crc-cta">Crear <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M5 12h14M13 6l6 6-6 6"/></svg></div>
+            </button>
+            <button class="crc" data-serv="banner" onclick="crearTrabajoHome('fb-1080x1350','/fb-ia')">
+              <span class="crc-ic display"><span class="ico" data-ic="imagen" data-icsize="20px"></span></span>
+              <div class="crc-t">Facebook Ads</div><div class="crc-d">Feed vertical, cuadrado y horizontal.</div>
               <div class="crc-cta">Crear <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M5 12h14M13 6l6 6-6 6"/></svg></div>
             </button>
             <button class="crc" data-serv="ads" onclick="crearTrabajoHome('ads','/ads-ia')">
@@ -3954,6 +3970,13 @@ const FORMATOS = {
   // Google Search: la "pieza" es la CAMPAÑA (grupos + keywords + anuncios), no un
   // visual. Ancho grande: la consola de campaña usa el espacio como una plataforma.
   "ads":             { label:"Campaña Google Search",     badge:"Ads",       ancho:1180, alto:0,   txt:"Grupos de anuncios, keywords (exacta/frase) y anuncios RSA. Exporta CSV para Google Ads." },
+  // FACEBOOK ADS · solo imagen estática. Tiene su PROPIO MÁSTER (1080×1350): no
+  // puede colgar del 300×250 de Display, el factor saldría 3,6 y todo saldría
+  // desproporcionado. Tres piezas cubren Feed, Marketplace, columna derecha y
+  // Audience Network. Sin Reels, sin Stories, sin carrusel, sin animación.
+  "fb-1080x1350":    { label:"Feed vertical · 1080×1350", badge:"Facebook", ancho:1080, alto:1350, txt:"4:5, el que Meta recomienda. Feed de Facebook e Instagram." },
+  "fb-1080x1080":    { label:"Cuadrado · 1080×1080",      badge:"Facebook", ancho:1080, alto:1080, txt:"1:1. Feed · Marketplace · columna derecha · Audience Network." },
+  "fb-1200x628":     { label:"Horizontal · 1200×628",     badge:"Facebook", ancho:1200, alto:628,  txt:"1.91:1 para feed horizontal y enlaces. La misma pieza sirve para Display." },
   // LinkedIn (tamaños oficiales)
   "linkedin":        { label:"Portada perfil · 1584×396", badge:"LinkedIn",  ancho:1584, alto:396,  txt:"Banner/portada de perfil 1584×396." },
   "linkedin-post":   { label:"Post cuadrado · 1200×1200", badge:"LinkedIn",  ancho:1200, alto:1200, txt:"Post cuadrado del feed 1200×1200." },
@@ -3995,7 +4018,7 @@ const CATS_PERMITIDAS = {
   todos:   null   // sin restricción
 };
 function modoDeCategoria(cat){
-  return cat==="Email" ? "email" : cat==="Banners" ? "banners" : cat==="Post" ? "post" : "todos";
+  return cat==="Email" ? "email" : (cat==="Banners"||cat==="Facebook") ? "banners" : cat==="Post" ? "post" : "todos";
 }
 function renderFormatoSelect(){
   // El selector depende de la SECCIÓN: en /email-ia solo se ofrece Email (no se
@@ -5009,8 +5032,11 @@ ${liveScript}
    ═══════════════════════════════════════════════════════════════ */
 const SET_DISPLAY_DESKTOP = ["display-300x250","display-336x280","display-728x90","display-970x90","display-300x600","display-160x600","display-250x250","display-200x200","display-468x60","display-1200x628","display-1200x1200"];
 const SET_SOCIAL = ["linkedin-post","fb-square","linkedin-link","fb-post","fb-story","linkedin"];
+// Facebook: máster propio y solo tres piezas (las que cubren todos los sitios).
+const SET_FACEBOOK = ["fb-1080x1350","fb-1080x1080","fb-1200x628"];
 const COLECCIONES = {
   "display-desktop": { fmts: SET_DISPLAY_DESKTOP, master: "display-300x250", nombre: "Display Desktop" },
+  "facebook":        { fmts: SET_FACEBOOK,        master: "fb-1080x1350",    nombre: "Facebook Ads" },
   "social":          { fmts: SET_SOCIAL,          master: "linkedin-post",   nombre: "Social" }
 };
 function esSetPieza(p){ return !!(p && p.esSet && Array.isArray(p.artboards)); }
@@ -5296,6 +5322,10 @@ const GEOM = {
   // círculo escala con la MISMA k que todo lo demás (155 × k) y el 62 % queda
   // como techo. En el máster y en 336×280 el número es idéntico al del manual.
   circuloBase:155,
+  // ⌀ del círculo en el máster de Facebook: 62 % de 1080 sería enorme, así que se
+  // usa la misma proporción que en Display respecto del máster (155/250 del lado
+  // corto = 62 %), pero escalada con la k de Facebook.
+  circuloBaseFb:670,
   emArial:0.52,                 // ancho medio de carácter en Arial
   topeChars:{ epigrafe:18, cta:24, cifra:6 },
   // El aire también es una medida fija: si se deja libre, unos formatos salen
@@ -5348,13 +5378,24 @@ function geomDe(fmt){
   // Piso de legibilidad: por debajo de esto no se encoge — o sube al piso, o el
   // elemento se cae. Es el mismo umbral que aplica el inspector.
   const piso = S<=250 ? 9 : 11;
-  const margen = Math.max(GEOM.margenMin, Math.round(S*GEOM.margenPct/100));
+  // Margen: en Display es el 5,5 % del lado corto REAL de cada formato (así lo
+  // fija su tabla: 14 px en 300×250, 66 px en 1200×1200). En Facebook la tabla lo
+  // deriva del máster con la k (59 px en 1080×1350, 47 en el cuadrado), porque
+  // los tres tamaños son de la misma familia visual y el salto de lado corto
+  // engañaría. Dos familias, dos reglas — las dos del manual.
+  const margen = esFacebookFmt(fmt)
+    ? Math.max(GEOM.margenMin, Math.round(Math.round(1080*GEOM.margenPct/100)*k))
+    : Math.max(GEOM.margenMin, Math.round(S*GEOM.margenPct/100));
   const logoAlto = Math.max(GEOM.logoMin, Math.round(S*GEOM.logoPct/100));
   // El círculo solo existe donde la diagramación lo admite.
-  const admiteCirculo = (fam==="cuadrado") || (fam==="grande" && w===h);
+  // En Facebook la diagramación preferida es la A (foto + círculo), así que el
+  // círculo entra también en el 4:5 vertical, no solo en el cuadrado.
+  const admiteCirculo = (fam==="cuadrado") || (fam==="grande" && w===h)
+                     || (esFacebookFmt(fmt) && h/w <= 1.3);
   const circulo = admiteCirculo ? Math.round(S*GEOM.circuloPct/100) : 0;   // el del manual (tabla/spec)
   // El que se dibuja: escalado con k y con el 62 % como techo.
-  const circuloK = admiteCirculo ? Math.min(Math.round(GEOM.circuloBase*k), circulo) : 0;
+  const base = esFacebookFmt(fmt) ? GEOM.circuloBaseFb : GEOM.circuloBase;
+  const circuloK = admiteCirculo ? Math.min(Math.round(base*k), circulo) : 0;
   const sale = Math.round(S*GEOM.salePct/100), hueco = Math.round(S*GEOM.huecoPct/100);
   // El círculo se mete en el lienzo su diámetro MENOS lo que sale por el borde:
   // el bloque de texto DESCUENTA eso de su ancho o el círculo le tapa el título.
@@ -5957,6 +5998,53 @@ function renderComposicion(comp, fmt, nivelMin){
   const burbuja = P.hay.circulo ? burbujaHTML(bu0, fmt) : "";
   const legal = bandaLegalHTML(P, c, bgColor, esFoto);
   return `<div class="cmp" data-fmt="${escAttr(fmt)}" data-nivel="${P.nivel}"${P.apretado?' data-apretado="1"':''} style="width:${W}px;height:${H}px;background:${esc(bgColor)};${borde}">${fondoLayer}${scrim}${deco}<div class="cmp-zonas ${fila?'row':'col'}${reparteAlto?' reparte':''}" style="padding:${mpad};box-sizing:border-box;">${zonas}</div>${burbuja}${legal}</div>`;
+}
+// ═══ FACEBOOK: LOS TEXTOS DEL ANUNCIO VAN FUERA DE LA IMAGEN ══════════════
+// Es la diferencia fundamental con Display. En Display el título vive DENTRO del
+// banner; en Facebook el título y el texto son campos del anuncio. Meta no
+// rechaza el texto largo: lo CORTA sin avisar. Por eso se valida contra el
+// límite VISIBLE, no contra el máximo, y se avisa en cuanto se pasa.
+const FB_TEXTOS = [
+  { clave:"principal",   label:"Texto principal", visible:125, max:500,
+    nota:"Lo que pase de 125 se oculta tras «Ver más»." },
+  { clave:"titular",     label:"Titular del anuncio", visible:40, max:255,
+    nota:"En móviles pequeños se corta en 27." },
+  { clave:"descripcion", label:"Descripción", visible:30, max:90,
+    nota:"Opcional: en móvil se oculta casi siempre." }
+];
+const esColeccionFacebook = p => !!(p && p.esSet && p.setTipo === "facebook");
+function fbTextos(p){ p = p || pieza(); if(!p) return {}; p.fbTextos = p.fbTextos || {}; return p.fbTextos; }
+function setFbTexto(clave, valor){
+  const p = pieza(); if(!p) return;
+  fbTextos(p)[clave] = valor;
+  persistir();
+  const c = FB_TEXTOS.find(x => x.clave === clave);
+  const cont = document.querySelector(`[data-fbcount="${clave}"]`);
+  if(cont && c) cont.outerHTML = fbContadorHTML(c, valor);
+}
+function fbContadorHTML(c, valor){
+  const n = String(valor||"").length;
+  const estado = n > c.max ? "mal" : (n > c.visible ? "aviso" : "ok");
+  const msg = n > c.max ? `pasa del máximo de ${c.max}`
+            : n > c.visible ? `Meta cortará a partir de ${c.visible}`
+            : `${c.visible - n} disponibles antes del corte`;
+  return `<span class="fb-count ${estado}" data-fbcount="${c.clave}">${n}/${c.visible} · ${esc(msg)}</span>`;
+}
+// Panel de los textos del anuncio, dentro del editor de la colección de Facebook.
+function panelFacebookHTML(){
+  const p = pieza(); if(!esColeccionFacebook(p)) return "";
+  const T = fbTextos(p);
+  return `<div class="fb-panel">
+    <div class="cmp-parte">Textos del anuncio <small>van FUERA de la imagen · los escribe Meta alrededor de tu gráfica</small></div>
+    ${FB_TEXTOS.map(c => `<div class="fb-campo">
+      <label>${esc(c.label)} <small>${esc(c.nota)}</small></label>
+      ${c.clave==="principal"
+        ? `<textarea rows="3" oninput="setFbTexto('${c.clave}', this.value)" placeholder="Qué gana el lector, en la primera frase">${esc(T[c.clave]||"")}</textarea>`
+        : `<input type="text" value="${escAttr(T[c.clave]||"")}" oninput="setFbTexto('${c.clave}', this.value)" placeholder="${c.clave==='titular'?'Beneficio corto y directo':'Opcional'}">`}
+      ${fbContadorHTML(c, T[c.clave]||"")}
+    </div>`).join("")}
+    <div class="fb-nota">${svgIcon("info",{size:"12px"})} Por la regla del 20 % de texto en la imagen, en Facebook conviene la foto con círculo de oferta antes que una pieza muy tipográfica: Meta reparte menos las imágenes cargadas de texto.</div>
+  </div>`;
 }
 // ═══ INSPECTOR ════════════════════════════════════════════════════════════
 // Ninguna pieza llega al usuario sin pasar SEIS comprobaciones sobre el render
@@ -6850,7 +6938,7 @@ function renderComposicionEditor(){
     marcas.map(m=>`<option value="${m.id}" ${p.tema&&p.tema.marcaId===m.id?'selected':''}>${esc(m.nombre)}</option>`).join('')+
     `</select><button class="cmp-bib" onclick="abrirMarcas()" title="Gestionar marcas">${svgIcon("paleta",{size:"12px"})}</button></div>`;
   const C0 = p.composicion || composicionDefault(p.tema);
-  cont.innerHTML=`<div class="cmp-ed">${compScopeHeader(null)}${marcaSel}${selectorLayout(C0,"renderComposicionEditor();renderTablero()")}<div class="dz-sec">Contenido</div><button class="ia-sugerir" onclick="sugerirTextosIA()">${svgIcon("estrella",{size:"13px"})} Sugerir textos con Char-B</button><button class="ia-sugerir" onclick="generarFondoIA()">${svgIcon("imagen",{size:"13px"})} Generar fondo con IA</button>${compEditorHTML(p,null,'diseno')}</div>`;
+  cont.innerHTML=`<div class="cmp-ed">${compScopeHeader(null)}${marcaSel}${panelFacebookHTML()}${selectorLayout(C0,"renderComposicionEditor();renderTablero()")}<div class="dz-sec">Contenido</div><button class="ia-sugerir" onclick="sugerirTextosIA()">${svgIcon("estrella",{size:"13px"})} Sugerir textos con Char-B</button><button class="ia-sugerir" onclick="generarFondoIA()">${svgIcon("imagen",{size:"13px"})} Generar fondo con IA</button>${compEditorHTML(p,null,'diseno')}</div>`;
 }
 // Panel "Ajustar este tamaño" (overrides sobre el global) en la pestaña Editar.
 function renderFormTamaño(f){
@@ -7785,7 +7873,8 @@ function categoriaDe(formato){
   if(formato==="ads") return "Ads";
   if(formato==="libre") return "Formato Libre";
   if(formato && formato.indexOf("display-")===0) return "Banners";
-  if(formato==="linkedin" || (formato && (formato.indexOf("linkedin-")===0 || formato.indexOf("fb-")===0))) return "Post";
+  if(formato && formato.indexOf("fb-")===0) return "Facebook";
+  if(formato==="linkedin" || (formato && formato.indexOf("linkedin-")===0)) return "Post";
   return "Otro";
 }
 
@@ -8321,8 +8410,8 @@ async function crearDesde(formato){
   nom = String(nom).trim() || _sug;
   if(/^Proyecto \d+$/.test(pr.nombre||"")) pr.nombre = nom;
   // Formatos visuales de tamaño fijo → modelo de capas (colección). Documentos → bloques.
-  if(cat === "Banners" || cat === "Post"){
-    crearComposicion(cat==="Banners" ? "display-desktop" : "social");
+  if(cat === "Banners" || cat === "Post" || cat === "Facebook"){
+    crearComposicion(cat==="Banners" ? "display-desktop" : cat==="Facebook" ? "facebook" : "social");
     const pz = pieza(); if(pz){ pz.nombre = nom; persistir(); if(typeof renderTabsPiezas==="function") renderTabsPiezas(); }
     setURL(rutaDeProducto(pz)+"/"+slugDe(nom));
     return;
@@ -9842,6 +9931,7 @@ const RUTAS_PRODUCTO = {
   "/free":     { tipo:"libre",             nombre:"Estilo Libre",            serv:"libre" },
   "/post-ia":  { pronto:true,              nombre:"Post RRSS" },
   "/ads-ia":   { tipo:"ads",               nombre:"Google Search Ads",       serv:"ads" },
+  "/fb-ia":    { tipo:"fb-1080x1350",      nombre:"Facebook Ads · Char-B",   serv:"banner" },
 };
 // Permisos por servicio: 'admin' o permiso '*' = todo; si aún no cargó la
 // sesión (o en pruebas locales sin whoami) no se bloquea nada.
@@ -9927,12 +10017,14 @@ function restaurarSeccion(ruta, slug){
 // La URL al editar refleja la SECCIÓN de la pieza (no existe un "/editor" genérico).
 function rutaDeProducto(p){
   if(!p) return null;
+  if(p.setTipo === "facebook") return "/fb-ia";
   if(esComposicion(p) || esSetPieza(p)) return "/gdn-ia";
   const f = p.formato;
   if(f==="email") return "/email-ia";
   if(f==="ads") return "/ads-ia";
   if(f==="libre") return "/free";
-  if(/^display|^linkedin|^fb-/.test(String(f||""))) return "/gdn-ia";
+  if(/^fb-/.test(String(f||""))) return "/fb-ia";
+  if(/^display|^linkedin/.test(String(f||""))) return "/gdn-ia";
   return "/free";   // invitación y otros documentos → lienzo abierto
 }
 

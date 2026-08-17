@@ -7,7 +7,8 @@
 #   /gdn-ia      → Banner Display (con Char-B)
 #   /free        → Estilo Libre
 #   /post-ia     → Post RRSS (pronto)
-#   /ads-ia      → Google Search Ads (pronto)
+#   /ads-ia      → Google Search Ads
+#   /fb-ia       → Facebook Ads (3 tamanos, master propio 1080x1350)
 #   /marcas /papelera /permisos /configuracion → menú (abren su panel sobre el dashboard)
 /login         /index.html  200
 /home          /editor.html 200
@@ -23,6 +24,8 @@
 /post-ia/*   /editor.html 200
 /ads-ia        /editor.html 200
 /ads-ia/*   /editor.html 200
+/fb-ia         /editor.html 200
+/fb-ia/*   /editor.html 200
 /marcas        /editor.html 200
 /papelera      /editor.html 200
 /permisos      /editor.html 200
