@@ -1,0 +1,738 @@
+<title>Campaign Flash</title>
+<style>
+:root{
+  --ground:#F7F8FA; --panel:#FFFFFF; --ink:#1A1F2E; --muted:#6B7385;
+  --rule:#DFE3EB; --rule-soft:#EDF0F5; --accent:#2167AE; --accent-soft:#E7F0F8;
+  --limit:#B4453C; --limit-soft:#FBEDEC; --ok:#2E7D5B; --ok-soft:#EAF4EF;
+  --warn:#8A6212; --warn-soft:#FBF3E0;
+  --mono:ui-monospace,"SF Mono","Cascadia Mono",Menlo,Consolas,monospace;
+  --sans:ui-sans-serif,-apple-system,"Segoe UI",system-ui,Arial,sans-serif;
+}
+@media (prefers-color-scheme:dark){ :root:not([data-theme="light"]){
+  --ground:#14161C; --panel:#1B1E26; --ink:#E8EAF0; --muted:#9AA2B4;
+  --rule:#2B3040; --rule-soft:#22262F; --accent:#6FA8DC; --accent-soft:#1D2A38;
+  --limit:#E08079; --limit-soft:#2E2020; --ok:#6BBF97; --ok-soft:#1B2A23;
+  --warn:#D9B25F; --warn-soft:#2A2418;
+}}
+:root[data-theme="dark"]{
+  --ground:#14161C; --panel:#1B1E26; --ink:#E8EAF0; --muted:#9AA2B4;
+  --rule:#2B3040; --rule-soft:#22262F; --accent:#6FA8DC; --accent-soft:#1D2A38;
+  --limit:#E08079; --limit-soft:#2E2020; --ok:#6BBF97; --ok-soft:#1B2A23;
+  --warn:#D9B25F; --warn-soft:#2A2418;
+}
+*{box-sizing:border-box}
+body{ margin:0; background:var(--ground); color:var(--ink); font:15px/1.62 var(--sans);
+      -webkit-font-smoothing:antialiased; }
+.wrap{ max-width:980px; margin:0 auto; padding:44px 22px 110px; }
+header{ border-bottom:2px solid var(--ink); padding-bottom:22px; }
+.eyebrow{ font:600 11px/1 var(--mono); letter-spacing:.16em; text-transform:uppercase;
+          color:var(--accent); margin-bottom:12px; }
+h1{ font-size:clamp(30px,5.5vw,46px); line-height:1.03; margin:0 0 12px; letter-spacing:-.025em;
+    font-weight:700; text-wrap:balance; }
+.sub{ color:var(--muted); max-width:64ch; margin:0; font-size:16px; }
+h2{ font-size:22px; margin:56px 0 8px; letter-spacing:-.015em; font-weight:700; text-wrap:balance; }
+h2 .n{ font:600 12px var(--mono); color:var(--accent); display:block; letter-spacing:.14em;
+       text-transform:uppercase; margin-bottom:7px; }
+h3{ font-size:16px; margin:30px 0 8px; font-weight:700; }
+h4{ font-size:14px; margin:20px 0 6px; font-weight:700; color:var(--muted);
+    font-family:var(--mono); letter-spacing:.04em; }
+p{ max-width:68ch; }
+.lede{ color:var(--muted); max-width:68ch; margin:0 0 16px; }
+ul,ol{ max-width:68ch; padding-left:20px; }
+li{ margin:5px 0; }
+.tw{ overflow-x:auto; margin:14px 0 8px; border:1px solid var(--rule); background:var(--panel); }
+table{ border-collapse:collapse; width:100%; font-size:13.5px; }
+th,td{ text-align:left; padding:8px 12px; border-bottom:1px solid var(--rule-soft); vertical-align:top; }
+th{ font:600 11px var(--mono); letter-spacing:.07em; text-transform:uppercase; color:var(--muted);
+    background:var(--rule-soft); border-bottom:1px solid var(--rule); white-space:nowrap; }
+tbody tr:last-child td{ border-bottom:none; }
+td.num,th.num{ font-family:var(--mono); font-variant-numeric:tabular-nums; white-space:nowrap; }
+.no{ color:var(--limit); font-weight:600; }
+.si{ color:var(--ok); font-weight:600; }
+.chip{ display:inline-block; font:600 10.5px var(--mono); padding:2px 7px; border:1px solid var(--rule);
+       border-radius:2px; background:var(--rule-soft); color:var(--muted); }
+.sw{ display:inline-block; width:13px; height:13px; border:1px solid rgba(0,0,0,.22);
+     vertical-align:-2px; margin-right:7px; }
+.box{ border-left:3px solid var(--accent); background:var(--accent-soft); padding:13px 17px; margin:16px 0; }
+.box.no-{ border-left-color:var(--limit); background:var(--limit-soft); }
+.box.si-{ border-left-color:var(--ok); background:var(--ok-soft); }
+.box.wa{ border-left-color:var(--warn); background:var(--warn-soft); }
+.box p,.box ul{ margin:0; max-width:none; font-size:14px; }
+.box p + p, .box p + ul{ margin-top:9px; }
+.box .t{ font:600 11px var(--mono); letter-spacing:.1em; text-transform:uppercase; display:block;
+         margin-bottom:7px; opacity:.85; }
+.formula{ font-family:var(--mono); font-size:12.5px; background:var(--rule-soft);
+          border:1px solid var(--rule); padding:11px 14px; margin:12px 0; overflow-x:auto;
+          white-space:pre; line-height:1.55; }
+.mapa{ display:flex; flex-wrap:wrap; gap:15px; align-items:flex-end; margin:16px 0 6px;
+       padding:18px; border:1px solid var(--rule); background:var(--panel); overflow-x:auto; }
+.mini{ text-align:center; flex:0 0 auto; }
+.mini .lab{ font:600 10px var(--mono); color:var(--muted); margin-top:5px; white-space:nowrap; }
+.idx{ columns:2; column-gap:34px; margin:22px 0 0; padding:0; list-style:none; max-width:none; }
+.idx li{ break-inside:avoid; margin:0; border-bottom:1px solid var(--rule-soft); padding:6px 0; }
+.idx a{ color:var(--ink); text-decoration:none; display:flex; gap:10px; font-size:14px; }
+.idx a:hover{ color:var(--accent); }
+.idx .k{ font:600 11px var(--mono); color:var(--accent); flex:0 0 26px; padding-top:2px; }
+a{ color:var(--accent); }
+:focus-visible{ outline:2px solid var(--accent); outline-offset:2px; }
+footer{ margin-top:70px; padding-top:20px; border-top:1px solid var(--rule); color:var(--muted); font-size:13px; }
+@media(max-width:640px){ .idx{ columns:1; } }
+</style>
+
+<div class="wrap">
+<header>
+  <div class="eyebrow">Manual de construcción · versión 1</div>
+  <h1>Campaign Flash</h1>
+  <p class="sub">Todo lo necesario para construir el aplicativo: qué hace, cómo se despliega, cómo
+  se comporta cada pantalla y — sobre todo — <b>las reglas exactas de cada pieza gráfica</b>, con sus
+  medidas, sus límites de caracteres y lo que ocurre cuando algo no cabe.</p>
+</header>
+
+<ol class="idx">
+  <li><a href="#p0"><span class="k">00</span> Cómo leer este manual</a></li>
+  <li><a href="#p1"><span class="k">01</span> Qué es y qué no es</a></li>
+  <li><a href="#p2"><span class="k">02</span> Arquitectura y despliegue</a></li>
+  <li><a href="#p3"><span class="k">03</span> Acceso y usuarios</a></li>
+  <li><a href="#p4"><span class="k">04</span> Marcas</a></li>
+  <li><a href="#p5"><span class="k">05</span> Estructura de la aplicación</a></li>
+  <li><a href="#p6"><span class="k">06</span> El asistente de IA</a></li>
+  <li><a href="#p7"><span class="k">07</span> El editor</a></li>
+  <li><a href="#p8"><span class="k">08</span> Google Display</a></li>
+  <li><a href="#p9"><span class="k">09</span> Facebook Ads</a></li>
+  <li><a href="#p10"><span class="k">10</span> Google Search</a></li>
+  <li><a href="#p11"><span class="k">11</span> El inspector</a></li>
+  <li><a href="#p12"><span class="k">12</span> Exportación</a></li>
+  <li><a href="#p13"><span class="k">13</span> Errores ya cometidos</a></li>
+</ol>
+
+<h2 id="p0"><span class="n">00 · Para quien construya esto</span>Cómo leer este manual</h2>
+<p class="lede">Este documento existe porque una versión anterior de esta aplicación falló, y falló
+de una forma concreta: <b>generaba la geometría de cada pieza en el momento</b>. Cada generación era
+distinta y ninguna se comprobaba. El resultado eran banners con el texto cortado, elementos
+superpuestos y verticales medio vacíos.</p>
+
+<div class="box no-">
+  <span class="t">Las tres reglas de oro</span>
+  <p><b>1. La IA nunca dibuja.</b> Aporta texto, elige una foto y elige una diagramación del catálogo.
+  La geometría está resuelta de antemano y no es negociable.</p>
+  <p><b>2. Nada se entrega sin inspección.</b> Cada pieza se renderiza y se comprueba antes de mostrarse.
+  La que no pasa, se rehace.</p>
+  <p><b>3. Si el texto no cabe, se reescribe el texto.</b> Jamás se estira la caja ni se corta la frase.</p>
+</div>
+
+<p>Cuando este manual dice «debe», es obligatorio. Cuando dice «puede», es una decisión del usuario
+dentro de un rango acotado. Los rangos existen para que ninguna decisión del usuario rompa la pieza.</p>
+
+<h2 id="p1"><span class="n">01 · Alcance</span>Qué es y qué no es</h2>
+<p class="lede">Campaign Flash es una aplicación web que produce propuestas de anuncios y campañas
+digitales de marca y performance para <b>tres plataformas</b>, apoyada en la API de IA de Google.</p>
+
+<div class="tw"><table>
+<thead><tr><th>Plataforma</th><th>Qué produce</th><th class="num">Piezas</th></tr></thead>
+<tbody>
+<tr><td><b>Google Display</b></td><td>Banners de imagen estática</td><td class="num">11 tamaños</td></tr>
+<tr><td><b>Facebook Ads</b></td><td>Imagen estática + textos del anuncio</td><td class="num">3 tamaños</td></tr>
+<tr><td><b>Google Search</b></td><td>Campaña estructurada: grupos, keywords, anuncios RSA</td><td class="num">1 documento</td></tr>
+</tbody></table></div>
+
+<p>Cada entregable debe seguir <b>el contenido y las condiciones de la landing de la promoción</b> o
+las directrices que entregue el usuario. La IA no inventa ofertas, precios ni fechas.</p>
+
+<div class="box no-">
+  <span class="t">Fuera de alcance — decisiones deliberadas</span>
+  <ul>
+    <li><b>No hay email marketing.</b> Se eliminó del producto.</li>
+    <li><b>No hay animación ni video.</b> Solo imagen estática. Sin HTML5 animado, sin Reels, sin Stories.</li>
+    <li><b>No se crean piezas desde cero.</b> El usuario no puede abrir un lienzo en blanco: toda pieza
+    nace de una generación de la IA. Después puede modificarla por completo, pero no partir de nada.</li>
+    <li><b>No hay carrusel</b> de Facebook (es una pieza de 2 a 10 tarjetas, otra estructura).</li>
+  </ul>
+</div>
+
+<h2 id="p2"><span class="n">02 · Infraestructura</span>Arquitectura y despliegue</h2>
+<div class="tw"><table>
+<thead><tr><th>Pieza</th><th>Servicio</th><th>Para qué</th></tr></thead>
+<tbody>
+<tr><td>Código</td><td><b>GitHub</b></td><td>Repositorio. El despliegue se dispara al empujar a la rama principal</td></tr>
+<tr><td>Alojamiento</td><td><b>Cloudflare Pages</b></td><td>Sirve la aplicación en un subdominio propio</td></tr>
+<tr><td>Backend</td><td><b>Cloudflare Functions</b></td><td>Endpoints de API. No hay servidor propio</td></tr>
+<tr><td>Datos</td><td><b>Cloudflare D1</b></td><td>Proyectos, marcas, historial</td></tr>
+<tr><td>Imágenes</td><td><b>Cloudflare R2</b></td><td>Biblioteca de fotos. Se sirven por el mismo dominio</td></tr>
+<tr><td>Inteligencia</td><td><b>API de IA de Google</b></td><td>Genera copy, elige foto y diagramación, lee las landings</td></tr>
+</tbody></table></div>
+
+<h4>Lo que provee el usuario</h4>
+<ul>
+  <li>El contenedor de GitHub y la creación del Page y el subdominio en Cloudflare, con ambas plataformas conectadas.</li>
+  <li>La clave de la API de IA de Google, configurada como <b>secreto</b> dentro de Cloudflare.</li>
+  <li>El enlace del almacenamiento donde quedan las imágenes.</li>
+</ul>
+
+<div class="box wa">
+  <span class="t">Dos trampas de despliegue que ya nos costaron horas</span>
+  <p><b>Los secretos no se aplican solos.</b> Cambiar una clave en Cloudflare no afecta a un despliegue
+  ya publicado. Hay que volver a desplegar — basta un empujón al repositorio — para que la tome.</p>
+  <p><b>Nunca fijar un solo modelo de IA.</b> Google retira modelos sin aviso y la llamada devuelve
+  404. El código debe probar una <b>cadena de modelos</b> en orden y saltar al siguiente ante un 404.
+  Debe existir además un endpoint de diagnóstico que liste los modelos que la cuenta tiene de verdad.</p>
+</div>
+
+<h2 id="p3"><span class="n">03 · Acceso</span>Usuarios y permisos</h2>
+<ul>
+  <li>Entrada con <b>usuario y contraseña</b>. Sin correos de verificación ni enlaces mágicos.</li>
+  <li>Las credenciales viven en un <b>archivo del repositorio</b>, editable por el administrador desde GitHub.
+  Sacar a alguien del archivo lo expulsa en la siguiente petición.</li>
+  <li>Contraseña guardada como <b>hash con sal</b>, nunca en texto plano.</li>
+  <li>Dos roles: <b>administrador</b> (crea y habilita usuarios, ve la configuración y el historial completo)
+  y <b>usuario</b> (trabaja en su propio espacio).</li>
+  <li>Cada usuario ve sus proyectos. El administrador ve los de todos, con el dueño identificado.</li>
+</ul>
+
+<h2 id="p4"><span class="n">04 · Marcas</span>El corazón del sistema</h2>
+<p class="lede">Todo trabajo está asociado a una marca creada previamente. La marca no es un puñado
+de colores: es <b>el manual que la IA lee antes de escribir una sola palabra</b>.</p>
+
+<div class="tw"><table>
+<thead><tr><th>Grupo</th><th>Campos</th></tr></thead>
+<tbody>
+<tr><td><b>Identidad</b></td><td>Nombre · empresa · logo (versión color y versión para fondos oscuros) · sitio web</td></tr>
+<tr><td><b>Color</b></td><td>Primario · secundario · color de fondo de pieza · color de texto · color de CTA y su texto · dos acentos</td></tr>
+<tr><td><b>Tipografía</b></td><td>Fuente de titulares · fuente de cuerpo</td></tr>
+<tr><td><b>Voz</b></td><td>Negocio · tono · eslogan · público · productos · palabras a usar · palabras a evitar</td></tr>
+<tr><td><b>Directrices</b></td><td>Texto libre y extenso: el manual de marca resumido. <b>Se inyecta en todos los prompts</b></td></tr>
+<tr><td><b>Legal</b></td><td>Descargo de responsabilidad · copyright</td></tr>
+</tbody></table></div>
+
+<div class="box">
+  <span class="t">El campo que más importa</span>
+  <p><b>Directrices</b> es el mecanismo por el que el usuario enseña a la IA sin programar. Ahí van
+  el lenguaje de formas, el criterio fotográfico, las reglas de composición y lo que está prohibido.
+  Es lo único que el usuario puede cambiar para mejorar la calidad de salida por su cuenta.</p>
+</div>
+
+<p>La creación de una marca es <b>un espacio colaborativo</b>: el usuario entrega el manual, directrices
+claras y referencias adjuntas; la IA las analiza y propone la ficha; el usuario corrige. Debe existir
+conversación, no un formulario ciego.</p>
+
+<h2 id="p5"><span class="n">05 · Estructura</span>La aplicación por dentro</h2>
+<h4>Home</h4>
+<ul>
+  <li>Logo y nombre del aplicativo</li>
+  <li>Menú lateral con los accesos</li>
+  <li>Espacio de vista de proyectos</li>
+  <li>Ventana flotante con ícono para llamar a la IA, presente en todo el escritorio</li>
+</ul>
+
+<h4>Páginas — cada una con su propia ruta</h4>
+<div class="tw"><table>
+<thead><tr><th>Página</th><th>Contenido</th></tr></thead>
+<tbody>
+<tr><td><b>Creación de campañas</b></td><td>Abre la ventana del asistente</td></tr>
+<tr><td><b>Proyectos en curso</b></td><td>Campañas abiertas, con acceso al editor</td></tr>
+<tr><td><b>Proyectos realizados</b></td><td>Campañas cerradas, en solo lectura o reabribles</td></tr>
+<tr><td><b>Marcas</b></td><td>Creadas o por crear</td></tr>
+<tr><td><b>Fotos</b></td><td>Biblioteca: guardadas o por subir</td></tr>
+<tr><td><b>Historial de trabajos</b></td><td>Hora de creación · usuarios conectados con fecha y hora · datos de uso</td></tr>
+<tr><td><b>Configuración</b></td><td>Cambio de contraseña · zona horaria · correo de contacto. Solo el administrador crea o habilita usuarios</td></tr>
+</tbody></table></div>
+
+<h4>Biblioteca de fotos</h4>
+<ul>
+  <li>Sistema de fotos <b>predefinidas</b>, cargadas de antemano.</li>
+  <li>El usuario puede subir las suyas, <b>máximo 3 por campaña</b>.</li>
+  <li>Toda foto subida queda alojada en la biblioteca y disponible para futuras campañas.</li>
+</ul>
+
+<h2 id="p6"><span class="n">06 · Asistente</span>El formulario de la IA</h2>
+<p class="lede">Una sola ventana con toda la información necesaria para la campaña. No hay pasos ni
+asistente por etapas: el usuario ve todo lo que se le va a pedir de una vez.</p>
+
+<div class="tw"><table>
+<thead><tr><th class="num">#</th><th>Campo</th><th>Comportamiento</th></tr></thead>
+<tbody>
+<tr><td class="num">1</td><td>Saludo del asistente</td><td>Introducción breve, no es un campo</td></tr>
+<tr><td class="num">2</td><td><b>Marca</b></td><td>Lista de marcas creadas. Obligatorio</td></tr>
+<tr><td class="num">3</td><td><b>Estilo</b></td><td>De marca (usa el catálogo de diagramaciones de la marca) o libre</td></tr>
+<tr><td class="num">4</td><td><b>Plataforma</b></td><td>Google Display · Google Search · Facebook Ads. <b>Selección múltiple</b></td></tr>
+<tr><td class="num">5</td><td><b>Descripción de la campaña</b></td><td>Texto libre. Es el encargo y manda sobre todo lo demás</td></tr>
+<tr><td class="num">6</td><td><b>CTA</b></td><td>Lista predeterminada de llamadas a la acción</td></tr>
+<tr><td class="num">7</td><td><b>URL de destino</b></td><td>Adonde llevan los anuncios</td></tr>
+<tr><td class="num">8</td><td><b>URL de referencia 1 y 2</b></td><td>Opcionales</td></tr>
+<tr><td class="num">9</td><td><b>Foto</b></td><td>Elige de la biblioteca o sube otra, que igualmente se aloja allí</td></tr>
+<tr><td class="num">10</td><td><b>Comentarios generales</b></td><td>Cualquier otra información de interés</td></tr>
+</tbody></table></div>
+
+<p>Botón de <b>generar</b> a la derecha y de <b>limpiar</b> a la izquierda.</p>
+
+<div class="box si-">
+  <span class="t">Regla obligatoria sobre las URL</span>
+  <p>Las URL de destino y de referencia <b>deben ser abiertas, leídas y razonadas por la IA</b> antes
+  de generar. De ahí salen el vocabulario real del producto, la propuesta de valor y las promociones
+  vigentes. Un anuncio escrito sin leer la landing sale genérico — es el fallo más frecuente.</p>
+  <p>Si una URL no se puede leer, <b>hay que avisarlo</b>. Nunca generar en silencio como si se hubiera leído.</p>
+</div>
+
+<h4>Qué pasa al generar</h4>
+<p>La IA crea la campaña para las plataformas marcadas. Todas las piezas quedan <b>en un mismo
+proyecto</b> y se abre el editor con <b>una pestaña por plataforma</b>, como en un navegador. Si se
+marcan las tres, hay tres pestañas.</p>
+
+<div class="box wa">
+  <span class="t">Qué hacer si la generación falla</span>
+  <p>Si falla una plataforma pero las otras salen bien, <b>se entregan las que salieron</b> y se avisa
+  cuál falló y por qué. Solo se aborta entero si fallan todas.</p>
+  <p>Como no existe la creación manual desde cero, un fallo total deja al usuario sin salida: en ese
+  caso hay que <b>reintentar automáticamente hasta tres veces</b> y, si aun así falla, mostrar el
+  motivo real del error — nunca un mensaje genérico.</p>
+</div>
+
+<h2 id="p7"><span class="n">07 · Editor</span>Modificar lo que la IA generó</h2>
+<h4>Controles comunes a toda campaña</h4>
+<div class="tw"><table>
+<thead><tr><th>Control</th><th>Comportamiento</th></tr></thead>
+<tbody>
+<tr><td>Proyecto · Nombre · Tipo de campaña</td><td>Visibles y editables en la cabecera</td></tr>
+<tr><td>Vista previa</td><td>De un banner o de todos. Permite probar el CTA y elegir dispositivo</td></tr>
+<tr><td>Deshacer y rehacer</td><td>Por pieza</td></tr>
+<tr><td>Guardar</td><td>Explícito, además del autoguardado</td></tr>
+<tr><td>Autoguardado</td><td>Con aviso de fecha y hora en la zona superior</td></tr>
+<tr><td>Exportar · Salir</td><td>—</td></tr>
+</tbody></table></div>
+
+<h4>Selección directa</h4>
+<p>El ratón selecciona el elemento sobre la propia pieza y, en el panel de la izquierda,
+aparece la propiedad correspondiente a ese elemento. No hay que buscar el control en una lista.</p>
+
+<h4>Editar uno o editar todos</h4>
+<div class="tw"><table>
+<thead><tr><th>Modo</th><th>Comportamiento</th></tr></thead>
+<tbody>
+<tr><td><b>Editar uno</b></td><td>Se edita y se exporta banner por banner</td></tr>
+<tr><td><b>Editar todos</b></td><td>Los cambios se hacen solo en <b>el principal de cada grupo</b> (cuadrado, horizontal o vertical) y el resto del grupo se ajusta automáticamente</td></tr>
+</tbody></table></div>
+
+<h3>Las partes de un banner</h3>
+<p class="lede">Un banner se compone de estas partes, y cada una es editable por separado.</p>
+
+<h4>Fondo</h4>
+<ul>
+  <li>Puede ser de <b>color</b> o de <b>imagen</b>.</li>
+  <li>Debe poder llevar un <b>filtro de color encima</b>, con ajuste de transparencia.</li>
+</ul>
+
+<h4>Elementos sobre el fondo</h4>
+<ul>
+  <li>Círculos, cuadrados, patrones u otras formas que van sobre el fondo de color.</li>
+  <li>Van siempre <b>por detrás del texto</b>, nunca encima.</li>
+</ul>
+
+<h4>Logo de marca</h4>
+<ul>
+  <li>Dos posiciones iniciales: <b>arriba a la izquierda</b> o <b>abajo a la derecha</b>.</li>
+  <li>Tamaño ajustable.</li>
+  <li>Alineación a izquierda, centro o derecha.</li>
+  <li>Versión clara automática cuando el fondo es oscuro.</li>
+</ul>
+
+<h4>Texto — cuatro partes</h4>
+<p><b>Epígrafe · Título · Bajada · CTA.</b> Cada una debe poder:</p>
+<ul>
+  <li>Llevar un <b>fondo detrás</b>, cuadrado o redondeado.</li>
+  <li>Ajustar <b>márgenes arriba, abajo, izquierda y derecha</b>, con número.</li>
+  <li>Alinearse a la izquierda, al centro o a la derecha.</li>
+  <li>Ajustar el <b>tamaño de fuente</b> de forma independiente.</li>
+</ul>
+
+<h4>CTA</h4>
+<ul>
+  <li>Va sobre una figura <b>ovalada o cuadrada</b>, del color de la marca.</li>
+  <li>La figura debe poder ajustarse hacia arriba, abajo, izquierda o derecha.</li>
+  <li>El texto lleva márgenes elegibles en los cuatro lados.</li>
+</ul>
+
+<div class="box wa">
+  <span class="t">La tensión que este manual tiene que resolver</span>
+  <p>Este editor permite cambiar tamaños de fuente, márgenes y alineaciones. Eso significa que
+  <b>el usuario puede romper una pieza que la IA entregó correcta</b>.</p>
+  <p>La solución no es prohibir: es que <b>el inspector siga corriendo sobre las ediciones del
+  usuario</b>. Si una edición manual produce desborde, colisión o texto ilegible, se muestra un aviso
+  visible junto a la pieza — pero no se bloquea la edición. La responsabilidad pasa a ser del usuario
+  a partir del momento en que toca algo, y él tiene que saberlo.</p>
+</div>
+
+<h2 id="p8"><span class="n">08 · Display</span>Google Display</h2>
+<p class="lede">Once tamaños en cuatro familias. Un banner no se diseña once veces: se diseña una vez
+en el máster <b>300×250</b> y se deriva con un factor <b>k</b> propio de cada familia.</p>
+
+<div class="formula" id="formulas"></div>
+<div class="mapa" id="mapa"></div>
+
+<h3>Elementos y medidas base</h3>
+<p class="lede">Valores en el máster (k = 1). En cualquier otro formato se multiplican por su k.</p>
+<div class="tw"><table>
+<thead><tr><th>Elemento</th><th class="num">Base</th><th class="num">Rango</th><th class="num">Peso</th><th>Regla</th></tr></thead>
+<tbody>
+<tr><td><b>Epígrafe</b></td><td class="num">11 px</td><td class="num">10–12</td><td class="num">700</td><td>Nombre corto del producto. Una línea</td></tr>
+<tr><td><b>Título</b></td><td class="num">26 px</td><td class="num">24–28</td><td class="num">300</td><td>Sin punto final. Cursiva en 1–3 palabras como máximo</td></tr>
+<tr><td><b>Bajada</b></td><td class="num">13 px</td><td class="num">12–14</td><td class="num">400</td><td>Una sola idea</td></tr>
+<tr><td><b>CTA</b></td><td class="num">13 px</td><td class="num">12–14</td><td class="num">700</td><td>Verbo + complemento. Nunca se cae</td></tr>
+<tr><td><b>Legal</b></td><td class="num">9 px</td><td class="num">8–10</td><td class="num">400</td><td>El primero en caerse</td></tr>
+<tr><td><b>Logo</b></td><td class="num">8 % lado corto</td><td class="num">mín. 14 px</td><td class="num">—</td><td>Nunca se cae</td></tr>
+<tr><td><b>Margen</b></td><td class="num">5,5 % lado corto</td><td class="num">mín. 8 px</td><td class="num">—</td><td>Igual en los cuatro lados</td></tr>
+<tr><td><b>Cifra del círculo</b></td><td class="num">45 % ⌀</td><td class="num">42–48</td><td class="num">400</td><td>Porcentaje del diámetro, no del lienzo</td></tr>
+</tbody></table></div>
+
+<h4>Líneas permitidas — por familia, no globales</h4>
+<div class="tw"><table>
+<thead><tr><th>Familia</th><th class="num">Título</th><th class="num">Bajada</th><th class="num">Legal</th></tr></thead>
+<tbody>
+<tr><td>Cuadrados</td><td class="num">3</td><td class="num">3</td><td class="num">2</td></tr>
+<tr><td>Verticales</td><td class="num">3</td><td class="num">3</td><td class="num">2</td></tr>
+<tr><td>Grandes</td><td class="num">2</td><td class="num">2</td><td class="num">1</td></tr>
+<tr><td>Franjas</td><td class="num">1</td><td class="num">1</td><td class="num">1</td></tr>
+</tbody></table></div>
+
+<h3>Tabla maestra de los once formatos</h3>
+<div class="tw"><table id="tFmt">
+<thead><tr><th>Formato</th><th>Familia</th><th class="num">k</th><th class="num">Margen</th>
+<th class="num">Título</th><th class="num">Bajada</th><th class="num">CTA</th><th class="num">Epígrafe</th>
+<th class="num">⌀ Círculo</th><th>Diagramación</th></tr></thead><tbody></tbody></table></div>
+
+<h3>Máximo de caracteres</h3>
+<div class="box">
+  <span class="t">De dónde salen estos números</span>
+  <p>No se eligen: se calculan. Con el ancho útil y el cuerpo ya fijados, caben
+  <span style="font-family:var(--mono)">ancho ÷ (cuerpo × 0,52)</span> caracteres por línea —
+  0,52 em es el ancho medio de un carácter en Arial — multiplicado por las líneas permitidas.</p>
+</div>
+<div class="tw"><table id="tChars">
+<thead><tr><th>Formato</th><th class="num">Ancho útil</th><th class="num">Epígrafe</th><th class="num">Título</th>
+<th class="num">Bajada</th><th class="num">CTA</th><th class="num">Legal</th></tr></thead><tbody></tbody></table></div>
+
+<h3>Catálogo de diagramaciones</h3>
+<div class="tw"><table>
+<thead><tr><th>Diagramación</th><th>Cuadrados</th><th>Verticales</th><th>Franjas</th><th>Grandes</th><th>Requiere</th></tr></thead>
+<tbody>
+<tr><td><b>A</b> · Producto + oferta en círculo</td><td class="si">Sí</td><td class="no">No</td><td class="no">No</td><td>Solo 1200×1200</td><td>Oferta con cifra</td></tr>
+<tr><td><b>B</b> · La cifra manda</td><td class="si">Sí</td><td class="no">No</td><td class="si">Sí</td><td class="si">Sí</td><td>Precio o cifra</td></tr>
+<tr><td><b>C</b> · Vertical</td><td class="no">No</td><td class="si">Sí</td><td class="no">No</td><td class="no">No</td><td>—</td></tr>
+<tr><td><b>D</b> · Solo mensaje</td><td class="si">Sí</td><td class="si">Sí</td><td class="si">Sí</td><td class="si">Sí</td><td>Nada. Es el recurso sin oferta ni foto</td></tr>
+</tbody></table></div>
+
+<h4>A · Producto + oferta en círculo</h4>
+<p>Logo arriba-izquierda · píldora de producto · nombre del producto grande · línea de apoyo.
+A la derecha, un <b>círculo de oferta</b> de ⌀ 62 % del lado corto que sale 8 % por el borde, con
+entradilla (11 % del ⌀), cifra (45 %) y palabra (20 %). Adornos asomando por el borde inferior.
+Alineación izquierda en todo el bloque.</p>
+
+<h4>B · La cifra manda</h4>
+<p>Nombre del producto grande con dos pesos · píldora con el eslogan · <b>la cifra como elemento
+mayor</b> (22 % del lado corto) · línea de apoyo · botón · legal. Logo en círculo claro abajo-derecha.
+En formatos anchos se parte en dos columnas con la foto en <b>recorte circular</b> a la izquierda
+(⌀ 85 % del alto). Centrada en cuadrados; a la izquierda de su columna en anchos.</p>
+
+<h4>Círculo de oferta</h4>
+<ul>
+  <li>Solo existe <b>si hay una oferta real con cifra</b>. Sin cifra, no hay círculo.</li>
+  <li>Relleno en acento de marca o en el azul principal. Texto blanco sobre azul, oscuro sobre claro.</li>
+  <li>El bloque de texto <b>reserva su espacio</b>: el círculo va superpuesto y sin reserva tapa el título.</li>
+  <li>Segundo círculo permitido para oferta secundaria: ⌀ 62 % del primero, blanco.</li>
+</ul>
+
+<h4>Adornos</h4>
+<ul>
+  <li>Tres formas de ⌀ 28 %, 16 % y 9 % del lado corto.</li>
+  <li><b>Siempre asomando por el borde inferior.</b> Nunca flotando en el centro, nunca sobre el texto.</li>
+  <li>Nunca dos del mismo color tocándose.</li>
+  <li>Se apagan en franjas y en cualquier formato de lado corto ≤ 250 px.</li>
+</ul>
+
+<h4>Borde del banner</h4>
+<p>Google exige que el anuncio se distinga de la página. Con fondo oscuro no hace falta;
+<b>con fondo blanco o gris claro es obligatorio un borde de 1 px</b> en el color oscuro de la marca.</p>
+
+<h4>Espaciado entre elementos</h4>
+<div class="tw"><table>
+<thead><tr><th>Entre</th><th class="num">Base (k = 1)</th></tr></thead>
+<tbody>
+<tr><td>Epígrafe → Título</td><td class="num">6 px</td></tr>
+<tr><td>Título → Bajada</td><td class="num">10 px</td></tr>
+<tr><td>Bajada → CTA</td><td class="num">16 px</td></tr>
+<tr><td>CTA → Legal</td><td class="num">10 px</td></tr>
+<tr><td>Logo → primer texto</td><td class="num">18 px</td></tr>
+<tr><td>Texto → Círculo</td><td class="num">4 % del lado corto</td></tr>
+</tbody></table></div>
+
+<h4>Prioridad de caída</h4>
+<p>Si el contenido no cabe se reduce la escala. Si aun al mínimo no cabe, se quita en este orden:</p>
+<p><b>Legal → Bajada → Adornos → Epígrafe.</b>
+<span class="no">Título, CTA y logo nunca se caen</span> — si no caben, ese formato no admite esa
+diagramación y se usa otra del catálogo.</p>
+
+<h2 id="p9"><span class="n">09 · Facebook</span>Facebook Ads · solo imagen</h2>
+<p class="lede">Tres piezas cubren Feed, Marketplace, columna derecha y Audience Network. Sin Reels,
+sin Stories, sin carrusel, sin animación.</p>
+
+<div class="tw"><table>
+<thead><tr><th>Pieza</th><th class="num">Proporción</th><th class="num">Píxeles</th><th>Cubre</th></tr></thead>
+<tbody>
+<tr><td><b>Feed vertical</b> <span class="chip">máster</span></td><td class="num">4:5</td><td class="num">1080 × 1350</td><td>Feed de Facebook e Instagram. El que Meta recomienda</td></tr>
+<tr><td>Cuadrado</td><td class="num">1:1</td><td class="num">1080 × 1080</td><td>Feed · Marketplace · columna derecha · Audience Network</td></tr>
+<tr><td>Horizontal</td><td class="num">1.91:1</td><td class="num">1200 × 628</td><td>Feed horizontal y enlaces</td></tr>
+</tbody></table></div>
+
+<div class="box si-">
+  <span class="t">Dos cosas que ahorran trabajo</span>
+  <p><b>El 1200×628 es idéntico al de Display.</b> La misma pieza sirve para las dos plataformas.</p>
+  <p><b>Facebook tiene su propio máster: el 1080×1350.</b> No puede colgar del 300×250 de Display —
+  el factor saldría 3,6 y todo saldría desproporcionado.</p>
+</div>
+
+<h4>Requisitos de archivo</h4>
+<ul>
+  <li>JPG o PNG, <b>máximo 30 MB</b>.</li>
+  <li>Mínimo práctico <b>1080 px</b> en el lado corto.</li>
+  <li>Por debajo de <b>600 px de ancho</b>, Meta marca la imagen como baja resolución y reduce la entrega.</li>
+</ul>
+
+<h4>Texto dentro de la imagen</h4>
+<p>Meta eliminó el rechazo automático por exceso de texto, <b>pero sus sistemas siguen penalizando
+con menos entrega las imágenes cargadas de texto</b>. Se mantiene como regla interna: el texto no
+debe superar aproximadamente el 20 % de la superficie. Por eso en Facebook conviene la diagramación
+<b>A</b> (foto + círculo) antes que la B, que es muy tipográfica.</p>
+
+<h3>Los textos del anuncio — van FUERA de la imagen</h3>
+<p class="lede">Esta es la diferencia fundamental con Display. En Display el título vive dentro del
+banner; en Facebook el título y el texto son <b>campos del anuncio</b>. La IA debe entregar dos cosas
+distintas: la gráfica y los textos.</p>
+
+<div class="tw"><table>
+<thead><tr><th>Campo</th><th class="num">Máximo</th><th class="num">Visible</th><th>Regla para el sistema</th></tr></thead>
+<tbody>
+<tr><td><b>Texto principal</b></td><td class="num">500</td><td class="num">125</td><td>Apuntar a 125. Lo que pase de ahí se oculta tras «Ver más»</td></tr>
+<tr><td><b>Titular</b></td><td class="num">255</td><td class="num">40</td><td>Apuntar a 40. En móviles pequeños se corta en 27</td></tr>
+<tr><td><b>Descripción</b></td><td class="num">—</td><td class="num">30</td><td>Opcional: en móvil se oculta casi siempre</td></tr>
+</tbody></table></div>
+
+<div class="box no-">
+  <span class="t">Meta trunca en silencio</span>
+  <p>A diferencia de Google, que rechaza el texto largo, <b>Meta lo corta sin avisar</b>. Por eso el
+  sistema debe validar contra el límite <b>visible</b>, no contra el máximo, y avisar al usuario en
+  cuanto lo supere.</p>
+</div>
+
+<h2 id="p10"><span class="n">10 · Search</span>Google Search</h2>
+<p class="lede">Search no produce una gráfica: produce una <b>campaña estructurada</b>. Se piensa como
+especialista, no como formulario — la unidad de agrupación es la <b>intención de búsqueda</b>.</p>
+
+<h3>Estructura que debe devolver la IA</h3>
+<div class="tw"><table>
+<thead><tr><th>Nivel</th><th>Contenido</th></tr></thead>
+<tbody>
+<tr><td><b>Campaña</b></td><td>Nombre legible · URL final · lista de negativas de campaña</td></tr>
+<tr><td><b>Grupo de anuncios</b></td><td>Nombre legible · intención de búsqueda · razonamiento · keywords · negativas del grupo · titulares · descripciones · rutas</td></tr>
+<tr><td><b>Extensiones</b></td><td>Sitelinks con texto y dos descripciones</td></tr>
+</tbody></table></div>
+
+<h3>Keywords</h3>
+<div class="tw"><table>
+<thead><tr><th>Regla</th><th>Valor</th></tr></thead>
+<tbody>
+<tr><td>Cantidad por grupo</td><td class="num">20 a 25 · <b>menos de 20 no sirve</b></td></tr>
+<tr><td>Concordancias permitidas</td><td><b>Exacta y de frase únicamente.</b> <span class="no">La amplia está prohibida</span></td></tr>
+<tr><td>Mezcla obligatoria</td><td>Mínimo 30 % de cada tipo. Un grupo todo exacto o todo frase está mal</td></tr>
+<tr><td>Criterio de asignación</td><td>Búsqueda corta y precisa (2–3 palabras) → <b>exacta</b>. Cola larga (4–5 palabras) → <b>frase</b></td></tr>
+<tr><td>Forma</td><td>Minúsculas, sin corchetes ni comillas. Nada de keywords de una sola palabra genérica</td></tr>
+<tr><td>Cobertura</td><td>Singular y plural, sinónimos, orden distinto, con «online», «precio», «chile» cuando aplique</td></tr>
+<tr><td>Negativas</td><td>Mínimo 5 de campaña, razonadas: qué búsquedas parecidas no queremos pagar</td></tr>
+</tbody></table></div>
+
+<div class="box wa">
+  <span class="t">Si la IA se queda corta</span>
+  <p>Suele devolver menos keywords de las pedidas. El servidor debe <b>completar los grupos flacos
+  con una llamada adicional</b>, pasándole las que ya tiene para que no repita, y usando el
+  vocabulario de la landing.</p>
+</div>
+
+<h3>Anuncios RSA</h3>
+<div class="tw"><table>
+<thead><tr><th>Elemento</th><th class="num">Cantidad</th><th class="num">Límite</th><th>Regla</th></tr></thead>
+<tbody>
+<tr><td><b>Titulares fijos</b></td><td class="num">4</td><td class="num">30 caracteres</td><td>Anclados: se muestran siempre. Orden: marca · keyword · beneficio · llamada a la acción</td></tr>
+<tr><td><b>Titulares que rotan</b></td><td class="num">11</td><td class="num">30 caracteres</td><td>Un ángulo distinto cada uno. No repetir ni parafrasear los fijos</td></tr>
+<tr><td><b>Descripciones</b></td><td class="num">4</td><td class="num">90 caracteres</td><td>Cada una dice UNA cosa concreta</td></tr>
+<tr><td><b>Rutas</b></td><td class="num">2</td><td class="num">15 caracteres</td><td>Minúsculas, sin espacios, relacionadas con el grupo</td></tr>
+<tr><td><b>Sitelinks</b></td><td class="num">4 a 6</td><td class="num">25 · 35 · 35</td><td>De la misma landing. Usar rutas reales, no inventadas</td></tr>
+</tbody></table></div>
+
+<p>Google muestra tres titulares y dos descripciones a la vez. El total de 15 titulares es el
+máximo que admite un anuncio adaptable; los 4 anclados ocupan las posiciones 1, 2 y 3 — y esa
+posición <b>debe viajar en el CSV de exportación</b>, o el anclaje se decide en la app y nunca llega
+a Google.</p>
+
+<div class="box no-">
+  <span class="t">Prohibido en el copy de Search</span>
+  <ul>
+    <li><b>Hablar del anuncio o de la campaña.</b> «Esta campaña fue creada para convertir» es
+    exactamente lo que no se escribe.</li>
+    <li><b>Amontonar keywords.</b> No repetir la misma más de dos veces entre titular y descripción.</li>
+    <li><b>Relleno genérico</b> tipo «rápido, fácil y online» como frase completa.</li>
+    <li><b>Productos sin relación</b> con la intención del grupo.</li>
+    <li>Punto final en los titulares. Exclamaciones dobles.</li>
+  </ul>
+</div>
+
+<h2 id="p11"><span class="n">11 · Inspector</span>La garantía de calidad</h2>
+<p class="lede">Ninguna pieza llega al usuario sin pasar seis comprobaciones sobre el render real —
+no sobre el código que lo generó, sobre el resultado medido en pantalla.</p>
+
+<div class="tw"><table>
+<thead><tr><th class="num">#</th><th>Comprobación</th><th>Criterio</th></tr></thead>
+<tbody>
+<tr><td class="num">1</td><td><b>Desborde</b></td><td>Ningún elemento fuera del marco</td></tr>
+<tr><td class="num">2</td><td><b>Colisión</b></td><td>Ningún texto montado sobre otro ni sobre el círculo</td></tr>
+<tr><td class="num">3</td><td><b>Legibilidad</b></td><td>Ningún texto bajo 9 px en formatos de lado corto ≤ 250, ni bajo 11 px en el resto</td></tr>
+<tr><td class="num">4</td><td><b>Contraste</b></td><td>Texto contra su fondo real ≥ 4,5:1</td></tr>
+<tr><td class="num">5</td><td><b>Completa</b></td><td>Título, CTA y logo presentes</td></tr>
+<tr><td class="num">6</td><td><b>Aire</b></td><td>Ninguna zona muerta mayor al 30 % del alto</td></tr>
+</tbody></table></div>
+
+<p>Una pieza que falla <b>se regenera</b> con texto más corto o con otra diagramación del catálogo.
+Tras tres intentos fallidos se entrega con el aviso visible — nunca en silencio.</p>
+
+<div class="box si-">
+  <span class="t">Línea base visual</span>
+  <p>Además del inspector, cada diagramación aprobada se guarda como <b>imagen de referencia</b>.
+  Cualquier cambio de código que altere un píxel de una diagramación aprobada <b>bloquea el
+  despliegue</b>. Sin esto, una mejora en un formato rompe otro en silencio y nadie se entera hasta
+  que el usuario abre la aplicación.</p>
+</div>
+
+<div class="box no-">
+  <span class="t">Cómo NO comprobar</span>
+  <p>Comprobar que el HTML generado no venga vacío ni contenga errores <b>no es comprobar calidad</b>.
+  Un banner completamente vacío pasa ese test. La comprobación tiene que <b>medir el resultado
+  renderizado</b>: posiciones, tamaños y colores reales.</p>
+</div>
+
+<h2 id="p12"><span class="n">12 · Salida</span>Exportación</h2>
+<div class="tw"><table>
+<thead><tr><th>Plataforma</th><th>Formatos</th><th>Alcance</th></tr></thead>
+<tbody>
+<tr><td>Google Display</td><td>HTML · JPG · PNG · todos</td><td>Un banner o el grupo completo</td></tr>
+<tr><td>Facebook Ads</td><td>JPG · PNG + los textos del anuncio aparte</td><td>Las tres piezas</td></tr>
+<tr><td>Google Search</td><td><b>CSV de keywords</b> y <b>CSV de anuncios</b> + resumen legible</td><td>Campaña completa</td></tr>
+</tbody></table></div>
+
+<p>Los CSV deben llevar las cabeceras <b>en inglés</b> — son las únicas que Google Ads Editor
+reconoce — y BOM UTF-8 para que las tildes no se rompan. Los límites de caracteres se vuelven a
+recortar al exportar, por si el usuario alargó un texto al editarlo.</p>
+
+<h2 id="p13"><span class="n">13 · Aprendizaje</span>Errores ya cometidos</h2>
+<p class="lede">Esta sección es la más valiosa del manual. Son fallos reales de la versión anterior,
+con su causa. Cada uno costó horas y una entrega mala delante de un cliente.</p>
+
+<div class="tw"><table>
+<thead><tr><th>Síntoma</th><th>Causa real</th><th>Cómo evitarlo</th></tr></thead>
+<tbody>
+<tr><td>El texto se corta a la mitad en formatos anchos</td><td>La escala salía solo del ancho, ignorando el alto: un 1200×628 daba titulares de 104 px dentro de 628 px</td><td>La escala manda sobre el lado más ajustado</td></tr>
+<tr><td>El círculo de oferta tapa el titular y el botón</td><td>Iba superpuesto sin que el texto le reservara sitio</td><td>El bloque de texto descuenta el diámetro del círculo de su ancho disponible</td></tr>
+<tr><td>Los verticales salen con dos tercios vacíos</td><td>Una zona sin contenido seguía reservando su porcentaje del alto</td><td>Zona sin contenido, no crece</td></tr>
+<tr><td>Los verticales estrechos salen ilegibles</td><td>Se escalaban por el lado corto, que en un 160×600 son 160 px</td><td>Los verticales tienen su propia diagramación, no una escalada</td></tr>
+<tr><td>Banners sin foto teniendo biblioteca llena</td><td>La IA no elegía imagen y nadie lo suplía</td><td>Si la IA no elige foto, la elige el sistema de la biblioteca</td></tr>
+<tr><td>Nadie detectó los banners rotos hasta que el cliente abrió la app</td><td>Las pruebas comprobaban que no reventara, no que funcionara</td><td>Inspector sobre el render + línea base visual</td></tr>
+<tr><td>Una campaña de tres plataformas abría una sola pieza</td><td>Crear una pieza reutilizaba la abierta si la creía vacía</td><td>Una función única decide si una pieza está vacía, y contempla todos los tipos</td></tr>
+<tr><td>La IA responde 404 y se cae todo</td><td>Había un modelo fijo y Google lo retiró sin aviso</td><td>Cadena de modelos con salto ante 404</td></tr>
+<tr><td>El copy sale genérico</td><td>El encargo del usuario era el 0,6 % del prompt y la IA lo ignoraba</td><td>El encargo va primero y marcado como orden que gana sobre las reglas de estilo</td></tr>
+<tr><td>Un cambio arregla un formato y rompe otro</td><td>No había forma de saberlo antes de publicar</td><td>Línea base visual que bloquea el despliegue</td></tr>
+</tbody></table></div>
+
+<div class="box">
+  <span class="t">La lección de fondo</span>
+  <p>Todos estos fallos comparten una raíz: <b>el sistema producía sin mirar lo que producía</b>.
+  Automatizar sin inspección no es automatizar — es equivocarse más rápido. Por eso el inspector no
+  es una mejora opcional al final del proyecto: es la condición para que todo lo demás sea confiable.</p>
+</div>
+
+<footer>
+  Campaign Flash · manual de construcción. Las medidas de Display derivan de piezas reales de campaña;
+  las de Facebook y Search, de las especificaciones vigentes de cada plataforma. Todo número calculado
+  se recalcula al abrir esta página: corregir un valor de origen actualiza las tablas enteras.
+</footer>
+</div>
+
+<script>
+const FORMATOS = [
+  {w:300,h:250,fam:'Cuadrados'},{w:336,h:280,fam:'Cuadrados'},
+  {w:250,h:250,fam:'Cuadrados'},{w:200,h:200,fam:'Cuadrados'},
+  {w:300,h:600,fam:'Verticales'},{w:160,h:600,fam:'Verticales'},
+  {w:728,h:90,fam:'Franjas'},{w:970,h:90,fam:'Franjas'},{w:468,h:60,fam:'Franjas'},
+  {w:1200,h:628,fam:'Grandes'},{w:1200,h:1200,fam:'Grandes'}
+];
+const COLOR_FAM={Cuadrados:'#2167AE',Verticales:'#7B5EA7',Franjas:'#2E7D5B',Grandes:'#C4762B'};
+const BASE={epigrafe:11,titulo:26,bajada:13,cta:13,legal:9,margen:5.5};
+const LINEAS={
+  Cuadrados:{epigrafe:1,titulo:3,bajada:3,cta:1,legal:2},
+  Verticales:{epigrafe:1,titulo:3,bajada:3,cta:1,legal:2},
+  Grandes:{epigrafe:1,titulo:2,bajada:2,cta:1,legal:1},
+  Franjas:{epigrafe:1,titulo:1,bajada:1,cta:1,legal:1}
+};
+function factor(f){
+  if(f.fam==='Franjas')    return Math.max(0.55, f.h/110);
+  if(f.fam==='Verticales') return Math.max(0.62, f.w/300);
+  return Math.max(0.70, Math.min(f.w/300, f.h/250));
+}
+const r1=n=>Math.round(n*100)/100;
+function medidas(f){
+  const k=factor(f), S=Math.min(f.w,f.h), L=LINEAS[f.fam];
+  const margen=Math.max(8,Math.round(S*BASE.margen/100));
+  const piso=S<=250?9:11;
+  const px=b=>Math.max(piso,Math.round(b*k));
+  const circulo=(f.fam==='Cuadrados'||(f.fam==='Grandes'&&f.w===f.h))?Math.round(S*0.62):0;
+  const sale=Math.round(S*0.08), hueco=Math.round(S*0.04);
+  const invade=circulo?(circulo-sale+hueco):0;
+  const anchoUtil=Math.max(40,f.w-margen*2-invade);
+  const chars=(fs,l)=>Math.max(4,Math.floor(anchoUtil/(fs*0.52))*l);
+  const m={k,margen,circulo,anchoUtil,
+    titulo:Math.max(piso,Math.round(BASE.titulo*k)), bajada:px(BASE.bajada),
+    cta:px(BASE.cta), epigrafe:px(BASE.epigrafe), legal:px(BASE.legal), cae:[]};
+  if(f.fam==='Franjas'&&S<=60) m.cae.push('bajada','epigrafe');
+  if(f.fam==='Verticales'&&f.w<=160) m.cae.push('legal');
+  m.cEpigrafe=m.cae.includes('epigrafe')?0:Math.min(18,chars(m.epigrafe,L.epigrafe));
+  m.cTitulo=chars(m.titulo,L.titulo);
+  m.cBajada=m.cae.includes('bajada')?0:chars(m.bajada,L.bajada);
+  m.cCta=Math.min(24,chars(m.cta,L.cta));
+  m.cLegal=m.cae.includes('legal')?0:chars(m.legal,L.legal);
+  return m;
+}
+const diag=f=> f.fam==='Verticales'?'C · D'
+  : f.fam==='Franjas'?'B · D'
+  : f.fam==='Grandes'?(f.w===f.h?'A · B · D':'B · D') : 'A · B · D';
+
+document.getElementById('formulas').textContent =
+ 'Cuadrados y grandes   k = máx(0,70 ; mín(ancho/300 , alto/250))\n'+
+ 'Verticales            k = máx(0,62 ; ancho/300)    ← manda el ancho; el alto se REPARTE\n'+
+ 'Franjas               k = máx(0,55 ; alto/110)     ← manda el alto\n\n'+
+ 'Cualquier medida      valor = medida_base × k      (base = la del máster 300×250)\n'+
+ 'Piso de legibilidad   9 px si el lado corto ≤ 250 · 11 px en el resto';
+
+document.getElementById('mapa').innerHTML = FORMATOS.map(f=>{
+  const e=62/1200;
+  return `<div class="mini"><div style="width:${Math.max(6,f.w*e)}px;height:${Math.max(5,f.h*e)}px;
+    background:${COLOR_FAM[f.fam]};opacity:.9"></div><div class="lab">${f.w}×${f.h}</div></div>`;
+}).join('');
+
+const tf=document.querySelector('#tFmt tbody'), tc=document.querySelector('#tChars tbody');
+FORMATOS.forEach(f=>{
+  const m=medidas(f), n=`${f.w}×${f.h}`;
+  const master=(f.w===300&&f.h===250)?' <span class="chip">máster</span>':'';
+  tf.insertAdjacentHTML('beforeend',`<tr><td><b>${n}</b>${master}</td><td>${f.fam}</td>
+    <td class="num">${r1(m.k)}</td><td class="num">${m.margen} px</td><td class="num">${m.titulo} px</td>
+    <td class="num">${m.bajada} px</td><td class="num">${m.cta} px</td><td class="num">${m.epigrafe} px</td>
+    <td class="num">${m.circulo?m.circulo+' px':'<span class="no">—</span>'}</td><td>${diag(f)}</td></tr>`);
+  tc.insertAdjacentHTML('beforeend',`<tr><td><b>${n}</b></td><td class="num">${m.anchoUtil} px</td>
+    <td class="num">${m.cEpigrafe||'<span class="no">no va</span>'}</td><td class="num">${m.cTitulo}</td>
+    <td class="num">${m.cBajada||'<span class="no">no va</span>'}</td><td class="num">${m.cCta}</td>
+    <td class="num">${m.cLegal||'<span class="no">no va</span>'}</td></tr>`);
+});
+</script>
