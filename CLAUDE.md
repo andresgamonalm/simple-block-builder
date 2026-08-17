@@ -452,3 +452,79 @@ producción y borrador NO comparten datos. Puntos de retorno: rama congelada `re
 **Pendientes de esta línea:** analizar `mockups/Varios-Estilos/` (9 piezas, nunca se abrieron — Zurich tenía
 prioridad); que la IA VEA bien las fotos (hoy 3 de 50 en banner, 0 en email); escala tipográfica por formato;
 Ctrl+Z no cubre `adsData`; el Atrás del navegador no cambia la vista del dashboard.
+
+## Sesión 17-ago-2026: manual Flash Campaign implementado (ESTADO ACTUAL — no rehacer)
+El usuario entregó un **manual de construcción** (artifact "Flash Campaign", 29 pág.) + el
+**"Manual de Diagramación"** de Display. Orden: *"olvida el nombre nuevo y el dominio, focalízate en lo
+que viene después del login y en especial en hacer que las gráficas funcionen correctamente"*, y
+*"¿te tengo que especificar uno a uno o puedes leer el documento?"* → se ejecutó el manual completo.
+El PDF venía **cortado** (faltaban comprobaciones 5-6 del inspector, §13 Exportación y §14 Fallos): se
+recuperó el original vía `WebFetch` del artifact. Los valores ya estaban en `mockups/flash-campaign-spec.json`.
+
+**GEOMETRÍA CERRADA (`GEOM`, `geomDe`, `factorK`, `familiaGeom`, `planDeBanner` en editor.html).**
+Se acabó la escala libre: todo sale de la fórmula de su familia. k = cuadrados/grandes
+`max(0,70; min(w/300, h/250))` · verticales `max(0,62; w/300)` · franjas `max(0,55; h/110)` · Facebook
+`min(w/1080, h/1350)`. Cuerpos = base del máster × k, nunca bajo el **piso de legibilidad** (9 px con
+lado corto ≤250, 11 px el resto). `geomAutotest()` comprueba los 11 formatos contra el spec — **corre
+en la verificación, si se toca una fórmula lo grita**. `familiaGeom` tiene CUATRO familias (la vieja
+`familiaDeFormato` sigue para row/col y no se toca).
+- **Prioridad de caída** en vez de encoger: Bajada → Adornos → Epígrafe → **Legal último** (el usuario lo
+  quiere en cada banner; el manual contempla la excepción). Título, CTA y logo NUNCA caen.
+  `noVan` por formato: sin bajada/epígrafe/legal en 468×60, sin legal en 160×600, sin adornos en franjas
+  y con lado corto ≤250.
+- **Círculo de oferta**: solo con CIFRA real (`tieneCifra`). ⌀ = 155×k con el 62 % del lado corto como
+  techo — con el 62 % fijo un 1200×1200 daba 744 px de círculo y **12 caracteres** de titular.
+- **Legal = banda inferior de UNA línea** con espacio reservado (`bandaLegalHTML`), respaldo sólido si
+  detrás hay foto o adornos. Nunca sobre la imagen.
+- **Adornos**: 3 formas 28/16/9 % del lado corto asomando por el borde inferior, las dos del mismo color
+  en extremos opuestos. **Borde 1 px** obligatorio con fondo claro. **Velo** sobre foto acotado a 35-60 %.
+- **Diagramación C**: en verticales, si sobra alto el aire se reparte en huecos IGUALES
+  (`.cmp-zonas.col.reparte`). 160×600 pasó de 31 % a 21 % de zona muerta.
+- Las zonas ya no bajan de `min-content`: con `min-height:0` el flex las encogía y `overflow:hidden`
+  **cortaba el texto en silencio** (titular de 200×200, bajada de 250×250).
+- Antes de partir una palabra, **encoge** hasta el piso (`cabePalabra`): "Auto protegid/o" ya no pasa.
+
+**INSPECTOR (`inspeccionarCmp`, `inspeccionarTablero`, `avisoInspectorHTML`).** Seis comprobaciones sobre
+el **render real**: desborde · colisión · legibilidad · contraste ≥4,5:1 · completa (título+CTA+logo) ·
+aire (zona muerta >30 % del alto, medida DENTRO de la caja útil). Extras propios: texto recortado por su
+zona, palabra más ancha que la columna, adorno bajo texto desnudo, legal que no cabe en una línea.
+Corre tras cada render del tablero (también sobre ediciones del usuario), avisa junto a la pieza y resume
+en `#ed-inspector`. **Dos trampas ya resueltas**: normalizar por la escala del tablero (`scale(0.7)`) y
+**esperar la carga de imágenes** (`esperarImagenes`) — sin eso daba 11/11 falsos positivos.
+
+**IA.** Límites de caracteres calculados por el cliente (`limitesParaIA`, la palabra más larga sale del
+formato más angosto) y enviados en `body.limites`; el servidor los pone como reglas duras y hace una
+**pasada de acortado** si se pasa (`acortarAlLimite` + `recortarAPalabras`, nunca a mitad de palabra).
+La segunda pasada de **ortografía** ya existía y está enganchada en banner/email/ads/textos/concepto.
+**Logos excluidos por PREFIJO DE CARPETA** (`sirveComoFondo`/`prefijoDeImagen`): `logos/` jamás es fondo,
+`fotos-generales|fotos-seguros|subidas|ia/` sí; carpeta desconocida cae al nombre. **Avisos que no se
+pierden** (`mostrarAvisosIA` + `avisosDeReferencias`): URL que no se pudo leer, discrepancia entre el
+gancho del encargo y la promoción de la landing (manda el encargo, se muestran las dos), texto acortado.
+
+**ASISTENTE EN UNA VENTANA.** El manual: *"No hay pasos ni asistente por etapas"*. Se eliminaron los 3
+pasos; todo a la vista, **Limpiar** a la izquierda y **Generar** a la derecha. `iaIrPaso` ya no navega
+(solo alterna formulario/estado) y los ids + `generarConIA` no se tocaron.
+
+**SEARCH → XLSX.** `construirXLSX`/`_zip`/`_crc32` propios (la app es un solo archivo en Pages, sin
+librerías). `descargarPlanillaAds()` = una hoja por tipo (Keywords · Anuncios · Negativas · Sitelinks),
+cabeceras en inglés y **columna de posición** al lado de cada titular (anclados 1,2,3,3). Los CSV quedan
+como salida secundaria. Verificado descomprimiendo el archivo con Python.
+
+**FACEBOOK ADS (nuevo).** `SET_FACEBOOK` = fb-1080x1350 (máster) · fb-1080x1080 · fb-1200x628, colección
+`facebook`, categoría `Facebook` y ruta **`/fb-ia`** (antes un `fb-` caía en "Post" y creaba la colección
+social con máster de LinkedIn). Margen: en Facebook se deriva del máster con la k (59/47/28); en Display
+es el 5,5 % del lado corto real (14/66) — **dos reglas, las dos del manual**. Los **textos del anuncio van
+FUERA de la imagen**: panel `panelFacebookHTML` con contador contra el límite VISIBLE (125/40/30), porque
+Meta no rechaza el texto largo, lo **corta sin avisar**.
+
+**Verificación (arnés en el scratchpad de la sesión, patrón `srv.js` + mocks):** `geom.js` 11/11 ·
+`medir.js` (los 11 formatos, con copy dentro y fuera de límites) 0 fallos · `insp.js` 17/17 · `iaq.js`
+12/12 · `asis.js` 9/9 · `xls.js` 10/10 · `fb.js` 18/18 · `regres.js` 9/9 (email, libre, los 43 bloques,
+Search, export, dashboard). Baseline antes de tocar: 5 formatos con fallos, 8 fallos.
+
+**Pendientes de esta línea:** (1) §05 del manual pide **Proyectos en curso / realizados** y **Historial
+de trabajos** como páginas propias — no se hicieron. (2) La **línea base visual** que bloquea el
+despliegue si un cambio mueve un píxel de una diagramación aprobada (§12) — no se hizo. (3) El manual
+pide **conversación** al crear una marca (la IA propone la ficha y el usuario corrige), hoy es formulario.
+(4) `LAYOUTS_MARCA` sigue **apagado**: ahora hay inspector para medirlos, así que se pueden reactivar uno
+a uno con la batería. (5) Sigue pendiente de antes: la IA ve 3 de 50 fotos en banner y 0 en email.
