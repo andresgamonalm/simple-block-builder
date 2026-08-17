@@ -563,6 +563,11 @@ consola eran fuentes de Google bloqueadas por el sandbox. Con el instrumento cor
 Las pruebas leen ahora el registro de la app (`DASH_VIEWS`) en vez de listas escritas a mano, para no
 volver a desincronizarse.
 
+**Cierre de la auditoría (recorrido corregido, informe en `pruebas/informe-recorrido-2026-08-17.txt`):**
+`RECORRIDO COMPLETO SIN HALLAZGOS`. Las 7 páginas del dashboard con su ruta correcta, los 3 modales
+abriendo, los 5 productos creando/pintando/exportando, los 20 bloques de email con su formulario, y las
+13 rutas cargando por enlace directo sin un solo error de consola ni de JS.
+
 **Observación menor, sin corregir:** un enlace directo a una sección sin slug (`/email-ia` a secas) abre
 el diálogo de nombre sobre el dashboard y la URL queda en `/home` hasta que se confirma el nombre. Es
 transitorio y se corrige solo al crear la pieza; no se tocó el ruteo por no arriesgar más de lo que suma.

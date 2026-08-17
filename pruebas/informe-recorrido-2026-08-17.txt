@@ -1,0 +1,42 @@
+
+═══ 1 · DASHBOARD ═══
+  home        se ve · ruta /home · 1 controles pulsados (8 omitidos)
+  proyectos   se ve · ruta /proyectos · 6 controles pulsados (0 omitidos)
+  marcas      se ve · ruta /marcas · 2 controles pulsados (8 omitidos)
+  imagenes    se ve · ruta /imagenes · 1 controles pulsados (2 omitidos)
+  papelera    se ve · ruta /papelera · 0 controles pulsados (2 omitidos)
+  permisos    se ve · ruta /permisos · 0 controles pulsados (0 omitidos)
+  configuracion se ve · ruta /configuracion · 2 controles pulsados (0 omitidos)
+
+═══ 2 · MODALES ═══
+  Char-B (IA)   abre (modal-ia, 23 controles)
+  Imágenes (selector) abre (modal-imagenes, 6 controles)
+  Exportar      abre (modal-export, 2 controles)
+
+═══ 3 · PRODUCTOS ═══
+  Email     ruta /email-ia  · 4/4 pestañas activas · export 43201 bytes · 0 botones de barra
+  Display   ruta /gdn-ia    · 2/4 pestañas activas · export 42128 bytes · 1 botones de barra
+  Facebook  ruta /fb-ia     · 2/4 pestañas activas · export 42121 bytes · 1 botones de barra
+  Search    ruta /ads-ia    · 2/4 pestañas activas · export 43206 bytes · 0 botones de barra
+  Libre     ruta /free      · 4/4 pestañas activas · export 43201 bytes · 0 botones de barra
+
+═══ 4 · EMAIL: todos los bloques de su biblioteca ═══
+  20/20 bloques añadidos · 0 fallos al añadir · 0 formularios vacíos
+
+═══ 5 · ENLACE DIRECTO a cada ruta ═══
+  /home            carga · sin errores
+  /proyectos       carga · sin errores
+  /imagenes        carga · sin errores
+  /marcas          carga · sin errores
+  /papelera        carga · sin errores
+  /permisos        carga · sin errores
+  /configuracion   carga · sin errores
+  /email-ia        carga · sin errores
+  /gdn-ia          carga · sin errores
+  /fb-ia           carga · sin errores
+  /ads-ia          carga · sin errores
+  /free            carga · sin errores
+  /post-ia         carga · sin errores
+
+══════════════════════════════════════════════════════════════════════
+RECORRIDO COMPLETO SIN HALLAZGOS
