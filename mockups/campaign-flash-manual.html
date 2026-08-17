@@ -169,30 +169,35 @@ las directrices que entregue el usuario. La IA no inventa ofertas, precios ni fe
 </tbody></table></div>
 
 <h3>Coordenadas del proyecto</h3>
+<p class="lede">Toda la infraestructura está creada y conectada. Quien construya la aplicación
+<b>no tiene que configurar nada</b>: solo escribir código que use estos nombres.</p>
 <div class="tw"><table>
-<thead><tr><th>Recurso</th><th>Dirección</th><th>Estado</th></tr></thead>
+<thead><tr><th>Recurso</th><th>Dirección o valor</th><th>Nombre en el código</th></tr></thead>
 <tbody>
-<tr><td>Repositorio</td><td><a href="https://github.com/andresgamonalm/flash-campaign">github.com/andresgamonalm/flash-campaign</a> · rama <code>main</code></td><td class="si">Creado</td></tr>
-<tr><td>Dirección pública</td><td><b>flash-campaign.gamonal.app</b></td><td class="si">Conectada</td></tr>
-<tr><td>Alojamiento</td><td>Cloudflare Pages, desplegando desde <code>main</code></td><td class="si">Conectado</td></tr>
-<tr><td>Clave de la IA</td><td><code>GEMINI_API_KEY</code>, como secreto en Cloudflare</td><td class="si">Cargada</td></tr>
-<tr><td>Base de datos</td><td>Cloudflare D1, base <code>flash-campaign</code><br><span style="color:var(--muted)">id <code>7bde6bd4-5481-4a03-91f3-a3ef37d144c0</code></span>, binding <code>DB</code></td><td class="si">Creada · falta enlazarla al proyecto</td></tr>
-<tr><td>Imágenes</td><td>Cloudflare R2, bucket <code>zurich-chile</code>, binding <code>IMAGENES</code></td><td class="si">Existe · falta enlazarlo al proyecto</td></tr>
-<tr><td>Clave de sesión</td><td><code>JWT_SECRET</code>, como secreto en Cloudflare</td><td class="no">Por cargar</td></tr>
+<tr><td>Repositorio</td><td><a href="https://github.com/andresgamonalm/flash-campaign">andresgamonalm/flash-campaign</a> · rama <code>main</code></td><td>—</td></tr>
+<tr><td>Dirección pública</td><td><b>flash-campaign.gamonal.app</b></td><td>—</td></tr>
+<tr><td>Alojamiento</td><td>Cloudflare Pages, desplegando desde <code>main</code></td><td>—</td></tr>
+<tr><td>Base de datos</td><td>D1 · <code>flash-campaign</code><br><span style="color:var(--muted)">id <code>7bde6bd4-5481-4a03-91f3-a3ef37d144c0</code></span></td><td><code>env.DB</code></td></tr>
+<tr><td>Imágenes</td><td>R2 · <code>zurich-chile</code></td><td><code>env.IMAGENES</code></td></tr>
+<tr><td>Clave de la IA</td><td>Secreto</td><td><code>env.GEMINI_API_KEY</code></td></tr>
+<tr><td>Clave de sesión</td><td>Secreto</td><td><code>env.JWT_SECRET</code></td></tr>
+<tr><td>Dirección del sitio</td><td>https://flash-campaign.gamonal.app</td><td><code>env.SITE_URL</code></td></tr>
+<tr><td>Administrador</td><td>hola@andresgamonal.com</td><td><code>env.SUPER_ADMIN_EMAIL</code></td></tr>
 </tbody></table></div>
 
 <div class="box wa">
-  <span class="t">Enlazar no es lo mismo que crear</span>
-  <p>Una base o un bucket pueden existir y aun así la aplicación no encontrarlos. Hace falta el
-  <b>binding</b>: en el proyecto de Pages → Settings → Bindings, se declara con qué nombre los llama
-  el código. Son tres:</p>
-  <ul>
-    <li><code>DB</code> → la base de datos D1</li>
-    <li><code>IMAGENES</code> → el bucket de R2</li>
-    <li><code>GEMINI_API_KEY</code> y <code>JWT_SECRET</code> → como <b>secretos</b>, no como variables normales</li>
-  </ul>
-  <p>Las <b>tablas de la base no se crean a mano</b>: las levanta la propia aplicación la primera vez
-  que las necesita. Una base recién creada debe estar vacía.</p>
+  <span class="t">Dos cosas que se olvidan y cuestan una tarde</span>
+  <p><b>Las variables y vinculaciones no llegan a un despliegue ya publicado.</b> Si más adelante se
+  agrega o cambia alguna, hay que volver a desplegar para que la aplicación la tome.</p>
+  <p><b>Lo anterior está cargado en el entorno de producción.</b> Si algún día se trabaja con una
+  rama aparte, Cloudflare la construye con el entorno de <i>preview</i>, que arranca <b>sin ninguna
+  de estas variables</b>. Hay que cargarlas de nuevo ahí, o la rama fallará sin motivo aparente.</p>
+</div>
+
+<div class="box si-">
+  <span class="t">Las tablas no se crean a mano</span>
+  <p>La base debe estar <b>vacía</b> al empezar. Las tablas las levanta la propia aplicación la
+  primera vez que las necesita.</p>
 </div>
 
 <h4>Lo que provee el usuario</h4>
