@@ -270,9 +270,10 @@ async function generar({ request, env }) {
   // Lee también el SITIO DE DESTINO del anuncio (ctaUrl), no solo las URLs de referencia.
   const refs = await leerReferencias([brief.ctaUrl].concat(Array.isArray(brief.refs) ? brief.refs : []));
   const refsTxt = refs.texto, promos = refs.promos, enlaces = refs.enlaces;
+  const avisos = avisosDeReferencias(refs, brief);
 
-  if (producto === 'ads') return generarAds({ env, brief, marca, refsTxt, promos, enlaces });
-  if (producto === 'banner') return generarBanner({ env, brief, marca, imagenes, refsTxt, promos, estilo: body.estilo === 'marca' ? 'marca' : '' });
+  if (producto === 'ads') return generarAds({ env, brief, marca, refsTxt, promos, enlaces, avisos });
+  if (producto === 'banner') return generarBanner({ env, brief, marca, imagenes, refsTxt, promos, estilo: body.estilo === 'marca' ? 'marca' : '', limites: body.limites || null, avisos });
   return generarEmail({ env, brief, marca, imagenes, refsTxt, promos, catalogo: Array.isArray(body.catalogo) ? body.catalogo : [] });
 }
 
@@ -470,19 +471,48 @@ async function leerReferencias(refs) {
         if (ex2.length > extracto.length) { html = html2; extracto = ex2; }
       }
     }
-    if (!extracto) return { trozo: `(${norm}: no se pudo leer)`, promos: [], enlaces: [] };
+    if (!extracto) return { trozo: `(${norm}: no se pudo leer)`, promos: [], enlaces: [], noLeida: norm };
     return {
       trozo: `• ${norm}\n${extracto}`,
       promos: detectarPromos(extracto),
-      enlaces: esPrimera && html ? extraerEnlaces(html, norm) : []   // sitelinks: solo de la landing principal
+      enlaces: esPrimera && html ? extraerEnlaces(html, norm) : [],  // sitelinks: solo de la landing principal
+      leida: norm
     };
   };
   const partes = await Promise.all(urls.map((u, i) => leerUna(u, i === 0)));
   return {
     texto: partes.map(p => p.trozo).join('\n\n').slice(0, 2500),   // era 9000: ahogaba el encargo del usuario
     promos: partes.flatMap(p => p.promos).slice(0, 4),
-    enlaces: partes.flatMap(p => p.enlaces).slice(0, 12)
+    enlaces: partes.flatMap(p => p.enlaces).slice(0, 12),
+    // Si una URL no se pudo leer HAY QUE DECIRLO: nunca generar en silencio como
+    // si se hubiera leído. Un anuncio escrito sin leer la landing sale genérico.
+    noLeidas: partes.filter(p => p.noLeida).map(p => p.noLeida),
+    leidas: partes.filter(p => p.leida).map(p => p.leida)
   };
+}
+// Avisos que viajan al cliente con la generación: lo que el usuario tiene que
+// saber para no confiar a ciegas en la pieza.
+function avisosDeReferencias(refs, brief) {
+  const av = [];
+  (refs.noLeidas || []).forEach(u => av.push({
+    tipo: 'url-no-leida',
+    texto: `No se pudo leer ${u}. El copy se escribió sin el contenido de esa página, así que revisa nombres de producto y condiciones.`
+  }));
+  // Discrepancia entre el GANCHO del encargo y lo que anuncia la landing. No se
+  // elige en silencio: manda el encargo y se muestran las dos versiones. Publicar
+  // una cifra equivocada en seguros no es una errata, es un problema legal.
+  const cifraEncargo = (String(brief.gancho || '').match(/\d+(?:[.,]\d+)?\s*%?/) || [])[0];
+  if (cifraEncargo && (refs.promos || []).length) {
+    const choca = (refs.promos || []).filter(p => {
+      const c = (String(p).match(/\d+(?:[.,]\d+)?\s*%?/) || [])[0];
+      return c && c.replace(/\s/g, '') !== cifraEncargo.replace(/\s/g, '');
+    });
+    if (choca.length) av.push({
+      tipo: 'discrepancia',
+      texto: `Tu gancho dice "${String(brief.gancho).trim()}" y la página anuncia "${choca[0]}". Se generó con TU dato; revisa cuál corresponde antes de publicar.`
+    });
+  }
+  return av;
 }
 
 // ── Llamada a Gemini con parseo robusto de JSON ───────────────────────────
@@ -620,7 +650,51 @@ async function corregirOrtografia(env, textos) {
 }
 
 // ════════════ PRODUCTO 1: BANNERS DE GOOGLE DISPLAY (3 zonas) ════════════
-async function generarBanner({ env, brief, marca, imagenes, refsTxt, promos, estilo }) {
+// LÍMITES DE CARACTERES: no se eligen, los calcula el cliente desde la
+// geometría del formato (ancho útil ÷ cuerpo × 0,52 × líneas permitidas) y los
+// manda aquí. Escribir sin ellos es lo que producía titulares que no caben, y
+// entonces el sistema tenía que quitar la bajada para que la pieza cerrara.
+const LIMITES_BANNER_POR_DEFECTO = { titulo: 27, cuerpo: 54, cta: 18, etiqueta: 18, burbuja: 16, legal: 27, palabra: 9 };
+function limitesBanner(l) {
+  const d = LIMITES_BANNER_POR_DEFECTO, o = {};
+  for (const k in d) {
+    const v = parseInt(l && l[k]);
+    o[k] = (v && v > 3) ? Math.min(v, d[k] * 6) : d[k];
+  }
+  return o;
+}
+// Recorte por PALABRAS (nunca a mitad de palabra) como última red: si tras pedir
+// el acortado el texto sigue pasándose, se corta por el último espacio que cabe.
+function recortarAPalabras(s, max) {
+  const t = String(s || '').replace(/\s+/g, ' ').trim();
+  if (t.length <= max) return t;
+  const corte = t.slice(0, max + 1).lastIndexOf(' ');
+  return (corte > max * 0.5 ? t.slice(0, corte) : t.slice(0, max)).trim();
+}
+// Una pasada de ACORTADO: se le pide a la IA que reescriba más corto lo que no
+// cabe, conservando el significado. Es la regla 3 del manual — si el texto no
+// cabe se reescribe el texto, no se estira la caja ni se corta la frase.
+async function acortarAlLimite(env, campos) {
+  const pasados = campos.filter(c => String(c.valor || '').length > c.max);
+  if (!pasados.length) return { valores: null, acortado: false };
+  const prompt = [
+    'Eres redactor publicitario. Estos textos de un banner NO CABEN en su espacio.',
+    'Reescríbelos MÁS CORTOS respetando el límite de caracteres de cada uno.',
+    'Conserva el significado, la oferta y las cifras EXACTAS. No inventes datos. No pongas punto final en titulares.',
+    'Ninguna palabra debe superar ' + (campos[0].palabra || 9) + ' caracteres si se puede evitar.',
+    'Devuelve EXCLUSIVAMENTE: { "textos": [ ... ] } en el MISMO orden.',
+    JSON.stringify({ textos: pasados.map(c => ({ texto: c.valor, maximoCaracteres: c.max })) })
+  ].join('\n');
+  const { parsed } = await llamarGemini(env, prompt, 1024, 0.4);
+  const out = {};
+  pasados.forEach((c, i) => {
+    const nuevo = parsed && Array.isArray(parsed.textos) ? String(parsed.textos[i] == null ? '' : parsed.textos[i]) : '';
+    out[c.clave] = recortarAPalabras(nuevo && nuevo.length <= c.max ? nuevo : c.valor, c.max);
+  });
+  return { valores: out, acortado: true };
+}
+async function generarBanner({ env, brief, marca, imagenes, refsTxt, promos, estilo, limites, avisos }) {
+  const LIM = limitesBanner(limites);
   const imgsTxt = imagenes.length
     ? imagenes.map(im => `- ${im.url}  →  ${im.nombre || '(sin descripción)'}`).join('\n')
     : '(biblioteca vacía: deja "imagen" en "")';
@@ -690,6 +764,17 @@ async function generarBanner({ env, brief, marca, imagenes, refsTxt, promos, est
     '',
     'REGLAS FINALES:',
     reglasBrief(brief, promos, 'banner'),
+    // El espacio de la pieza está medido: escribir por encima del límite obliga
+    // al sistema a quitar elementos para que el banner cierre.
+    '',
+    'ESPACIO DISPONIBLE — LÍMITES DUROS DE CARACTERES (cuéntalos, no los estimes):',
+    `- titular: máximo ${LIM.titulo} caracteres.`,
+    `- cuerpo (bajada): máximo ${LIM.cuerpo} caracteres, UNA sola idea.`,
+    `- cta: máximo ${LIM.cta} caracteres.`,
+    `- etiqueta (nombre del producto): máximo ${LIM.etiqueta} caracteres.`,
+    `- burbuja (la oferta): máximo ${LIM.burbuja} caracteres.`,
+    `- Ninguna palabra del titular debe pasar de ${LIM.palabra} caracteres: en los tamaños chicos la columna es angosta y una palabra más larga obliga a encoger la letra.`,
+    'Si tu mejor titular no cabe, escribe otro más corto. NO se puede ensanchar la pieza.',
     brief.notas && String(brief.notas).trim() ? `\nRECORDATORIO — las indicaciones expresas del encargo mandan: ${String(brief.notas).trim()}` : ''
   ].filter(Boolean).join('\n');
 
@@ -732,6 +817,24 @@ async function generarBanner({ env, brief, marca, imagenes, refsTxt, promos, est
   out.zonas = { etiqueta: limpia(rev.textos[1], 3), titular: sinPuntoFinal(limpia(rev.textos[2], 8)), cuerpo: limpia(rev.textos[3], 18), cta: limpia(rev.textos[4], 4) };
   out.burbuja = (brief.gancho || (promos && promos.length)) ? limpia(rev.textos[5], 5) : '';
   out.ortografia = rev.revisado ? 'revisada' : 'sin-revisar';
+  // Tercera pasada: lo que no CABE se reescribe más corto (regla 3 del manual).
+  const ac = await acortarAlLimite(env, [
+    { clave: 'titular',  valor: out.zonas.titular,  max: LIM.titulo,   palabra: LIM.palabra },
+    { clave: 'cuerpo',   valor: out.zonas.cuerpo,   max: LIM.cuerpo,   palabra: LIM.palabra },
+    { clave: 'cta',      valor: out.zonas.cta,      max: LIM.cta },
+    { clave: 'etiqueta', valor: out.zonas.etiqueta, max: LIM.etiqueta },
+    { clave: 'burbuja',  valor: out.burbuja,        max: LIM.burbuja }
+  ]);
+  if (ac.valores) {
+    if (ac.valores.titular  !== undefined) out.zonas.titular  = sinPuntoFinal(ac.valores.titular);
+    if (ac.valores.cuerpo   !== undefined) out.zonas.cuerpo   = ac.valores.cuerpo;
+    if (ac.valores.cta      !== undefined) out.zonas.cta      = ac.valores.cta;
+    if (ac.valores.etiqueta !== undefined) out.zonas.etiqueta = ac.valores.etiqueta;
+    if (ac.valores.burbuja  !== undefined) out.burbuja        = ac.valores.burbuja;
+  }
+  out.limites = LIM;
+  out.acortado = !!ac.acortado;
+  if (avisos && avisos.length) out.avisos = avisos;
   return json(out);
 }
 

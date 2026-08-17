@@ -904,6 +904,14 @@ button,input,select,textarea{font-family:inherit;}
 .ed-insp.ok{background:#EAF4EF;color:#22624a;border-color:#c9e4d7;}
 .ed-insp.mal{background:#FBF3E0;color:#7A5A10;border-color:#ecd9a8;}
 .ed-insp.mal:hover{background:#f6e8c8;}
+/* Avisos de la generación: quedan a la vista hasta que el usuario los cierra */
+.ia-avisos{position:fixed;right:18px;bottom:18px;z-index:9500;max-width:420px;}
+.iav-caja{background:#fff;border:1px solid #ecd9a8;border-left:4px solid #C08A1E;border-radius:10px;padding:12px 14px;box-shadow:0 8px 24px rgba(10,14,40,.16);}
+.iav-tit{display:flex;align-items:center;gap:6px;font-size:13px;font-weight:700;color:#7A5A10;margin-bottom:7px;}
+.iav-x{margin-left:auto;border:none;background:transparent;font-size:18px;line-height:1;color:#8a7a52;cursor:pointer;padding:0 2px;}
+.ia-avisos ul{margin:0;padding-left:2px;list-style:none;}
+.ia-avisos li{display:flex;gap:7px;align-items:flex-start;font-size:13px;line-height:1.5;color:#3a4056;margin-bottom:6px;}
+.ia-avisos li:last-child{margin-bottom:0;}
 .ab-frame{position:relative;overflow:hidden;display:flex;flex-direction:column;box-sizing:border-box;}
 .ab-frame.fila{flex-direction:row;align-items:center;}   /* banners anchos: bloques en fila (leaderboard) */
 .ab-frame > *{flex:1;min-height:0;}
@@ -5769,6 +5777,19 @@ function planDeBanner(c, fmt, nivel){
   // reserva el círculo tapaba el titular y el botón en casi todos los tamaños.
   const reservaH = hay.circulo ? reserva : 0;
   const anchoTexto = Math.max(40, g.ancho - margen.l - margen.r - reservaH);
+  // ANTES DE PARTIR UNA PALABRA, ENCOGER. Si la palabra más larga no cabe a lo
+  // ancho de la columna, el navegador la corta por la mitad ("Auto protegid / o").
+  // El manual prohíbe cortar la frase, así que el cuerpo baja —hasta el piso de
+  // legibilidad, no más— hasta que la palabra entre. Con el círculo puesto, un
+  // 200×200 deja 77 px de columna: el titular pasa de 18 a 16 px y se lee entero.
+  const cabePalabra = (texto, fs) => {
+    const larga = String(texto||"").split(/\s+/).reduce((a,w)=>Math.max(a,w.length),0);
+    if(!larga) return fs;
+    const necesita = Math.floor(anchoTexto/(larga*GEOM.emArial));
+    return Math.max(g.piso, Math.min(fs, necesita));
+  };
+  cuerpo.titulo = cabePalabra(txt.titulo, cuerpo.titulo);
+  cuerpo.bajada = cabePalabra(txt.bajada, cuerpo.bajada);
   // Máximo de caracteres con el ancho REAL de esta pieza (el de geomDe supone
   // círculo puesto en horizontal, que es el peor caso; este es el de verdad).
   const maxChars = {};
@@ -5778,6 +5799,9 @@ function planDeBanner(c, fmt, nivel){
     if(GEOM.topeChars[p]) m = Math.min(GEOM.topeChars[p], m);
     maxChars[p] = m;
   }
+  // Palabra más larga que admite la columna: es el dato que la IA necesita para
+  // no escribir un titular que no entre.
+  maxChars.palabra = Math.max(3, Math.floor(anchoTexto/(cuerpo.titulo*GEOM.emArial)));
   return { fmt, g, hay, txt, cuerpo, dia, reserva, reservaH, margen, anchoTexto, maxChars,
            nivel:n, peldanos:escalera.length, logoAlto:altoLogo(lg, fmt) };
 }
@@ -8625,6 +8649,51 @@ function esLogoOIcono(img){
   return /(^|[\s\-_\/])(logos?|iconos?|icon|favicon|isotipo|imagotipo)([\s\-_\/.]|$)/.test(t)
       || /(^|[\s\-_\/])ic[-_]/.test(t);
 }
+// ── DOS TRABAJOS DISTINTOS, DOS ORÍGENES DISTINTOS ──────────────────────
+// Una foto de FONDO y un LOGOTIPO no tienen nada que ver. Confundirlos es lo que
+// produce banners con la marca gigante y deformada de fondo y el titular encima.
+// La exclusión se decide por el PREFIJO DE LA CARPETA, no adivinando por el
+// nombre del archivo — que es como se colaba antes. Si la carpeta es desconocida
+// (claves antiguas), se cae al nombre como red de seguridad.
+const CARPETAS_FONDO   = ["fotos-generales/","fotos-seguros/","subidas/","ia/","fotos/"];
+const CARPETAS_NO_FONDO = ["logos/","iconos/","brand/"];
+function prefijoDeImagen(img){
+  const bruto = String((img && (img.key || img.url)) || "");
+  const m = /[?&]k=([^&]+)/.exec(bruto);                       // /api/upload?k=<clave>
+  const clave = m ? decodeURIComponent(m[1]) : bruto.replace(/^https?:\/\/[^/]+\//, "").replace(/^\//, "");
+  const partes = clave.split("/");
+  return partes.length > 1 ? partes[0].toLowerCase() + "/" : "";
+}
+// Límites de caracteres que se le pasan a la IA. Salen del MÁSTER (es el tamaño
+// para el que se escribe la campaña) salvo la palabra más larga, que sale del
+// tamaño MÁS ANGOSTO del set: una palabra que no cabe ahí obliga a encoger la
+// letra en ese formato. Nada de esto se elige a mano.
+function limitesParaIA(fmtMaster){
+  const master = fmtMaster || "display-300x250";
+  const gm = geomDe(master);
+  const conCirculo = planDeBanner({ zonas:{ texto:{} }, burbuja:{ visible:true, texto:"1" } }, master, 0);
+  let palabra = conCirculo.maxChars.palabra;
+  SET_DISPLAY_DESKTOP.forEach(f => {
+    if(!FORMATOS[f]) return;
+    const P = planDeBanner({ zonas:{ texto:{} }, burbuja:{ visible:true, texto:"1" } }, f, 0);
+    if(P.maxChars.palabra < palabra) palabra = P.maxChars.palabra;
+  });
+  return {
+    titulo: conCirculo.maxChars.titulo,
+    cuerpo: conCirculo.maxChars.bajada,
+    cta: conCirculo.maxChars.cta,
+    etiqueta: conCirculo.maxChars.epigrafe,
+    burbuja: GEOM.topeChars.cifra + 10,
+    legal: gm.maxChars.legal,
+    palabra: Math.max(6, palabra)
+  };
+}
+function sirveComoFondo(img){
+  const pre = prefijoDeImagen(img);
+  if(CARPETAS_NO_FONDO.includes(pre)) return false;   // logos/ jamás es fondo
+  if(CARPETAS_FONDO.includes(pre)) return true;       // carpeta de fotos: sí
+  return !esLogoOIcono(img);                          // carpeta desconocida
+}
 async function subirImagenes(files){
   const lista = [...(files||[])].filter(f => /^image\//.test(f.type));
   if(!lista.length){ toast("Elige imágenes (PNG, JPG, WEBP…)"); return; }
@@ -8869,12 +8938,12 @@ async function generarConIA(){
     if(fotosElegidas){
       biblioteca = _iaFotos.map(u => { const im=(workspace.imagenes||[]).find(x=>x.url===u); return { url:u, nombre: im?im.nombre:"" }; });
     } else {
-      biblioteca = (workspace.imagenes||[]).filter(i => !esLogoOIcono(i)).map(i => ({ url:i.url, nombre:i.nombre }));
+      biblioteca = (workspace.imagenes||[]).filter(sirveComoFondo).map(i => ({ url:i.url, nombre:i.nombre }));
       try{
         const rr = await fetch("/api/upload?list=1",{credentials:"include"});
         if(rr.ok){ const dd=await rr.json(); if(dd&&dd.ok&&Array.isArray(dd.objects)){
           const urls=new Set(biblioteca.map(i=>i.url));
-          dd.objects.forEach(o=>{ const nombre=String(o.key||"").split("/").pop().replace(/\.[a-z0-9]+$/i,""); const cand={url:o.url,nombre}; if(!urls.has(o.url) && !esLogoOIcono(cand)) biblioteca.push(cand); });
+          dd.objects.forEach(o=>{ const nombre=String(o.key||"").split("/").pop().replace(/\.[a-z0-9]+$/i,""); const cand={url:o.url,nombre,key:o.key}; if(!urls.has(o.url) && sirveComoFondo(cand)) biblioteca.push(cand); });
         }}
       }catch(e){}
     }
@@ -8901,6 +8970,7 @@ async function generarConIA(){
     }
     // 2) Cada pieza marcada, en orden, con el MISMO brief (+ concepto).
     const fallas = [];
+    const avisosIA = [];   // lo que el usuario TIENE que saber antes de publicar
     for(const producto of sel){
     let imagenes = [];
     if(producto !== "ads"){   // una campaña Search es 100% texto: sin fotos
@@ -8942,6 +9012,10 @@ async function generarConIA(){
         formato: producto==="email" ? "email" : producto==="ads" ? "ads" : "display-300x250",
         marca: marcaAPI,
         imagenes,
+        // El ESPACIO de la pieza lo sabe el cliente (tiene la tabla de geometría):
+        // se lo pasamos a la IA para que escriba copy que quepa, en vez de tener
+        // que quitarle elementos al banner después para que cierre.
+        limites: producto==="banner" ? limitesParaIA() : null,
         catalogo: producto==="email" ? catalogoBloquesParaIA() : null
       })
     });
@@ -8951,6 +9025,12 @@ async function generarConIA(){
       fallas.push(`${producto}: ${data.error || (raw ? raw.slice(0,200) : "Error " + r.status)}`);
       continue;   // la campaña sigue con las demás piezas
     }
+    // Avisos del servidor (URL que no se pudo leer, discrepancia de cifra entre
+    // el encargo y la landing, texto que hubo que acortar). No se descartan: una
+    // cifra equivocada en una campaña de seguros no es una errata.
+    if(Array.isArray(data.avisos)) data.avisos.forEach(a => avisosIA.push(a));
+    if(data.acortado) avisosIA.push({ tipo:"acortado",
+      texto:"Algún texto no cabía en el espacio del banner y se reescribió más corto. Revisa que siga diciendo lo que querías." });
     if(producto==="banner") insertarBannerIA(data, marca);
     else if(producto==="ads") insertarAdsIA(data, marca);
     else insertarPiezaIA(data, "email", marca);
@@ -9010,11 +9090,32 @@ async function generarConIA(){
       est.className = "ia-estado err"; btn.disabled = false; return;
     }
     cerrarModal("ia");
+    if(avisosIA.length) mostrarAvisosIA(avisosIA);
     if(fallas.length) toast(`Campaña generada con avisos — falló ${fallas.join(" · ")}`);
     else if(esCampana) toast(`Campaña completa: ${sel.length} piezas con el mismo concepto, en su propio proyecto`);
     else toast(sel[0]==="ads" ? "Campaña de Search lista — revísala y exporta el CSV" : "Pieza generada por Char-B (IA) — edítala a tu gusto");
   }catch(e){ est.textContent = "Sin conexión: " + (e.message||e); est.className = "ia-estado err"; }
   finally{ btn.disabled = false; }
+}
+// Avisos de la generación, en pantalla y no en un toast que se va: si una URL no
+// se pudo leer o el gancho no coincide con la landing, el usuario tiene que
+// enterarse ANTES de publicar. Generar en silencio como si todo hubiera salido
+// bien es el fallo que este panel existe para evitar.
+function mostrarAvisosIA(avisos){
+  if(!avisos || !avisos.length) return;
+  let cont = document.getElementById("ia-avisos");
+  if(!cont){
+    cont = document.createElement("div");
+    cont.id = "ia-avisos";
+    cont.className = "ia-avisos";
+    document.body.appendChild(cont);
+  }
+  const ico = { "url-no-leida":"nube", "discrepancia":"alerta", "acortado":"info" };
+  cont.innerHTML = `<div class="iav-caja">
+    <div class="iav-tit">${svgIcon("alerta",{size:"14px"})} Revisa antes de publicar
+      <button class="iav-x" onclick="document.getElementById('ia-avisos').remove()" title="Cerrar">×</button></div>
+    <ul>${avisos.slice(0,5).map(a=>`<li>${svgIcon(ico[a.tipo]||"info",{size:"12px"})} ${esc(a.texto)}</li>`).join("")}</ul>
+  </div>`;
 }
 function asegurarProyectoIA(){
   if(!proyecto){
