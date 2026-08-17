@@ -890,6 +890,20 @@ button,input,select,textarea{font-family:inherit;}
 .ab-dl:hover{background:var(--primary);color:#fff;border-color:var(--primary);}
 .ab-stage{overflow:hidden;border-radius:4px;}
 .ab-scale{transform-origin:top left;}
+/* ── INSPECTOR: el aviso va JUNTO a la pieza, no en un log ── */
+.ab.ab-falla{border-color:#e0b34a;}
+.ab-bar .ab-insp{margin-left:auto;}
+.insp-chip{display:inline-flex;align-items:center;justify-content:center;min-width:17px;height:17px;padding:0 4px;border-radius:9px;background:#B4453C;color:#fff;font-size:11px;font-weight:700;}
+.insp-aviso{margin-top:7px;padding:7px 9px;background:#FBF3E0;border-left:3px solid #C08A1E;border-radius:0 6px 6px 0;}
+.insp-aviso .insp-tit{display:flex;align-items:center;gap:5px;font-size:12px;font-weight:700;color:#7A5A10;margin-bottom:3px;}
+.insp-aviso ul{margin:0;padding-left:15px;}
+.insp-aviso li{font-size:12px;line-height:1.45;color:#5b4a20;}
+.insp-aviso .insp-det{color:#8a7a52;font-size:11px;}
+.ed-insp{display:inline-flex;align-items:center;gap:5px;height:32px;padding:0 10px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;border:1px solid transparent;white-space:nowrap;}
+.ed-insp:empty{display:none;}
+.ed-insp.ok{background:#EAF4EF;color:#22624a;border-color:#c9e4d7;}
+.ed-insp.mal{background:#FBF3E0;color:#7A5A10;border-color:#ecd9a8;}
+.ed-insp.mal:hover{background:#f6e8c8;}
 .ab-frame{position:relative;overflow:hidden;display:flex;flex-direction:column;box-sizing:border-box;}
 .ab-frame.fila{flex-direction:row;align-items:center;}   /* banners anchos: bloques en fila (leaderboard) */
 .ab-frame > *{flex:1;min-height:0;}
@@ -1216,7 +1230,9 @@ button,input,select,textarea{font-family:inherit;}
 .cmp .cmp-scrim{position:absolute;inset:0;z-index:0;pointer-events:none;background:linear-gradient(105deg,rgba(8,14,28,.62) 0%,rgba(8,14,28,.34) 48%,rgba(8,14,28,.12) 100%),linear-gradient(0deg,rgba(8,14,28,.55) 0%,rgba(8,14,28,0) 55%);}
 .cmp .cmp-zonas{position:absolute;inset:0;display:flex;z-index:1;}
 .cmp .cmp-zonas.col{flex-direction:column;}
-.cmp .cmp-zonas.row{flex-direction:row;}
+/* Franja: logo · mensaje · botón repartidos a lo ancho. El aire sobrante se
+   divide entre los huecos en vez de acumularse en uno solo. */
+.cmp .cmp-zonas.row{flex-direction:row;justify-content:space-between;align-items:center;}
 .cmp .cmp-zona{position:relative;display:flex;flex-direction:column;box-sizing:border-box;min-width:0;min-height:0;overflow:hidden;}
 .cmp .cmp-zona .cmp-zbg{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:0;}
 .cmp .cmp-zona .cmp-zveil{position:absolute;inset:0;z-index:0;}
@@ -1272,6 +1288,10 @@ button,input,select,textarea{font-family:inherit;}
 .cmp .cmp-burbuja .bnum{font-weight:800;line-height:.95;}
 .cmp .cmp-burbuja .btxt{font-weight:700;word-break:break-word;}
 .cmp .cmp-etq{display:inline-block;font-weight:600;letter-spacing:.05em;border-radius:999px;line-height:1;}
+/* Legal: banda inferior con espacio RESERVADO (una línea). No se monta nunca
+   sobre el contenido, y sobre foto lleva respaldo sólido — no va en la imagen. */
+.cmp .cmp-legalbanda{position:absolute;left:0;right:0;z-index:3;display:flex;align-items:center;box-sizing:border-box;}
+.cmp .cmp-legal{line-height:1.25;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%;opacity:.85;}
 .sbb-header h1{font-weight:600;line-height:1.18;margin:0;font-family:inherit;}
 .sbb-header p{line-height:1.5;margin:6px 0 0;font-family:inherit;color:inherit;opacity:.78;}
 .sbb-header .eyebrow{font-size:13px;text-transform:uppercase;letter-spacing:.1em;font-weight:600;color:var(--sbb-primary,#040764);margin:0 0 8px;}
@@ -1691,6 +1711,8 @@ button,input,select,textarea{font-family:inherit;}
       <span id="ed-chip"></span>
       <span class="sync-status" id="sync-status" title="Cada cambio se guarda solo: al instante en este equipo y en ~1 s en la nube">—</span>
       <div class="tb-spacer"></div>
+      <!-- Estado del inspector: mide los banners dibujados, no el código -->
+      <span class="ed-insp" id="ed-inspector"></span>
       <button class="tb-act sec" onclick="guardarProyectoAhora()" title="Guardar el proyecto ahora"><span class="ico" data-ic="nube"></span> Guardar</button>
       <button class="tb-act primary" onclick="abrirExportar()" title="Exportar / descargar"><span class="ico" data-ic="exportar"></span> Exportar</button>
       <button class="tb-act salir" onclick="salirDelProyecto()" title="Guardar y volver a tus proyectos"><span class="ico" data-ic="salir"></span> Salir</button>
@@ -5210,6 +5232,178 @@ function asegurarComposicionNueva(p){
     }
   }
 }
+// ═══ GEOMETRÍA CERRADA DE BANNERS ════════════════════════════════════════
+// Manual de Diagramación · Flash Campaign. Un banner NO se diseña once veces:
+// se diseña una vez en el máster (300×250 en Display, 1080×1350 en Facebook) y
+// se deriva con un factor k propio de cada FAMILIA. Ningún número de aquí se
+// elige a mano: todos salen de estas fórmulas, y por eso la pieza es
+// comprobable. La IA aporta texto, foto y diagramación; la geometría no se toca.
+//
+// Verificado formato a formato contra mockups/flash-campaign-spec.json
+// (autotest en geomAutotest(), se corre en la verificación con Playwright).
+const GEOM = {
+  // Medidas base = las del máster (k = 1).
+  base: {
+    display:  { epigrafe:11, titulo:26, bajada:13, cta:13, legal:9 },
+    facebook: { epigrafe:40, titulo:94, bajada:47, cta:47, legal:32 }
+  },
+  // Hasta dónde puede moverlo el usuario sin salirse del sistema. Los rangos
+  // existen para que ninguna decisión del usuario rompa la pieza.
+  rango: {
+    display:  { epigrafe:[10,12], titulo:[24,28], bajada:[12,14], cta:[12,14], legal:[8,10] },
+    facebook: { epigrafe:[36,44], titulo:[85,103], bajada:[42,52], cta:[42,52], legal:[29,35] }
+  },
+  margenPct:5.5, margenMin:8, logoPct:8, logoMin:14,
+  // Las líneas NO son globales: en una franja de 90 px de alto no cabe un
+  // titular de tres líneas, y permitirlo daba límites absurdos (261 caracteres
+  // en 970×90).
+  // El legal va SIEMPRE en una línea (decisión del usuario, 17-ago): en vez de
+  // un párrafo legal que compite con el mensaje, cada banner reserva una banda
+  // inferior de una línea. Por eso legal:1 en las cuatro familias, aunque la
+  // tabla original del manual permitía dos en cuadrados y verticales.
+  lineas: {
+    cuadrado:{ epigrafe:1, titulo:3, bajada:3, cta:1, legal:1 },
+    vertical:{ epigrafe:1, titulo:3, bajada:3, cta:1, legal:1 },
+    grande:  { epigrafe:1, titulo:2, bajada:2, cta:1, legal:1 },
+    franja:  { epigrafe:1, titulo:1, bajada:1, cta:1, legal:1 }
+  },
+  circuloPct:62, salePct:8, huecoPct:4, segundoPct:62, cifraPctDia:45,
+  // ⌀ del círculo en el MÁSTER = 62 % de 250 = 155 px. El manual lo define como
+  // "62 % del lado corto" en todos los formatos, pero eso lo hace crecer más
+  // rápido que la tipografía: en un 1200×1200 daba 744 px de círculo y dejaba
+  // una columna de texto con sitio para DOCE caracteres de titular. Aquí el
+  // círculo escala con la MISMA k que todo lo demás (155 × k) y el 62 % queda
+  // como techo. En el máster y en 336×280 el número es idéntico al del manual.
+  circuloBase:155,
+  emArial:0.52,                 // ancho medio de carácter en Arial
+  topeChars:{ epigrafe:18, cta:24, cifra:6 },
+  // El aire también es una medida fija: si se deja libre, unos formatos salen
+  // apretados y otros desparramados.
+  espaciado:{ epiTit:6, titBaj:10, bajCta:16, ctaLegal:10, logoTexto:18, textoCirculoPct:4 },
+  // Si no cabe se reduce hasta el piso; si aun así no cabe, se QUITA en este
+  // orden. Título, CTA y logo nunca se caen.
+  // El legal va ÚLTIMO (no primero como en el manual original): con banda
+  // reservada de una línea cuesta muy poco alto, y la campaña lo exige. El
+  // propio manual contempla esta excepción: "salvo que la campaña lo exija por
+  // ley, y entonces cae la bajada antes".
+  caida:["bajada","adornos","epigrafe","legal"],
+  nuncaCaen:["titulo","cta","logo"],
+  decoPct:[28,16,9], decoCantidad:3,
+  velo:[35,60]                  // sobre foto el velo es obligatorio
+};
+// Familia del formato SEGÚN EL MANUAL (cuatro, no tres): la familia decide la
+// fórmula de k, las líneas permitidas y qué diagramaciones caben.
+function familiaGeom(fmt){
+  const F = FORMATOS[fmt]; if(!F) return "cuadrado";
+  const w=F.ancho, h=F.alto, r=w/h;
+  if(r>=2.2) return "franja";
+  if(r<=0.6) return "vertical";
+  if(Math.min(w,h)>=600 && w>=1000) return "grande";   // 1200×628 · 1200×1200
+  return "cuadrado";
+}
+const esFacebookFmt = fmt => /^fb-/.test(fmt||"");
+// k por familia. Verticales y franjas NO se escalan por el lado corto: se
+// romperían igual que se rompían antes (un 1200×628 daba titulares de 104 px
+// dentro de 628 px de alto porque la escala salía solo del ancho).
+function factorK(fmt){
+  const F = FORMATOS[fmt]; if(!F) return 1;
+  const w=F.ancho, h=F.alto;
+  if(esFacebookFmt(fmt)) return Math.min(w/1080, h/1350);
+  const fam = familiaGeom(fmt);
+  if(fam==="franja")   return Math.max(0.55, h/110);
+  if(fam==="vertical") return Math.max(0.62, w/300);
+  return Math.max(0.70, Math.min(w/300, h/250));
+}
+const _geomCache = {};
+// Tabla cerrada de un formato: k, márgenes, cuerpos, ancho útil, círculo,
+// máximo de caracteres y qué elementos no caben en ese tamaño.
+function geomDe(fmt){
+  if(_geomCache[fmt]) return _geomCache[fmt];
+  const F = FORMATOS[fmt] || FORMATOS["display-300x250"];
+  const w=F.ancho, h=F.alto, S=Math.min(w,h);
+  const fam = familiaGeom(fmt), k = factorK(fmt);
+  const set = esFacebookFmt(fmt) ? "facebook" : "display";
+  const B = GEOM.base[set], L = GEOM.lineas[fam];
+  // Piso de legibilidad: por debajo de esto no se encoge — o sube al piso, o el
+  // elemento se cae. Es el mismo umbral que aplica el inspector.
+  const piso = S<=250 ? 9 : 11;
+  const margen = Math.max(GEOM.margenMin, Math.round(S*GEOM.margenPct/100));
+  const logoAlto = Math.max(GEOM.logoMin, Math.round(S*GEOM.logoPct/100));
+  // El círculo solo existe donde la diagramación lo admite.
+  const admiteCirculo = (fam==="cuadrado") || (fam==="grande" && w===h);
+  const circulo = admiteCirculo ? Math.round(S*GEOM.circuloPct/100) : 0;   // el del manual (tabla/spec)
+  // El que se dibuja: escalado con k y con el 62 % como techo.
+  const circuloK = admiteCirculo ? Math.min(Math.round(GEOM.circuloBase*k), circulo) : 0;
+  const sale = Math.round(S*GEOM.salePct/100), hueco = Math.round(S*GEOM.huecoPct/100);
+  // El círculo se mete en el lienzo su diámetro MENOS lo que sale por el borde:
+  // el bloque de texto DESCUENTA eso de su ancho o el círculo le tapa el título.
+  const invade = circulo ? (circulo - sale + hueco) : 0;
+  const anchoUtil = Math.max(40, w - margen*2 - invade);
+  const cuerpo = {}, maxChars = {};
+  for(const p in B) cuerpo[p] = Math.max(piso, Math.round(B[p]*k));
+  // No se eligen: se calculan. Caben ancho ÷ (cuerpo × 0,52) por línea.
+  const chars = (fs, li) => Math.max(4, Math.floor(anchoUtil/(fs*GEOM.emArial))*li);
+  // Un elemento que solo cabe forzándolo al piso en un formato mínimo, se cae.
+  const noVan = [];
+  if(fam==="franja" && S<=60) noVan.push("bajada","epigrafe","legal");
+  if(fam==="vertical" && w<=160) noVan.push("legal");
+  if(fam==="franja" || S<=250) noVan.push("adornos");
+  for(const p in B){
+    let n = chars(cuerpo[p], L[p]);
+    if(GEOM.topeChars[p]) n = Math.min(GEOM.topeChars[p], n);
+    maxChars[p] = noVan.includes(p) ? 0 : n;
+  }
+  if(circulo) maxChars.cifra = GEOM.topeChars.cifra;
+  const g = { fmt, ancho:w, alto:h, corto:S, familia:fam, k, piso, margen, logoAlto,
+    circulo, circuloK, sale, hueco, invade, anchoUtil, cuerpo, maxChars, noVan,
+    master: fmt===(esFacebookFmt(fmt)?"fb-1080x1350":"display-300x250") };
+  _geomCache[fmt] = g;
+  return g;
+}
+// Cuerpo efectivo de una parte: el usuario mueve la BASE dentro de su rango y
+// el formato la escala con su k. Nunca por debajo del piso de legibilidad.
+function cuerpoDe(fmt, parte, valUsuario){
+  const g = geomDe(fmt), set = esFacebookFmt(fmt) ? "facebook" : "display";
+  const rg = (GEOM.rango[set]||{})[parte];
+  if(!rg) return g.cuerpo[parte] || g.piso;
+  const v = parseFloat(valUsuario);
+  const b = (v && isFinite(v)) ? Math.max(rg[0], Math.min(rg[1], v)) : GEOM.base[set][parte];
+  return Math.max(g.piso, Math.round(b * g.k));
+}
+// Espaciado entre elementos, escalado con k y nunca por debajo de 2 px.
+function aireDe(fmt, cual){ return Math.max(2, Math.round((GEOM.espaciado[cual]||0) * geomDe(fmt).k)); }
+// ¿Hay una CIFRA real? El círculo de oferta solo existe si la hay: un círculo
+// vacío o con una frase sin número es el error gráfico más visible del sistema.
+function tieneCifra(t){ return /\d/.test(String(t||"")); }
+// Autotest: la tabla calculada tiene que dar los valores del spec. Si una
+// fórmula se toca y desincroniza los números, esto lo grita.
+function geomAutotest(){
+  const esperado = {
+    "display-300x250":  {k:1,    margen:14, anchoUtil:127, titulo:26,  circulo:155, cTitulo:27},
+    "display-336x280":  {k:1.12, margen:15, anchoUtil:143, titulo:29,  circulo:174, cTitulo:27},
+    "display-250x250":  {k:0.83, margen:14, anchoUtil:77,  titulo:22,  circulo:155, cTitulo:18},
+    "display-200x200":  {k:0.7,  margen:11, anchoUtil:62,  titulo:18,  circulo:124, cTitulo:18},
+    "display-300x600":  {k:1,    margen:17, anchoUtil:266, titulo:26,  circulo:0,   cTitulo:57},
+    "display-160x600":  {k:0.62, margen:9,  anchoUtil:142, titulo:16,  circulo:0,   cTitulo:51},
+    "display-728x90":   {k:0.82, margen:8,  anchoUtil:712, titulo:21,  circulo:0,   cTitulo:65},
+    "display-970x90":   {k:0.82, margen:8,  anchoUtil:954, titulo:21,  circulo:0,   cTitulo:87},
+    "display-468x60":   {k:0.55, margen:8,  anchoUtil:452, titulo:14,  circulo:0,   cTitulo:62},
+    "display-1200x628": {k:2.51, margen:35, anchoUtil:1130,titulo:65,  circulo:0,   cTitulo:66},
+    "display-1200x1200":{k:4,    margen:66, anchoUtil:372, titulo:104, circulo:744, cTitulo:12}
+  };
+  const fallos = [];
+  for(const fmt in esperado){
+    const g = geomDe(fmt), e = esperado[fmt];
+    const chk = (n, real, esp) => { if(Math.abs(real-esp) > (n==="k"?0.01:0)) fallos.push(`${fmt}.${n}=${real} esperado ${esp}`); };
+    chk("k", Math.round(g.k*100)/100, e.k);
+    chk("margen", g.margen, e.margen);
+    chk("anchoUtil", g.anchoUtil, e.anchoUtil);
+    chk("titulo", g.cuerpo.titulo, e.titulo);
+    chk("circulo", g.circulo, e.circulo);
+    chk("cTitulo", g.maxChars.titulo, e.cTitulo);
+  }
+  return fallos;
+}
 // Acceso por ruta ("zonas.texto.titular.texto").
 function getPath(obj, path){ return String(path).split('.').reduce((o,k)=> (o==null?undefined:o[k]), obj); }
 function setPath(obj, path, val){ const ks=String(path).split('.'); let o=obj; for(let i=0;i<ks.length-1;i++){ if(o[ks[i]]==null||typeof o[ks[i]]!=="object") o[ks[i]]={}; o=o[ks[i]]; } o[ks[ks.length-1]]=val; }
@@ -5217,86 +5411,128 @@ function delPath(obj, path){ const ks=String(path).split('.'); let o=obj; for(le
 function alinSelf(a){ return a==="center"?"center":a==="right"?"flex-end":"flex-start"; }
 function alinFlex(a){ return (a==="center")?"center":(a==="right"||a==="bottom")?"flex-end":"flex-start"; }
 function alinText(a){ return a==="center"?"center":a==="right"?"right":"left"; }
-function capaImagenHTML(im, cls){
+function capaImagenHTML(im, cls, esFondoBanner){
   if(!im || !im.url) return "";
   const foco=im.foco||"center";
   const zoom=Math.max(50,Math.min(300,parseInt(im.zoom)||100))/100;
   const fit=(im.fit==="contain")?"contain":"cover";
   const veil=cls==="cmp-bg"?"cmp-veil":"cmp-zveil";
-  return `<img class="${cls}" src="${esc(im.url)}" style="object-fit:${fit};object-position:${esc(foco)};transform:scale(${zoom});transform-origin:${esc(foco)};"><div class="${veil}" style="background:rgba(8,14,28,${((parseInt(im.oscurecer)||0)/100).toFixed(2)});"></div>`;
+  // Sobre foto el velo es OBLIGATORIO: sin él, el texto blanco es una apuesta.
+  // Rango de uso del manual: 35 %–60 %.
+  let op = parseInt(im.oscurecer);
+  if(!isFinite(op)) op = 45;
+  if(esFondoBanner) op = Math.max(GEOM.velo[0], Math.min(GEOM.velo[1], op));
+  else op = Math.max(0, Math.min(100, op));
+  return `<img class="${cls}" src="${esc(im.url)}" style="object-fit:${fit};object-position:${esc(foco)};transform:scale(${zoom});transform-origin:${esc(foco)};"><div class="${veil}" style="background:rgba(8,14,28,${(op/100).toFixed(2)});"></div>`;
 }
-// Render del contenido propio de cada zona.
-function zonaContenido(zk, z, px){
+// Render del contenido propio de cada zona, con las medidas del PLAN (tabla
+// cerrada) y el espaciado fijo del manual.
+function zonaContenido(zk, z, P, c){
+  const fmt = P.fmt;
+  const px = (v,base)=>Math.round((parseFloat(v)||base)*P.g.k);
   if(zk==="logo"){
     if(!z.url) return "";
     const maxw=Math.max(15,Math.min(100,parseInt(z.maxw)||70));
-    return `<img class="cmp-logo" src="${esc(z.url)}" style="height:${px(z.alto,48)}px;max-width:${maxw}%;">`;
+    return `<img class="cmp-logo" src="${esc(z.url)}" style="height:${P.logoAlto}px;max-width:${maxw}%;">`;
   }
   if(zk==="texto"){
     const ti=z.titular||{}, cu=z.cuerpo||{}, et=z.etiqueta||{};
     const fam = z.fuente ? `font-family:'${esc(z.fuente)}',Arial,sans-serif;` : "";
     const est = (o)=> `${o.negrita?'font-weight:700;':''}${o.italica?'font-style:italic;':''}`;
-    // Etiqueta de producto (píldora chica sobre el titular, ej. "Seguro").
-    const etEl = et.texto ? `<div><span class="cmp-etq" style="font-size:${px(et.tamano,11)}px;padding:${px(4,4)}px ${px(10,10)}px;background:${esc(et.color||'rgba(255,255,255,.18)')};color:${esc(et.colorTexto||ti.color||'#fff')};${fam}">${esc(et.texto)}</span></div>` : "";
-    // sep = desplazamiento vertical propio (px base, escala con el tamaño) ·
+    // sep = desplazamiento vertical propio (unidades base, escala con k) ·
     // ancho = ancho de la caja de texto (%). Ambos editables desde el lienzo.
-    const sepA=(o)=>{ const v=parseFloat(o.sep); return v?`margin-top:${px(v,0)}px;`:""; };
+    const sepA=(o,aire)=>{ const v=parseFloat(o.sep)||0; return `margin-top:${aire + (v?px(v,0):0)}px;`; };
     const anchoA=(o)=>{ const v=parseFloat(o.ancho); return (v&&v>=20&&v<=100)?`width:${v}%;`:""; };
-    const tiEl = ti.texto ? `<div class="cmp-tit" style="font-size:${px(ti.tamano,26)}px;color:${esc(ti.color||'#fff')};text-align:${alinText(z.alinH)};${sepA(ti)}${anchoA(ti)}${fam}${est(ti)}">${escMultiline(ti.texto)}</div>` : "";
-    const cuEl = cu.texto ? `<div class="cmp-cue" style="font-size:${px(cu.tamano,13)}px;color:${esc(cu.color||'#fff')};text-align:${alinText(z.alinH)};${sepA(cu)}${anchoA(cu)}${fam}${est(cu)}">${escMultiline(cu.texto)}</div>` : "";
+    // Epígrafe: píldora chica con el nombre corto del producto. Su fondo por
+    // defecto es un blanco translúcido, que sobre navy da contraste real.
+    const etEl = et.texto ? `<div><span class="cmp-etq" style="font-size:${P.cuerpo.epigrafe}px;padding:${Math.round(P.cuerpo.epigrafe*0.35)}px ${Math.round(P.cuerpo.epigrafe*0.9)}px;background:${esc(et.color||'rgba(255,255,255,.22)')};color:${esc(et.colorTexto||ti.color||'#fff')};${fam}">${esc(et.texto)}</span></div>` : "";
+    const tiEl = ti.texto ? `<div class="cmp-tit" style="font-size:${P.cuerpo.titulo}px;color:${esc(ti.color||'#fff')};text-align:${alinText(z.alinH)};${sepA(ti, et.texto?aireDe(fmt,"epiTit"):0)}${anchoA(ti)}${fam}${est(ti)}">${escMultiline(ti.texto)}</div>` : "";
+    const cuEl = cu.texto ? `<div class="cmp-cue" style="font-size:${P.cuerpo.bajada}px;color:${esc(cu.color||'#fff')};text-align:${alinText(z.alinH)};${sepA(cu, ti.texto?aireDe(fmt,"titBaj"):0)}${anchoA(cu)}${fam}${est(cu)}">${escMultiline(cu.texto)}</div>` : "";
     return etEl+tiEl+cuEl;
   }
   if(zk==="cta"){
-    if(!z.texto) return "";
-    const t=parseFloat(z.tamano)||13;
-    const pY=Math.round(t*0.55), pX=Math.round(t*1.25);
     const fam = z.fuente ? `font-family:'${esc(z.fuente)}',Arial,sans-serif;` : "";
     const est = `${z.negrita?'font-weight:700;':''}${z.italica?'font-style:italic;':''}`;
+    const t = P.cuerpo.cta;
     const sepC = parseFloat(z.sep) ? `margin-top:${px(parseFloat(z.sep),0)}px;` : "";
-    return `<a class="cmp-cta" href="${esc(z.url||'#')}" target="_blank" rel="noopener" style="font-size:${px(z.tamano,13)}px;background:${esc(z.colorFondo||'#2f80ed')};color:${esc(z.colorTexto||'#fff')};border-radius:${px(z.radio,8)}px;padding:${px(pY,pY)}px ${px(pX,pX)}px;${sepC}${fam}${est}">${esc(z.texto)}</a>`;
+    // El botón nunca se cae. El legal NO va aquí: tiene su propia banda inferior
+    // reservada (bandaLegalHTML), para que nunca se monte sobre el contenido.
+    return (P.hay.cta && z.texto)
+      ? `<a class="cmp-cta" href="${esc(z.url||'#')}" target="_blank" rel="noopener" style="font-size:${t}px;background:${esc(z.colorFondo||'#2f80ed')};color:${esc(z.colorTexto||'#fff')};border-radius:${px(z.radio,0)}px;padding:${Math.round(t*0.55)}px ${Math.round(t*1.25)}px;${sepC}${fam}${est}">${esc(z.texto)}</a>` : "";
   }
   return "";
 }
-// Burbujas decorativas de fondo (círculos sólidos que asoman por los bordes,
-// composición fija y determinista — misma en editor y export).
+// BANDA LEGAL: una línea, abajo, con su espacio RESERVADO en cada banner (así
+// no se monta nunca sobre el contenido). Sobre foto el legal no va encima de la
+// imagen: la banda lleva un respaldo sólido del color de fondo del banner.
+function altoBandaLegal(P){
+  if(!P.hay.legal) return 0;
+  return Math.round(P.cuerpo.legal*1.25) + Math.round(P.cuerpo.legal*0.5);
+}
+function bandaLegalHTML(P, c, bgColor, esFoto){
+  if(!P.hay.legal) return "";
+  const alto = altoBandaLegal(P);
+  const col = c.legalColor || (esFoto || esColorOscuro(bgColor) ? "#ffffff" : colorTintaSobre(bgColor));
+  const respaldo = esFoto ? `background:${esc(bgColor)};` : "";
+  return `<div class="cmp-legalbanda" style="height:${alto}px;padding:0 ${P.margen.r}px 0 ${P.margen.l}px;bottom:${Math.max(2,Math.round(P.margen.b/2))}px;${respaldo}">`
+    + `<div class="cmp-legal" style="font-size:${P.cuerpo.legal}px;color:${esc(col)};">${esc(c.legal)}</div></div>`;
+}
+// Tinta legible sobre un fondo claro: el color oscuro de la marca si lo hay.
+function colorTintaSobre(bg){
+  const m = (workspace.marcas||[]).find(x=>x && x.text);
+  const t = (m && m.text) || "#23366F";
+  return esColorOscuro(t) ? t : "#23366F";
+}
+// ADORNOS (formas de apoyo). Manual: TRES formas de ⌀ 28 %, 16 % y 9 % del lado
+// corto, SIEMPRE asomando por el borde inferior — nunca flotando en el centro —,
+// siempre por detrás del contenido y nunca dos del mismo color tocándose (las
+// dos que comparten color van en extremos opuestos). Se apagan en franjas y en
+// cualquier formato de lado corto ≤ 250: eso lo decide geomDe().noVan.
 function decoBurbujasHTML(deco, W, H){
-  const c1 = deco.color1 || "#72CCFD", c2 = deco.color2 || "#2F80ED";
-  const R = Math.min(W, H);
+  const c1 = deco.color1 || "#91BFE3", c2 = deco.color2 || "#41B6E6";
+  const S = Math.min(W, H);
+  const r = GEOM.decoPct.map(p => S*p/200);          // /200 = mitad del diámetro
   const cs = [
-    { x:0.06*W, y:0.96*H, r:0.15*R, f:c1, o:.95 },
-    { x:0.17*W, y:1.04*H, r:0.08*R, f:c2, o:.9 },
-    { x:0.99*W, y:0.26*H, r:0.09*R, f:c2, o:.9 },
-    { x:1.03*W, y:0.80*H, r:0.16*R, f:c1, o:.85 }
+    { x:0.16*W, y:H + r[0]*0.40, r:r[0], f:c1 },     // grande, izquierda
+    { x:0.60*W, y:H + r[1]*0.30, r:r[1], f:c2 },     // media, centro-derecha
+    { x:0.88*W, y:H + r[2]*0.10, r:r[2], f:c1 }      // chica, derecha (lejos de la grande)
   ];
-  const circles = cs.map(c=>`<circle cx="${c.x.toFixed(0)}" cy="${c.y.toFixed(0)}" r="${c.r.toFixed(0)}" fill="${esc(c.f)}" opacity="${c.o}"/>`).join("");
+  const circles = cs.map(c=>`<circle cx="${c.x.toFixed(0)}" cy="${c.y.toFixed(0)}" r="${c.r.toFixed(0)}" fill="${esc(c.f)}"/>`).join("");
   return `<svg class="cmp-deco" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg">${circles}</svg>`;
 }
-// Burbuja circular de OFERTA (el círculo de promo). Si el texto parte con un
-// número ("2 Cuotas Gratis", "60% dcto."), el número se pinta GRANDE.
-// Diámetro real de la burbuja de oferta. Se calcula aparte porque la
-// composición necesita RESERVARLE el sitio: la burbuja va posicionada encima,
-// así que sin reserva se comía el titular y el botón en casi todos los tamaños.
-function diametroBurbuja(bu, px, W, H){
-  return Math.min(Math.max(34, px(bu.tamano, 96)), Math.round(H*0.8), Math.round(W*0.5));
+// CÍRCULO DE OFERTA. Diámetro cerrado: 62 % del lado corto, y sale 8 % por el
+// borde. El bloque de texto le DESCUENTA ese sitio de su ancho (sin reserva
+// tapaba el título y el botón). Solo existe si hay una cifra real.
+// El campo "tamaño" del panel se interpreta como PORCENTAJE del lado corto
+// cuando está entre 30 y 80; cualquier otro valor usa el 62 % del manual.
+function diametroBurbuja(bu, fmt){
+  const g = geomDe(fmt);
+  const v = parseFloat(bu && bu.tamano);
+  if(v && v>=30 && v<=80) return Math.min(Math.round(g.corto*v/100), Math.round(g.corto*0.72));
+  return g.circuloK || Math.round(GEOM.circuloBase*g.k);
 }
-// Lado del banner que ocupa la burbuja: 'l' (tl/bl) o 'r' (tr/br/cr).
+// Lado del banner que ocupa el círculo: 'l' (tl/bl) o 'r' (tr/br/cr).
 const ladoBurbuja = bu => /l$/.test(bu && bu.pos || "tr") ? "l" : "r";
-function burbujaHTML(bu, px, W, H){
-  const dia = diametroBurbuja(bu, px, W, H);
+function burbujaHTML(bu, fmt){
+  const dia = diametroBurbuja(bu, fmt);
+  const g = geomDe(fmt);
   const bg = bu.color || "#FFF773", fg = bu.colorTexto || "#23366F";
   const t = String(bu.texto||"").trim();
   const m = t.match(/^(\$?\d[\d.,]*%?)\s+([\s\S]+)$/);
-  // Estilo Zurich: número MUY grande y protagonista, texto chico y compacto
-  // debajo. Si no hay número, el texto va en 2-3 líneas centradas.
+  // La cifra manda: 45 % del DIÁMETRO (no del lienzo). La palabra, 20 %.
   const inner = m
-    ? `<span class="bnum" style="font-size:${Math.round(dia*0.5)}px;">${esc(m[1])}</span><span class="btxt" style="font-size:${Math.round(dia*0.135)}px;">${esc(m[2])}</span>`
+    ? `<span class="bnum" style="font-size:${Math.round(dia*GEOM.cifraPctDia/100)}px;">${esc(m[1])}</span><span class="btxt" style="font-size:${Math.round(dia*0.14)}px;">${esc(m[2])}</span>`
     : `<span class="btxt" style="font-size:${Math.round(dia*0.17)}px;">${esc(t)}</span>`;
-  const off = Math.max(4, Math.round(dia*0.09));
+  // Sale por el borde 8 % del lado corto: el desplazamiento es NEGATIVO y se
+  // compensa con padding para que el texto de dentro no se corte.
+  const sale = g.sale;
   const pos = bu.pos || "tr";
-  const P = pos==="tl" ? `top:${off}px;left:${off}px;` : pos==="bl" ? `bottom:${off}px;left:${off}px;`
-        : pos==="br" ? `bottom:${off}px;right:${off}px;` : pos==="cr" ? `top:50%;margin-top:${-Math.round(dia/2)}px;right:${off}px;`
-        : `top:${off}px;right:${off}px;`;
-  return `<div class="cmp-burbuja" style="width:${dia}px;height:${dia}px;background:${esc(bg)};color:${esc(fg)};padding:${Math.round(dia*0.1)}px;${P}">${inner}</div>`;
+  const P = pos==="tl" ? `top:${-sale}px;left:${-sale}px;padding-top:${sale}px;padding-left:${sale}px;`
+        : pos==="bl" ? `bottom:${-sale}px;left:${-sale}px;padding-bottom:${sale}px;padding-left:${sale}px;`
+        : pos==="br" ? `bottom:${-sale}px;right:${-sale}px;padding-bottom:${sale}px;padding-right:${sale}px;`
+        : pos==="cr" ? `top:50%;margin-top:${-Math.round(dia/2)}px;right:${-sale}px;padding-right:${sale}px;`
+        : `top:${-sale}px;right:${-sale}px;padding-top:${sale}px;padding-right:${sale}px;`;
+  return `<div class="cmp-burbuja" style="width:${dia}px;height:${dia}px;background:${esc(bg)};color:${esc(fg)};${P}">${inner}</div>`;
 }
 // ── LAYOUTS DE MARCA (estilo Zurich) ────────────────────────────────────
 // Cuatro disposiciones extraidas de las campanas reales. Reusan el MISMO
@@ -5454,95 +5690,403 @@ function renderLayoutMarca(c, fmt, layout){
       + bajada() + boton() + `</div>`, true
   );
 }
-// ── QUE EL CONTENIDO QUEPA ──────────────────────────────────────────────
-// El renderizador devuelve un string, así que no puede medir el DOM: estima el
-// alto que ocuparán etiqueta + titular + bajada + botón y, si no cabe, baja la
-// escala. Si aun al mínimo no cabe, quita la BAJADA — que es lo que hacen los
-// banners display reales en formatos chicos: titular y botón, sin párrafo.
-// Sin esto el texto se cortaba a la mitad (300x250, 250x250, 1200x1200).
-function altoNecesario(c, W, e, resBu, sinCuerpo){
-  const Z=c.zonas||{}, T=Z.texto||{}, ti=T.titular||{}, cu=T.cuerpo||{}, et=T.etiqueta||{}, cta=Z.cta||{}, lg=Z.logo||{}, mg=c.margen||{};
-  const p=(v,b)=>Math.round((parseFloat(v)||b)*e);
-  const util = Math.max(40, W - resBu - p(mg.l,0) - p(mg.r,0) - p(12,12)*2);
-  // Ancho medio de un carácter en Arial ≈ 0.52 em. Sirve para contar líneas.
-  const lineas=(txt,fs)=>{ if(!txt) return 0;
-    const porLinea=Math.max(6, Math.floor(util/(fs*0.52)));
-    return String(txt).split("\n").reduce((n,l)=>n+Math.max(1,Math.ceil(l.length/porLinea)),0); };
-  let h=0;
-  if(lg.url) h += p(lg.alto,48) + p(12,12)*2;
-  const fTi=p(ti.tamano,26), fCu=p(cu.tamano,13), fEt=p(et.tamano,11), fCta=p(cta.tamano,13);
-  let ht=0;
-  if(et.texto) ht += fEt*1.2 + p(4,4)*2 + p(4,4);
-  if(ti.texto) ht += lineas(ti.texto,fTi)*fTi*1.18 + p(4,4);
-  if(!sinCuerpo && cu.texto) ht += lineas(cu.texto,fCu)*fCu*1.35 + p(4,4);
-  if(ht) h += ht + p(12,12)*2;
-  if(cta.texto) h += fCta*1.2 + Math.round(fCta*0.55)*2 + p(12,12)*2;
-  return h;
+// ── PLAN DEL BANNER: QUÉ ENTRA Y CON QUÉ MEDIDAS ────────────────────────
+// El manual no admite "encoger hasta que quepa": los cuerpos salen de la tabla
+// cerrada (base × k, nunca bajo el piso de legibilidad) y, si el contenido no
+// cabe, se QUITA el elemento menos importante en este orden:
+//     Legal → Bajada → Adornos → Epígrafe
+// Título, CTA y logo NUNCA se caen. Si no caben, ese formato no admite esa
+// diagramación y hay que usar otra del catálogo.
+// `nivel` = cuántos peldaños de la escalera se han bajado ya. El inspector puede
+// pedir otro peldaño si midiendo el render real encuentra que sigue sin caber.
+function planDeBanner(c, fmt, nivel){
+  c = c || {};
+  const g = geomDe(fmt);
+  const Z=c.zonas||{}, T=Z.texto||{}, ti=T.titular||{}, cu=T.cuerpo||{},
+        et=T.etiqueta||{}, cta=Z.cta||{}, lg=Z.logo||{}, bu=c.burbuja||{};
+  const txt = {
+    epigrafe: String(et.texto||"").trim(),
+    titulo:   String(ti.texto||"").trim(),
+    bajada:   String(cu.texto||"").trim(),
+    cta:      String(cta.texto||"").trim(),
+    legal:    String(c.legal||"").trim()
+  };
+  const hay = {
+    logo:     !!lg.url && lg.visible!==false,
+    epigrafe: !!txt.epigrafe && T.visible!==false,
+    titulo:   !!txt.titulo   && T.visible!==false,
+    bajada:   !!txt.bajada   && T.visible!==false,
+    cta:      !!txt.cta      && cta.visible!==false,
+    legal:    !!txt.legal,
+    // El círculo de oferta SOLO existe si hay una cifra real. Un círculo vacío o
+    // con una frase sin número es el error gráfico más visible del sistema.
+    circulo:  bu.visible===true && tieneCifra(bu.texto) && g.circulo>0,
+    adornos:  !!(c.deco && c.deco.visible===true)
+  };
+  // 1 · Lo que no cabe en este tamaño se cae solo (tabla del manual: la bajada y
+  //     el epígrafe no van en un 468×60, el legal no va en un 160×600, los
+  //     adornos se apagan en franjas y con lado corto ≤ 250).
+  g.noVan.forEach(k => { if(k in hay) hay[k] = false; });
+  // 2 · Peldaños de la escalera de caída, contando solo lo que de verdad hay
+  //     (bajar un peldaño tiene que quitar algo, o no sirve de nada).
+  const escalera = GEOM.caida.filter(k => hay[k]);
+  const n = Math.max(0, Math.min(parseInt(nivel)||0, escalera.length));
+  for(let i=0;i<n;i++) hay[escalera[i]] = false;
+  // 3 · Medidas. El usuario mueve la base dentro de su rango; el formato escala.
+  const cuerpo = {
+    epigrafe: cuerpoDe(fmt,"epigrafe",et.tamano),
+    titulo:   cuerpoDe(fmt,"titulo",ti.tamano),
+    bajada:   cuerpoDe(fmt,"bajada",cu.tamano),
+    cta:      cuerpoDe(fmt,"cta",cta.tamano),
+    legal:    cuerpoDe(fmt,"legal",c.legalTamano)
+  };
+  const dia = hay.circulo ? diametroBurbuja(bu, fmt) : 0;
+  // Sitio que el círculo le quita al bloque de texto: su diámetro menos lo que
+  // sale por el borde, más el hueco de respeto (4 % del lado corto).
+  const reserva = hay.circulo ? Math.max(0, dia - g.sale + g.hueco) : 0;
+  const mg = c.margen||{};
+  const margen = {
+    t: Math.max(0, parseFloat(mg.t)>0 ? Math.round(parseFloat(mg.t)*g.k) : g.margen),
+    r: Math.max(0, parseFloat(mg.r)>0 ? Math.round(parseFloat(mg.r)*g.k) : g.margen),
+    b: Math.max(0, parseFloat(mg.b)>0 ? Math.round(parseFloat(mg.b)*g.k) : g.margen),
+    l: Math.max(0, parseFloat(mg.l)>0 ? Math.round(parseFloat(mg.l)*g.k) : g.margen)
+  };
+  // El bloque de texto DESCUENTA el sitio del círculo de su ancho. Sin esta
+  // reserva el círculo tapaba el titular y el botón en casi todos los tamaños.
+  const reservaH = hay.circulo ? reserva : 0;
+  const anchoTexto = Math.max(40, g.ancho - margen.l - margen.r - reservaH);
+  // Máximo de caracteres con el ancho REAL de esta pieza (el de geomDe supone
+  // círculo puesto en horizontal, que es el peor caso; este es el de verdad).
+  const maxChars = {};
+  const L = GEOM.lineas[g.familia];
+  for(const p in cuerpo){
+    let m = Math.max(4, Math.floor(anchoTexto/(cuerpo[p]*GEOM.emArial)) * L[p]);
+    if(GEOM.topeChars[p]) m = Math.min(GEOM.topeChars[p], m);
+    maxChars[p] = m;
+  }
+  return { fmt, g, hay, txt, cuerpo, dia, reserva, reservaH, margen, anchoTexto, maxChars,
+           nivel:n, peldanos:escalera.length, logoAlto:altoLogo(lg, fmt) };
 }
-function ajusteQueCabe(c, W, H, esc0, fila, resBu){
-  if(fila) return { esc:esc0, sinCuerpo:false };      // las franjas reparten en horizontal
-  let e=esc0;
-  for(let i=0;i<30 && altoNecesario(c,W,e,resBu,false)>H;i++) e*=0.95;
-  if(altoNecesario(c,W,e,resBu,false)<=H && e>=0.62) return { esc:e, sinCuerpo:false };
-  e=esc0;
-  for(let i=0;i<30 && altoNecesario(c,W,e,resBu,true)>H;i++) e*=0.95;
-  return { esc:Math.max(0.5,e), sinCuerpo:true };
+// Alto del logo: 8 % del lado corto, mínimo 14 px. Si el usuario dio un
+// porcentaje propio (`altoPct`) se respeta acotado entre 4 % y 16 %; el viejo
+// campo en píxeles (`alto`, que la app rellenaba con 48) se convierte a escala
+// del formato y se acota igual — un logo de 48 px en un 200×200 se comía la pieza.
+function altoLogo(lg, fmt){
+  const g = geomDe(fmt);
+  const lim = v => Math.max(GEOM.logoMin, Math.min(Math.round(g.corto*0.16), Math.round(v)));
+  const pct = parseFloat(lg && lg.altoPct);
+  if(pct && pct>=3 && pct<=20) return lim(g.corto*pct/100);
+  const pxUsr = parseFloat(lg && lg.alto);
+  if(pxUsr>0 && pxUsr!==48) return lim(Math.max(g.corto*0.04, pxUsr*g.k));
+  return lim(g.corto*GEOM.logoPct/100);
 }
-// Renderiza la composición (3 zonas) a un tamaño concreto.
-function renderComposicion(comp, fmt){
+// Alto (o ancho, en franjas) que ocupa el plan. Es una ESTIMACIÓN de vuelo
+// previo: el juez de verdad es el inspector, que mide el render.
+function ocupaDelPlan(P){
+  const g = P.g, A = n => aireDe(P.fmt, n);
+  // Cuenta líneas simulando el CORTE POR PALABRAS del navegador, no dividiendo
+  // caracteres entre el ancho: "Auto protegido" en 8 caracteres por línea ocupa
+  // TRES líneas (Auto / protegi / do), no dos. Contarlo mal hacía que el texto
+  // se saliera de su zona en los formatos chicos (200×200).
+  const lineas = (t, fs) => { if(!t) return 0;
+    const porLinea = Math.max(4, Math.floor(P.anchoTexto/(fs*GEOM.emArial)));
+    let total = 0;
+    String(t).split("\n").forEach(parrafo => {
+      let cur = 0, li = 1;
+      parrafo.split(/\s+/).filter(Boolean).forEach(w => {
+        const cabe = (cur ? cur+1 : 0) + w.length;
+        if(cabe <= porLinea){ cur = cabe; }
+        else if(w.length > porLinea){                 // palabra más larga que la línea
+          if(cur) li++;
+          li += Math.ceil(w.length/porLinea) - 1;
+          cur = w.length % porLinea || porLinea;
+        } else { li++; cur = w.length; }
+      });
+      total += li;
+    });
+    return total; };
+  if(g.familia==="franja"){
+    // En una franja el reparto es horizontal: lo que aprieta es el ancho.
+    const anchoDe = (t,fs)=>Math.ceil(String(t||"").length*fs*GEOM.emArial);
+    let w = 0;
+    if(P.hay.logo) w += Math.round(P.logoAlto*2.6) + A("logoTexto");
+    if(P.hay.epigrafe) w += anchoDe(P.txt.epigrafe,P.cuerpo.epigrafe) + Math.round(P.cuerpo.epigrafe*1.8) + A("epiTit");
+    if(P.hay.titulo) w += anchoDe(P.txt.titulo,P.cuerpo.titulo);
+    if(P.hay.bajada) w += A("titBaj") + anchoDe(P.txt.bajada,P.cuerpo.bajada);
+    if(P.hay.cta) w += A("bajCta") + anchoDe(P.txt.cta,P.cuerpo.cta) + Math.round(P.cuerpo.cta*2.5);
+    // La banda legal come alto: en una franja hay que comprobar que aún quepa el
+    // titular por debajo de ella.
+    if(P.hay.legal && (altoBandaLegal(P) + P.cuerpo.titulo*1.2 + P.margen.t) > g.alto)
+      return { usa:g.ancho+1, cabe:g.ancho };
+    return { usa:w + P.margen.l + P.margen.r + P.reserva, cabe:g.ancho };
+  }
+  let h = 0;
+  if(P.hay.logo) h += P.logoAlto + A("logoTexto");
+  if(P.hay.epigrafe) h += Math.round(P.cuerpo.epigrafe*1.0) + Math.round(P.cuerpo.epigrafe*0.7) + A("epiTit");
+  if(P.hay.titulo) h += lineas(P.txt.titulo,P.cuerpo.titulo)*P.cuerpo.titulo*1.14;
+  if(P.hay.bajada) h += A("titBaj") + lineas(P.txt.bajada,P.cuerpo.bajada)*P.cuerpo.bajada*1.32;
+  if(P.hay.cta) h += A("bajCta") + P.cuerpo.cta*1.2 + Math.round(P.cuerpo.cta*0.55)*2;
+  // La banda legal ya trae su propio aire interior: no se suma otra vez, o el
+  // máster 300×250 perdía la bajada por 8 px.
+  if(P.hay.legal) h += altoBandaLegal(P);
+  return { usa:Math.round(h + P.margen.t + P.margen.b), cabe:g.alto };
+}
+// Baja peldaños hasta que el contenido quepa. Si se agotan y sigue sin caber, se
+// devuelve el último plan marcado como `apretado` — el inspector lo avisará en
+// pantalla en vez de entregar una pieza rota en silencio.
+function planQueCabe(c, fmt, nivelMin){
+  let P = planDeBanner(c, fmt, nivelMin||0);
+  let o = ocupaDelPlan(P);
+  while(o.usa > o.cabe && P.nivel < P.peldanos){
+    P = planDeBanner(c, fmt, P.nivel+1);
+    o = ocupaDelPlan(P);
+  }
+  P.apretado = o.usa > o.cabe;
+  P.ocupa = o;
+  return P;
+}
+// Renderiza la composición (3 zonas) a un tamaño concreto, con la geometría
+// cerrada del manual. `nivelMin` fuerza peldaños de caída (lo usa el inspector
+// cuando, midiendo el render, encuentra que aún no cabe).
+function renderComposicion(comp, fmt, nivelMin){
   // Estilo de marca: disposiciones cerradas. Si no hay layout de marca, sigue
   // el modelo de 3 zonas de siempre (las piezas existentes no cambian).
   if(comp && esLayoutMarca(comp.layout)) return renderLayoutMarca(comp, fmt, comp.layout);
   const f = FORMATOS[fmt] || FORMATOS["display-300x250"];
   const W=f.ancho, H=f.alto, fila=(familiaDeFormato(fmt)==="franja");
-  // La escala manda sobre el LADO MÁS AJUSTADO, no solo sobre el ancho. Con
-  // W/300 a secas, un 1200x628 daba escala 4 (titular 104px) dentro de 628px de
-  // alto: el texto no cabía y se cortaba a la mitad. El piso sube a 0.7 porque
-  // por debajo (160x600 daba 14px de titular) el banner es ilegible.
   const c=comp||{}; const fondo=c.fondo||{}; const prop=(c.prop&&c.prop.length===3)?c.prop:[25,50,25];
-  const escBase = fila ? Math.max(0.5, H/110) : Math.max(0.7, Math.min(W/300, H/250));
-  // La burbuja NO se encoge con el texto: la oferta manda. Va a escala base.
+  const P = planQueCabe(c, fmt, nivelMin);
+  const g = P.g;
   const bu0 = c.burbuja||{};
-  const hayBu = bu0.visible===true && !!String(bu0.texto||"").trim();
-  const pxB=(v,base)=>Math.round((parseFloat(v)||base)*escBase);
-  const resBu = hayBu ? diametroBurbuja(bu0, pxB, W, H) + pxB(10,10) : 0;
-  const aj = ajusteQueCabe(c, W, H, escBase, fila, resBu);
-  const escF = aj.esc;
-  const px=(v,base)=>Math.round((parseFloat(v)||base)*escF);
   let Z=c.zonas||{};
-  if(aj.sinCuerpo && Z.texto && Z.texto.cuerpo && Z.texto.cuerpo.texto)
-    Z = Object.assign({}, Z, { texto: Object.assign({}, Z.texto,
-        { cuerpo: Object.assign({}, Z.texto.cuerpo, { texto:"" }) }) });
+  // Lo que el plan decidió QUITAR se quita de verdad del render.
+  if(!P.hay.bajada || !P.hay.epigrafe){
+    const T = Object.assign({}, Z.texto||{});
+    if(!P.hay.bajada && T.cuerpo)   T.cuerpo   = Object.assign({}, T.cuerpo,   {texto:""});
+    if(!P.hay.epigrafe && T.etiqueta) T.etiqueta = Object.assign({}, T.etiqueta, {texto:""});
+    Z = Object.assign({}, Z, { texto:T });
+  }
   const bgColor = fondo.color || "#0e2748";
   const esFoto = fondo.tipo==="imagen" && fondo.imagen && fondo.imagen.url;
-  const fondoLayer = esFoto ? capaImagenHTML(fondo.imagen, "cmp-bg") : "";
+  const fondoLayer = esFoto ? capaImagenHTML(fondo.imagen, "cmp-bg", true) : "";
   // Velo de legibilidad SOLO sobre foto (garantiza contraste del texto blanco).
   const scrim = esFoto ? `<div class="cmp-scrim"></div>` : "";
-  const pad=px("12",12);
+  // Google exige que el anuncio se distinga de la página: con fondo oscuro lo
+  // hace el propio color, con fondo claro hace falta un borde de 1 px.
+  const claro = !esFoto && !esColorOscuro(bgColor);
+  const borde = claro ? `border:1px solid ${esc(colorTintaSobre(bgColor))};` : "";
   const zonaHTML=(zk,i)=>{
     const z=Object.assign({bg:"hereda",alinH:"left",alinV:"center",visible:true}, Z[zk]||{});
     const grow = (z.visible===false) ? 0 : Math.max(0,parseFloat(prop[i])||0);
     const bg = (z.bg==="color" && z.color) ? `<div class="cmp-zbg" style="background:${esc(z.color)};"></div>`
              : (z.bg==="imagen") ? capaImagenHTML(z.imagen, "cmp-zbg") : "";
-    const inner = (z.visible===false) ? "" : zonaContenido(zk, z, px);
+    const inner = (z.visible===false) ? "" : zonaContenido(zk, z, P, c);
     // Una zona SIN contenido no debe reservar espacio: si no, deja un hueco
     // muerto (el logo vacío se comía el tercio superior de los verticales) y
     // el resto queda apelotonado. Sin contenido → no crece y no pone padding.
     const vacia = !String(inner||"").trim();
-    const g2 = vacia ? 0 : grow;
-    const p2 = vacia ? 0 : pad;
-    return `<div class="cmp-zona" style="flex:${g2} 1 0;justify-content:${alinFlex(z.alinV)};align-items:${alinFlex(z.alinH)};padding:${p2}px;">${bg}<div class="cmp-zin" style="align-items:${alinFlex(z.alinH)};text-align:${alinText(z.alinH)};gap:${px(4,4)}px;">${inner}</div></div>`;
+    // En FRANJA el reparto es horizontal y las zonas no crecen: el aire sobrante
+    // se distribuye entre ellas (space-between). Si crecen, todo el hueco se
+    // acumula en un solo sitio — un 970×90 dejaba un vacío del 33 %.
+    const g2 = vacia ? 0 : (fila ? 0 : grow);
+    // Espaciado del manual entre bloques: logo → primer texto 18, bajada → CTA 16.
+    const sep = vacia ? 0 : (zk==="texto" && P.hay.logo) ? aireDe(fmt,"logoTexto")
+              : (zk==="cta") ? aireDe(fmt,"bajCta") : 0;
+    const pad = fila ? `padding:0 ${vacia?0:Math.round(sep/2)}px;` : `padding:${sep}px 0 0;`;
+    const flexBase = fila ? `flex:0 1 auto;` : `flex:${g2} 1 0;`;
+    return `<div class="cmp-zona" style="${flexBase}justify-content:${alinFlex(z.alinV)};align-items:${alinFlex(z.alinH)};${pad}">${bg}<div class="cmp-zin" style="align-items:${alinFlex(z.alinH)};text-align:${alinText(z.alinH)};">${inner}</div></div>`;
   };
   const zonas = ["logo","texto","cta"].map((zk,i)=>zonaHTML(zk,i)).join("");
-  const mg=c.margen||{};
-  // RESERVA para la burbuja de oferta: va posicionada encima de todo, así que
-  // el contenido tiene que apartarse de su lado. Sin esto tapaba el titular
+  // RESERVA para el círculo de oferta: va posicionado encima de todo, así que el
+  // contenido tiene que apartarse de su lado. Sin esto tapaba el titular
   // (300x250, 336x280, 1200x628) y el botón (728x90, 468x60).
-  const buIzq = hayBu && ladoBurbuja(bu0)==="l";
-  const mpad=`${px(mg.t,0)}px ${px(mg.r,0)+(hayBu&&!buIzq?resBu:0)}px ${px(mg.b,0)}px ${px(mg.l,0)+(buIzq?resBu:0)}px`;
-  const deco = (c.deco && c.deco.visible===true) ? decoBurbujasHTML(c.deco, W, H) : "";
-  const burbuja = hayBu ? burbujaHTML(bu0, pxB, W, H) : "";   // pxB = escala base: la oferta no se encoge
-  return `<div class="cmp" style="width:${W}px;height:${H}px;background:${esc(bgColor)};">${fondoLayer}${scrim}${deco}<div class="cmp-zonas ${fila?'row':'col'}" style="padding:${mpad};box-sizing:border-box;">${zonas}</div>${burbuja}</div>`;
+  const buIzq = P.hay.circulo && ladoBurbuja(bu0)==="l";
+  // La banda legal se descuenta del alto del contenido: espacio RESERVADO.
+  const banda = altoBandaLegal(P);
+  const rH = P.reservaH;
+  const mpad=`${P.margen.t}px ${P.margen.r+(rH&&!buIzq?rH:0)}px ${P.margen.b+banda}px ${P.margen.l+(rH&&buIzq?rH:0)}px`;
+  const deco = P.hay.adornos ? decoBurbujasHTML(c.deco, W, H) : "";
+  const burbuja = P.hay.circulo ? burbujaHTML(bu0, fmt) : "";
+  const legal = bandaLegalHTML(P, c, bgColor, esFoto);
+  return `<div class="cmp" data-fmt="${escAttr(fmt)}" data-nivel="${P.nivel}"${P.apretado?' data-apretado="1"':''} style="width:${W}px;height:${H}px;background:${esc(bgColor)};${borde}">${fondoLayer}${scrim}${deco}<div class="cmp-zonas ${fila?'row':'col'}" style="padding:${mpad};box-sizing:border-box;">${zonas}</div>${burbuja}${legal}</div>`;
+}
+// ═══ INSPECTOR ════════════════════════════════════════════════════════════
+// Ninguna pieza llega al usuario sin pasar SEIS comprobaciones sobre el render
+// REAL — no sobre el código que lo generó, sobre el resultado medido en pantalla.
+// Comprobar que el HTML no venga vacío ni con errores NO es comprobar calidad:
+// un banner completamente vacío pasa ese test.
+//   1 Desborde     ningún elemento fuera del marco
+//   2 Colisión     ningún texto montado sobre otro ni sobre el círculo
+//   3 Legibilidad  nada bajo 9 px (lado corto ≤ 250) ni bajo 11 px en el resto
+//   4 Contraste    texto contra su fondo real ≥ 4,5:1
+//   5 Completa     título, CTA y logo presentes
+//   6 Aire         ninguna zona muerta mayor al 30 % del alto
+const INSPECTOR_SELS = { logo:".cmp-logo", etq:".cmp-etq", tit:".cmp-tit",
+  cue:".cmp-cue", cta:".cmp-cta", legal:".cmp-legal", bub:".cmp-burbuja" };
+const INSPECTOR_NOMBRE = { logo:"logo", etq:"epígrafe", tit:"título", cue:"bajada",
+  cta:"botón", legal:"legal", bub:"círculo de oferta" };
+function _insRgba(c){
+  const m = /rgba?\((\d+),\s*(\d+),\s*(\d+)(?:,\s*([\d.]+))?\)/.exec(c||"");
+  return m ? { r:+m[1], g:+m[2], b:+m[3], a:m[4]===undefined?1:parseFloat(m[4]) } : null;
+}
+function _insLum(c){
+  const f = v => { v=v/255; return v<=0.03928 ? v/12.92 : Math.pow((v+0.055)/1.055, 2.4); };
+  return 0.2126*f(c.r) + 0.7152*f(c.g) + 0.0722*f(c.b);
+}
+// Fondo REAL detrás de un elemento: acumula las capas translúcidas de los padres
+// (una píldora blanca al 22 % sobre navy NO es blanco) hasta dar con una opaca.
+function _insFondo(el, raiz){
+  const capas=[]; let n=el, foto=false;
+  while(n && n!==raiz.parentElement){
+    const cs = getComputedStyle(n);
+    if(cs.backgroundImage && cs.backgroundImage!=="none") foto = true;
+    const c = _insRgba(cs.backgroundColor);
+    if(c && c.a>0.001){ capas.push(c); if(c.a>=0.999) break; }
+    n = n.parentElement;
+  }
+  if(!capas.length) return { col:null, foto };
+  let out = capas[capas.length-1];
+  for(let i=capas.length-2;i>=0;i--){ const f=capas[i];
+    out = { r:f.r*f.a+out.r*(1-f.a), g:f.g*f.a+out.g*(1-f.a), b:f.b*f.a+out.b*(1-f.a), a:1 }; }
+  return { col:out, foto };
+}
+const _insContraste = (L1,L2) => (Math.max(L1,L2)+0.05)/(Math.min(L1,L2)+0.05);
+// Mide un banner ya pintado. Devuelve { ok, fallos:[{id,que,detalle}], datos }.
+function inspeccionarCmp(cmp){
+  const fallos = [];
+  if(!cmp) return { ok:false, fallos:[{id:"vacio",que:"No se pudo medir el banner"}], datos:{} };
+  const fmt = cmp.dataset.fmt || "display-300x250";
+  const g = geomDe(fmt);
+  const marco = cmp.getBoundingClientRect();
+  const W = g.ancho, H = g.alto;
+  // El tablero y el lienzo pintan el banner con transform:scale(), y
+  // getBoundingClientRect devuelve píxeles de PANTALLA. Sin dividir por la
+  // escala real, cada elemento parecía desbordar el marco. Todo lo que sigue
+  // está en coordenadas del banner (píxeles de verdad, los del export).
+  const s = marco.width > 0 ? marco.width / W : 1;
+  const el = {}, C = {};
+  for(const k in INSPECTOR_SELS) el[k] = cmp.querySelector(INSPECTOR_SELS[k]);
+  for(const k in el){
+    if(!el[k]){ C[k]=null; continue; }
+    const r = el[k].getBoundingClientRect();
+    C[k] = { x:(r.left-marco.left)/s, y:(r.top-marco.top)/s, w:r.width/s, h:r.height/s,
+             r:(r.right-marco.left)/s, b:(r.bottom-marco.top)/s };
+  }
+  const T = 1.0, nm = k => INSPECTOR_NOMBRE[k] || k;
+  // 1 · DESBORDE. El círculo sale por el borde a propósito: no cuenta.
+  for(const k in C){
+    const c = C[k]; if(!c || !c.w || k==="bub") continue;
+    if(c.x < -T || c.y < -T || c.r > W+T || c.b > H+T)
+      fallos.push({ id:"desborde", que:`El ${nm(k)} se sale del marco`, detalle:`${Math.round(c.x)},${Math.round(c.y)} ${Math.round(c.w)}×${Math.round(c.h)} en ${W}×${H}` });
+  }
+  // Texto CORTADO dentro de su propia caja (el "se corta a la mitad").
+  ["tit","cue","cta","etq","legal"].forEach(k => {
+    const e = el[k]; if(!e) return;
+    if(e.scrollHeight > e.clientHeight+1 || e.scrollWidth > e.clientWidth+1)
+      fallos.push({ id:"cortado", que:`El ${nm(k)} está cortado`, detalle:`${e.scrollWidth}×${e.scrollHeight} en ${e.clientWidth}×${e.clientHeight}` });
+  });
+  // 2 · COLISIÓN entre textos, y de cualquier texto con el círculo.
+  const solapa = (a,b) => a&&b&&a.w&&b.w && a.x<b.r-1 && b.x<a.r-1 && a.y<b.b-1 && b.y<a.b-1;
+  [["tit","cue"],["tit","cta"],["cue","cta"],["etq","tit"],["logo","tit"],["logo","etq"],
+   ["tit","legal"],["cue","legal"],["cta","legal"],
+   ["tit","bub"],["cue","bub"],["cta","bub"],["logo","bub"],["etq","bub"]].forEach(([a,b])=>{
+    if(solapa(C[a],C[b])) fallos.push({ id:"colision", que:`El ${nm(a)} se monta sobre el ${nm(b)}` });
+  });
+  // Los adornos van DETRÁS y fuera de la caja de texto: si pisan un texto, no
+  // vale que estén por debajo en z — se ven igual y matan el contraste.
+  const svg = cmp.querySelector(".cmp-deco");
+  if(svg){
+    const cajas = ["tit","cue","etq","cta"].map(k=>C[k]).filter(c=>c&&c.w);
+    [...svg.querySelectorAll("circle")].forEach(ci=>{
+      const cx=+ci.getAttribute("cx"), cy=+ci.getAttribute("cy"), r=+ci.getAttribute("r");
+      const caja = { x:cx-r, y:cy-r, r:cx+r, b:cy+r, w:2*r };
+      if(cajas.some(t=>solapa(t,caja)))
+        fallos.push({ id:"adorno", que:"Un adorno queda por detrás del texto", detalle:"los adornos van fuera de la caja de texto" });
+    });
+  }
+  // 3 · LEGIBILIDAD.
+  const cuerpos = {};
+  ["tit","cue","cta","etq","legal"].forEach(k => {
+    const e = el[k]; if(!e) return;
+    const fs = parseFloat(getComputedStyle(e).fontSize);
+    cuerpos[k] = Math.round(fs*10)/10;
+    if(fs < g.piso-0.5)
+      fallos.push({ id:"legibilidad", que:`El ${nm(k)} queda ilegible`, detalle:`${Math.round(fs)} px, el mínimo de este formato es ${g.piso} px` });
+  });
+  // 4 · CONTRASTE.
+  const contrastes = {};
+  ["tit","cue","cta","etq","legal"].forEach(k => {
+    const e = el[k]; if(!e) return;
+    const ct = _insRgba(getComputedStyle(e).color); const fb = _insFondo(e, cmp);
+    if(!ct || !fb.col) return;
+    const rz = _insContraste(_insLum(ct), _insLum(fb.col));
+    contrastes[k] = Math.round(rz*10)/10;
+    if(rz < 4.5)
+      fallos.push({ id:"contraste", que:`El ${nm(k)} no contrasta con su fondo`, detalle:`${rz.toFixed(1)}:1, el mínimo es 4,5:1${fb.foto?" (sobre foto: sube el velo)":""}` });
+  });
+  // 5 · COMPLETA: título, botón y logo nunca se caen.
+  if(!C.tit || !C.tit.w) fallos.push({ id:"completa", que:"Falta el título" });
+  if(!C.cta || !C.cta.w) fallos.push({ id:"completa", que:"Falta el botón" });
+  if(!C.logo || !C.logo.w) fallos.push({ id:"completa", que:"Falta el logo" });
+  // 6 · AIRE: ninguna zona muerta mayor al 30 % del alto.
+  // Se mide DENTRO de la caja útil (entre los márgenes declarados), no de borde
+  // a borde: el margen es aire deliberado, y contarlo hacía fallar a un 468×60
+  // que solo tenía 19 px de respiro arriba y abajo. Lo que esta comprobación
+  // busca es el hueco de verdad — el vertical con dos tercios vacíos.
+  const cont = Object.keys(C).map(k=>C[k]).filter(c=>c&&c.w);
+  const zonasEl = cmp.querySelector(".cmp-zonas");
+  let y0 = 0, y1 = H;
+  if(zonasEl){
+    const zs = getComputedStyle(zonasEl);
+    y0 = parseFloat(zs.paddingTop) || 0;
+    y1 = H - (parseFloat(zs.paddingBottom) || 0);
+    // La banda legal vive en ese margen inferior: cuenta como contenido.
+    if(C.legal && C.legal.w) y1 = Math.max(y1, C.legal.b);
+  }
+  let racha=0, peor=0;
+  for(let y=y0; y<y1; y+=2){
+    const hay = cont.some(c => c.y-2<=y && y<=c.b+2);
+    if(hay) racha=0; else { racha+=2; if(racha>peor) peor=racha; }
+  }
+  const muerta = Math.round(peor/H*100);
+  if(muerta > 30) fallos.push({ id:"aire", que:`Queda un hueco vacío del ${muerta} % del alto`, detalle:"el máximo es 30 %" });
+  return { ok:!fallos.length, fallos, datos:{ fmt, cuerpos, contrastes, muerta, nivel:+(cmp.dataset.nivel||0) } };
+}
+// Renderiza un banner en `host` y, si el inspector lo rechaza, lo REHACE bajando
+// un peldaño de la escalera de caída. Hasta tres intentos; si sigue fallando se
+// entrega con el aviso visible — nunca en silencio.
+function pintarBannerInspeccionado(host, comp, fmt, opciones){
+  const o = opciones||{};
+  let nivel = 0, rep = null;
+  for(let intento=0; intento<3; intento++){
+    host.innerHTML = renderComposicion(comp, fmt, nivel);
+    rep = inspeccionarCmp(host.querySelector(".cmp"));
+    if(rep.ok) break;
+    // Solo tiene sentido rehacer si el fallo es de espacio; un contraste malo o
+    // un logo que falta no se arreglan quitando elementos.
+    const deEspacio = rep.fallos.some(f => /desborde|cortado|colision|aire|adorno/.test(f.id));
+    const P = planDeBanner(comp, fmt, nivel);
+    if(!deEspacio || nivel >= P.peldanos) break;
+    nivel++;
+  }
+  rep.intentos = nivel+1;
+  if(!o.sinAviso){
+    const cmp = host.querySelector(".cmp");
+    if(cmp) cmp.dataset.inspector = rep.ok ? "ok" : "falla";
+  }
+  return rep;
+}
+// Aviso visible junto a la pieza. El inspector sigue corriendo sobre las
+// ediciones del usuario: si una edición manual rompe la pieza se avisa, pero NO
+// se bloquea — desde que toca algo, la responsabilidad es suya y debe saberlo.
+function avisoInspectorHTML(rep){
+  if(!rep || rep.ok) return "";
+  const lista = rep.fallos.slice(0,4).map(f =>
+    `<li>${esc(f.que)}${f.detalle?` <span class="insp-det">${esc(f.detalle)}</span>`:""}</li>`).join("");
+  const mas = rep.fallos.length>4 ? `<li>y ${rep.fallos.length-4} más</li>` : "";
+  return `<div class="insp-aviso" title="El inspector mide el banner ya dibujado">
+    <div class="insp-tit">${svgIcon("alerta",{size:"12px"})} Revisa este tamaño</div>
+    <ul>${lista}${mas}</ul></div>`;
 }
 // ── Custom por tamaño (overrides sobre el Diseño global) ──
 function ovDeFmt(p, fmt){ const ab=(p.artboards||[]).find(a=>a.fmt===fmt); if(!ab) return {}; ab.ov=ab.ov||{}; return ab.ov; }
@@ -5597,8 +6141,9 @@ function renderTableroComposicion(p, c){
     const f=FORMATOS[fmt]; const master = fmt===(p.masterFmt||"display-300x250");
     const activo = fmt===p.activaFmt; const ajustado = tieneOverride(p, fmt);
     return `<div class="ab${activo?' activo':''}" data-fmt="${fmt}">
-      <div class="ab-bar"><span class="ab-tit">${f.ancho}×${f.alto}${master?' <span class="mtag">máster</span>':''}${ajustado?' <span class="ajtag">· ajustado</span>':''}</span><button class="ab-dl" onclick="exportarArtboard('${fmt}');event.stopPropagation();" title="Descargar este banner">${svgIcon("exportar",{size:"12px"})}</button></div>
+      <div class="ab-bar"><span class="ab-tit">${f.ancho}×${f.alto}${master?' <span class="mtag">máster</span>':''}${ajustado?' <span class="ajtag">· ajustado</span>':''}</span><span class="ab-insp" data-insp="${fmt}"></span><button class="ab-dl" onclick="exportarArtboard('${fmt}');event.stopPropagation();" title="Descargar este banner">${svgIcon("exportar",{size:"12px"})}</button></div>
       <div class="ab-stage" style="width:${Math.round(f.ancho*zoom)}px;height:${Math.round(f.alto*zoom)}px;"><div class="ab-scale" style="transform:scale(${zoom});">${renderComposicion(composicionEfectiva(p, fmt), fmt)}</div></div>
+      <div class="ab-aviso" data-aviso="${fmt}"></div>
     </div>`;
   };
   // Píldoras de TAMAÑO arriba del lienzo: tocas una y ese banner aparece para
@@ -5621,7 +6166,66 @@ function renderTableroComposicion(p, c){
   c.querySelectorAll(".fmt-pill").forEach(el=>el.addEventListener("click",()=>{ p.activaFmt=el.dataset.fmt; renderTablero(); renderForm(); cambiarPanelTab("editar"); }));
   // El overlay del lienzo se mide DESPUÉS de pintar (necesita tamaños reales).
   requestAnimationFrame(()=>{ try{ attachLienzoInteraccion(p, c); }catch(e){ console.warn("lienzo:",e); } });
+  // El INSPECTOR corre sobre el render ya pintado, también sobre las ediciones
+  // del usuario. No bloquea: avisa.
+  esperarImagenes(c).then(()=>{ try{ inspeccionarTablero(p, c); }catch(e){ console.warn("inspector:",e); } });
   iniciarLivePreview();
+}
+// Medir antes de que carguen las imágenes da falsos positivos: un logo aún sin
+// cargar mide 0×0 y el inspector cantaba "falta el logo" y una zona muerta que
+// no existía. Se espera la carga (con tope de 1,2 s por si una URL está muerta:
+// en ese caso el logo SÍ falta de verdad y hay que decirlo).
+function esperarImagenes(cont){
+  const imgs = [...cont.querySelectorAll(".cmp img")].filter(i => !i.complete);
+  if(!imgs.length) return Promise.resolve();
+  return Promise.race([
+    Promise.all(imgs.map(i => new Promise(r => {
+      i.addEventListener("load", r, {once:true}); i.addEventListener("error", r, {once:true});
+    }))),
+    new Promise(r => setTimeout(r, 1200))
+  ]);
+}
+// Pasa el inspector por TODOS los tamaños del tablero y deja el aviso al lado de
+// cada uno. Guarda el resumen en p._inspeccion para la barra y el export.
+function inspeccionarTablero(p, cont){
+  const res = {};
+  cont.querySelectorAll(".ab").forEach(ab => {
+    const fmt = ab.dataset.fmt; const cmp = ab.querySelector(".cmp");
+    if(!cmp) return;
+    const rep = inspeccionarCmp(cmp);
+    res[fmt] = rep;
+    const chip = ab.querySelector('[data-insp="'+fmt+'"]');
+    if(chip) chip.innerHTML = rep.ok ? "" : `<span class="insp-chip">${rep.fallos.length}</span>`;
+    const av = ab.querySelector('[data-aviso="'+fmt+'"]');
+    if(av) av.innerHTML = avisoInspectorHTML(rep);
+    ab.classList.toggle("ab-falla", !rep.ok);
+  });
+  p._inspeccion = res;
+  pintarResumenInspector(res);
+  return res;
+}
+// Resumen en la barra del editor: cuántos tamaños están sanos. Es la única forma
+// de que el usuario sepa, de un vistazo, si la campaña se puede entregar.
+function pintarResumenInspector(res){
+  const el = document.getElementById("ed-inspector"); if(!el) return;
+  const fmts = Object.keys(res||{});
+  if(!fmts.length){ el.innerHTML = ""; el.className = "ed-insp"; return; }
+  const malos = fmts.filter(f => !res[f].ok);
+  if(!malos.length){
+    el.className = "ed-insp ok";
+    el.innerHTML = `${svgIcon("check",{size:"13px"})}<span>${fmts.length} tamaños revisados</span>`;
+    el.title = "El inspector midió los banners dibujados: sin desbordes, colisiones, textos ilegibles ni huecos.";
+  } else {
+    el.className = "ed-insp mal";
+    el.innerHTML = `${svgIcon("alerta",{size:"13px"})}<span>${malos.length} de ${fmts.length} por revisar</span>`;
+    el.title = "Tamaños con avisos: " + malos.map(f=>f.replace("display-","")).join(", ");
+  }
+  el.onclick = () => {
+    if(!malos.length){ toast("Los "+fmts.length+" tamaños pasan las 6 comprobaciones"); return; }
+    const primero = document.querySelector(".ab-falla");
+    if(primero) primero.scrollIntoView({behavior:"smooth", block:"center"});
+    toast("Revisa: " + malos.map(f=>f.replace("display-","")).join(" · "));
+  };
 }
 // Mutadores de la composición global (por ruta, ej. "zonas.texto.titular.texto").
 function setComp(path, val){ const p=pieza(); if(!esComposicion(p))return; setPath(p.composicion, path, val); persistir(); renderTablero(); }
@@ -5739,8 +6343,7 @@ function attachLienzoInteraccion(p, root){
 // tirador lateral cambia el ANCHO de la caja de texto (%).
 function hacerElementosMovibles(cmp, ovl, stage, fmt, rel){
   const F = FORMATOS[fmt]; if(!F) return;
-  const fila = (familiaDeFormato(fmt)==="franja");
-  const escF = fila ? Math.max(0.5, F.alto/110) : Math.max(0.5, F.ancho/300);   // misma formula que el render (proporcional, sin tope)
+  const escF = factorK(fmt);   // la MISMA k que usa el render (tabla cerrada)
   const sLienzo = parseFloat(cmp.closest(".lienzo")?.dataset.escala) || 1;
   const k = escF * sLienzo;   // px de pantalla por unidad base
   const items = [
