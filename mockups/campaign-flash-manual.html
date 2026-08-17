@@ -92,6 +92,7 @@ footer{ margin-top:70px; padding-top:20px; border-top:1px solid var(--rule); col
 
 <ol class="idx">
   <li><a href="#p0"><span class="k">00</span> Cómo leer este manual</a></li>
+  <li><a href="#p05"><span class="k">00b</span> Cómo se entrega</a></li>
   <li><a href="#p1"><span class="k">01</span> Qué es y qué no es</a></li>
   <li><a href="#p2"><span class="k">02</span> Arquitectura y despliegue</a></li>
   <li><a href="#p3"><span class="k">03</span> Acceso y usuarios</a></li>
@@ -127,6 +128,25 @@ todas sus medidas son cerradas.</p>
 
 <p>Cuando este manual dice «debe», es obligatorio. Cuando dice «puede», es una decisión del usuario
 dentro de un rango acotado. Los rangos existen para que ninguna decisión del usuario rompa la pieza.</p>
+
+<h2 id="p05"><span class="n">00b · Cómo se entrega</span>Dos archivos, no uno</h2>
+<p class="lede">Este manual explica <b>el comportamiento y el porqué</b>. Los <b>valores</b> viven
+aparte, en un archivo de datos. Se entregan los dos juntos.</p>
+<div class="tw"><table>
+<thead><tr><th>Archivo</th><th>Contiene</th><th>Se lee para</th></tr></thead>
+<tbody>
+<tr><td><b>Este manual</b></td><td>Comportamiento, pantallas, flujos, criterios y el porqué de cada regla</td><td>Entender cómo debe actuar la aplicación</td></tr>
+<tr><td><code>flash-campaign-spec.json</code></td><td>Todo número, color, límite y lista de valores permitidos</td><td>Programar. <b>Ningún valor se saca de la prosa</b></td></tr>
+</tbody></table></div>
+
+<div class="box si-">
+  <span class="t">Por qué separados</span>
+  <p>Si los valores están en el texto, quien programe tiene que <b>interpretarlos</b> — y ahí vuelve
+  a entrar la improvisación. En un archivo de datos no hay nada que interpretar.</p>
+  <p>Además evita el peor error de un documento largo: <b>que un mismo valor aparezca en dos sitios
+  y se desincronicen</b>. La especificación se genera con <code>generar-spec.js</code> desde las
+  fórmulas; corregir una fórmula actualiza todos los valores de golpe.</p>
+</div>
 
 <h2 id="p1"><span class="n">01 · Alcance</span>Qué es y qué no es</h2>
 <p class="lede">Flash Campaign es una aplicación web que produce propuestas de anuncios y campañas

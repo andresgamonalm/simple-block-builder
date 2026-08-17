@@ -1,0 +1,993 @@
+{
+  "producto": "Flash Campaign",
+  "version": 1,
+  "nota": "Valores generados desde las formulas del manual. No editar a mano: editar la formula.",
+  "formulas": {
+    "escala": {
+      "display.cuadrados_y_grandes": "max(0.70, min(ancho/300, alto/250))",
+      "display.verticales": "max(0.62, ancho/300)",
+      "display.franjas": "max(0.55, alto/110)",
+      "facebook": "min(ancho/1080, alto/1350)"
+    },
+    "maxCaracteres": "floor(anchoUtil / (cuerpo * 0.52)) * lineasPermitidas",
+    "anchoUtil": "ancho - margen*2 - (diametroCirculo - salidaBorde + hueco)",
+    "nota": "0.52 em = ancho medio de caracter en Arial"
+  },
+  "masters": {
+    "display": "300x250",
+    "facebook": "1080x1350"
+  },
+  "medidasBase": {
+    "display": {
+      "epigrafe": 11,
+      "titulo": 26,
+      "bajada": 13,
+      "cta": 13,
+      "legal": 9,
+      "margenPct": 5.5,
+      "logoPct": 8
+    },
+    "facebook": {
+      "epigrafe": 40,
+      "titulo": 94,
+      "bajada": 47,
+      "cta": 47,
+      "legal": 32,
+      "margenPct": 5.5,
+      "logoPct": 8
+    }
+  },
+  "lineasPorFamilia": {
+    "cuadrados": {
+      "epigrafe": 1,
+      "titulo": 3,
+      "bajada": 3,
+      "cta": 1,
+      "legal": 2
+    },
+    "verticales": {
+      "epigrafe": 1,
+      "titulo": 3,
+      "bajada": 3,
+      "cta": 1,
+      "legal": 2
+    },
+    "grandes": {
+      "epigrafe": 1,
+      "titulo": 2,
+      "bajada": 2,
+      "cta": 1,
+      "legal": 1
+    },
+    "franjas": {
+      "epigrafe": 1,
+      "titulo": 1,
+      "bajada": 1,
+      "cta": 1,
+      "legal": 1
+    }
+  },
+  "paleta": {
+    "fondos": [
+      {
+        "nombre": "navy",
+        "hex": "#23366F",
+        "texto": "#FFFFFF",
+        "fuente": "manual"
+      },
+      {
+        "nombre": "azul",
+        "hex": "#2167AE",
+        "texto": "#FFFFFF",
+        "fuente": "manual"
+      },
+      {
+        "nombre": "coral",
+        "hex": "#F0736B",
+        "texto": "#FFFFFF",
+        "fuente": "medido-en-pieza"
+      },
+      {
+        "nombre": "magenta",
+        "hex": "#C2417F",
+        "texto": "#FFFFFF",
+        "fuente": "medido-en-pieza"
+      },
+      {
+        "nombre": "beige",
+        "hex": "#D9D2C5",
+        "texto": "#23366F",
+        "fuente": "medido-en-pieza"
+      },
+      {
+        "nombre": "durazno",
+        "hex": "#E8B87A",
+        "texto": "#23366F",
+        "fuente": "medido-en-pieza"
+      },
+      {
+        "nombre": "blanco",
+        "hex": "#FFFFFF",
+        "texto": "#23366F",
+        "fuente": "manual",
+        "obligaBorde": true
+      }
+    ],
+    "acentos": [
+      {
+        "nombre": "celeste",
+        "hex": "#91BFE3",
+        "uso": [
+          "formas",
+          "circulo-secundario"
+        ]
+      },
+      {
+        "nombre": "cyan",
+        "hex": "#41B6E6",
+        "uso": [
+          "formas"
+        ]
+      },
+      {
+        "nombre": "beige-forma",
+        "hex": "#D8D2BC",
+        "uso": [
+          "formas"
+        ]
+      },
+      {
+        "nombre": "verde-salvia",
+        "hex": "#8FB89A",
+        "uso": [
+          "circulo-monto"
+        ],
+        "fuente": "medido-en-pieza"
+      },
+      {
+        "nombre": "rojo-cta",
+        "hex": "#C0392B",
+        "uso": [
+          "cta-solido"
+        ]
+      }
+    ],
+    "fotoFiltro": {
+      "obligatorio": true,
+      "opacidadMin": 0.35,
+      "opacidadMax": 0.6
+    }
+  },
+  "circuloMonto": {
+    "diametroPctLadoCorto": 62,
+    "salidaBordePctLadoCorto": 8,
+    "maximo": 2,
+    "cuerpoCifraPctDiametro": 45,
+    "cuerpoEntradillaPctDiametro": 11,
+    "cuerpoPalabraPctDiametro": 20,
+    "requiereCifraReal": true,
+    "combinaciones": [
+      {
+        "cantidad": 1,
+        "fondo": "navy",
+        "colores": [
+          "#2167AE"
+        ],
+        "textos": [
+          "#FFFFFF"
+        ]
+      },
+      {
+        "cantidad": 1,
+        "fondo": "coral",
+        "colores": [
+          "#2167AE"
+        ],
+        "textos": [
+          "#FFFFFF"
+        ]
+      },
+      {
+        "cantidad": 1,
+        "fondo": "magenta",
+        "colores": [
+          "#FFFFFF"
+        ],
+        "textos": [
+          "#23366F"
+        ]
+      },
+      {
+        "cantidad": 1,
+        "fondo": "durazno",
+        "colores": [
+          "#23366F"
+        ],
+        "textos": [
+          "#FFFFFF"
+        ]
+      },
+      {
+        "cantidad": 1,
+        "fondo": "foto",
+        "colores": [
+          "#8FB89A"
+        ],
+        "textos": [
+          "#FFFFFF"
+        ]
+      },
+      {
+        "cantidad": 2,
+        "fondo": "navy",
+        "colores": [
+          "#2167AE",
+          "#5B9BD5"
+        ],
+        "textos": [
+          "#FFFFFF",
+          "#FFFFFF"
+        ]
+      },
+      {
+        "cantidad": 2,
+        "fondo": "coral",
+        "colores": [
+          "#2167AE",
+          "#FFFFFF"
+        ],
+        "textos": [
+          "#FFFFFF",
+          "#23366F"
+        ]
+      },
+      {
+        "cantidad": 2,
+        "fondo": "foto",
+        "colores": [
+          "#2167AE",
+          "#23366F"
+        ],
+        "textos": [
+          "#FFFFFF",
+          "#FFFFFF"
+        ]
+      }
+    ],
+    "secundarioPuedeContener": [
+      "cifra",
+      "foto-producto-recortada",
+      "logo-socio",
+      "linea-divisoria",
+      "legal"
+    ]
+  },
+  "voces": {
+    "serif-display": {
+      "peso": "fino",
+      "usoEn": [
+        "epigrafe",
+        "frase-gancho"
+      ]
+    },
+    "sans-light": {
+      "peso": "light",
+      "usoEn": [
+        "nombre-producto",
+        "bajada",
+        "monto",
+        "entradilla",
+        "legal"
+      ]
+    }
+  },
+  "monto": {
+    "presentaciones": [
+      {
+        "tipo": "pildora-contorneada",
+        "cuando": "convive con mas datos",
+        "bordePx": 2,
+        "fondo": "transparente"
+      },
+      {
+        "tipo": "desnudo",
+        "cuando": "el precio es el mensaje",
+        "esElementoMayor": true
+      }
+    ],
+    "simboloMonedaMasChico": true,
+    "asteriscoSiHayCondiciones": true,
+    "entradillaArriba": true,
+    "aclaracionAbajo": true
+  },
+  "cta": [
+    {
+      "forma": "pildora-solida",
+      "fondo": "#C0392B",
+      "texto": "#FFFFFF",
+      "cuando": "venta directa"
+    },
+    {
+      "forma": "pildora-contorneada-flecha",
+      "fondo": "transparente",
+      "borde": "color-texto",
+      "cuando": "invitacion"
+    },
+    {
+      "forma": "solo-texto",
+      "peso": "negrita",
+      "cuando": "el canal no es un clic"
+    }
+  ],
+  "logo": [
+    {
+      "posicion": "arriba-izquierda",
+      "version": "clara",
+      "fondo": "ninguno"
+    },
+    {
+      "posicion": "arriba-centro",
+      "version": "clara",
+      "fondo": "ninguno"
+    },
+    {
+      "posicion": "abajo-derecha",
+      "version": "color",
+      "fondo": "circulo-claro-que-asoma"
+    }
+  ],
+  "foto": [
+    {
+      "tratamiento": "fondo-a-sangre",
+      "filtro": true,
+      "sujetoAlLadoContrarioDelTexto": true
+    },
+    {
+      "tratamiento": "recorte-circular",
+      "filtro": false,
+      "lados": [
+        "izquierda",
+        "derecha"
+      ],
+      "asomaPorBorde": true,
+      "diametroPctAlto": 85
+    },
+    {
+      "tratamiento": "producto-en-circulo",
+      "filtro": false,
+      "sinFondo": true
+    }
+  ],
+  "formas": {
+    "repertorio": [
+      "circulo",
+      "cuarto-de-circulo",
+      "trazo-pincel",
+      "linea-divisoria"
+    ],
+    "colores": [
+      "#91BFE3",
+      "#41B6E6",
+      "#2167AE",
+      "#23366F",
+      "#E9EDF2",
+      "#D8D2BC"
+    ],
+    "cantidadMin": 3,
+    "cantidadMax": 5,
+    "escalasPctLadoCorto": [
+      28,
+      16,
+      9
+    ],
+    "anclaje": "borde",
+    "porDetrasDelContenido": true,
+    "nuncaDosDelMismoColorTocandose": true
+  },
+  "espaciado": {
+    "epigrafe->titulo": 6,
+    "titulo->bajada": 10,
+    "bajada->cta": 16,
+    "cta->legal": 10,
+    "logo->primer-texto": 18,
+    "texto->circulo": "4% lado corto"
+  },
+  "prioridadDeCaida": [
+    "legal",
+    "bajada",
+    "formas",
+    "epigrafe"
+  ],
+  "nuncaSeCaen": [
+    "titulo",
+    "cta",
+    "logo"
+  ],
+  "inspector": {
+    "reglas": [
+      {
+        "id": "desborde",
+        "criterio": "ningun elemento fuera del marco"
+      },
+      {
+        "id": "colision",
+        "criterio": "ningun texto sobre otro ni sobre el circulo"
+      },
+      {
+        "id": "legible",
+        "criterio": "cuerpo >= 9px si lado corto <= 250, >= 11px en el resto"
+      },
+      {
+        "id": "contraste",
+        "criterio": "texto contra su fondo real >= 4.5:1"
+      },
+      {
+        "id": "completa",
+        "criterio": "titulo, cta y logo presentes"
+      },
+      {
+        "id": "aire",
+        "criterio": "ninguna zona muerta > 30% del alto"
+      }
+    ],
+    "intentosAntesDeEntregarConAviso": 3
+  },
+  "formatos": {
+    "display": [
+      {
+        "formato": "300x250",
+        "ancho": 300,
+        "alto": 250,
+        "familia": "cuadrados",
+        "master": true,
+        "k": 1,
+        "margen": 14,
+        "anchoUtil": 127,
+        "pisoLegibilidad": 9,
+        "circuloDiametro": 155,
+        "logoAlto": 20,
+        "cuerpo": {
+          "epigrafe": 11,
+          "titulo": 26,
+          "bajada": 13,
+          "cta": 13,
+          "legal": 9
+        },
+        "maxCaracteres": {
+          "epigrafe": 18,
+          "titulo": 27,
+          "bajada": 54,
+          "cta": 18,
+          "legal": 54
+        },
+        "elementosQueNoVan": [],
+        "diagramaciones": [
+          "A",
+          "B",
+          "D"
+        ]
+      },
+      {
+        "formato": "336x280",
+        "ancho": 336,
+        "alto": 280,
+        "familia": "cuadrados",
+        "master": false,
+        "k": 1.12,
+        "margen": 15,
+        "anchoUtil": 143,
+        "pisoLegibilidad": 11,
+        "circuloDiametro": 174,
+        "logoAlto": 22,
+        "cuerpo": {
+          "epigrafe": 12,
+          "titulo": 29,
+          "bajada": 15,
+          "cta": 15,
+          "legal": 11
+        },
+        "maxCaracteres": {
+          "epigrafe": 18,
+          "titulo": 27,
+          "bajada": 54,
+          "cta": 18,
+          "legal": 48
+        },
+        "elementosQueNoVan": [],
+        "diagramaciones": [
+          "A",
+          "B",
+          "D"
+        ]
+      },
+      {
+        "formato": "250x250",
+        "ancho": 250,
+        "alto": 250,
+        "familia": "cuadrados",
+        "master": false,
+        "k": 0.833,
+        "margen": 14,
+        "anchoUtil": 77,
+        "pisoLegibilidad": 9,
+        "circuloDiametro": 155,
+        "logoAlto": 20,
+        "cuerpo": {
+          "epigrafe": 9,
+          "titulo": 22,
+          "bajada": 11,
+          "cta": 11,
+          "legal": 9
+        },
+        "maxCaracteres": {
+          "epigrafe": 16,
+          "titulo": 18,
+          "bajada": 39,
+          "cta": 13,
+          "legal": 32
+        },
+        "elementosQueNoVan": [],
+        "diagramaciones": [
+          "A",
+          "B",
+          "D"
+        ]
+      },
+      {
+        "formato": "200x200",
+        "ancho": 200,
+        "alto": 200,
+        "familia": "cuadrados",
+        "master": false,
+        "k": 0.7,
+        "margen": 11,
+        "anchoUtil": 62,
+        "pisoLegibilidad": 9,
+        "circuloDiametro": 124,
+        "logoAlto": 16,
+        "cuerpo": {
+          "epigrafe": 9,
+          "titulo": 18,
+          "bajada": 9,
+          "cta": 9,
+          "legal": 9
+        },
+        "maxCaracteres": {
+          "epigrafe": 13,
+          "titulo": 18,
+          "bajada": 39,
+          "cta": 13,
+          "legal": 26
+        },
+        "elementosQueNoVan": [],
+        "diagramaciones": [
+          "A",
+          "B",
+          "D"
+        ]
+      },
+      {
+        "formato": "300x600",
+        "ancho": 300,
+        "alto": 600,
+        "familia": "verticales",
+        "master": false,
+        "k": 1,
+        "margen": 17,
+        "anchoUtil": 266,
+        "pisoLegibilidad": 11,
+        "circuloDiametro": null,
+        "logoAlto": 24,
+        "cuerpo": {
+          "epigrafe": 11,
+          "titulo": 26,
+          "bajada": 13,
+          "cta": 13,
+          "legal": 11
+        },
+        "maxCaracteres": {
+          "epigrafe": 18,
+          "titulo": 57,
+          "bajada": 117,
+          "cta": 24,
+          "legal": 92
+        },
+        "elementosQueNoVan": [],
+        "diagramaciones": [
+          "C",
+          "D"
+        ]
+      },
+      {
+        "formato": "160x600",
+        "ancho": 160,
+        "alto": 600,
+        "familia": "verticales",
+        "master": false,
+        "k": 0.62,
+        "margen": 9,
+        "anchoUtil": 142,
+        "pisoLegibilidad": 9,
+        "circuloDiametro": null,
+        "logoAlto": 14,
+        "cuerpo": {
+          "epigrafe": 9,
+          "titulo": 16,
+          "bajada": 9,
+          "cta": 9,
+          "legal": 9
+        },
+        "maxCaracteres": {
+          "epigrafe": 18,
+          "titulo": 51,
+          "bajada": 90,
+          "cta": 24,
+          "legal": null
+        },
+        "elementosQueNoVan": [
+          "legal"
+        ],
+        "diagramaciones": [
+          "C",
+          "D"
+        ]
+      },
+      {
+        "formato": "728x90",
+        "ancho": 728,
+        "alto": 90,
+        "familia": "franjas",
+        "master": false,
+        "k": 0.818,
+        "margen": 8,
+        "anchoUtil": 712,
+        "pisoLegibilidad": 9,
+        "circuloDiametro": null,
+        "logoAlto": 14,
+        "cuerpo": {
+          "epigrafe": 9,
+          "titulo": 21,
+          "bajada": 11,
+          "cta": 11,
+          "legal": 9
+        },
+        "maxCaracteres": {
+          "epigrafe": 18,
+          "titulo": 65,
+          "bajada": 124,
+          "cta": 24,
+          "legal": 152
+        },
+        "elementosQueNoVan": [],
+        "diagramaciones": [
+          "B",
+          "D"
+        ]
+      },
+      {
+        "formato": "970x90",
+        "ancho": 970,
+        "alto": 90,
+        "familia": "franjas",
+        "master": false,
+        "k": 0.818,
+        "margen": 8,
+        "anchoUtil": 954,
+        "pisoLegibilidad": 9,
+        "circuloDiametro": null,
+        "logoAlto": 14,
+        "cuerpo": {
+          "epigrafe": 9,
+          "titulo": 21,
+          "bajada": 11,
+          "cta": 11,
+          "legal": 9
+        },
+        "maxCaracteres": {
+          "epigrafe": 18,
+          "titulo": 87,
+          "bajada": 166,
+          "cta": 24,
+          "legal": 203
+        },
+        "elementosQueNoVan": [],
+        "diagramaciones": [
+          "B",
+          "D"
+        ]
+      },
+      {
+        "formato": "468x60",
+        "ancho": 468,
+        "alto": 60,
+        "familia": "franjas",
+        "master": false,
+        "k": 0.55,
+        "margen": 8,
+        "anchoUtil": 452,
+        "pisoLegibilidad": 9,
+        "circuloDiametro": null,
+        "logoAlto": 14,
+        "cuerpo": {
+          "epigrafe": 9,
+          "titulo": 14,
+          "bajada": 9,
+          "cta": 9,
+          "legal": 9
+        },
+        "maxCaracteres": {
+          "epigrafe": null,
+          "titulo": 62,
+          "bajada": null,
+          "cta": 24,
+          "legal": 96
+        },
+        "elementosQueNoVan": [
+          "bajada",
+          "epigrafe"
+        ],
+        "diagramaciones": [
+          "B",
+          "D"
+        ]
+      },
+      {
+        "formato": "1200x628",
+        "ancho": 1200,
+        "alto": 628,
+        "familia": "grandes",
+        "master": false,
+        "k": 2.512,
+        "margen": 35,
+        "anchoUtil": 1130,
+        "pisoLegibilidad": 11,
+        "circuloDiametro": null,
+        "logoAlto": 50,
+        "cuerpo": {
+          "epigrafe": 28,
+          "titulo": 65,
+          "bajada": 33,
+          "cta": 33,
+          "legal": 23
+        },
+        "maxCaracteres": {
+          "epigrafe": 18,
+          "titulo": 66,
+          "bajada": 130,
+          "cta": 24,
+          "legal": 94
+        },
+        "elementosQueNoVan": [],
+        "diagramaciones": [
+          "B",
+          "D"
+        ]
+      },
+      {
+        "formato": "1200x1200",
+        "ancho": 1200,
+        "alto": 1200,
+        "familia": "grandes",
+        "master": false,
+        "k": 4,
+        "margen": 66,
+        "anchoUtil": 372,
+        "pisoLegibilidad": 11,
+        "circuloDiametro": 744,
+        "logoAlto": 96,
+        "cuerpo": {
+          "epigrafe": 44,
+          "titulo": 104,
+          "bajada": 52,
+          "cta": 52,
+          "legal": 36
+        },
+        "maxCaracteres": {
+          "epigrafe": 16,
+          "titulo": 12,
+          "bajada": 26,
+          "cta": 13,
+          "legal": 19
+        },
+        "elementosQueNoVan": [],
+        "diagramaciones": [
+          "A",
+          "B",
+          "D"
+        ]
+      }
+    ],
+    "facebook": [
+      {
+        "formato": "1080x1350",
+        "ancho": 1080,
+        "alto": 1350,
+        "familia": "cuadrados",
+        "master": true,
+        "k": 1,
+        "margen": 59,
+        "anchoUtil": 335,
+        "pisoLegibilidad": 11,
+        "circuloDiametro": 670,
+        "logoAlto": 86,
+        "cuerpo": {
+          "epigrafe": 40,
+          "titulo": 94,
+          "bajada": 47,
+          "cta": 47,
+          "legal": 32
+        },
+        "maxCaracteres": {
+          "epigrafe": 16,
+          "titulo": 18,
+          "bajada": 39,
+          "cta": 13,
+          "legal": 40
+        },
+        "elementosQueNoVan": [],
+        "diagramaciones": [
+          "A",
+          "B",
+          "D"
+        ],
+        "cubre": [
+          "feed"
+        ]
+      },
+      {
+        "formato": "1080x1080",
+        "ancho": 1080,
+        "alto": 1080,
+        "familia": "cuadrados",
+        "master": false,
+        "k": 0.8,
+        "margen": 59,
+        "anchoUtil": 335,
+        "pisoLegibilidad": 11,
+        "circuloDiametro": 670,
+        "logoAlto": 86,
+        "cuerpo": {
+          "epigrafe": 32,
+          "titulo": 75,
+          "bajada": 38,
+          "cta": 38,
+          "legal": 26
+        },
+        "maxCaracteres": {
+          "epigrafe": 18,
+          "titulo": 24,
+          "bajada": 48,
+          "cta": 16,
+          "legal": 48
+        },
+        "elementosQueNoVan": [],
+        "diagramaciones": [
+          "A",
+          "B",
+          "D"
+        ],
+        "cubre": [
+          "feed",
+          "marketplace",
+          "columna-derecha",
+          "audience-network"
+        ]
+      },
+      {
+        "formato": "1200x628",
+        "ancho": 1200,
+        "alto": 628,
+        "familia": "grandes",
+        "master": false,
+        "k": 0.465,
+        "margen": 35,
+        "anchoUtil": 1130,
+        "pisoLegibilidad": 11,
+        "circuloDiametro": null,
+        "logoAlto": 50,
+        "cuerpo": {
+          "epigrafe": 19,
+          "titulo": 44,
+          "bajada": 22,
+          "cta": 22,
+          "legal": 15
+        },
+        "maxCaracteres": {
+          "epigrafe": 18,
+          "titulo": 98,
+          "bajada": 196,
+          "cta": 24,
+          "legal": 144
+        },
+        "elementosQueNoVan": [],
+        "diagramaciones": [
+          "B",
+          "D"
+        ],
+        "cubre": [
+          "feed-horizontal",
+          "enlaces"
+        ]
+      }
+    ]
+  },
+  "facebookTextosDelAnuncio": {
+    "nota": "Meta trunca en silencio. Validar contra el limite VISIBLE, no el maximo.",
+    "textoPrincipal": {
+      "maximo": 500,
+      "visible": 125
+    },
+    "titular": {
+      "maximo": 255,
+      "visible": 40,
+      "visibleMovilChico": 27
+    },
+    "descripcion": {
+      "visible": 30,
+      "opcional": true
+    },
+    "archivo": {
+      "formatos": [
+        "jpg",
+        "png"
+      ],
+      "maxMB": 30,
+      "minLadoCortoPx": 1080,
+      "minAnchoPx": 600
+    },
+    "textoEnImagenPctMax": 20
+  },
+  "search": {
+    "keywordsPorGrupo": {
+      "min": 20,
+      "max": 25
+    },
+    "concordancias": [
+      "exacta",
+      "frase"
+    ],
+    "concordanciaProhibida": "amplia",
+    "mezclaMinPorTipo": 0.3,
+    "criterioAsignacion": {
+      "exacta": "2-3 palabras, intencion precisa",
+      "frase": "4-5 palabras, cola larga"
+    },
+    "negativasCampanaMin": 5,
+    "competenciaProhibida": true,
+    "marcaPropia": "solo acompanada de producto o promocion",
+    "titulares": {
+      "fijos": 4,
+      "rotan": 11,
+      "maxCaracteres": 30,
+      "posicionesAncladas": [
+        1,
+        2,
+        3,
+        3
+      ]
+    },
+    "descripciones": {
+      "cantidad": 4,
+      "maxCaracteres": 90
+    },
+    "rutas": {
+      "cantidad": 2,
+      "maxCaracteres": 15
+    },
+    "sitelinks": {
+      "min": 4,
+      "max": 6,
+      "maxTexto": 25,
+      "maxDescripcion": 35
+    },
+    "exportacion": {
+      "formato": "xlsx",
+      "cabecerasEn": "ingles",
+      "unaHojaPor": [
+        "keywords",
+        "anuncios",
+        "negativas"
+      ]
+    }
+  }
+}
