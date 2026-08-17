@@ -177,7 +177,7 @@ las directrices que entregue el usuario. La IA no inventa ofertas, precios ni fe
 <tr><td>Alojamiento</td><td>Cloudflare Pages, desplegando desde <code>main</code></td><td class="si">Conectado</td></tr>
 <tr><td>Clave de la IA</td><td><code>GEMINI_API_KEY</code>, como secreto en Cloudflare</td><td class="si">Cargada</td></tr>
 <tr><td>Base de datos</td><td>Cloudflare D1, binding <code>DB</code></td><td class="no">Por crear</td></tr>
-<tr><td>Imágenes</td><td>Cloudflare R2, binding <code>IMAGENES</code></td><td class="no">Por crear</td></tr>
+<tr><td>Imágenes</td><td>Cloudflare R2, bucket <code>zurich-chile</code>, binding <code>IMAGENES</code></td><td class="si">Existe · falta enlazarlo al proyecto</td></tr>
 <tr><td>Clave de sesión</td><td><code>JWT_SECRET</code>, como secreto en Cloudflare</td><td class="no">Por cargar</td></tr>
 </tbody></table></div>
 
@@ -264,11 +264,40 @@ conversación, no un formulario ciego.</p>
 </tbody></table></div>
 
 <h4>Biblioteca de fotos</h4>
+<div class="box">
+  <span class="t">El bucket ES la biblioteca</span>
+  <p>La aplicación <b>no guarda una copia de la lista</b> en la base de datos: le pregunta al bucket
+  qué hay cada vez que abre la biblioteca. Así nunca se desincronizan, y las fotos que se suban por
+  fuera aparecen igual.</p>
+</div>
 <ul>
-  <li>Sistema de fotos <b>predefinidas</b>, cargadas de antemano.</li>
+  <li>Sistema de fotos <b>predefinidas</b>, ya cargadas en el bucket.</li>
   <li>El usuario puede subir las suyas, <b>máximo 3 por campaña</b>.</li>
-  <li>Toda foto subida queda alojada en la biblioteca y disponible para futuras campañas.</li>
+  <li>Lo que se sube va <b>al mismo bucket</b>, bajo el prefijo <code>subidas/</code>, y queda
+  disponible para futuras campañas.</li>
+  <li>Las imágenes se sirven <b>por el dominio de la aplicación</b>, no por la URL pública del bucket:
+  mismo origen, sin problemas de CORS y compatible con la exportación a imagen.</li>
 </ul>
+
+<h4>Carpetas y qué significa cada una</h4>
+<div class="tw"><table>
+<thead><tr><th>Prefijo</th><th>Contenido</th><th>¿Candidata a foto de la IA?</th></tr></thead>
+<tbody>
+<tr><td><code>fotos-generales/</code></td><td>Fotografía de uso libre</td><td class="si">Sí</td></tr>
+<tr><td><code>fotos-seguros/</code></td><td>Fotografía del rubro</td><td class="si">Sí, con prioridad si el encargo lo pide</td></tr>
+<tr><td><code>logos/</code></td><td>Logotipos y marcas</td><td class="no">No, nunca</td></tr>
+<tr><td><code>subidas/</code></td><td>Lo que suben los usuarios</td><td class="si">Sí</td></tr>
+</tbody></table></div>
+<p>La exclusión de <code>logos/</code> <b>se decide por el prefijo</b>, no adivinando por el nombre
+del archivo. Es la forma mecánica y fiable de cumplir la regla de que la IA nunca use un logotipo
+como fotografía de fondo.</p>
+
+<div class="box wa">
+  <span class="t">Biblioteca compartida</span>
+  <p>Si el mismo bucket se enlaza a más de una aplicación, la biblioteca es común. Es lo deseable —una
+  sola colección, no dos— pero implica que <b>borrar una foto desde una aplicación la borra para
+  todas</b>.</p>
+</div>
 
 <h2 id="p6"><span class="n">06 · Asistente</span>El formulario de la IA</h2>
 <p class="lede">Una sola ventana con toda la información necesaria para la campaña. No hay pasos ni
