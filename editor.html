@@ -945,7 +945,10 @@ button,input,select,textarea{font-family:inherit;}
 .lienzo-vp{overflow-x:auto;max-width:100%;border-radius:6px;}  /* sin tope de alto: el banner se despliega entero y lo demás baja */
 .lienzo-vp .lienzo-stage{margin:0 auto;}
 .lienzo-head .lz-tit .lz-badge{font-size:13px;font-weight:600;color:#fff;background:var(--navy,#040764);border-radius:999px;padding:3px 10px;}
-.lienzo-head .lz-ayuda{font-size:13px;color:var(--ink3,#5b6178);display:flex;align-items:center;gap:6px;}
+/* Bloque, NO flex: con flex cada <b> se convertia en un item y la frase salia
+   partida en columnas sueltas en cuanto la pantalla se estrechaba (tablet). */
+.lienzo-head .lz-ayuda{font-size:13px;line-height:1.5;color:var(--ink3,#5b6178);max-width:100%;}
+.lienzo-head .lz-ayuda svg{vertical-align:-2px;margin-right:4px;}
 .lienzo-stage{position:relative;margin:0 auto;border-radius:6px;overflow:hidden;box-shadow:0 6px 26px rgba(8,14,28,.14);background:#0e2748;}
 .lienzo-scale{position:absolute;top:0;left:0;transform-origin:top left;}
 .lienzo-ovl{position:absolute;inset:0;z-index:20;}
@@ -1002,7 +1005,10 @@ button,input,select,textarea{font-family:inherit;}
 .cmp-scope-hint b{color:var(--navy,#040764);}
 .cmp-ed .cmp-parte{margin:12px 2px 3px;font-size:12px;font-weight:700;color:var(--navy,#040764);}
 .cmp-ed .cmp-parte small{font-weight:400;color:var(--ink3,#5b6178);}
-.cmp-ed .cmp-hint-lienzo{margin:12px 2px;padding:8px 10px;background:#F2FDFD;border-radius:8px;font-size:12px;line-height:1.5;color:var(--ink2,#3b3b3b);display:flex;gap:7px;align-items:flex-start;}
+/* Igual que .lz-ayuda: en flex cada <b> del texto se volvia un item y la frase
+   salia partida en columnas sueltas al estrecharse la pantalla. */
+.cmp-ed .cmp-hint-lienzo{margin:12px 2px;padding:8px 10px;background:#F2FDFD;border-radius:8px;font-size:12px;line-height:1.5;color:var(--ink2,#3b3b3b);}
+.cmp-ed .cmp-hint-lienzo svg{vertical-align:-2px;margin-right:4px;}
 .cmp-ed .cmp-hint-lienzo .ico{color:#1DA4A4;flex-shrink:0;margin-top:1px;}
 .cmp-ed .cmp-zona-sec{margin:16px 0 4px;padding:7px 9px;background:var(--bg2,#f3f4f8);border:1px solid var(--bdr);border-radius:7px;display:flex;align-items:center;justify-content:space-between;font-size:12px;font-weight:700;color:var(--ink,#222);transition:box-shadow .2s,border-color .2s;}
 .cmp-ed .cmp-zona-sec.zona-foco{border-color:var(--blue,#1C73CB);box-shadow:0 0 0 3px rgba(28,115,203,.2);}
@@ -1723,6 +1729,26 @@ button,input,select,textarea{font-family:inherit;}
 .topbar .crumb-camp{max-width:150px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex-shrink:1;}
 .topbar .crumb-pieza{flex-shrink:0;}
 @media(max-width:1120px){ .topbar .tb-txt{display:none;} .topbar .tb-btn{gap:0;} }
+/* TABLET (≤1180px). El problema no era que no se viera: era que la primera fila
+   de la barra no cabia y Guardar/Exportar/Salir quedaban FUERA de la pantalla,
+   sin scroll que los alcanzara. Se libera espacio quitando lo accesorio y, como
+   red de seguridad, la fila puede envolver: ningun boton queda inalcanzable. */
+@media(max-width:1180px){
+  .topbar .tb-r1{flex-wrap:wrap;row-gap:6px;}
+  .topbar .ed-crumb-root,.topbar .crumb-sep:first-of-type{display:none;}
+  .topbar .sync-status{display:none;}
+  .ed-insp .ei-larga{display:none;}
+  .ed-insp{padding:0 8px;}
+  .topbar .tb-spacer{min-width:0;}
+  .lienzo{max-width:100%;}
+}
+.ed-insp .ei-corta{display:none;}
+@media(max-width:1180px){ .ed-insp .ei-corta{display:inline;} }
+/* El toast salia arriba a la derecha y en tablet tapaba la fila de herramientas
+   del editor (justo los botones que acababas de buscar). Abajo no molesta. */
+@media(max-width:1180px){
+  .toast{top:auto;bottom:18px;right:12px;left:12px;white-space:normal;text-align:center;}
+}
 @media(max-width:1280px){ .topbar .ed-name{display:none;} }
 </style>
 </head>
@@ -6345,8 +6371,22 @@ function renderTableroComposicion(p, c){
   requestAnimationFrame(()=>{ try{ attachLienzoInteraccion(p, c); }catch(e){ console.warn("lienzo:",e); } });
   // El INSPECTOR corre sobre el render ya pintado, también sobre las ediciones
   // del usuario. No bloquea: avisa.
-  esperarImagenes(c).then(()=>{ try{ inspeccionarTablero(p, c); }catch(e){ console.warn("inspector:",e); } });
+  inspeccionarConFreno(p, c);
   iniciarLivePreview();
+}
+// El inspector mide 11 banners: si se lanza en cada render (y un arrastre son
+// muchos renders) se acumulan pasadas que no sirven de nada. Con freno, solo corre
+// cuando el tablero se queda quieto.
+let _inspTimer = null;
+function inspeccionarConFreno(p, cont, ms){
+  if(_inspTimer) clearTimeout(_inspTimer);
+  _inspTimer = setTimeout(() => {
+    _inspTimer = null;
+    if(!document.body.contains(cont)) return;   // ya se repinto: la proxima pasada manda
+    esperarImagenes(cont).then(()=>{
+      try{ inspeccionarTablero(p, cont); }catch(e){ console.warn("inspector:",e); }
+    });
+  }, ms==null ? 220 : ms);
 }
 // Medir antes de que carguen las imágenes da falsos positivos: un logo aún sin
 // cargar mide 0×0 y el inspector cantaba "falta el logo" y una zona muerta que
@@ -6390,11 +6430,11 @@ function pintarResumenInspector(res){
   const malos = fmts.filter(f => !res[f].ok);
   if(!malos.length){
     el.className = "ed-insp ok";
-    el.innerHTML = `${svgIcon("check",{size:"13px"})}<span>${fmts.length} tamaños revisados</span>`;
+    el.innerHTML = `${svgIcon("check",{size:"13px"})}<span class="ei-larga">${fmts.length} tamaños revisados</span><span class="ei-corta">${fmts.length}</span>`;
     el.title = "El inspector midió los banners dibujados: sin desbordes, colisiones, textos ilegibles ni huecos.";
   } else {
     el.className = "ed-insp mal";
-    el.innerHTML = `${svgIcon("alerta",{size:"13px"})}<span>${malos.length} de ${fmts.length} por revisar</span>`;
+    el.innerHTML = `${svgIcon("alerta",{size:"13px"})}<span class="ei-larga">${malos.length} de ${fmts.length} por revisar</span><span class="ei-corta">${malos.length}</span>`;
     el.title = "Tamaños con avisos: " + malos.map(f=>f.replace("display-","")).join(", ");
   }
   el.onclick = () => {
@@ -6609,10 +6649,20 @@ function hacerTextoEditableLienzo(cmp, ovl, stage, fmt, rel){
       if(document.activeElement && document.activeElement.closest && document.activeElement.closest(".lienzo-textbar")) return;
       ocultarBarraTexto();
       const val=ed.innerText.replace(/ /g," ").replace(/\n{3,}/g,"\n\n").replace(/[ \t]+\n/g,"\n").trim();
-      setCompScope(fmt, pt.path, val); persistir(); renderTablero();
+      setCompScope(fmt, pt.path, val); marcarTableroSucio(); repintarSiSucio();
     }, 70); });
     ovl.appendChild(ed);
   });
+}
+// El tablero se repinta UNA vez cuando terminas de editar, no en cada pulsacion.
+// Los 11 banners mas el inspector son trabajo real: hacerlo por tecla es lo que
+// se sentia como "no es fluido".
+let _tableroSucio = false;
+function marcarTableroSucio(){ _tableroSucio = true; }
+function repintarSiSucio(){
+  if(!_tableroSucio) return;
+  _tableroSucio = false;
+  persistir(); renderTablero();
 }
 function ocultarBarraTexto(){ const b=document.getElementById("lienzo-textbar"); if(b) b.remove(); }
 function mostrarBarraTexto(ed, stage, fmt, pt){
@@ -6635,9 +6685,33 @@ function mostrarBarraTexto(ed, stage, fmt, pt){
       // commit del texto actual antes de aplicar el cambio
       const val=ed.innerText.replace(/ /g," ").replace(/\n{3,}/g,"\n\n").trim();
       setCompScope(fmt, pt.path, val);
-      if(b.dataset.act){ const cur=parseInt(getPath(composicionEfectiva(pieza(),fmt), pt.size))||(pt.mn+pt.mx>>1); const nv=Math.max(pt.mn,Math.min(pt.mx, cur+(b.dataset.act==="mas"?2:-2))); setCompScope(fmt, pt.size, String(nv)); }
-      else if(b.dataset.aln){ setCompScope(fmt, "zonas.texto.alinH", b.dataset.aln); }
-      persistir(); renderTablero();
+      // El cambio se aplica EN VIVO al banner y al clon editable, y el tablero se
+      // repinta al SALIR del texto. Antes cada clic repintaba los 11 banners, y eso
+      // borraba el overlay: perdias el foco y la barrita se cerraba, asi que habia
+      // que volver a hacer clic en el texto para cada A+ y cada alineacion.
+      // `stage` es .lienzo-stage; el banner vive dentro, en .lienzo-scale > .cmp
+      const cmpEl = stage.querySelector(".cmp");
+      const orig = cmpEl && cmpEl.querySelector(pt.sel);
+      const sVv = parseFloat(stage.closest(".lienzo")?.dataset.escala)||1;
+      if(b.dataset.act){
+        const cur=parseInt(getPath(composicionEfectiva(pieza(),fmt), pt.size))||(pt.mn+pt.mx>>1);
+        const nv=Math.max(pt.mn,Math.min(pt.mx, cur+(b.dataset.act==="mas"?2:-2)));
+        setCompScope(fmt, pt.size, String(nv));
+        // Vista previa inmediata con el cuerpo REAL: lo decide la tabla de
+        // geometria (base x k, acotada al rango), igual que en el render.
+        const parte = pt.sel===".cmp-tit" ? "titulo" : "bajada";
+        const px = cuerpoDe(fmt, parte, nv);
+        if(orig) orig.style.fontSize = px+"px";
+        ed.style.fontSize = Math.round(px*sVv)+"px";
+      } else if(b.dataset.aln){
+        setCompScope(fmt, "zonas.texto.alinH", b.dataset.aln);
+        const zin = orig && orig.closest(".cmp-zin");
+        if(zin){ zin.style.textAlign = b.dataset.aln; zin.style.alignItems = alinFlex(b.dataset.aln); }
+        if(orig) orig.style.textAlign = b.dataset.aln;
+        ed.style.textAlign = b.dataset.aln;
+      }
+      marcarTableroSucio();          // se repinta al salir del texto
+      ed.focus();                    // el foco NO se pierde: sigues escribiendo
     });
   });
   stage.querySelector(".lienzo-ovl").appendChild(bar);
