@@ -1230,10 +1230,21 @@ button,input,select,textarea{font-family:inherit;}
 .cmp .cmp-scrim{position:absolute;inset:0;z-index:0;pointer-events:none;background:linear-gradient(105deg,rgba(8,14,28,.62) 0%,rgba(8,14,28,.34) 48%,rgba(8,14,28,.12) 100%),linear-gradient(0deg,rgba(8,14,28,.55) 0%,rgba(8,14,28,0) 55%);}
 .cmp .cmp-zonas{position:absolute;inset:0;display:flex;z-index:1;}
 .cmp .cmp-zonas.col{flex-direction:column;}
+/* Vertical con mucho alto de sobra: huecos iguales arriba, entre bloques y abajo
+   (diagramación C). Las zonas dejan de crecer para que el aire no se acumule. */
+.cmp .cmp-zonas.col.reparte{justify-content:space-evenly;}
+.cmp .cmp-zonas.col.reparte > .cmp-zona{flex-grow:0!important;}
 /* Franja: logo · mensaje · botón repartidos a lo ancho. El aire sobrante se
    divide entre los huecos en vez de acumularse en uno solo. */
 .cmp .cmp-zonas.row{flex-direction:row;justify-content:space-between;align-items:center;}
 .cmp .cmp-zona{position:relative;display:flex;flex-direction:column;box-sizing:border-box;min-width:0;min-height:0;overflow:hidden;}
+/* Una zona NUNCA debe encogerse por debajo de su contenido: con min-height:0 el
+   reparto flex la achicaba y overflow:hidden cortaba el texto EN SILENCIO (el
+   titular de un 200×200 y la bajada de un 250×250 salían partidos). Con
+   min-content, si el contenido no cabe se desborda el marco — y entonces el
+   inspector lo ve y la escalera de caída quita un elemento. */
+.cmp .cmp-zonas.col > .cmp-zona{min-height:min-content;}
+.cmp .cmp-zonas.row > .cmp-zona{min-width:min-content;}
 .cmp .cmp-zona .cmp-zbg{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:0;}
 .cmp .cmp-zona .cmp-zveil{position:absolute;inset:0;z-index:0;}
 .cmp .cmp-zin{position:relative;z-index:1;display:flex;flex-direction:column;min-width:0;max-width:100%;}
@@ -5473,7 +5484,10 @@ function bandaLegalHTML(P, c, bgColor, esFoto){
   if(!P.hay.legal) return "";
   const alto = altoBandaLegal(P);
   const col = c.legalColor || (esFoto || esColorOscuro(bgColor) ? "#ffffff" : colorTintaSobre(bgColor));
-  const respaldo = esFoto ? `background:${esc(bgColor)};` : "";
+  // Respaldo sólido si detrás hay foto O adornos: los adornos asoman por el borde
+  // inferior, justo donde vive la banda, y un celeste bajo el legal blanco lo
+  // deja ilegible.
+  const respaldo = (esFoto || P.hay.adornos) ? `background:${esc(bgColor)};` : "";
   return `<div class="cmp-legalbanda" style="height:${alto}px;padding:0 ${P.margen.r}px 0 ${P.margen.l}px;bottom:${Math.max(2,Math.round(P.margen.b/2))}px;${respaldo}">`
     + `<div class="cmp-legal" style="font-size:${P.cuerpo.legal}px;color:${esc(col)};">${esc(c.legal)}</div></div>`;
 }
@@ -5897,6 +5911,14 @@ function renderComposicion(comp, fmt, nivelMin){
     return `<div class="cmp-zona" style="${flexBase}justify-content:${alinFlex(z.alinV)};align-items:${alinFlex(z.alinH)};${pad}">${bg}<div class="cmp-zin" style="align-items:${alinFlex(z.alinH)};text-align:${alinText(z.alinH)};">${inner}</div></div>`;
   };
   const zonas = ["logo","texto","cta"].map((zk,i)=>zonaHTML(zk,i)).join("");
+  // DIAGRAMACIÓN C (verticales). El manual dice que en un vertical "manda el
+  // ancho y el alto se REPARTE", pero repartirlo con pesos dejaba el hueco todo
+  // junto: un 160×600 con 129 px de contenido en 600 px de alto salía con dos
+  // tercios vacíos — el fallo que el propio manual denuncia. Cuando sobra mucho
+  // alto, el aire se divide en huecos IGUALES (arriba, entre bloques y abajo):
+  // ningún hueco pasa del 30 % y el banner se lee como una columna aireada, no
+  // como tres islas. Con contenido suficiente vuelven a mandar las proporciones.
+  const reparteAlto = !fila && g.familia==="vertical" && P.ocupa && P.ocupa.usa < g.alto*0.6;
   // RESERVA para el círculo de oferta: va posicionado encima de todo, así que el
   // contenido tiene que apartarse de su lado. Sin esto tapaba el titular
   // (300x250, 336x280, 1200x628) y el botón (728x90, 468x60).
@@ -5908,7 +5930,7 @@ function renderComposicion(comp, fmt, nivelMin){
   const deco = P.hay.adornos ? decoBurbujasHTML(c.deco, W, H) : "";
   const burbuja = P.hay.circulo ? burbujaHTML(bu0, fmt) : "";
   const legal = bandaLegalHTML(P, c, bgColor, esFoto);
-  return `<div class="cmp" data-fmt="${escAttr(fmt)}" data-nivel="${P.nivel}"${P.apretado?' data-apretado="1"':''} style="width:${W}px;height:${H}px;background:${esc(bgColor)};${borde}">${fondoLayer}${scrim}${deco}<div class="cmp-zonas ${fila?'row':'col'}" style="padding:${mpad};box-sizing:border-box;">${zonas}</div>${burbuja}${legal}</div>`;
+  return `<div class="cmp" data-fmt="${escAttr(fmt)}" data-nivel="${P.nivel}"${P.apretado?' data-apretado="1"':''} style="width:${W}px;height:${H}px;background:${esc(bgColor)};${borde}">${fondoLayer}${scrim}${deco}<div class="cmp-zonas ${fila?'row':'col'}${reparteAlto?' reparte':''}" style="padding:${mpad};box-sizing:border-box;">${zonas}</div>${burbuja}${legal}</div>`;
 }
 // ═══ INSPECTOR ════════════════════════════════════════════════════════════
 // Ninguna pieza llega al usuario sin pasar SEIS comprobaciones sobre el render
@@ -5979,11 +6001,37 @@ function inspeccionarCmp(cmp){
     if(c.x < -T || c.y < -T || c.r > W+T || c.b > H+T)
       fallos.push({ id:"desborde", que:`El ${nm(k)} se sale del marco`, detalle:`${Math.round(c.x)},${Math.round(c.y)} ${Math.round(c.w)}×${Math.round(c.h)} en ${W}×${H}` });
   }
-  // Texto CORTADO dentro de su propia caja (el "se corta a la mitad").
+  // Texto CORTADO: dentro de su propia caja, o recortado por su zona. Lo segundo
+  // es el que se colaba: la zona se encogía, overflow:hidden tapaba el sobrante y
+  // el banner salía con media frase — sin que nada lo dijera.
   ["tit","cue","cta","etq","legal"].forEach(k => {
     const e = el[k]; if(!e) return;
     if(e.scrollHeight > e.clientHeight+1 || e.scrollWidth > e.clientWidth+1)
       fallos.push({ id:"cortado", que:`El ${nm(k)} está cortado`, detalle:`${e.scrollWidth}×${e.scrollHeight} en ${e.clientWidth}×${e.clientHeight}` });
+    const zona = e.closest(".cmp-zona");
+    if(zona){
+      const rz = zona.getBoundingClientRect(), re = e.getBoundingClientRect();
+      if(re.bottom > rz.bottom+1 || re.top < rz.top-1 || re.right > rz.right+1)
+        fallos.push({ id:"cortado", que:`El ${nm(k)} no cabe en su zona y se recorta`,
+          detalle:`sobresale ${Math.round(Math.max(re.bottom-rz.bottom, rz.top-re.top, re.right-rz.right)/s)} px` });
+    }
+  });
+  // El legal es de UNA línea: si el texto no cabe, hay que acortarlo (no se corta
+  // la frase con puntos suspensivos y se hace como si nada).
+  if(el.legal && el.legal.scrollWidth > el.legal.clientWidth+1)
+    fallos.push({ id:"legal", que:"El texto legal no cabe en una línea",
+      detalle:`acórtalo a ~${g.maxChars.legal} caracteres para este tamaño` });
+  // PALABRA MÁS ANCHA QUE LA COLUMNA: el navegador la parte por la mitad y sale
+  // "Auto protegid / o". No es un corte del sistema, es que el texto no cabe: hay
+  // que reescribirlo más corto, que es la regla 3 del manual.
+  ["tit","cue"].forEach(k => {
+    const e = el[k]; if(!e) return;
+    const fs = parseFloat(getComputedStyle(e).fontSize);
+    const ancho = e.clientWidth/1;   // clientWidth ya viene sin escalar (layout)
+    const porLinea = Math.floor(ancho/(fs*GEOM.emArial));
+    const larga = (e.textContent||"").split(/\s+/).filter(Boolean).find(w => w.length > porLinea);
+    if(larga) fallos.push({ id:"palabra", que:`«${larga}» no cabe a lo ancho del ${nm(k)}`,
+      detalle:`caben ${porLinea} caracteres por línea: se parte a mitad de palabra` });
   });
   // 2 · COLISIÓN entre textos, y de cualquier texto con el círculo.
   const solapa = (a,b) => a&&b&&a.w&&b.w && a.x<b.r-1 && b.x<a.r-1 && a.y<b.b-1 && b.y<a.b-1;
@@ -5996,7 +6044,22 @@ function inspeccionarCmp(cmp){
   // vale que estén por debajo en z — se ven igual y matan el contraste.
   const svg = cmp.querySelector(".cmp-deco");
   if(svg){
-    const cajas = ["tit","cue","etq","cta"].map(k=>C[k]).filter(c=>c&&c.w);
+    // Solo molesta donde el texto va DESNUDO: el botón, la píldora del epígrafe
+    // y la banda del legal llevan fondo propio opaco y se leen igual con un
+    // adorno detrás. Lo que no se puede es un adorno celeste bajo un titular
+    // blanco — y eso el contraste no lo ve, porque el adorno no es su fondo sino
+    // un hermano en el z.
+    const desnudo = k => {
+      const e = el[k]; if(!e) return false;
+      let n = e;
+      while(n && n!==cmp){
+        const c = _insRgba(getComputedStyle(n).backgroundColor);
+        if(c && c.a>=0.9) return false;
+        n = n.parentElement;
+      }
+      return true;
+    };
+    const cajas = ["tit","cue","etq","cta","legal"].filter(desnudo).map(k=>C[k]).filter(c=>c&&c.w);
     [...svg.querySelectorAll("circle")].forEach(ci=>{
       const cx=+ci.getAttribute("cx"), cy=+ci.getAttribute("cy"), r=+ci.getAttribute("r");
       const caja = { x:cx-r, y:cy-r, r:cx+r, b:cy+r, w:2*r };
