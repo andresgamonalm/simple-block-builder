@@ -339,6 +339,10 @@ button,input,select,textarea{font-family:inherit;}
 .ia-estado.err{color:var(--magenta);}
 /* Pasos del Asistente IA */
 .ia-spark{color:var(--magenta);margin-right:2px;vertical-align:-2px;}
+/* Separador de secciones dentro de la ventana unica del asistente */
+.ia-sep{display:flex;align-items:center;gap:10px;margin:20px 0 12px;}
+.ia-sep span{font-size:12px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--ink3,#5b6178);white-space:nowrap;}
+.ia-sep::after{content:"";flex:1;height:1px;background:var(--bdr,#e4e8f0);}
 .ia-pasos{display:flex;justify-content:center;align-items:center;gap:8px;margin:2px 0 18px;}
 .ia-paso-tag{display:flex;align-items:center;gap:8px;font-size:13px;font-weight:600;color:var(--ink4);}
 .ia-paso-tag.on{color:var(--navy);}
@@ -2008,11 +2012,9 @@ button,input,select,textarea{font-family:inherit;}
 <div class="modal-bg" id="modal-ia"><div class="modal">
   <div class="modal-head ia-head"><div class="ia-idn"><span class="ia-av"><img class="charb-face" alt="Char-B"></span><div class="ia-idn-t"><b>Char-B</b><span>Tu asistente de Marketing Digital con IA</span></div></div><button class="modal-close" onclick="cerrarModal('ia')">×</button></div>
   <div class="modal-body">
-    <div class="ia-pasos" id="ia-pasos">
-      <span class="ia-paso-tag on" data-p="1"><i>1</i> Producto</span><span class="ia-paso-linea"></span>
-      <span class="ia-paso-tag" data-p="2"><i>2</i> Brief</span><span class="ia-paso-linea"></span>
-      <span class="ia-paso-tag" data-p="3"><i>3</i> Resultado</span>
-    </div>
+    <!-- UNA SOLA VENTANA. El manual lo pide asi: "No hay pasos ni asistente por
+         etapas: el usuario ve todo lo que se le va a pedir de una vez". Los ids
+         ia-paso-1/2/3 se conservan para no tocar generarConIA ni los deep-links. -->
     <div id="ia-paso-1">
       <div class="ia-bubble"><span class="ia-bav"><img class="charb-face" alt=""></span><div class="ia-msg">¡Hola! Soy <b>Char-B</b> 👋 Con <b>un solo brief</b> te armo toda la campaña en la <b>voz de tu marca</b>. Cuéntame para qué marca y qué piezas necesitas.</div></div>
       <label class="ia-label">Marca <span class="ia-req">·obligatoria</span></label>
@@ -2039,7 +2041,8 @@ button,input,select,textarea{font-family:inherit;}
         </div><input type="hidden" id="ia-tono" value="comercial">
       </div>
     </div>
-    <div id="ia-paso-2" style="display:none">
+    <div id="ia-paso-2">
+      <div class="ia-sep"><span>El encargo</span></div>
       <label class="ia-label">¿Qué necesitas? <span class="ia-req">·obligatorio</span></label>
       <textarea id="ia-que" class="ia-que" placeholder="Ej: Promocionar el producto de pago automatizado"></textarea>
       <div class="ia-row">
@@ -2061,15 +2064,14 @@ button,input,select,textarea{font-family:inherit;}
       <textarea id="ia-notas" class="ia-refs" placeholder="Ej: tono cercano y claro, destacar la facilidad de uso, sin tecnicismos…"></textarea>
     </div>
     <div id="ia-paso-3" style="display:none">
-      <p class="ia-resultado-hint" id="ia-hint">Char-B está armando tu pieza con la identidad de la marca. Al terminar se abre directo en el editor.</p>
+      <p class="ia-resultado-hint" id="ia-hint">Char-B está armando la campaña con la identidad de la marca. Al terminar se abre directo en el editor.</p>
       <div id="ia-estado" class="ia-estado"></div>
     </div>
   </div>
   <div class="modal-foot">
-    <button id="ia-atras" onclick="iaAtras()" style="display:none;margin-right:auto">Atrás</button>
+    <button id="ia-limpiar" class="tb-link" onclick="iaLimpiar()" style="margin-right:auto">Limpiar</button>
     <button id="ia-cancelar" onclick="cerrarModal('ia')">Cancelar</button>
-    <button class="primary" id="ia-sig" onclick="iaIrPaso(2)">Siguiente · brief</button>
-    <button class="primary" id="ia-btn" onclick="iaGenerar()" style="display:none">Generar</button>
+    <button class="primary" id="ia-btn" onclick="iaGenerar()">Generar la campaña</button>
   </div>
 </div></div>
 <div class="modal-bg" id="modal-imagenes"><div class="modal modal-lg">
@@ -8840,23 +8842,44 @@ function iaPintaPiezas(){
   if(h) h.innerHTML = n>1 ? `Char-B definirá primero <b>un concepto de campaña</b> y las ${n} piezas seguirán la misma idea, en su propio proyecto.` : `Con 2 o más piezas, Char-B define primero <b>un concepto de campaña</b> y todas siguen la misma idea.`;
 }
 /* Flujo por pasos del Asistente IA (1 Producto · 2 Brief · 3 Resultado). */
+// El asistente es UNA SOLA VENTANA: todos los campos a la vista. `iaIrPaso` ya no
+// navega entre etapas — solo decide si se está pidiendo el brief o mostrando el
+// estado de la generación. Se conserva el nombre porque lo llaman abrirIA(),
+// iaGenerar() y los deep-links.
 let iaPaso = 1;
 function iaIrPaso(n){
-  iaPaso = Math.max(1, Math.min(3, n));
-  ["1","2","3"].forEach(k => { const p=document.getElementById("ia-paso-"+k); if(p) p.style.display = (String(iaPaso)===k) ? "" : "none"; });
-  document.querySelectorAll("#ia-pasos .ia-paso-tag").forEach(t => t.classList.toggle("on", Number(t.dataset.p)<=iaPaso));
-  const atras=document.getElementById("ia-atras"), sig=document.getElementById("ia-sig"),
-        gen=document.getElementById("ia-btn"), can=document.getElementById("ia-cancelar");
-  if(atras) atras.style.display = iaPaso>1 ? "" : "none";
-  if(can) can.style.display = iaPaso===1 ? "" : "none";
-  if(sig) sig.style.display = iaPaso===1 ? "" : "none";
-  if(gen) gen.style.display = iaPaso===2 ? "" : "none";
-  if(iaPaso===2) setTimeout(()=>{ const q=document.getElementById("ia-que"); if(q) q.focus(); }, 60);
+  iaPaso = (n === 3) ? 3 : 1;
+  const generando = iaPaso === 3;
+  const campos = ["ia-paso-1","ia-paso-2"];
+  campos.forEach(id => { const p=document.getElementById(id); if(p) p.style.display = generando ? "none" : ""; });
+  const est = document.getElementById("ia-paso-3");
+  if(est) est.style.display = generando ? "" : "none";
+  const gen=document.getElementById("ia-btn"), can=document.getElementById("ia-cancelar"),
+        lim=document.getElementById("ia-limpiar");
+  if(gen) gen.style.display = generando ? "none" : "";
+  if(lim) lim.style.display = generando ? "none" : "";
+  if(can) can.textContent = generando ? "Cerrar" : "Cancelar";
 }
-function iaAtras(){ iaIrPaso(iaPaso-1); }
+function iaAtras(){ iaIrPaso(1); }
+// Limpiar (a la izquierda del pie, como pide el manual): deja el formulario en
+// blanco sin cerrar la ventana. La marca y las piezas marcadas se conservan.
+function iaLimpiar(){
+  ["ia-que","ia-objetivo","ia-gancho","ia-ctaurl","ia-ref1","ia-ref2","ia-notas"].forEach(id => {
+    const e = document.getElementById(id); if(e) e.value = "";
+  });
+  _iaFotos = []; renderIaFotos();
+  const est = document.getElementById("ia-estado"); if(est){ est.textContent=""; est.className="ia-estado"; }
+  const q = document.getElementById("ia-que"); if(q) q.focus();
+  toast("Formulario limpio");
+}
 function iaGenerar(){
   const que = (document.getElementById("ia-que").value || "").trim();
-  if(!que){ toast("Cuéntame qué necesitas"); return; }
+  if(!que){
+    toast("Cuéntame qué necesitas para la campaña");
+    const q = document.getElementById("ia-que");
+    if(q){ q.focus(); q.scrollIntoView({behavior:"smooth", block:"center"}); }
+    return;
+  }
   iaIrPaso(3);
   generarConIA();
 }
