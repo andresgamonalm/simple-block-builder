@@ -115,8 +115,9 @@ todas sus medidas son cerradas.</p>
 
 <div class="box no-">
   <span class="t">Las tres reglas de oro</span>
-  <p><b>1. La IA nunca dibuja.</b> Aporta texto, elige una foto y elige una diagramación del catálogo.
-  La geometría está resuelta de antemano y no es negociable.</p>
+  <p><b>1. La IA nunca inventa geometría.</b> Aporta texto, elige una foto y elige una diagramación
+  <b>de un catálogo cerrado</b>. Puede elegir entre muchas disposiciones distintas; lo que no puede
+  es crear una nueva ni alterar las medidas de las que hay.</p>
   <p><b>2. Nada se entrega sin inspección.</b> Cada pieza se renderiza y se comprueba antes de mostrarse.
   La que no pasa, se rehace.</p>
   <p><b>3. Si el texto no cabe, se reescribe el texto.</b> Jamás se estira la caja ni se corta la frase.</p>
@@ -256,7 +257,7 @@ asistente por etapas: el usuario ve todo lo que se le va a pedir de una vez.</p>
 <tbody>
 <tr><td class="num">1</td><td>Saludo del asistente</td><td>Introducción breve, no es un campo</td></tr>
 <tr><td class="num">2</td><td><b>Marca</b></td><td>Lista de marcas creadas. Obligatorio</td></tr>
-<tr><td class="num">3</td><td><b>Estilo</b></td><td>De marca (usa el catálogo de diagramaciones de la marca) o libre</td></tr>
+<tr><td class="num">3</td><td><b>Estilo</b></td><td><b>De marca</b> o <b>libre</b>. Los dos son catálogos cerrados — ver abajo</td></tr>
 <tr><td class="num">4</td><td><b>Plataforma</b></td><td>Google Display · Google Search · Facebook Ads. <b>Selección múltiple</b></td></tr>
 <tr><td class="num">5</td><td><b>Descripción de la campaña</b></td><td>Texto libre. Es el encargo y manda sobre todo lo demás</td></tr>
 <tr><td class="num">6</td><td><b>CTA</b></td><td>Lista predeterminada de llamadas a la acción</td></tr>
@@ -267,6 +268,22 @@ asistente por etapas: el usuario ve todo lo que se le va a pedir de una vez.</p>
 </tbody></table></div>
 
 <p>Botón de <b>generar</b> a la derecha y de <b>limpiar</b> a la izquierda.</p>
+
+<div class="box">
+  <span class="t">Qué significa «estilo libre»</span>
+  <p><b>Libre no es libertad de geometría: es libertad de marca.</b> Son dos catálogos, y los dos
+  están dibujados y medidos de antemano.</p>
+  <ul>
+    <li><b>Estilo de marca</b> — usa las diagramaciones derivadas de las piezas reales de esa marca.
+    Reproduce su lenguaje gráfico: sus formas, sus proporciones, su manera de mostrar la oferta.</li>
+    <li><b>Estilo libre</b> — usa un catálogo <b>neutro</b>, que aplica los colores, la tipografía y
+    el logo de la marca pero no su sistema de formas. Sirve cuando la marca no tiene un lenguaje
+    gráfico definido, o cuando la campaña pide salirse de él a propósito.</li>
+  </ul>
+  <p>En ninguno de los dos casos la IA crea una disposición nueva. <span class="no">Si un día hace
+  falta una diagramación que no existe, se dibuja, se mide, se aprueba y entra al catálogo</span> —
+  no la improvisa el modelo en mitad de una generación.</p>
+</div>
 
 <div class="box si-">
   <span class="t">Regla obligatoria sobre las URL</span>
@@ -291,9 +308,10 @@ marcan las tres, hay tres pestañas.</p>
 </div>
 
 <h2 id="p7"><span class="n">07 · Instrucción</span>Cómo se instruye a la IA</h2>
-<p class="lede">La IA de Google hace exactamente dos trabajos: <b>elige</b> dentro de un catálogo
-cerrado y <b>escribe</b>. Lo que sigue no son sugerencias de prompt: son las condiciones que debe
-cumplir su salida para que se acepte.</p>
+<p class="lede">La IA de Google hace exactamente dos trabajos: <b>elige</b> dentro de catálogos
+cerrados —de diagramaciones y de fotos— y <b>escribe</b>. Puede elegir con mucha libertad; lo que no
+puede es crear una disposición que no exista ni mover una medida. Lo que sigue no son sugerencias de
+prompt: son las condiciones que debe cumplir su salida para que se acepte.</p>
 
 <div class="box">
   <span class="t">Regla estructural del prompt</span>
@@ -508,6 +526,10 @@ en el máster <b>300×250</b> y se deriva con un factor <b>k</b> propio de cada 
 <th class="num">Bajada</th><th class="num">CTA</th><th class="num">Legal</th></tr></thead><tbody></tbody></table></div>
 
 <h3>Catálogo de diagramaciones</h3>
+<p class="lede">Cada marca tiene su catálogo <b>de marca</b>, derivado de sus piezas reales. Existe
+además un catálogo <b>libre</b>, neutro, con las mismas cuatro estructuras pero sin el lenguaje de
+formas de ninguna marca en concreto. La IA elige dentro del catálogo que el usuario haya marcado en
+el formulario; nunca fuera de él.</p>
 <div class="tw"><table>
 <thead><tr><th>Diagramación</th><th>Cuadrados</th><th>Verticales</th><th>Franjas</th><th>Grandes</th><th>Requiere</th></tr></thead>
 <tbody>
