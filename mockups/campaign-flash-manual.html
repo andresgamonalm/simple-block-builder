@@ -219,16 +219,99 @@ las directrices que entregue el usuario. La IA no inventa ofertas, precios ni fe
 <p class="lede">Todo trabajo está asociado a una marca creada previamente. La marca no es un puñado
 de colores: es <b>el manual que la IA lee antes de escribir una sola palabra</b>.</p>
 
+<p class="lede">Funciona como un <b>kit de marca</b>: no es una ficha de datos, es una colección de
+activos —logotipos, colores, formas, tipografías, favicón, íconos, patrones— que la aplicación aplica
+sola a cualquier pieza. El usuario los carga una vez; después no vuelve a pensar en ellos.</p>
+
+<h3>Los activos del kit</h3>
+
+<h4>Logotipos — varios, no uno</h4>
 <div class="tw"><table>
-<thead><tr><th>Grupo</th><th>Campos</th></tr></thead>
+<thead><tr><th>Versión</th><th>Cuándo se usa</th><th>Obligatoria</th></tr></thead>
 <tbody>
-<tr><td><b>Identidad</b></td><td>Nombre · empresa · logo (versión color y versión para fondos oscuros) · sitio web</td></tr>
-<tr><td><b>Color</b></td><td>Primario · secundario · color de fondo de pieza · color de texto · color de CTA y su texto · dos acentos</td></tr>
-<tr><td><b>Tipografía</b></td><td>Fuente de titulares · fuente de cuerpo</td></tr>
-<tr><td><b>Voz</b></td><td>Negocio · tono · eslogan · público · productos · palabras a usar · palabras a evitar</td></tr>
-<tr><td><b>Directrices</b></td><td>Texto libre y extenso: el manual de marca resumido. <b>Se inyecta en todos los prompts</b></td></tr>
-<tr><td><b>Legal</b></td><td>Descargo de responsabilidad · copyright</td></tr>
+<tr><td><b>Principal</b></td><td>Sobre fondos claros</td><td class="si">Sí</td></tr>
+<tr><td><b>Clara</b> (blanca o monocroma)</td><td>Sobre fondos oscuros y sobre foto</td><td class="si">Sí</td></tr>
+<tr><td><b>Isotipo</b> (solo el símbolo)</td><td>Formatos donde el logotipo completo no se lee: franjas y cuadrados chicos</td><td>Recomendada</td></tr>
+<tr><td><b>Horizontal · Vertical</b></td><td>Según la proporción de la pieza</td><td>Opcional</td></tr>
 </tbody></table></div>
+<p>La aplicación <b>elige la versión sola</b>, según el fondo y el formato. El usuario no tiene que
+acordarse de cambiarla.</p>
+
+<h4>Colores — con rol, no sueltos</h4>
+<div class="tw"><table>
+<thead><tr><th>Rol</th><th>Para qué sirve</th></tr></thead>
+<tbody>
+<tr><td>Primario</td><td>Color principal de la marca</td></tr>
+<tr><td>Secundario</td><td>Fondo de pieza más habitual</td></tr>
+<tr><td>Fondo claro</td><td>Alternativa clara. Obliga a borde en la pieza</td></tr>
+<tr><td>Texto</td><td>Sobre fondos claros</td></tr>
+<tr><td>CTA y texto del CTA</td><td>El botón</td></tr>
+<tr><td>Acento 1 y 2</td><td>Círculo de oferta y formas decorativas</td></tr>
+</tbody></table></div>
+<p>Un color <b>sin rol asignado no se puede usar</b>. Es lo que impide que una pieza salga con un
+color de la marca puesto donde no corresponde.</p>
+
+<h4>Formas — el lenguaje gráfico</h4>
+<p class="lede">Es el activo que distingue una marca de otra más que el color, y el que hace que
+«estilo de marca» signifique algo.</p>
+<div class="tw"><table>
+<thead><tr><th>Propiedad</th><th>Qué define</th><th>Ejemplo</th></tr></thead>
+<tbody>
+<tr><td><b>Repertorio</b></td><td>Qué figuras usa la marca</td><td>Círculo · cuarto de círculo · píldora</td></tr>
+<tr><td><b>Colores permitidos</b></td><td>De qué colores pueden ser</td><td>Acento 1 y 2 únicamente</td></tr>
+<tr><td><b>Anclaje</b></td><td>Dónde viven en la pieza</td><td>Asomando por el borde inferior</td></tr>
+<tr><td><b>Escalas</b></td><td>En qué tamaños aparecen</td><td>28 % · 16 % · 9 % del lado corto</td></tr>
+<tr><td><b>Cantidad</b></td><td>Cuántas por pieza</td><td>Tres</td></tr>
+</tbody></table></div>
+<p>Una marca que solo use rectángulos rectos y otra que use círculos que se salen del borde producen
+piezas irreconocibles entre sí <b>aunque compartan colores y tipografía</b>. Por eso las formas viven
+en el kit y no en el código.</p>
+
+<h4>Tipografía</h4>
+<p>Fuente de titulares y fuente de cuerpo, con los pesos permitidos. Nunca más de dos familias.</p>
+
+<h4>Estilo de los bordes</h4>
+<div class="tw"><table>
+<thead><tr><th>Propiedad</th><th>Qué define</th></tr></thead>
+<tbody>
+<tr><td><b>Radio general</b></td><td>Si la marca redondea o no. <b>Por defecto: cero.</b> Redondear no es una mejora, es una decisión de marca</td></tr>
+<tr><td><b>Figura del CTA</b></td><td>Píldora (ovalada) o rectangular</td></tr>
+<tr><td><b>Radio de la foto</b></td><td>Recto, circular o redondeado</td></tr>
+</tbody></table></div>
+
+<h4>Otros activos</h4>
+<div class="tw"><table>
+<thead><tr><th>Activo</th><th>Para qué</th></tr></thead>
+<tbody>
+<tr><td><b>Favicón</b></td><td>Identifica la marca en listados y pestañas dentro de la aplicación. Se deriva del isotipo si no se sube uno</td></tr>
+<tr><td><b>Iconografía</b></td><td>Juego de íconos de la marca, para piezas que los usen. Un solo estilo: o todos de línea o todos sólidos</td></tr>
+<tr><td><b>Patrones y texturas</b></td><td>Tramas propias de la marca. Van al fondo, siempre por detrás del contenido</td></tr>
+<tr><td><b>Sitio y redes</b></td><td>URL del sitio y perfiles. Alimentan los destinos por defecto de los CTA</td></tr>
+</tbody></table></div>
+
+<h4>Fotografía</h4>
+<p>Las carpetas de la biblioteca que esta marca puede usar, y el criterio de selección escrito
+(por ejemplo: personas reales, luz natural, nada de poses de banco de imágenes).</p>
+
+<h4>Voz y textos</h4>
+<div class="tw"><table>
+<thead><tr><th>Campo</th><th>Contenido</th></tr></thead>
+<tbody>
+<tr><td>Negocio · público · productos</td><td>A qué se dedica y a quién le habla</td></tr>
+<tr><td>Tono · eslogan</td><td>Cómo suena</td></tr>
+<tr><td>Palabras a usar · a evitar</td><td>Vocabulario obligatorio y prohibido</td></tr>
+<tr><td><b>Directrices</b></td><td>Texto libre y extenso: el manual de marca resumido. <b>Se inyecta en todos los prompts</b></td></tr>
+<tr><td>Legal</td><td>Descargo de responsabilidad · copyright</td></tr>
+</tbody></table></div>
+
+<div class="box">
+  <span class="t">Del kit salen las diagramaciones</span>
+  <p>El <b>catálogo de marca</b> se construye con las formas, los colores y las proporciones del kit
+  de esa marca. El <b>catálogo libre</b> aplica los logotipos, colores y tipografías del kit, pero con
+  un repertorio de formas neutro.</p>
+  <p>Esa es exactamente la diferencia entre los dos estilos del formulario — y la razón de que ninguno
+  de los dos sea «inventar».</p>
+</div>
 
 <div class="box">
   <span class="t">El campo que más importa</span>
