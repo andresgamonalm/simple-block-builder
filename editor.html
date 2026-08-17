@@ -7312,11 +7312,12 @@ function abrirExportar(){
     const nKw = d.grupos.reduce((a,g)=>a+(g.keywords||[]).length,0);
     const nNeg = (d.negativas||[]).length + d.grupos.reduce((a,g)=>a+(g.negativas||[]).length,0);
     const nTit = d.grupos.reduce((a,g)=>a+(g.titulares||[]).length,0);
-    let h = `<p>Descarga los <b>CSV listos para Google Ads</b> (se importan en Google Ads Editor o en la interfaz web con "importar"). Solo concordancia <b>exacta</b> y de <b>frase</b>; las negativas van incluidas.</p>
+    const nHojas = 3 + ((d.sitelinks||[]).length ? 1 : 0);
+    let h = `<p>Descarga la <b>planilla lista para Google Ads</b> (se importa en Google Ads Editor). Una <b>hoja por tipo de dato</b>, cabeceras en inglés —las únicas que Ads Editor reconoce solo— y los límites de caracteres recortados de nuevo al exportar.</p>
       <div class="export-list">
-        <div class="export-row"><label><div><div class="pn">Keywords + negativas</div><div class="pf">${d.grupos.length} grupo${d.grupos.length!==1?"s":""} · ${nKw} keywords · ${nNeg} negativas</div></div></label><button class="download" onclick="descargarCSVKeywords()">${svgIcon("exportar",{size:"13px"})} CSV</button></div>
-        <div class="export-row"><label><div><div class="pn">Anuncios (RSA)</div><div class="pf">${nTit} titulares · rutas y URL final incluidas</div></div></label><button class="download" onclick="descargarCSVAnuncios()">${svgIcon("exportar",{size:"13px"})} CSV</button></div>
-        ${(d.sitelinks||[]).length ? `<div class="export-row"><label><div><div class="pn">Sitelinks</div><div class="pf">${d.sitelinks.length} enlaces extra bajo el anuncio</div></div></label><button class="download" onclick="descargarCSVSitelinks()">${svgIcon("exportar",{size:"13px"})} CSV</button></div>` : ""}
+        <div class="export-row"><label><div><div class="pn">Planilla de la campaña <b>· XLSX</b></div><div class="pf">${nHojas} hojas · ${d.grupos.length} grupo${d.grupos.length!==1?"s":""} · ${nKw} keywords · ${nNeg} negativas · ${nTit} titulares con su columna de posición</div></div></label><button class="download" onclick="descargarPlanillaAds()">${svgIcon("exportar",{size:"13px"})} XLSX</button></div>
+        <div class="export-row"><label><div><div class="pn">Keywords en CSV</div><div class="pf">Solo si tu flujo lo necesita; la planilla XLSX es la vía recomendada</div></div></label><button class="download" onclick="descargarCSVKeywords()">${svgIcon("exportar",{size:"13px"})} CSV</button></div>
+        <div class="export-row"><label><div><div class="pn">Anuncios en CSV</div><div class="pf">Mismo contenido que la hoja «Anuncios» de la planilla</div></div></label><button class="download" onclick="descargarCSVAnuncios()">${svgIcon("exportar",{size:"13px"})} CSV</button></div>
         <div class="export-row"><label><div><div class="pn">Resumen legible</div><div class="pf">La campaña completa en un HTML para revisar o compartir</div></div></label><button class="download" onclick="descargarPieza('${actual.id}')">${svgIcon("exportar",{size:"13px"})} HTML</button></div>
       </div>
       <div class="modal-foot" style="margin-top:18px;border-top:1px solid #e5e7ea;padding-top:14px;"><button onclick="cerrarModal('export')">Cerrar</button></div>`;
@@ -7395,6 +7396,145 @@ function _descargarCSV(nombre, filas){
   a.href = url; a.download = nombre;
   document.body.appendChild(a); a.click(); a.remove();
   URL.revokeObjectURL(url);
+}
+// ── PLANILLA XLSX ───────────────────────────────────────────────────────
+// El manual pide XLSX, nunca CSV, con UNA HOJA POR TIPO DE DATO. Se escribe a
+// mano (ZIP sin comprimir + XML mínimo) porque el aplicativo es un solo archivo
+// servido por Pages y no puede cargar librerías externas.
+function _crc32(buf){
+  let c, tabla = _crc32.t;
+  if(!tabla){
+    tabla = _crc32.t = new Int32Array(256);
+    for(let n=0;n<256;n++){ c=n; for(let k=0;k<8;k++) c = c&1 ? 0xEDB88320 ^ (c>>>1) : c>>>1; tabla[n]=c; }
+  }
+  let crc = -1;
+  for(let i=0;i<buf.length;i++) crc = (crc>>>8) ^ tabla[(crc ^ buf[i]) & 0xFF];
+  return (crc ^ -1) >>> 0;
+}
+// ZIP "store" (sin compresión): suficiente para planillas de texto y sin dependencias.
+function _zip(archivos){
+  const enc = new TextEncoder();
+  const partes = [], central = [];
+  let offset = 0;
+  const u16 = v => [v & 0xFF, (v>>>8) & 0xFF];
+  const u32 = v => [v & 0xFF, (v>>>8) & 0xFF, (v>>>16) & 0xFF, (v>>>24) & 0xFF];
+  archivos.forEach(f => {
+    const nombre = enc.encode(f.nombre);
+    const datos = typeof f.datos === "string" ? enc.encode(f.datos) : f.datos;
+    const crc = _crc32(datos);
+    const cab = [].concat([0x50,0x4B,0x03,0x04], u16(20), u16(0x0800), u16(0), u16(0), u16(0),
+      u32(crc), u32(datos.length), u32(datos.length), u16(nombre.length), u16(0));
+    partes.push(new Uint8Array(cab), nombre, datos);
+    central.push({ crc, len:datos.length, nombre, offset });
+    offset += cab.length + nombre.length + datos.length;
+  });
+  const dir = [];
+  central.forEach(c => {
+    const cab = [].concat([0x50,0x4B,0x01,0x02], u16(20), u16(20), u16(0x0800), u16(0), u16(0), u16(0),
+      u32(c.crc), u32(c.len), u32(c.len), u16(c.nombre.length), u16(0), u16(0), u16(0), u16(0), u32(0), u32(c.offset));
+    dir.push(new Uint8Array(cab), c.nombre);
+  });
+  const dirLen = dir.reduce((a,x)=>a+x.length, 0);
+  const fin = new Uint8Array([].concat([0x50,0x4B,0x05,0x06], u16(0), u16(0),
+    u16(central.length), u16(central.length), u32(dirLen), u32(offset), u16(0)));
+  const todo = partes.concat(dir, [fin]);
+  const total = todo.reduce((a,x)=>a+x.length, 0);
+  const out = new Uint8Array(total);
+  let p = 0; todo.forEach(x => { out.set(x, p); p += x.length; });
+  return out;
+}
+const _xmlEsc = s => String(s==null?"":s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
+function _colXLSX(n){ let s=""; n++; while(n>0){ const r=(n-1)%26; s=String.fromCharCode(65+r)+s; n=Math.floor((n-1)/26); } return s; }
+// hojas = [{ nombre, filas:[[celda,...],...] }]. Todo va como texto (inlineStr):
+// las keywords y los titulares son texto, y así Excel no reinterpreta nada.
+function construirXLSX(hojas){
+  const hs = hojas.slice(0, 10).map((h,i) => ({ nombre:String(h.nombre||("Hoja"+(i+1))).slice(0,31).replace(/[\\\/\?\*\[\]:]/g,"-"), filas:h.filas||[] }));
+  const sheetXML = h => {
+    const filas = h.filas.map((fila,r) => {
+      const celdas = fila.map((v,c) => {
+        const t = String(v==null?"":v);
+        return t === "" ? "" : `<c r="${_colXLSX(c)}${r+1}" t="inlineStr"><is><t xml:space="preserve">${_xmlEsc(t)}</t></is></c>`;
+      }).join("");
+      return `<row r="${r+1}">${celdas}</row>`;
+    }).join("");
+    return `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><sheetData>${filas}</sheetData></worksheet>`;
+  };
+  const archivos = [
+    { nombre:"[Content_Types].xml", datos:`<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/>${
+      hs.map((h,i)=>`<Override PartName="/xl/worksheets/sheet${i+1}.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/>`).join("")}</Types>` },
+    { nombre:"_rels/.rels", datos:`<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="xl/workbook.xml"/></Relationships>` },
+    { nombre:"xl/workbook.xml", datos:`<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"><sheets>${
+      hs.map((h,i)=>`<sheet name="${_xmlEsc(h.nombre)}" sheetId="${i+1}" r:id="rId${i+1}"/>`).join("")}</sheets></workbook>` },
+    { nombre:"xl/_rels/workbook.xml.rels", datos:`<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">${
+      hs.map((h,i)=>`<Relationship Id="rId${i+1}" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet${i+1}.xml"/>`).join("")}</Relationships>` }
+  ].concat(hs.map((h,i)=>({ nombre:`xl/worksheets/sheet${i+1}.xml`, datos:sheetXML(h) })));
+  return _zip(archivos);
+}
+function descargarXLSX(nombre, hojas){
+  const blob = new Blob([construirXLSX(hojas)], { type:"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url; a.download = nombre;
+  document.body.appendChild(a); a.click(); a.remove();
+  URL.revokeObjectURL(url);
+}
+// La planilla de la campaña de Search: UNA hoja por tipo de dato (keywords,
+// anuncios y negativas), cabeceras en inglés —las únicas que Google Ads Editor
+// reconoce solo— y los límites recortados otra vez al exportar, por si el
+// usuario alargó un texto al editarlo.
+function descargarPlanillaAds(){
+  const p = pieza(); const d = p && p.adsData;
+  if(!d){ toast("Sin campaña generada"); return; }
+  const camp = d.nombre || p.nombre || "Campaña";
+  const rec = (s,n) => String(s==null?"":s).replace(/\s+/g," ").trim().slice(0,n);
+
+  const keywords = [["Campaign","Ad Group","Keyword","Criterion Type"]];
+  (d.grupos||[]).forEach(g => (g.keywords||[]).forEach(k =>
+    keywords.push([camp, g.nombre, k.t, k.tipo==="frase" ? "Phrase" : "Exact"])));
+
+  const negativas = [["Campaign","Ad Group","Keyword","Criterion Type"]];
+  (d.grupos||[]).forEach(g => (g.negativas||[]).forEach(n =>
+    negativas.push([camp, g.nombre, n, "Negative Phrase"])));
+  (d.negativas||[]).forEach(n => negativas.push([camp, "", n, "Negative Phrase"]));
+
+  const maxT = Math.min(15, Math.max(0, ...(d.grupos||[]).map(g => (g.titulares||[]).length)));
+  const maxD = Math.min(4,  Math.max(0, ...(d.grupos||[]).map(g => (g.descripciones||[]).length)));
+  const cab = ["Campaign","Ad Group"];
+  // La COLUMNA DE POSICIÓN va al lado de cada titular: los cuatro anclados con su
+  // posición, los once que rotan en blanco. Sin ella el anclaje se decide en el
+  // aplicativo y nunca llega a Google.
+  for(let i=1;i<=maxT;i++){ cab.push("Headline "+i, "Headline "+i+" position"); }
+  for(let i=1;i<=maxD;i++) cab.push("Description "+i);
+  cab.push("Path 1","Path 2","Final URL");
+  const POSICION = ["1","2","3","3"];
+  const anuncios = [cab];
+  (d.grupos||[]).forEach(g => {
+    const fila = [camp, g.nombre];
+    const fijos = (g.titularesFijos||[]).map(t => String(t||"").toLowerCase());
+    for(let i=0;i<maxT;i++){
+      const t = rec((g.titulares||[])[i], 30);
+      fila.push(t);
+      const iFijo = t ? fijos.indexOf(t.toLowerCase()) : -1;
+      fila.push(iFijo >= 0 ? (POSICION[iFijo] || "") : "");
+    }
+    for(let i=0;i<maxD;i++) fila.push(rec((g.descripciones||[])[i], 90));
+    fila.push(rec(g.path1,15), rec(g.path2,15), d.urlFinal || "");
+    anuncios.push(fila);
+  });
+
+  const hojas = [{ nombre:"Keywords", filas:keywords }, { nombre:"Anuncios", filas:anuncios }, { nombre:"Negativas", filas:negativas }];
+  if(Array.isArray(d.sitelinks) && d.sitelinks.length){
+    const sl = [["Campaign","Link Text","Description Line 1","Description Line 2","Final URL"]];
+    d.sitelinks.forEach(s => sl.push([camp, rec(s.texto,25), rec(s.desc1,35), rec(s.desc2,35), s.url||""]));
+    hojas.push({ nombre:"Sitelinks", filas:sl });
+  }
+  descargarXLSX(slugify(camp)+"-google-ads.xlsx", hojas);
+  toast("Planilla XLSX descargada · "+hojas.length+" hojas");
 }
 function descargarCSVKeywords(){
   const p = pieza(); const d = p && p.adsData; if(!d){ toast("Sin campaña generada"); return; }
