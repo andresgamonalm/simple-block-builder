@@ -528,3 +528,41 @@ despliegue si un cambio mueve un píxel de una diagramación aprobada (§12) —
 pide **conversación** al crear una marca (la IA propone la ficha y el usuario corrige), hoy es formulario.
 (4) `LAYOUTS_MARCA` sigue **apagado**: ahora hay inspector para medirlos, así que se pueden reactivar uno
 a uno con la batería. (5) Sigue pendiente de antes: la IA ve 3 de 50 fotos en banner y 0 en email.
+
+## Auditoría de recorrido completo — 17-ago-2026 (arnés permanente en `pruebas/`)
+Pedido del usuario: *"navegar de principio a fin todas las herramientas y sus secciones… resguardes,
+levantes y repares todo"*. Se hizo con Playwright y **el arnés quedó en el repo**: `bash pruebas/correr-todo.sh`
+levanta un servidor local con mocks de `/api/*` y corre las 13 pruebas sin tocar producción, D1, R2 ni
+gastar llamadas a la IA. Ver `pruebas/LEEME.md`.
+
+**Resguardo antes de tocar nada:** rama `respaldo-produccion-2026-08-17` congelada en 9d9945b. (Nota: el
+remoto RECHAZA el push de etiquetas — `git push origin refs/tags/...` falla con "remote end hung up";
+usar ramas de respaldo, como la convención que ya existía.)
+
+**Resultado: el aplicativo está sano.** Lo verificado, con números:
+- **Auditoría estática** (sin navegador, `pruebas/audita-estatica.js`): de 152 manejadores distintos
+  referenciados en el HTML contra 636 funciones declaradas → **0 controles muertos**; **0 íconos** fuera
+  del registro; **0 rutas** del código que `_redirects` no sirva.
+- **Backend:** los 12 archivos de `functions/` compilan y los 10 endpoints están declarados.
+- **Dashboard:** las 7 páginas se muestran con su ruta correcta y sus controles responden.
+- **Los 5 productos** (email · display · facebook · search · libre) se crean, pintan, abren sus pestañas
+  y exportan.
+- **Los 20 bloques** de la biblioteca de email se añaden y todos abren su formulario.
+- **Modales:** todos abren, cierran y **no dejan capa invisible** comiéndose los clics; Escape cierra.
+- **Enlace directo** a las 13 rutas: todas cargan sin errores.
+- **Datos ya guardados (`pruebas/migra.js`, 22/22):** piezas con el modelo viejo de 6 capas migran, las
+  que traen `layout` de marca (hoy apagado) caen al de 3 zonas, y los valores fuera de rango se acotan
+  (titular 40→28 px, logo 60→40, 48→20). Conservan su texto y exportan.
+
+**Lección del recorrido: cuidado con el instrumento.** La primera pasada dio 14 "hallazgos" y **los 14
+eran fallos de la prueba, no del aplicativo**: la clave de la vista es `configuracion` (no `config`, y el
+id del elemento sí es `pg-config`); desde el dashboard `abrirMarcas/abrirImagenes/abrirPapelera` muestran
+su PÁGINA y no un modal (diseño, no fallo); el cuerpo del modal de exportar es `#export-body` (no
+`modal-export-body`); `abrirExportar()` sale sin hacer nada si no hay pieza abierta; y los errores de
+consola eran fuentes de Google bloqueadas por el sandbox. Con el instrumento corregido: **0 hallazgos**.
+Las pruebas leen ahora el registro de la app (`DASH_VIEWS`) en vez de listas escritas a mano, para no
+volver a desincronizarse.
+
+**Observación menor, sin corregir:** un enlace directo a una sección sin slug (`/email-ia` a secas) abre
+el diálogo de nombre sobre el dashboard y la URL queda en `/home` hasta que se confirma el nombre. Es
+transitorio y se corrige solo al crear la pieza; no se tocó el ruteo por no arriesgar más de lo que suma.
