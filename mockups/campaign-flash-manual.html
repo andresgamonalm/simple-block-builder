@@ -61,6 +61,8 @@ td.num,th.num{ font-family:var(--mono); font-variant-numeric:tabular-nums; white
 .box p + p, .box p + ul{ margin-top:9px; }
 .box .t{ font:600 11px var(--mono); letter-spacing:.1em; text-transform:uppercase; display:block;
          margin-bottom:7px; opacity:.85; }
+code{ font:600 12.5px var(--mono); background:var(--rule-soft); padding:1px 6px;
+       border:1px solid var(--rule); border-radius:2px; white-space:nowrap; }
 .formula{ font-family:var(--mono); font-size:12.5px; background:var(--rule-soft);
           border:1px solid var(--rule); padding:11px 14px; margin:12px 0; overflow-x:auto;
           white-space:pre; line-height:1.55; }
@@ -165,6 +167,26 @@ las directrices que entregue el usuario. La IA no inventa ofertas, precios ni fe
 <tr><td>Imágenes</td><td><b>Cloudflare R2</b></td><td>Biblioteca de fotos. Se sirven por el mismo dominio</td></tr>
 <tr><td>Inteligencia</td><td><b>API de IA de Google</b></td><td>Genera copy, elige foto y diagramación, lee las landings</td></tr>
 </tbody></table></div>
+
+<h3>Coordenadas del proyecto</h3>
+<div class="tw"><table>
+<thead><tr><th>Recurso</th><th>Dirección</th><th>Estado</th></tr></thead>
+<tbody>
+<tr><td>Repositorio</td><td><a href="https://github.com/andresgamonalm/flash-campaign">github.com/andresgamonalm/flash-campaign</a> · rama <code>main</code></td><td class="si">Creado</td></tr>
+<tr><td>Dirección pública</td><td><b>flash-campaign.gamonal.app</b></td><td class="si">Conectada</td></tr>
+<tr><td>Alojamiento</td><td>Cloudflare Pages, desplegando desde <code>main</code></td><td class="si">Conectado</td></tr>
+<tr><td>Clave de la IA</td><td><code>GEMINI_API_KEY</code>, como secreto en Cloudflare</td><td class="si">Cargada</td></tr>
+<tr><td>Base de datos</td><td>Cloudflare D1, binding <code>DB</code></td><td class="no">Por crear</td></tr>
+<tr><td>Imágenes</td><td>Cloudflare R2, binding <code>IMAGENES</code></td><td class="no">Por crear</td></tr>
+<tr><td>Clave de sesión</td><td><code>JWT_SECRET</code>, como secreto en Cloudflare</td><td class="no">Por cargar</td></tr>
+</tbody></table></div>
+
+<div class="box wa">
+  <span class="t">Ojo con el nombre</span>
+  <p>El producto se llama <b>Campaign Flash</b>, pero el repositorio y el subdominio son
+  <b>flash-campaign</b>. Es a propósito y no hay que «corregirlo»: las direcciones son las de la
+  tabla, y el nombre visible en la aplicación es Campaign Flash.</p>
+</div>
 
 <h4>Lo que provee el usuario</h4>
 <ul>
