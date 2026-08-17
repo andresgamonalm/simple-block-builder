@@ -176,10 +176,24 @@ las directrices que entregue el usuario. La IA no inventa ofertas, precios ni fe
 <tr><td>Dirección pública</td><td><b>flash-campaign.gamonal.app</b></td><td class="si">Conectada</td></tr>
 <tr><td>Alojamiento</td><td>Cloudflare Pages, desplegando desde <code>main</code></td><td class="si">Conectado</td></tr>
 <tr><td>Clave de la IA</td><td><code>GEMINI_API_KEY</code>, como secreto en Cloudflare</td><td class="si">Cargada</td></tr>
-<tr><td>Base de datos</td><td>Cloudflare D1, binding <code>DB</code></td><td class="no">Por crear</td></tr>
+<tr><td>Base de datos</td><td>Cloudflare D1, base <code>flash-campaign</code><br><span style="color:var(--muted)">id <code>7bde6bd4-5481-4a03-91f3-a3ef37d144c0</code></span>, binding <code>DB</code></td><td class="si">Creada · falta enlazarla al proyecto</td></tr>
 <tr><td>Imágenes</td><td>Cloudflare R2, bucket <code>zurich-chile</code>, binding <code>IMAGENES</code></td><td class="si">Existe · falta enlazarlo al proyecto</td></tr>
 <tr><td>Clave de sesión</td><td><code>JWT_SECRET</code>, como secreto en Cloudflare</td><td class="no">Por cargar</td></tr>
 </tbody></table></div>
+
+<div class="box wa">
+  <span class="t">Enlazar no es lo mismo que crear</span>
+  <p>Una base o un bucket pueden existir y aun así la aplicación no encontrarlos. Hace falta el
+  <b>binding</b>: en el proyecto de Pages → Settings → Bindings, se declara con qué nombre los llama
+  el código. Son tres:</p>
+  <ul>
+    <li><code>DB</code> → la base de datos D1</li>
+    <li><code>IMAGENES</code> → el bucket de R2</li>
+    <li><code>GEMINI_API_KEY</code> y <code>JWT_SECRET</code> → como <b>secretos</b>, no como variables normales</li>
+  </ul>
+  <p>Las <b>tablas de la base no se crean a mano</b>: las levanta la propia aplicación la primera vez
+  que las necesita. Una base recién creada debe estar vacía.</p>
+</div>
 
 <h4>Lo que provee el usuario</h4>
 <ul>
