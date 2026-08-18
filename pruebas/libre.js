@@ -92,6 +92,58 @@ const T=(c,n,e)=>{ if(c){ok++;console.log("  ok   "+n);} else {mal++;console.log
   });
   T(!r4.esLibre && r4.tieneZonas, "una composición antigua se sigue dibujando por zonas", JSON.stringify(r4));
 
+  console.log("\n5 · Exportación: JPG, PNG y HTML, solo de los marcados");
+  const ex = await pg.evaluate(async()=>{
+    const PNG="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M/wnwEEAA8CAv3s3S0AAAAASUVORK5CYII=";
+    const pr={id:uid(),nombre:"Export",creado:Date.now(),piezas:[],activa:null};
+    workspace.proyectos=[pr]; proyecto=pr; proyectoVistoId=pr.id;
+    crearComposicion("display-desktop");
+    const p=pieza(); const c=p.composicion;
+    c.fondo.tipo="imagen"; c.fondo.imagen.url=PNG;
+    c.fondo.filtro={tipo:"oscurecer",intensidad:45};
+    c.elementos=[
+      nuevoElementoLibre("texto",{ancla:"tl",dx:14,dy:40,w:160,h:50,texto:"Protege tu auto",tam:20,color:"#ffffff",z:1}),
+      nuevoElementoLibre("figura",{ancla:"bl",dx:14,dy:14,w:96,h:28,forma:"rect",relleno:"#2167ae",radio:4,z:2}),
+      nuevoElementoLibre("logo",{ancla:"tr",dx:12,dy:12,w:70,h:22,url:"/logo.svg",z:3})
+    ];
+    renderTablero();
+    await new Promise(r=>setTimeout(r,700));
+    // Marca solo tres tamaños.
+    p._sel = ["display-300x250","display-728x90","display-160x600"];
+    const blobJpg = await rasterizarComposicion(p, "display-300x250", "jpg");
+    const blobPng = await rasterizarComposicion(p, "display-300x250", "png");
+    const html5   = await generarHTML5Banner(p, "display-300x250");
+    const inline  = await compConImagenesInline(composicionEfectiva(p,"display-300x250"));
+    // ¿El JPG tiene contenido de verdad? Se mide el color de tres puntos.
+    const bmp = await createImageBitmap(blobJpg);
+    const cv = document.createElement("canvas"); cv.width=bmp.width; cv.height=bmp.height;
+    const cx = cv.getContext("2d"); cx.drawImage(bmp,0,0);
+    const pix = (x,y)=>{ const d=cx.getImageData(x,y,1,1).data; return d[0]+","+d[1]+","+d[2]; };
+    const distintos = new Set([pix(20,20), pix(60,120), pix(40,225), pix(280,20)]).size;
+    return {
+      jpg:{ tipo:blobJpg.type, kb:Math.round(blobJpg.size/1024), w:bmp.width, h:bmp.height, distintos },
+      png:{ tipo:blobPng.type, kb:Math.round(blobPng.size/1024) },
+      html5:{ largo:html5.length, tieneAdSize:/ad\.size/.test(html5), tieneClickTag:/clickTag/i.test(html5) },
+      logoIncrustado: String((inline.elementos||[]).find(e=>e.tipo==="logo").url||"").slice(0,11),
+      fondoIncrustado: String(inline.fondo.imagen.url||"").slice(0,11),
+      marcados: bannersMarcados(p),
+      preview: previewDeSet(p)
+    };
+  });
+  console.log(`     JPG  ${ex.jpg.w}×${ex.jpg.h} · ${ex.jpg.kb} KB · ${ex.jpg.tipo}`);
+  console.log(`     PNG  ${ex.png.kb} KB · ${ex.png.tipo}`);
+  console.log(`     HTML5 ${ex.html5.largo} caracteres`);
+  T(ex.jpg.tipo==="image/jpeg" && ex.jpg.kb>0, "el JPG se genera", ex.jpg.tipo+" "+ex.jpg.kb+"KB");
+  T(ex.jpg.w===300 && ex.jpg.h===250, "y sale al tamaño exacto que pide Google", ex.jpg.w+"×"+ex.jpg.h);
+  T(ex.jpg.distintos>=3, "el JPG tiene el diseño dentro, no un lienzo plano", ex.jpg.distintos+" colores distintos");
+  T(ex.png.tipo==="image/png" && ex.png.kb>0, "el PNG se genera", ex.png.tipo);
+  T(ex.html5.tieneAdSize && ex.html5.tieneClickTag, "el HTML5 lleva ad.size y clickTag", JSON.stringify(ex.html5));
+  T(ex.fondoIncrustado.startsWith("data:image"), "la foto de fondo viaja incrustada", ex.fondoIncrustado);
+  T(ex.logoIncrustado.startsWith("data:image"), "y el logo también (antes no se incrustaba)", ex.logoIncrustado);
+  T(ex.marcados.length===3, "solo se exportan los marcados", ex.marcados.join(" "));
+  T(/300 × 250/.test(ex.preview) && /728 × 90/.test(ex.preview) && !/336 × 280/.test(ex.preview),
+    "y la vista previa muestra esos mismos, no todos");
+
   T(errs.length===0, "sin errores de consola", errs.slice(0,3).join(" | "));
   console.log("\n"+(mal?"FALLA":"TODO OK")+` — ${ok} ok · ${mal} mal`);
   await b.close();

@@ -54,6 +54,9 @@ const T = (c, n, e) => { if (c) { ok++; console.log("  ok   " + n); } else { mal
   console.log("\n4 · Colección: export HTML y rasterizado de un banner");
   const r4 = await pg.evaluate(async () => {
     crearComposicion("display-desktop");
+    // Modelo de 3 ZONAS: es el de las piezas ya guardadas, y esta prueba lo
+    // protege. Los banners NUEVOS nacen en el lienzo libre.
+    pieza().composicion = composicionDefault(pieza().tema);
     const p = pieza();
     setComp("zonas.texto.titular.texto", "Auto protegido");
     setComp("zonas.cta.texto", "Cotiza aquí");

@@ -25,6 +25,9 @@ const T=(c,n,e)=>{ if(c){ok++;console.log("  ok   "+n);} else {mal++;console.log
                         {id:"i2",url:PNG,nombre:"familia auto",key:"fotos-seguros/familia.png"},
                         {id:"i3",url:"/logo.svg",nombre:"Logo Marca",key:"logos/Logo-Marca.svg"}];
     crearComposicion("display-desktop");
+    // Modelo de 3 ZONAS: es el de las piezas ya guardadas, y esta prueba lo
+    // protege. Los banners NUEVOS nacen en el lienzo libre.
+    pieza().composicion = composicionDefault(pieza().tema);
     setComp("zonas.logo.url","/logo.svg");   // el logo va en todas las piezas
     setComp("fondo.color","#23366F");
     setComp("zonas.texto.titular.texto","Protege tu auto");

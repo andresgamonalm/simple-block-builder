@@ -44,6 +44,9 @@ const CONTENIDO = CORTO ? {
     workspace.proyectos.push(pr);
     proyectoVistoId = pr.id; proyecto = pr;
     crearComposicion("display-desktop");
+    // Modelo de 3 ZONAS: es el de las piezas ya guardadas, y esta prueba lo
+    // protege. Los banners NUEVOS nacen en el lienzo libre.
+    pieza().composicion = composicionDefault(pieza().tema);
     const p = pieza();
     p.nombre = "Medición";
     setComp("zonas.texto.etiqueta.texto", C.etiqueta);

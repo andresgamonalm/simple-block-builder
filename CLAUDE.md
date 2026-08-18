@@ -722,6 +722,18 @@ desborde, legibilidad (piso por formato) y texto cortado en su cuadro. Medido co
 el nuevo (sale antes si `esLibre`). Un logo sin imagen no se dibuja, así que al añadirlo se le pone
 el de la marca o se abre la biblioteca.
 
-**PENDIENTE de esta línea:** que la vista previa y la exportación usen `bannersMarcados()` y exporten
-en JPG y/o HTML solo los marcados; edición del texto directamente sobre el banner (hoy se escribe en
-el panel); y que el asistente de IA sepa generar en este modelo.
+**EXPORTACIÓN Y VISTA PREVIA (HECHO).** Las casillas mandan: `exportarTodoZip` filtra por
+`bannerMarcado`, el modal de exportar trae su propia casilla por tamaño con contador (`marcarExport`/
+`refrescarNExport`), y la vista previa de una colección es una **hoja de contactos** (`previewDeSet`)
+con los marcados a tamaño real. JPG, PNG y HTML5 ya salen los tres del mismo rasterizador.
+`compConImagenesInline` ahora incrusta **también los logos de los elementos libres** — sin eso un logo
+de otro dominio no aparecía en el PNG/JPG. Medido (`libre.js` 21/21): el JPG sale a 300×250 exactos,
+con el diseño dentro (4 puntos de color distintos, no un lienzo plano), fondo y logo incrustados como
+data URL, y la vista previa lista solo los tres marcados.
+
+**Las pruebas del motor de 3 ZONAS piden ahora ese modelo explícitamente** (`pieza().composicion =
+composicionDefault(pieza().tema)` tras `crearComposicion`), porque los banners nuevos nacen libres.
+Ese motor sigue protegido por la batería: es el de las piezas ya guardadas.
+
+**PENDIENTE de esta línea:** edición del texto directamente sobre el banner (hoy se escribe en el
+panel); y que el asistente de IA sepa generar en este modelo.

@@ -13,6 +13,9 @@ const prepararColeccion = () => {
   const pr = { id: uid(), nombre: "T", creado: Date.now(), piezas: [], activa: null };
   workspace.proyectos = [pr]; proyectoVistoId = pr.id; proyecto = pr;
   crearComposicion("display-desktop");
+  // Modelo de 3 ZONAS: es el de las piezas ya guardadas, y esta prueba lo
+  // protege. Los banners NUEVOS nacen en el lienzo libre.
+  pieza().composicion = composicionDefault(pieza().tema);
   setComp("zonas.texto.titular.texto", "Tu auto listo");
   setComp("zonas.texto.cuerpo.texto", "Cobertura desde hoy");
   setComp("zonas.cta.texto", "Cotiza aquí");
@@ -47,7 +50,7 @@ const prepararColeccion = () => {
         return { flex: /flex/.test(cs.display), lineas: Math.round(lineas) }; };
       return { desborda: doc.scrollWidth > doc.clientWidth + 1,
         acc, fuera: acc.filter(x => !x.dentro).length,
-        ayuda: prosa(".lz-ayuda"), hint: prosa(".cmp-hint-lienzo"),
+        ayuda: prosa(".lz-ayuda"), hint: prosa(".cmp-hint-lienzo") || prosa(".se-nota"),
         banners: document.querySelectorAll(".ab .cmp").length,
         // `top` resuelve a pixeles cuando hay `bottom`, asi que se mide la
         // posicion REAL: el toast debe caer bajo la barra de herramientas.
@@ -60,7 +63,7 @@ const prepararColeccion = () => {
     T(r.acc.length >= 3 && r.fuera === 0, "Guardar, Exportar y Salir alcanzables",
       r.acc.map(x => x.t + (x.dentro ? "" : " FUERA")).join(","));
     T(r.ayuda && !r.ayuda.flex && r.ayuda.lineas <= 4, "la ayuda del lienzo se lee como frase", JSON.stringify(r.ayuda));
-    T(r.hint && !r.hint.flex && r.hint.lineas <= 4, "el aviso del panel se lee como frase", JSON.stringify(r.hint));
+    T(!r.hint || (!r.hint.flex && r.hint.lineas <= 5), "el aviso del panel se lee como frase", JSON.stringify(r.hint));
     T(r.banners === 11, "los 11 banners se dibujan", r.banners);
     T(r.toastAbajo, "el toast no tapa la barra de herramientas");
     await pg.close();

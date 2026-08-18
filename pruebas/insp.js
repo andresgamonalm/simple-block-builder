@@ -18,6 +18,9 @@ const T = (c, n, extra) => { if (c) { ok++; console.log("  ok   " + n); } else {
     const pr = { id: uid(), nombre: "Insp", creado: Date.now(), piezas: [], activa: null };
     workspace.proyectos = [pr]; proyectoVistoId = pr.id; proyecto = pr;
     crearComposicion("display-desktop");
+    // Modelo de 3 ZONAS: es el de las piezas ya guardadas, y esta prueba lo
+    // protege. Los banners NUEVOS nacen en el lienzo libre.
+    pieza().composicion = composicionDefault(pieza().tema);
     setComp("zonas.texto.etiqueta.texto", "Seguro");
     setComp("zonas.texto.titular.texto", "Tu auto listo");
     setComp("zonas.texto.cuerpo.texto", "Cobertura desde hoy");

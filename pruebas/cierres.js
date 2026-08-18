@@ -21,6 +21,9 @@ const T = (c, n, e) => { if (c) { ok++; console.log("  ok   " + n); } else { mal
     workspace.proyectos = [pr]; proyectoVistoId = pr.id; proyecto = pr;
     workspace.marcas = [{ id: "m1", nombre: "Prueba" }];
     crearComposicion("display-desktop");
+    // Modelo de 3 ZONAS: es el de las piezas ya guardadas, y esta prueba lo
+    // protege. Los banners NUEVOS nacen en el lienzo libre.
+    pieza().composicion = composicionDefault(pieza().tema);
     setComp("zonas.texto.titular.texto", "Tu auto listo");
     setComp("zonas.cta.texto", "Cotiza aquí");
     setComp("zonas.logo.url", "/logo.svg");

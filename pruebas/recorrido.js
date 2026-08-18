@@ -130,9 +130,9 @@ const anota = (seccion, tipo, detalle) => hallazgos.push({ seccion, tipo, detall
       _rutaActual = p.ruta;
       const cat = categoriaDe(p.tipo);
       try {
-        if (cat === "Banners" || cat === "Post" || cat === "Facebook")
+        if (cat === "Banners" || cat === "Post" || cat === "Facebook") {
           crearComposicion(cat === "Banners" ? "display-desktop" : cat === "Facebook" ? "facebook" : "social");
-        else { crearPieza(p.tipo, "Auditoría " + p.nombre); activarPieza(proyecto.activa); }
+        } else { crearPieza(p.tipo, "Auditoría " + p.nombre); activarPieza(proyecto.activa); }
       } catch (e) { return { err: e.message }; }
       const pz = pieza();
       return { creada: !!pz, formato: pz && pz.formato, cat, ruta: rutaDeProducto(pz),

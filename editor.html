@@ -1180,6 +1180,10 @@ body.sbb-arrastrando{user-select:none;-webkit-user-select:none;cursor:grabbing;}
 .lb-resultado.aviso{padding:9px 12px;background:#FFF8E1;color:#6b5300;border-radius:9px;}
 .ab-check{display:inline-flex;align-items:center;margin-right:7px;cursor:pointer;}
 .ab-check input{width:15px;height:15px;cursor:pointer;accent-color:var(--navy,#040764);}
+.export-sel{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:0 0 12px;padding:9px 12px;background:#f4f6ff;border-radius:9px;font-size:12.5px;color:var(--ink2,#3a4056);}
+.export-sel span{flex:1;}
+.export-row label{display:flex;align-items:center;gap:10px;}
+.export-row .exp-ck{width:16px;height:16px;cursor:pointer;accent-color:var(--navy,#040764);flex-shrink:0;}
 .cmp-libre .lb-el:hover{outline:1.5px dashed rgba(28,115,203,.6);outline-offset:2px;}
 /* El overlay es una capa de asas: no debe interceptar el puntero, o nada del
    banner (logo, boton, textos) se puede agarrar. Solo sus asas lo reciben. */
@@ -8555,8 +8559,12 @@ async function exportarArtboard(fmt){
 // múltiples del navegador y es el formato que espera Google Ads).
 async function exportarTodoZip(){
   const p=pieza(); if(!esSetPieza(p)) return;
-  const fmts=(p.artboards||[]).map(a=>a.fmt).filter(f=>FORMATOS[f] && (esComposicion(p) || (p.artboards.find(a=>a.fmt===f).canvas||[]).length));
-  if(!fmts.length){ toast("No hay banners con contenido"); return; }
+  // Solo los banners MARCADOS con su casilla (el modelo del usuario: "la vista
+  // previa y la exportación puede ser seleccionada: todos o solo algunos").
+  const fmts=(p.artboards||[]).map(a=>a.fmt)
+    .filter(f=>FORMATOS[f] && (esComposicion(p) || (p.artboards.find(a=>a.fmt===f).canvas||[]).length))
+    .filter(f=>bannerMarcado(p,f));
+  if(!fmts.length){ toast("No hay banners seleccionados. Marca al menos uno con su casilla."); return; }
   const tipo=exportTipo; const slug=slugify(p.nombre);
   toast(`Preparando ZIP con ${fmts.length} banners…`, 12000);
   const files=[];
@@ -8592,6 +8600,10 @@ async function urlADataURL(url){
 async function compConImagenesInline(comp){
   const c=JSON.parse(JSON.stringify(comp));
   if(c.fondo&&c.fondo.imagen&&c.fondo.imagen.url) c.fondo.imagen.url=await urlADataURL(c.fondo.imagen.url);
+  // Lienzo libre: cada elemento con imagen (los logos) también se incrusta.
+  if(Array.isArray(c.elementos)){
+    for(const e of c.elementos){ if(e && e.tipo==="logo" && e.url) e.url=await urlADataURL(e.url); }
+  }
   if(c.zonas){ for(const zk of ["logo","texto","cta"]){ const z=c.zonas[zk]; if(!z) continue;
     if(z.imagen&&z.imagen.url) z.imagen.url=await urlADataURL(z.imagen.url);
     // Solo la zona LOGO tiene una imagen en `url`; en la zona CTA `url` es el
@@ -8635,6 +8647,18 @@ let exportTipo = "png";   // por defecto imagen exacta (lo más simple para Goog
 function setExportTipo(t){ exportTipo=t; document.querySelectorAll("#export-tipo button").forEach(b=>b.classList.toggle("on", b.dataset.t===t)); }
 function exportarArtboardEn(fmt){ if(exportTipo==="html") exportarArtboard(fmt); else exportarArtboardImg(fmt, exportTipo); }
 function exportarTodoEnTipo(){ exportarTodoZip(); }
+// Casillas del modal de exportación (las mismas que las del tablero).
+function marcarExport(on){
+  const p=pieza(); if(!p) return;
+  marcarTodosBanners(on);
+  document.querySelectorAll("#export-list .exp-ck").forEach(c=>{ c.checked = on; });
+  refrescarNExport();
+}
+function refrescarNExport(){
+  const p=pieza(); if(!p) return;
+  const n=document.getElementById("exp-n");
+  if(n) n.textContent = bannersMarcados(p).length;
+}
 // Muestra/oculta los controles del set en la barra superior según la creatividad.
 function actualizarUISet(){
   const es = esSetPieza(pieza());
@@ -8892,9 +8916,13 @@ function abrirExportar(){
   if(esComposicion(actual)){
     const sizes = (actual.artboards||[]).map(a=>a.fmt);
     const seg = `<div class="export-tipo" id="export-tipo"><span>Formato:</span>${[['png','PNG (imagen)'],['jpg','JPG (imagen)'],['html','HTML5']].map(([t,l])=>`<button data-t="${t}" class="${exportTipo===t?'on':''}" onclick="setExportTipo('${t}')">${l}</button>`).join('')}</div>`;
-    let h = `<p>Cada banner sale <b>individual y en su tamaño exacto</b>, listo para subir a Google Ads. <b>PNG/JPG</b> = imagen (lo más simple para Google Display y redes); <b>HTML5</b> = anuncio con enlace (incluye <code>ad.size</code> y <code>clickTag</code>, imágenes incrustadas).</p>${seg}<p><button class="primary" onclick="exportarTodoZip()">${svgIcon("exportar",{size:"13px"})} Descargar todos en un ZIP</button> <span style="font-size:12px;color:#5b6178;">un archivo por tamaño</span></p><div class="export-list" id="export-list">`;
+    const nMarc = sizes.filter(f=>bannerMarcado(actual,f)).length;
+    let h = `<p>Cada banner sale <b>individual y en su tamaño exacto</b>, listo para subir a Google Ads. <b>PNG/JPG</b> = imagen (lo más simple para Google Display y redes); <b>HTML5</b> = anuncio con enlace (incluye <code>ad.size</code> y <code>clickTag</code>, imágenes incrustadas).</p>${seg}`;
+    h += `<div class="export-sel"><span>Se exportan los <b id="exp-n">${nMarc}</b> de ${sizes.length} que tengas marcados.</span>`
+       + `<button class="lb-link" onclick="marcarExport(true)">Marcar todos</button><button class="lb-link" onclick="marcarExport(false)">Ninguno</button></div>`;
+    h += `<p><button class="primary" onclick="exportarTodoZip()">${svgIcon("exportar",{size:"13px"})} Descargar los marcados en un ZIP</button> <span style="font-size:12px;color:#5b6178;">un archivo por tamaño</span></p><div class="export-list" id="export-list">`;
     sizes.forEach(fmt => { const f=FORMATOS[fmt]; if(!f) return;
-      h += `<div class="export-row"><label><div><div class="pn">${f.ancho}×${f.alto}${fmt===actual.masterFmt?' <span style="color:#1c73cb;font-weight:600;">· máster</span>':''}${tieneOverride(actual,fmt)?' <span class="ajtag">· ajustado</span>':''}</div><div class="pf">${esc(HINTS[fmt]?.badge||'Display')}</div></div></label><button class="download" onclick="exportarArtboardEn('${fmt}')">${svgIcon("exportar",{size:"13px"})} Descargar</button></div>`;
+      h += `<div class="export-row"><label><input type="checkbox" class="exp-ck" ${bannerMarcado(actual,fmt)?"checked":""} onchange="marcarBanner('${fmt}',this.checked);refrescarNExport()"><div><div class="pn">${f.ancho}×${f.alto}${fmt===actual.masterFmt?' <span style="color:#1c73cb;font-weight:600;">· máster</span>':''}${tieneOverride(actual,fmt)?' <span class="ajtag">· ajustado</span>':''}</div><div class="pf">${esc(HINTS[fmt]?.badge||'Display')}</div></div></label><button class="download" onclick="exportarArtboardEn('${fmt}')">${svgIcon("exportar",{size:"13px"})} Descargar</button></div>`;
     });
     h += `</div><div class="modal-foot" style="margin-top:18px;border-top:1px solid #e5e7ea;padding-top:14px;"><button onclick="cerrarModal('export')">Cerrar</button></div>`;
     body.innerHTML = h;
@@ -11582,9 +11610,39 @@ function abrirPreview(id){
   if(!p){ for(const pr of workspace.proyectos){ const f=pr.piezas.find(x=>x.id===id); if(f){ p=f; break; } } }
   if(!p) return;
   document.getElementById("pv-title").textContent = p.nombre;
-  document.getElementById("pv-frame").srcdoc = generarHTMLDePieza(p);
+  // Una colección de banners se previsualiza como HOJA DE CONTACTOS con los que
+  // tengas MARCADOS (el modelo: "la vista previa puede ser seleccionada").
+  document.getElementById("pv-frame").srcdoc = esSetPieza(p) ? previewDeSet(p) : generarHTMLDePieza(p);
   setPreviewWidth(esMovil() ? "movil" : "full");
   document.getElementById("preview-modal").classList.add("show");
+}
+// Hoja de contactos: todos los banners MARCADOS, cada uno a su tamaño real y
+// con su rótulo, para revisarlos de una vez antes de exportar.
+function previewDeSet(p){
+  const css = cssComponentes();
+  const fmts = (p.artboards||[]).map(a=>a.fmt).filter(f=>FORMATOS[f] && bannerMarcado(p,f));
+  const piezas = fmts.map(fmt=>{
+    const F = FORMATOS[fmt];
+    const cuerpo = esComposicion(p)
+      ? renderComposicion(composicionEfectiva(p, fmt), fmt)
+      : `<div class="ab-frame" style="width:${F.ancho}px;height:${F.alto}px;">${((p.artboards.find(a=>a.fmt===fmt)||{}).canvas||[]).map(it=>BLOQUES[it.tipo].render(it.datos)).join("")}</div>`;
+    return `<figure class="pv-b"><figcaption>${F.ancho} × ${F.alto}</figcaption>
+      <div class="pv-marco" style="width:${F.ancho}px;height:${F.alto}px;">${cuerpo}</div></figure>`;
+  }).join("");
+  const vacio = `<p class="pv-vacio">No hay banners marcados. Marca al menos uno con su casilla para verlo aquí.</p>`;
+  return `<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8"><title>${esc(p.nombre)}</title>
+<style>*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:Roboto,Arial,sans-serif;background:#eef1f6;padding:26px;color:#12173d;}
+h1{font-size:18px;font-weight:600;margin-bottom:4px;}
+.pv-sub{font-size:13px;color:#5b6178;margin-bottom:22px;}
+.pv-lista{display:flex;flex-wrap:wrap;gap:26px;align-items:flex-start;}
+.pv-b figcaption{font-size:11.5px;font-weight:600;color:#5b6178;margin-bottom:6px;letter-spacing:.03em;}
+.pv-marco{background:#fff;box-shadow:0 2px 10px rgba(18,23,61,.10);overflow:hidden;}
+.pv-vacio{font-size:14px;color:#5b6178;}
+${css}</style></head><body>
+<h1>${esc(p.nombre)}</h1>
+<p class="pv-sub">${fmts.length} banner${fmts.length===1?"":"s"} seleccionado${fmts.length===1?"":"s"}, a tamaño real</p>
+<div class="pv-lista">${piezas||vacio}</div></body></html>`;
 }
 function cerrarPreview(){ document.getElementById("preview-modal").classList.remove("show"); document.getElementById("pv-frame").srcdoc = ""; }
 function setPreviewWidth(w){

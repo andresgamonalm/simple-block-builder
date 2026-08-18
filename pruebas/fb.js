@@ -31,6 +31,9 @@ const T=(c,n,e)=>{ if(c){ok++;console.log("  ok   "+n);} else {mal++;console.log
     const pr={id:uid(),nombre:"FB",creado:Date.now(),piezas:[],activa:null};
     workspace.proyectos=[pr]; proyectoVistoId=pr.id; proyecto=pr;
     crearComposicion("facebook");
+    // Modelo de 3 ZONAS: es el de las piezas ya guardadas, y esta prueba lo
+    // protege. Los banners NUEVOS nacen en el lienzo libre.
+    pieza().composicion = composicionDefault(pieza().tema);
     const p=pieza();
     setComp("zonas.texto.etiqueta.texto","Seguro");
     setComp("zonas.texto.titular.texto","Tu auto listo");
@@ -76,6 +79,9 @@ const T=(c,n,e)=>{ if(c){ok++;console.log("  ok   "+n);} else {mal++;console.log
   console.log("\n5 · Que la colección de Display siga intacta");
   const r5=await pg.evaluate(async ()=>{
     crearComposicion("display-desktop");
+    // Modelo de 3 ZONAS: es el de las piezas ya guardadas, y esta prueba lo
+    // protege. Los banners NUEVOS nacen en el lienzo libre.
+    pieza().composicion = composicionDefault(pieza().tema);
     const p=pieza();
     return { n:(p.artboards||[]).length, master:p.masterFmt, ruta:rutaDeProducto(p) };
   });

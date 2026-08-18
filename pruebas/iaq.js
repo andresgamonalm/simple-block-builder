@@ -43,6 +43,9 @@ const T = (c, n, e) => { if (c) { ok++; console.log("  ok   " + n); } else { mal
     const pr = { id: uid(), nombre: "q", creado: Date.now(), piezas: [], activa: null };
     workspace.proyectos = [pr]; proyectoVistoId = pr.id; proyecto = pr;
     crearComposicion("display-desktop");
+    // Modelo de 3 ZONAS: es el de las piezas ya guardadas, y esta prueba lo
+    // protege. Los banners NUEVOS nacen en el lienzo libre.
+    pieza().composicion = composicionDefault(pieza().tema);
     setComp("zonas.texto.titular.texto", "Auto protegido");
     setComp("burbuja.texto", "2 Cuotas Gratis"); setComp("burbuja.visible", true);
     const P = planDeBanner(composicionEfectiva(pieza(), "display-200x200"), "display-200x200", 0);

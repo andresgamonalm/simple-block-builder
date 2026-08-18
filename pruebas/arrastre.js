@@ -12,6 +12,9 @@ const FIXTURE = () => {
   workspace.proyectos=[pr]; proyecto=pr; proyectoVistoId=pr.id;
   workspace.imagenes=[{id:"i1",url:PNG,nombre:"foto",key:"fotos-generales/f.png"}];
   crearComposicion("display-desktop");
+  // Modelo de 3 ZONAS: es el de las piezas ya guardadas, y esta prueba lo
+  // protege. Los banners NUEVOS nacen en el lienzo libre.
+  pieza().composicion = composicionDefault(pieza().tema);
   setComp("fondo.color","#23366F");
   setComp("zonas.logo.url","/logo.svg");
   setComp("zonas.texto.etiqueta.texto","Seguro Auto");
