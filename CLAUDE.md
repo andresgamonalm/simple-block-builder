@@ -684,3 +684,44 @@ así que `document.querySelector(".cmp-tit")` ya NO es el banner grande — hay 
 **Verificación:** `panel.js` reescrito para medir la lista del usuario punto por punto — **60/60**, con
 arrastre real del logo a una esquina, el filtro quitándose, las plantillas sin tocar contenido y los 11
 tamaños sanos después. Batería completa (16 pruebas) EN VERDE, recorrido SIN HALLAZGOS.
+
+## Sesión 18-ago-2026 (tarde): LIENZO LIBRE — el modelo del usuario (EN CURSO)
+El usuario entregó su modelo en un documento (dos capturas: la barra con X sobre Bloques/Diseño/
+Plantillas, y la especificación GENERAL + Más). **Reemplaza el modelo de 3 zonas**, que queda vivo
+solo para las piezas ya guardadas.
+
+**Modelo** (`comp.modo === "libre"`, `libreDefault`, `esLibre`): el banner es una LISTA de elementos
+que crea el usuario — `texto`, `figura` (círculo/cuadrado/rectángulo) y `logo` — sobre un `fondo`
+(color plano o foto, con filtro de tipo + intensidad ENCIMA de la imagen). El CTA no es un elemento
+propio: es una figura con un texto encima y un enlace. **No hay banda legal automática** (el usuario
+la pone con un cuadro de texto).
+
+**Cómo sobrevive a REPLICAR** (lo único delicado): la posición NO se guarda en píxeles del máster.
+Se guarda **ancla** (`ANCLAS_LIBRE`, las 9 posiciones), **distancia a esa ancla** y **tamaño**, todo
+en unidades base. `cajaLibre(el,fmt)` multiplica por la k del formato y recoloca desde su ancla;
+`anclarLibre(el,fmt,left,top)` hace el camino inverso al soltar (el ancla se elige por el TERCIO en
+que cae el centro). Medido: un sello anclado abajo-derecha queda a 10 unidades del borde en los 11
+tamaños (10px en 300×250, 40 en 1200×1200, 6 en 160×600); ida y vuelta exacta (prueba `libre.js`).
+
+**Interacción** (`attachLibre`, `arrastrarLibre`, `redimensionarLibre`): se agarra el elemento y se
+mueve; se tira de una PUNTA (4 asas) y se redimensiona EN PROPORCIÓN. Imantado a bordes y centro con
+guía visible, acotado al marco, en vivo con transform y un solo repintado al soltar.
+
+**Panel** (`renderPanelLibre`): Marca · Añadir al banner · Fondo (color/foto/filtro) · propiedades del
+elemento seleccionado · Capas (delante/detrás, con eliminar). **Barra**: botón **Guardar** explícito
+(`marcarSinGuardar`/`guardarBanner`), **Replicar a los demás tamaños** (`replicarBanner`, limpia los
+overrides y luego informa con el inspector), y **casillas por banner** (`bannerMarcado`/`marcarBanner`/
+`bannersMarcados`) para elegir cuáles entran en la vista previa y la exportación.
+
+**Inspector adaptado** (`inspeccionarLibre`): en el lienzo libre NO aplican "completa" (el usuario
+decide qué pone), "colisión" (poner texto ENCIMA de una figura es el modelo) ni "aire". Quedan
+desborde, legibilidad (piso por formato) y texto cortado en su cuadro. Medido con un diseño real:
+8 de 11 bien y las 3 franjas avisando que el texto no cabe — que es la información útil.
+
+**Trampas ya resueltas:** `asegurarComposicionNueva` migraba la pieza al modelo de 3 zonas y borraba
+el nuevo (sale antes si `esLibre`). Un logo sin imagen no se dibuja, así que al añadirlo se le pone
+el de la marca o se abre la biblioteca.
+
+**PENDIENTE de esta línea:** que la vista previa y la exportación usen `bannersMarcados()` y exporten
+en JPG y/o HTML solo los marcados; edición del texto directamente sobre el banner (hoy se escribe en
+el panel); y que el asistente de IA sepa generar en este modelo.

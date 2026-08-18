@@ -105,22 +105,23 @@ const T=(c,n,e)=>{ if(c){ok++;console.log("  ok   "+n);} else {mal++;console.log
 
   console.log("\n1d · Arrastrar (drag and drop) sobre el banner");
   await pg.waitForTimeout(1200);   // el overlay se reconstruye tras repintar
+  // Ya no hay asas por elemento: se agarra el elemento mismo (motor único).
   const dnd=await pg.evaluate(()=>({
-    logo: !!document.querySelector(".lienzo-logo"),
-    tirador: !!document.querySelector(".lienzo-logo .lz-rz"),
+    logo: !!document.querySelector(".lienzo .cmp-logo.cmp-mov"),
+    tirador: !!document.querySelector(".lienzo-rzlogo"),
     divisores: document.querySelectorAll(".lienzo-div").length,
-    burbuja: !!document.querySelector(".lienzo-burbuja"),
+    burbuja: !!document.querySelector(".lienzo .cmp-burbuja.cmp-mov"),
     textos: document.querySelectorAll(".lienzo-edit").length,
-    grips: document.querySelectorAll(".lienzo-grip").length
+    agarrables: document.querySelectorAll(".lienzo .cmp-mov").length
   }));
-  T(dnd.logo && dnd.tirador,"el LOGO se arrastra y tiene tirador de tamaño",JSON.stringify(dnd));
+  T(dnd.logo && dnd.tirador,"el LOGO se agarra y tiene tirador de tamaño",JSON.stringify(dnd));
   T(dnd.divisores>=1,"los divisores de zona se arrastran",dnd.divisores);
-  T(dnd.burbuja,"el círculo de oferta se arrastra");
+  T(dnd.burbuja,"el círculo de oferta se agarra");
   T(dnd.textos>=1,"los textos se editan sobre el propio banner",dnd.textos);
-  T(dnd.grips>=1,"y se mueven con su tirador",dnd.grips);
+  T(dnd.agarrables>=4,"y todos los elementos son agarrables, no solo dos",dnd.agarrables);
   // Arrastre REAL del logo: de su sitio a la esquina de abajo a la derecha.
   const arr=await pg.evaluate(()=>{const c=pieza().composicion;return {h:getPath(c,"zonas.logo.alinH"),v:getPath(c,"zonas.logo.alinV")};});
-  const caja=await pg.evaluate(()=>{const e=document.querySelector(".lienzo-logo");const r=e.getBoundingClientRect();
+  const caja=await pg.evaluate(()=>{const e=document.querySelector(".lienzo .cmp-logo");const r=e.getBoundingClientRect();
     const s=document.querySelector(".lienzo-stage").getBoundingClientRect();
     return {x:r.left+r.width/2,y:r.top+r.height/2,sx:s.left,sy:s.top,sw:s.width,sh:s.height};});
   await pg.mouse.move(caja.x,caja.y); await pg.mouse.down();

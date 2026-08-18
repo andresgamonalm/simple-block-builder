@@ -769,6 +769,12 @@ button,input,select,textarea{font-family:inherit;}
 .canvas-frame[data-fijo="1"] .sbb-hero img.bg{width:100%!important;height:100%!important;object-fit:cover;}
 /* Mientras editas, los links/forms NO navegan (sí lo hacen en Vista previa y en el HTML exportado). */
 #canvas a{pointer-events:none!important;cursor:default;}
+/* El boton del banner es un <a>: la regla de arriba (que evita navegar al
+   hacer clic en el lienzo) tambien le quitaba el raton, asi que no se podia
+   agarrar. Se le devuelve el puntero; la navegacion se sigue impidiendo en el
+   manejador de clic. */
+#canvas a.cmp-mov{pointer-events:auto!important;cursor:grab;}
+#canvas a.cmp-mov.arrastrando{cursor:grabbing;}
 #canvas iframe{pointer-events:none;}
 
 /* ── Biblioteca de creaciones (galería) ── */
@@ -951,12 +957,12 @@ button,input,select,textarea{font-family:inherit;}
 .lienzo-head .lz-ayuda svg{vertical-align:-2px;margin-right:4px;}
 .lienzo-stage{position:relative;margin:0 auto;border-radius:6px;overflow:hidden;box-shadow:0 6px 26px rgba(8,14,28,.14);background:#0e2748;}
 .lienzo-scale{position:absolute;top:0;left:0;transform-origin:top left;}
-.lienzo-ovl{position:absolute;inset:0;z-index:20;}
+.lienzo-ovl{position:absolute;inset:0;z-index:20;pointer-events:none;}
 /* Zonas clicables (para seleccionar y editar su contenido) */
-.lienzo-zona{position:absolute;cursor:pointer;border:2px solid transparent;border-radius:4px;transition:border-color .12s,background .12s;}
-.lienzo-zona:hover{border-color:rgba(28,115,203,.7);background:rgba(28,115,203,.08);}
+.lienzo-zona{position:absolute;pointer-events:none;border:2px solid transparent;border-radius:4px;transition:border-color .12s,background .12s;}
+.lienzo-zona.sel{border-color:rgba(28,115,203,.55);background:rgba(28,115,203,.06);}
 .lienzo-zona .lz-ztag{position:absolute;top:4px;left:4px;font-size:13px;font-weight:600;color:#fff;background:rgba(4,7,100,.82);border-radius:5px;padding:2px 7px;opacity:0;transition:opacity .12s;pointer-events:none;}
-.lienzo-zona:hover .lz-ztag{opacity:1;}
+.lienzo-zona.sel .lz-ztag{opacity:1;}
 /* Divisores arrastrables entre zonas */
 .lienzo-div{position:absolute;z-index:25;background:transparent;touch-action:none;}
 .lienzo-div.h{cursor:ns-resize;height:14px;margin-top:-7px;left:0;right:0;}
@@ -1121,6 +1127,67 @@ button,input,select,textarea{font-family:inherit;}
 .lz-ancla{position:absolute;width:16px;height:16px;margin:-8px 0 0 -8px;border-radius:50%;border:2px solid var(--blue,#1C73CB);background:rgba(255,255,255,.9);opacity:0;transition:opacity .12s,transform .12s;pointer-events:none;z-index:23;}
 .lienzo-ovl.arrastrando .lz-ancla{opacity:.75;}
 .lz-ancla.cerca{opacity:1;transform:scale(1.45);background:var(--blue,#1C73CB);}
+/* ── Arrastre: mismo gesto para todos los elementos ────────────────────── */
+/* El cursor avisa que el elemento se puede tomar. Es solo del editor: la clase
+   se pone sobre el render, pero .cmp-mov no viaja al export porque el HTML
+   exportado se genera aparte, desde los datos. */
+.lienzo .cmp-mov{cursor:grab;}
+.lienzo .cmp-mov:hover{outline:1.5px dashed rgba(28,115,203,.55);outline-offset:3px;}
+.lienzo .cmp-mov.arrastrando{cursor:grabbing;opacity:.92;outline:1.5px solid var(--blue,#1C73CB);outline-offset:3px;}
+/* Mientras se arrastra no se selecciona texto por accidente en toda la pagina. */
+body.sbb-arrastrando{user-select:none;-webkit-user-select:none;cursor:grabbing;}
+/* Guias de alineacion: aparecen cuando el elemento se pega a un borde o al centro. */
+.lz-guia{position:absolute;z-index:30;background:#E5007E;pointer-events:none;}
+.lz-guia.v{top:0;bottom:0;width:1px;}
+.lz-guia.h{left:0;right:0;height:1px;}
+/* Marco de seleccion del lienzo libre, con sus cuatro puntas. */
+.lb-sel{position:absolute;z-index:29;border:1.5px solid var(--blue,#1C73CB);pointer-events:none;}
+.lb-punta{position:absolute;width:12px;height:12px;border-radius:50%;background:#fff;border:1.5px solid var(--blue,#1C73CB);box-shadow:0 1px 4px rgba(8,14,28,.28);pointer-events:auto;}
+.lb-punta.tl{left:-7px;top:-7px;cursor:nwse-resize;}
+.lb-punta.tr{right:-7px;top:-7px;cursor:nesw-resize;}
+.lb-punta.bl{left:-7px;bottom:-7px;cursor:nesw-resize;}
+.lb-punta.br{right:-7px;bottom:-7px;cursor:nwse-resize;}
+/* ── Panel y barra del lienzo libre ────────────────────────────────────── */
+.lb-add{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:6px;}
+.lb-add button{display:inline-flex;align-items:center;gap:7px;height:38px;padding:0 11px;border:1px solid #dfe4f2;border-radius:9px;background:#fff;font-family:var(--f);font-size:12.5px;font-weight:500;color:var(--ink,#12173d);cursor:pointer;}
+.lb-add button:hover{border-color:var(--blue,#1C73CB);color:var(--navy,#040764);}
+.lb-ico{width:15px;height:15px;flex-shrink:0;border:1.6px solid currentColor;}
+.lb-ico.circulo{border-radius:50%;}
+.lb-ico.cuadrado{border-radius:2px;}
+.lb-ico.rect{height:10px;border-radius:2px;}
+.lb-pads{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-bottom:11px;}
+.lb-pads label{font-size:11.5px;color:var(--ink2,#3a4056);display:flex;flex-direction:column;gap:3px;}
+.lb-pads input{height:32px;border:1px solid #dfe4f2;border-radius:8px;padding:0 8px;font-family:var(--f);font-size:13px;text-align:center;}
+.lb-capas{display:flex;flex-direction:column;gap:4px;}
+.lb-capa{display:flex;align-items:center;gap:8px;height:34px;padding:0 8px 0 11px;border:1px solid #dfe4f2;border-radius:8px;background:#fff;font-family:var(--f);font-size:12.5px;color:var(--ink,#12173d);cursor:pointer;text-align:left;}
+.lb-capa.on{border-color:var(--navy,#040764);background:#f4f6ff;}
+.lb-capa-n{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.lb-capa-acc{display:flex;gap:2px;flex-shrink:0;}
+.lb-capa-acc i{font-style:normal;width:22px;height:22px;display:flex;align-items:center;justify-content:center;border-radius:5px;color:#8890a8;font-size:11px;}
+.lb-capa-acc i:hover{background:#eef1f6;color:var(--navy,#040764);}
+.lb-capa-acc i.del:hover{background:#F5D6D6;color:#A8206E;}
+.lb-borrar{width:100%;height:36px;margin-top:8px;border:1px solid #E5AACB;border-radius:9px;background:#fff;color:#A8206E;font-family:var(--f);font-size:12.5px;font-weight:500;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:7px;}
+.lb-barra{display:flex;align-items:center;gap:9px;flex-wrap:wrap;max-width:900px;margin:0 auto 10px;padding:9px 12px;background:#fff;border:1px solid #e4e8f0;border-radius:10px;}
+.lb-guardar{display:inline-flex;align-items:center;gap:7px;height:36px;padding:0 14px;border:1px solid #cfd6e4;border-radius:9px;background:#fff;font-family:var(--f);font-size:13px;font-weight:500;color:#0D7332;cursor:pointer;}
+.lb-guardar.pend{background:var(--navy,#040764);border-color:var(--navy,#040764);color:#fff;}
+.lb-replicar{display:inline-flex;align-items:center;gap:7px;height:36px;padding:0 14px;border:none;border-radius:9px;background:#FCE865;color:#08103a;font-family:var(--f);font-size:13px;font-weight:600;cursor:pointer;}
+.lb-replicar:hover{background:#f5dd47;}
+.lb-sep{flex:1;}
+.lb-selinfo{font-size:12.5px;color:var(--ink2,#3a4056);}
+.lb-link{border:none;background:none;font-family:var(--f);font-size:12.5px;color:var(--blue,#1C73CB);cursor:pointer;padding:4px 6px;}
+.lb-resultado{max-width:900px;margin:0 auto 12px;font-size:13px;line-height:1.5;padding:0;}
+.lb-resultado.ok{padding:9px 12px;background:#C2F0D3;color:#0D7332;border-radius:9px;}
+.lb-resultado.aviso{padding:9px 12px;background:#FFF8E1;color:#6b5300;border-radius:9px;}
+.ab-check{display:inline-flex;align-items:center;margin-right:7px;cursor:pointer;}
+.ab-check input{width:15px;height:15px;cursor:pointer;accent-color:var(--navy,#040764);}
+.cmp-libre .lb-el:hover{outline:1.5px dashed rgba(28,115,203,.6);outline-offset:2px;}
+/* El overlay es una capa de asas: no debe interceptar el puntero, o nada del
+   banner (logo, boton, textos) se puede agarrar. Solo sus asas lo reciben. */
+.lienzo-ovl > .lienzo-div,.lienzo-ovl > .lienzo-wh,.lienzo-ovl > .lienzo-rzlogo,
+.lienzo-ovl > .lienzo-quitar,.lienzo-ovl > .lienzo-edit,.lienzo-ovl > .lienzo-textbar{pointer-events:auto;}
+/* Tirador de tamano del logo. */
+.lienzo-rzlogo{position:absolute;z-index:28;width:12px;height:12px;border-radius:50%;background:#fff;border:1.5px solid var(--blue,#1C73CB);box-shadow:0 1px 4px rgba(8,14,28,.3);cursor:nwse-resize;}
+.lienzo-rzlogo:hover{transform:scale(1.2);}
 /* Plantillas: miniaturas dibujadas con el render real del banner. */
 .plt-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(104px,1fr));gap:8px;margin:0 0 6px;}
 .plt-op{display:flex;flex-direction:column;align-items:center;gap:6px;padding:7px 5px;border:1px solid #dfe4f2;border-radius:10px;background:#fff;cursor:pointer;transition:border-color .12s,box-shadow .12s;}
@@ -1349,6 +1416,13 @@ button,input,select,textarea{font-family:inherit;}
    COMPONENT STYLES (canvas + export) — phone-widget aesthetic
    ═══════════════════════════════════════════════════════════════ */
 .sbb-page{font-family:inherit;color:inherit;background:inherit;}
+/* ── LIENZO LIBRE: elementos colocados por el usuario ─────────────────── */
+.cmp-libre{position:relative;overflow:hidden;box-sizing:border-box;font-family:Arial,"Helvetica Neue",Helvetica,sans-serif;-webkit-font-smoothing:antialiased;}
+.cmp-libre .lb-bg{position:absolute;inset:0;z-index:0;}
+.cmp-libre .lb-veil{position:absolute;inset:0;z-index:1;}
+.cmp-libre .lb-el{position:absolute;z-index:2;box-sizing:border-box;}
+.cmp-libre .lb-txt{overflow:hidden;word-break:break-word;}
+.cmp-libre .lb-txt-in{width:100%;}
 /* Visibilidad por dispositivo (por bloque): en el email exportado se respeta
    con media query; en el editor solo se atenúa (ver CSS del chrome). */
 .sbb-ver-movil{display:none;}
@@ -1379,7 +1453,7 @@ button,input,select,textarea{font-family:inherit;}
 /* Franja: logo · mensaje · botón repartidos a lo ancho. El aire sobrante se
    divide entre los huecos en vez de acumularse en uno solo. */
 .cmp .cmp-zonas.row{flex-direction:row;justify-content:space-between;align-items:center;}
-.cmp .cmp-zona{position:relative;display:flex;flex-direction:column;box-sizing:border-box;min-width:0;min-height:0;overflow:hidden;}
+.cmp .cmp-zona{position:relative;display:flex;flex-direction:column;box-sizing:border-box;min-width:0;min-height:0;}
 /* Una zona NUNCA debe encogerse por debajo de su contenido: con min-height:0 el
    reparto flex la achicaba y overflow:hidden cortaba el texto EN SILENCIO (el
    titular de un 200×200 y la bajada de un 250×250 salían partidos). Con
@@ -5293,7 +5367,8 @@ function crearComposicion(tipoCol, comp){
   p.activaFmt = cfg.master;
   p.formato = cfg.master;
   p.canvas = [];
-  p.composicion = comp || p.composicion || composicionDefault(p.tema);
+  // Nace EN BLANCO con el modelo libre: el usuario diseña el máster y replica.
+  p.composicion = comp || p.composicion || libreDefault(p.tema);
   p.artboards = cfg.fmts.map(fmt => ({ fmt }));
   proyecto.activa = p.id;
   document.getElementById("galeria").classList.remove("show");
@@ -5400,6 +5475,644 @@ function ajustarFrameParaSet(es){
 function esComposicion(p){ return !!(p && p.esSet && p.composicion); }
 // ── Modelo de 3 ZONAS (logo · texto · cta) con fondo de banner continuo ──
 function imgDefComp(){ return { url:"", foco:"center", fit:"cover", zoom:100, oscurecer:40 }; }
+// ══════════════════════════════════════════════════════════════════════════
+// LIENZO LIBRE — el modelo del usuario (18-ago-2026)
+// ══════════════════════════════════════════════════════════════════════════
+// El banner deja de ser tres zonas con papeles fijos y pasa a ser una lista de
+// ELEMENTOS que crea el usuario: cuadros de texto y figuras, tantos como
+// quiera, más el logo y el fondo. Se mueven con el ratón y se redimensionan
+// desde las puntas. El CTA no es un elemento aparte: es una figura con un texto
+// encima y un enlace.
+//
+// CÓMO SOBREVIVE A "REPLICAR", que es lo único delicado del modelo:
+// la posición NO se guarda en píxeles del 300×250, porque un 160×600 tiene otra
+// forma y no hay escala que valga. Se guarda:
+//   · el ANCLA: a qué esquina o borde pertenece el elemento;
+//   · su DISTANCIA a ese ancla, en unidades base;
+//   · su TAMAÑO, en unidades base.
+// Al replicar, cada formato multiplica por su propio factor k y recoloca desde
+// su ancla. Un logo anclado arriba-izquierda queda arriba-izquierda en los once,
+// a la distancia proporcional. Lo que no cuadre lo marca el inspector.
+const ANCLAS_LIBRE = [
+  ["tl","Arriba izquierda"], ["tc","Arriba centro"], ["tr","Arriba derecha"],
+  ["ml","Centro izquierda"], ["mc","Centro"],        ["mr","Centro derecha"],
+  ["bl","Abajo izquierda"],  ["bc","Abajo centro"],  ["br","Abajo derecha"]
+];
+const FIGURAS_LIBRE = [["circulo","Círculo"],["cuadrado","Cuadrado"],["rect","Rectángulo"]];
+const FILTROS_FONDO = [
+  ["","Sin filtro"], ["oscurecer","Oscurecer"], ["aclarar","Aclarar"],
+  ["gris","Blanco y negro"], ["marca","Tinte de marca"], ["desenfoque","Desenfoque"]
+];
+
+function libreDefault(tema){
+  return {
+    modo: "libre",
+    fondo: { tipo:"color", color:(tema&&tema.bg)||"#ffffff",
+             imagen:{ url:"", fit:"cover", foco:"center", zoom:100 },
+             filtro:{ tipo:"", intensidad:40, color:"" } },
+    elementos: []
+  };
+}
+// Un elemento nuevo nace en el centro, con un tamaño cómodo para el máster.
+function nuevoElementoLibre(tipo, extra){
+  const base = { id:uid(), tipo, ancla:"mc", dx:0, dy:0, w:120, h:40, z:1, rot:0 };
+  if(tipo==="texto") Object.assign(base, {
+    texto:"Escribe aquí", fuente:"", tam:18, color:"#111111", alinH:"left", alinV:"top",
+    negrita:false, italica:false, padT:0, padR:0, padB:0, padL:0, w:150, h:44 });
+  if(tipo==="figura") Object.assign(base, {
+    forma:"rect", relleno:"#1c73cb", borde:"", bordeAncho:0, radio:0, w:120, h:40 });
+  if(tipo==="logo") Object.assign(base, { url:"", w:90, h:32, ancla:"tl", dx:14, dy:14 });
+  return Object.assign(base, extra||{});
+}
+// Dónde y de qué tamaño cae un elemento en un formato concreto.
+function cajaLibre(el, fmt){
+  const F = FORMATOS[fmt] || FORMATOS["display-300x250"];
+  const k = factorK(fmt);
+  const W = F.ancho, H = F.alto;
+  const w = Math.round((parseFloat(el.w)||10) * k);
+  const h = Math.round((parseFloat(el.h)||10) * k);
+  const dx = (parseFloat(el.dx)||0) * k;
+  const dy = (parseFloat(el.dy)||0) * k;
+  const a = String(el.ancla||"tl");
+  const hz = a[1], vt = a[0];
+  let left;
+  if(hz==="l") left = dx;
+  else if(hz==="r") left = W - dx - w;
+  else left = W/2 + dx - w/2;
+  let top;
+  if(vt==="t") top = dy;
+  else if(vt==="b") top = H - dy - h;
+  else top = H/2 + dy - h/2;
+  return { left:Math.round(left), top:Math.round(top), w, h, k };
+}
+// El camino inverso: el usuario suelta el elemento en un punto del banner y hay
+// que guardar su ancla y su distancia. El ancla se elige por el TERCIO en que
+// cae su centro, que es lo que hace que "esto va abajo a la derecha" se
+// mantenga al replicar.
+function anclarLibre(el, fmt, left, top){
+  const F = FORMATOS[fmt] || FORMATOS["display-300x250"];
+  const k = factorK(fmt);
+  const W = F.ancho, H = F.alto;
+  const w = (parseFloat(el.w)||10) * k, h = (parseFloat(el.h)||10) * k;
+  const cx = left + w/2, cy = top + h/2;
+  const hz = cx < W/3 ? "l" : cx > W*2/3 ? "r" : "c";
+  const vt = cy < H/3 ? "t" : cy > H*2/3 ? "b" : "m";
+  let dx;
+  if(hz==="l") dx = left;
+  else if(hz==="r") dx = W - left - w;
+  else dx = cx - W/2;
+  let dy;
+  if(vt==="t") dy = top;
+  else if(vt==="b") dy = H - top - h;
+  else dy = cy - H/2;
+  return { ancla: vt+hz, dx: Math.round(dx/k), dy: Math.round(dy/k) };
+}
+// CSS del filtro de fondo. Va SOBRE la imagen, como pide el modelo.
+function filtroFondoCSS(f){
+  if(!f || !f.tipo) return "";
+  const i = Math.max(0, Math.min(100, parseFloat(f.intensidad)||40));
+  if(f.tipo==="oscurecer")  return `background:rgba(0,0,0,${i/100});`;
+  if(f.tipo==="aclarar")    return `background:rgba(255,255,255,${i/100});`;
+  if(f.tipo==="marca")      return `background:${esc(f.color||"#040764")};opacity:${i/100};`;
+  return "";
+}
+function filtroImagenCSS(f){
+  if(!f || !f.tipo) return "";
+  const i = Math.max(0, Math.min(100, parseFloat(f.intensidad)||40));
+  if(f.tipo==="gris")        return `filter:grayscale(${i}%);`;
+  if(f.tipo==="desenfoque")  return `filter:blur(${(i/100*6).toFixed(1)}px);`;
+  return "";
+}
+// Dibuja un banner del modelo libre en un formato dado.
+function renderLibre(comp, fmt){
+  const F = FORMATOS[fmt] || FORMATOS["display-300x250"];
+  const k = factorK(fmt);
+  const fo = comp.fondo || {};
+  const esFoto = (fo.tipo==="imagen") && fo.imagen && fo.imagen.url;
+  let fondo = "";
+  if(esFoto){
+    const im = fo.imagen;
+    fondo = `<div class="lb-bg" style="background-image:url('${escAttr(im.url)}');background-size:${im.fit==="contain"?"contain":"cover"};`
+          + `background-position:${esc(im.foco||"center")};background-repeat:no-repeat;`
+          + `${parseFloat(im.zoom)&&parseFloat(im.zoom)!==100?`background-size:${parseFloat(im.zoom)}%;`:""}`
+          + `${filtroImagenCSS(fo.filtro)}"></div>`
+          + (filtroFondoCSS(fo.filtro) ? `<div class="lb-veil" style="${filtroFondoCSS(fo.filtro)}"></div>` : "");
+  }
+  const els = (comp.elementos||[]).slice().sort((a,b)=>(a.z||0)-(b.z||0)).map(el=>{
+    const c = cajaLibre(el, fmt);
+    const pos = `left:${c.left}px;top:${c.top}px;width:${c.w}px;height:${c.h}px;`;
+    if(el.tipo==="logo"){
+      if(!el.url) return "";
+      return `<div class="lb-el lb-logo" data-el="${esc(el.id)}" style="${pos}">`
+           + `<img draggable="false" src="${escAttr(el.url)}" style="width:100%;height:100%;object-fit:contain;object-position:center;"></div>`;
+    }
+    if(el.tipo==="figura"){
+      const r = el.forma==="circulo" ? "50%" : Math.round((parseFloat(el.radio)||0)*k)+"px";
+      const bw = Math.round((parseFloat(el.bordeAncho)||0)*k);
+      const bd = (bw && el.borde) ? `border:${bw}px solid ${esc(el.borde)};` : "";
+      return `<div class="lb-el lb-fig" data-el="${esc(el.id)}" style="${pos}background:${esc(el.relleno||"transparent")};border-radius:${r};${bd}"></div>`;
+    }
+    // Texto
+    const fam = el.fuente ? `font-family:'${esc(el.fuente)}',Arial,sans-serif;` : "";
+    const pad = `padding:${Math.round((parseFloat(el.padT)||0)*k)}px ${Math.round((parseFloat(el.padR)||0)*k)}px `
+              + `${Math.round((parseFloat(el.padB)||0)*k)}px ${Math.round((parseFloat(el.padL)||0)*k)}px;`;
+    const just = el.alinV==="center" ? "center" : el.alinV==="bottom" ? "flex-end" : "flex-start";
+    return `<div class="lb-el lb-txt" data-el="${esc(el.id)}" style="${pos}${pad}display:flex;flex-direction:column;justify-content:${just};`
+         + `font-size:${Math.round((parseFloat(el.tam)||14)*k)}px;color:${esc(el.color||"#111")};text-align:${alinText(el.alinH)};`
+         + `${fam}${el.negrita?"font-weight:700;":""}${el.italica?"font-style:italic;":""}line-height:1.22;">`
+         + `<div class="lb-txt-in">${escMultiline(el.texto||"")}</div></div>`;
+  }).join("");
+  const bgCol = (!esFoto && fo.color) ? `background:${esc(fo.color)};` : (!esFoto ? "background:#ffffff;" : "");
+  const borde = (!esFoto && fo.color && !esColorOscuro(fo.color)) ? "box-shadow:inset 0 0 0 1px rgba(0,0,0,.12);" : "";
+  return `<div class="cmp cmp-libre" data-fmt="${esc(fmt)}" style="width:${F.ancho}px;height:${F.alto}px;${bgCol}${borde}">${fondo}${els}</div>`;
+}
+function esLibre(c){ return !!(c && c.modo === "libre"); }
+// Inspección del lienzo libre: desborde, legibilidad y contraste. Ni "completa"
+// ni "colisión" ni "aire" aplican aquí — el usuario decide qué pone y dónde.
+function inspeccionarLibre(cmp){
+  const fallos = [];
+  const R = cmp.getBoundingClientRect();
+  const W = R.width, H = R.height, T = 1.5;
+  const fmt = cmp.dataset.fmt || "display-300x250";
+  const piso = (typeof GEOM!=="undefined" && GEOM.piso) ? pisoDe(fmt) : 9;
+  [...cmp.querySelectorAll(".lb-el")].forEach(el=>{
+    const r = el.getBoundingClientRect();
+    const x = r.left-R.left, y = r.top-R.top;
+    const nom = el.classList.contains("lb-txt") ? "Un texto"
+              : el.classList.contains("lb-logo") ? "El logo" : "Una figura";
+    if(x < -T || y < -T || x+r.width > W+T || y+r.height > H+T)
+      fallos.push({ id:"desborde", que:`${nom} se sale del marco`,
+                    detalle:`${Math.round(x)},${Math.round(y)} ${Math.round(r.width)}×${Math.round(r.height)} en ${Math.round(W)}×${Math.round(H)}` });
+    if(el.classList.contains("lb-txt")){
+      const px = parseFloat(getComputedStyle(el).fontSize)||0;
+      if(px && px < piso)
+        fallos.push({ id:"legibilidad", que:`Un texto queda en ${px.toFixed(1)} px`,
+                      detalle:`por debajo del piso de ${piso} px para este tamaño` });
+      if(el.scrollHeight > el.clientHeight+1 || el.scrollWidth > el.clientWidth+1)
+        fallos.push({ id:"cortado", que:"Un texto no cabe en su cuadro",
+                      detalle:`${el.scrollWidth}×${el.scrollHeight} en ${el.clientWidth}×${el.clientHeight}` });
+    }
+  });
+  return { ok: fallos.length===0, fallos };
+}
+// Piso de legibilidad del formato (la misma tabla del manual).
+function pisoDe(fmt){
+  const F = FORMATOS[fmt]; if(!F) return 9;
+  return Math.min(F.ancho, F.alto) <= 250 ? 9 : 11;
+}
+// ── INTERACCIÓN DEL LIENZO LIBRE ────────────────────────────────────────
+// Un solo gesto para todo: se agarra el elemento y se mueve; se agarra una
+// PUNTA y se redimensiona en proporción. Nada de tiradores escondidos.
+let elLibreSel = null;                 // id del elemento seleccionado
+const PUNTAS = ["tl","tr","bl","br"];
+
+function elLibre(p, id){ const c = compDe(p); return (c.elementos||[]).find(e=>e.id===id) || null; }
+function compDe(p){ return p && p.composicion; }
+
+function attachLibre(p, root){
+  const wrap = root.querySelector(".lienzo"); if(!wrap) return;
+  const fmt = wrap.dataset.fmt;
+  const stage = wrap.querySelector(".lienzo-stage");
+  const ovl = wrap.querySelector(".lienzo-ovl");
+  const cmp = wrap.querySelector(".cmp-libre");
+  if(!stage || !ovl || !cmp) return;
+  ovl.innerHTML = "";
+  const sL = parseFloat(wrap.dataset.escala) || 1;
+  const k  = factorK(fmt) * sL;                 // px de pantalla por unidad base
+  const F  = FORMATOS[fmt];
+  const sr = stage.getBoundingClientRect();
+
+  // Clic en el fondo: deselecciona.
+  cmp.addEventListener("pointerdown",(e)=>{
+    if(e.target.closest(".lb-el")) return;
+    elLibreSel = null; pintarSelLibre(); renderPanelLibre();
+  });
+
+  (cmp.querySelectorAll(".lb-el")||[]).forEach(el=>{
+    const id = el.dataset.el;
+    const dato = elLibre(p, id); if(!dato) return;
+    el.style.cursor = "grab";
+    el.addEventListener("pointerdown",(e)=>{
+      if(e.button!==0) return;
+      e.preventDefault(); e.stopPropagation();
+      elLibreSel = id; pintarSelLibre(); renderPanelLibre();
+      arrastrarLibre(e, el, dato, { fmt, stage, ovl, cmp, sL, k, F });
+    });
+  });
+
+  pintarSelLibre();
+
+  // Marco de selección con las cuatro puntas, sobre el elemento elegido.
+  function pintarSelLibre(){
+    ovl.querySelectorAll(".lb-sel").forEach(n=>n.remove());
+    if(!elLibreSel) return;
+    const el = cmp.querySelector(`.lb-el[data-el="${elLibreSel}"]`);
+    const dato = elLibre(p, elLibreSel);
+    if(!el || !dato) return;
+    const r = el.getBoundingClientRect();
+    const s2 = stage.getBoundingClientRect();
+    const caja = document.createElement("div");
+    caja.className = "lb-sel";
+    caja.style.cssText = `left:${r.left-s2.left}px;top:${r.top-s2.top}px;width:${r.width}px;height:${r.height}px;`;
+    PUNTAS.forEach(q=>{
+      const h = document.createElement("div");
+      h.className = "lb-punta " + q;
+      h.title = "Arrastra para agrandar o achicar";
+      h.addEventListener("pointerdown",(ev)=>{
+        ev.preventDefault(); ev.stopPropagation();
+        redimensionarLibre(ev, el, dato, q, { fmt, stage, ovl, cmp, sL, k, F });
+      });
+      caja.appendChild(h);
+    });
+    ovl.appendChild(caja);
+  }
+  wrap._pintarSel = pintarSelLibre;
+}
+
+// Mover: en vivo con transform, y al soltar se guarda ANCLA + distancia.
+function arrastrarLibre(e0, el, dato, ctx){
+  const { fmt, stage, ovl, cmp, sL, k, F } = ctx;
+  const s2 = stage.getBoundingClientRect();
+  const r0 = el.getBoundingClientRect();
+  const x0 = e0.clientX, y0 = e0.clientY;
+  const left0 = r0.left - s2.left, top0 = r0.top - s2.top;
+  let dx=0, dy=0, raf=null, movido=false;
+  const guias = [];
+  const limpiarGuias = ()=>{ while(guias.length) guias.pop().remove(); };
+  const pintar = ()=>{ raf=null; el.style.transform = `translate(${dx/sL}px,${dy/sL}px)`;
+    const sel = ovl.querySelector(".lb-sel"); if(sel) sel.style.transform = `translate(${dx}px,${dy}px)`; };
+  const mover = (ev)=>{
+    let ddx = ev.clientX-x0, ddy = ev.clientY-y0;
+    if(!movido && Math.abs(ddx)<3 && Math.abs(ddy)<3) return;
+    movido = true; document.body.classList.add("sbb-arrastrando");
+    // Acotado al banner: nada se puede sacar fuera del marco.
+    const anchoS = s2.width, altoS = s2.height;
+    ddx = Math.max(-left0, Math.min(anchoS - left0 - r0.width, ddx));
+    ddy = Math.max(-top0,  Math.min(altoS  - top0  - r0.height, ddy));
+    // Imantado a los bordes y al centro del banner, con guía visible.
+    limpiarGuias();
+    const izq = left0+ddx, der = left0+ddx+r0.width, cx = izq + r0.width/2;
+    const arr = top0+ddy,  aba = top0+ddy+r0.height, cy = arr + r0.height/2;
+    const M = 8*sL;
+    const pegar = (val, destino)=> Math.abs(val-destino) < M;
+    if(pegar(izq,0)) { ddx = -left0; guias.push(guiaLibre(ovl,"v",0)); }
+    else if(pegar(der,anchoS)) { ddx = anchoS-left0-r0.width; guias.push(guiaLibre(ovl,"v",anchoS-1)); }
+    else if(pegar(cx,anchoS/2)) { ddx = anchoS/2 - r0.width/2 - left0; guias.push(guiaLibre(ovl,"v",anchoS/2)); }
+    if(pegar(arr,0)) { ddy = -top0; guias.push(guiaLibre(ovl,"h",0)); }
+    else if(pegar(aba,altoS)) { ddy = altoS-top0-r0.height; guias.push(guiaLibre(ovl,"h",altoS-1)); }
+    else if(pegar(cy,altoS/2)) { ddy = altoS/2 - r0.height/2 - top0; guias.push(guiaLibre(ovl,"h",altoS/2)); }
+    dx=ddx; dy=ddy;
+    if(!raf) raf = requestAnimationFrame(pintar);
+  };
+  const soltar = ()=>{
+    window.removeEventListener("pointermove",mover); window.removeEventListener("pointerup",soltar);
+    if(raf) cancelAnimationFrame(raf);
+    limpiarGuias(); document.body.classList.remove("sbb-arrastrando");
+    el.style.transform = "";
+    const sel = ovl.querySelector(".lb-sel"); if(sel) sel.style.transform = "";
+    if(!movido) return;
+    // Del punto de pantalla a la posición del banner, y de ahí a ancla+distancia.
+    const escala = (F.ancho / s2.width);
+    const nuevoLeft = (left0 + dx) * escala;
+    const nuevoTop  = (top0  + dy) * escala;
+    Object.assign(dato, anclarLibre(dato, fmt, nuevoLeft, nuevoTop));
+    persistir(); renderTablero(); renderPanelLibre();
+  };
+  window.addEventListener("pointermove",mover); window.addEventListener("pointerup",soltar);
+}
+
+// Redimensionar desde una punta, EN PROPORCIÓN (como pide el modelo).
+function redimensionarLibre(e0, el, dato, punta, ctx){
+  const { fmt, stage, ovl, cmp, sL, k, F } = ctx;
+  const s2 = stage.getBoundingClientRect();
+  const r0 = el.getBoundingClientRect();
+  const x0 = e0.clientX, y0 = e0.clientY;
+  const left0 = r0.left - s2.left, top0 = r0.top - s2.top;
+  const w0 = parseFloat(dato.w)||10, h0 = parseFloat(dato.h)||10;
+  const prop = h0 / w0;
+  let w=w0, h=h0, nl=left0, nt=top0, raf=null;
+  const escala = (F.ancho / s2.width);
+  const pintar = ()=>{ raf=null;
+    el.style.width=(w*factorK(fmt))+"px"; el.style.height=(h*factorK(fmt))+"px";
+    el.style.left=(nl*escala)+"px"; el.style.top=(nt*escala)+"px";
+    const sel=ovl.querySelector(".lb-sel");
+    if(sel){ const rr=el.getBoundingClientRect();
+      sel.style.left=(rr.left-s2.left)+"px"; sel.style.top=(rr.top-s2.top)+"px";
+      sel.style.width=rr.width+"px"; sel.style.height=rr.height+"px"; }
+  };
+  const mover=(ev)=>{
+    const ddx = ev.clientX-x0, ddy = ev.clientY-y0;
+    // La punta que arrastras decide el signo; la proporción se conserva.
+    const signo = (punta==="br") ? 1 : (punta==="tl") ? -1 : (punta==="tr") ? 1 : -1;
+    const deltaU = ((punta==="tr"||punta==="br") ? ddx : -ddx) * escala;
+    w = Math.max(8, Math.round(w0 + deltaU));
+    h = Math.max(8, Math.round(w * prop));
+    // Las puntas de la izquierda y de arriba mueven el origen.
+    const wPx = w*factorK(fmt)/escala, hPx = h*factorK(fmt)/escala;
+    nl = (punta==="tl"||punta==="bl") ? left0 + (r0.width - wPx) : left0;
+    nt = (punta==="tl"||punta==="tr") ? top0  + (r0.height - hPx) : top0;
+    if(!raf) raf = requestAnimationFrame(pintar);
+  };
+  const soltar=()=>{
+    window.removeEventListener("pointermove",mover); window.removeEventListener("pointerup",soltar);
+    if(raf) cancelAnimationFrame(raf);
+    el.style.width=el.style.height=el.style.left=el.style.top="";
+    dato.w = w; dato.h = h;
+    Object.assign(dato, anclarLibre(dato, fmt, nl*escala, nt*escala));
+    persistir(); renderTablero(); renderPanelLibre();
+  };
+  window.addEventListener("pointermove",mover); window.addEventListener("pointerup",soltar);
+}
+// ── PANEL DEL LIENZO LIBRE ──────────────────────────────────────────────
+// La estructura del documento del usuario: Marca · Fondo · Logo · Formas para
+// dibujar · Cuadro de texto · Enlace CTA. Arriba, lo que se añade; abajo, las
+// propiedades de lo que tengas seleccionado.
+function renderPanelLibre(){
+  const cont = document.getElementById("comp-editor"); if(!cont) return;
+  const p = pieza(); if(!p || !esLibre(p.composicion)) return;
+  const c = p.composicion;
+  const sel = (c.elementos||[]).find(e=>e.id===elLibreSel) || null;
+  const marcas = workspace.marcas||[];
+  const S = (id,expr)=>`setLibre('${id}',${expr})`;
+  let h = `<div class="cmp-ed lb-panel">`;
+
+  // ── MARCA
+  h += `<div class="se-h">${svgIcon("paleta",{size:"15px"})} Marca</div>`;
+  h += `<div class="se-f"><div class="se-tamrow"><select onchange="if(this.value)aplicarMarca(this.value)">`
+     + `<option value="">${marcas.length?"— Aplicar una marca —":"— Sin marcas —"}</option>`
+     + marcas.map(m=>`<option value="${m.id}" ${p.tema&&p.tema.marcaId===m.id?"selected":""}>${esc(m.nombre)}</option>`).join("")
+     + `</select><button type="button" class="cmp-bib" onclick="abrirMarcas()" title="Crear o editar marcas">${svgIcon("mas",{size:"13px"})}</button></div></div>`;
+
+  // ── AÑADIR ELEMENTOS
+  h += `<div class="se-h">${svgIcon("mas",{size:"15px"})} Añadir al banner</div>`;
+  h += `<div class="lb-add">`
+     + `<button type="button" onclick="anadirLibre('texto')">${svgIcon("documento",{size:"15px"})} Cuadro de texto</button>`
+     + `<button type="button" onclick="anadirLibre('logo')">${svgIcon("imagen",{size:"15px"})} Logo</button>`
+     + FIGURAS_LIBRE.map(([f,n])=>`<button type="button" onclick="anadirLibre('figura','${f}')"><span class="lb-ico ${f}"></span> ${n}</button>`).join("")
+     + `</div>`;
+  h += `<p class="se-nota">Una figura con un texto encima y un enlace es tu botón. Puedes poner las que quieras.</p>`;
+
+  // ── FONDO
+  const fo = c.fondo||{}; const esFoto = fo.tipo==="imagen" && fo.imagen && fo.imagen.url;
+  h += `<div class="se-h">${svgIcon("imagen",{size:"15px"})} Fondo</div>`;
+  h += `<div class="se-seg2"><button type="button" class="${esFoto?"":"on"}" onclick="fondoLibre('color')">Color plano</button>`
+     + `<button type="button" class="${esFoto?"on":""}" onclick="fondoLibre('foto')">Fotografía</button></div>`;
+  if(!esFoto){
+    h += `<div class="se-col"><label>Color</label><input type="color" value="${esc(fo.color||"#ffffff")}" oninput="${S('fondo.color','this.value')}">`
+       + `<div class="se-sw">${swatchesLibre('fondo.color')}</div>`
+       + `<input type="text" class="se-hex" placeholder="#hex" value="${escAttr(fo.color||"")}" onchange="${S('fondo.color','this.value')};renderPanelLibre()"></div>`;
+  } else {
+    const fotos=(workspace.imagenes||[]).filter(sirveComoFondo).slice(0,7);
+    h += `<div class="se-fotos">`
+       + fotos.map(im=>`<button type="button" class="${im.url===fo.imagen.url?"on":""}" title="${escAttr(im.nombre||"")}" onclick="${S('fondo.imagen.url',"'"+jsAttr(im.url)+"'")};renderPanelLibre()"><img src="${esc(im.url)}" alt=""></button>`).join("")
+       + `</div>`;
+    h += `<div class="se-acc"><button type="button" onclick="elegirFotoLibre()">${svgIcon("imagen",{size:"14px"})} Biblioteca</button>`
+       + `<button type="button" onclick="document.getElementById('lb-subir').click()">${svgIcon("mas",{size:"14px"})} Subir foto</button></div>`
+       + `<input type="file" id="lb-subir" accept="image/*" style="display:none" onchange="subirFotoLibre(this.files)">`;
+    h += `<div class="se-f"><label>Encuadre</label><select onchange="${S('fondo.imagen.fit','this.value')};renderTablero()">`
+       + [["cover","Cubrir el banner"],["contain","Ver la foto entera"]].map(([v,l])=>`<option value="${v}" ${(fo.imagen.fit||"cover")===v?"selected":""}>${l}</option>`).join("")
+       + `</select></div>`;
+  }
+  // Filtro (va SOBRE la imagen, con tipo e intensidad)
+  const fi = fo.filtro||{};
+  h += `<div class="se-f"><label>Filtro sobre el fondo</label><select onchange="${S('fondo.filtro.tipo','this.value')};renderPanelLibre()">`
+     + FILTROS_FONDO.map(([v,l])=>`<option value="${v}" ${(fi.tipo||"")===v?"selected":""}>${l}</option>`).join("")+`</select></div>`;
+  if(fi.tipo){
+    h += `<div class="se-f"><label>Intensidad <small>· ${parseInt(fi.intensidad)||40}%</small></label>`
+       + `<div class="se-tamrow"><input type="range" min="0" max="100" value="${parseInt(fi.intensidad)||40}" oninput="${S('fondo.filtro.intensidad','this.value')}" onchange="renderPanelLibre()">`
+       + `<button type="button" class="se-quitar" onclick="${S('fondo.filtro.tipo',"''")};renderPanelLibre()">Quitar</button></div></div>`;
+    if(fi.tipo==="marca") h += `<div class="se-col"><label>Color</label><input type="color" value="${esc(fi.color||"#040764")}" oninput="${S('fondo.filtro.color','this.value')}"><div class="se-sw">${swatchesLibre('fondo.filtro.color')}</div></div>`;
+  }
+
+  // ── ELEMENTO SELECCIONADO
+  h += `<div class="se-h">${svgIcon("editar",{size:"15px"})} ${sel ? nombreLibre(sel) : "Elemento"}</div>`;
+  h += sel ? propsLibreHTML(sel) : `<p class="se-nota">Haz clic en un elemento del banner para editarlo, o añade uno arriba.</p>`;
+
+  // ── CAPAS (delante / detrás)
+  const els = (c.elementos||[]).slice().sort((a,b)=>(b.z||0)-(a.z||0));
+  if(els.length){
+    h += `<div class="se-h">${svgIcon("grid",{size:"15px"})} Capas <small style="font-weight:400;color:#8890a8">de delante a detrás</small></div>`;
+    h += `<div class="lb-capas">` + els.map(e=>`<button type="button" class="lb-capa${e.id===elLibreSel?" on":""}" onclick="elLibreSel='${e.id}';renderPanelLibre();renderTablero()">`
+       + `<span class="lb-capa-n">${esc(nombreLibre(e))}</span>`
+       + `<span class="lb-capa-acc"><i onclick="event.stopPropagation();moverCapaLibre('${e.id}',1)" title="Traer adelante">▲</i>`
+       + `<i onclick="event.stopPropagation();moverCapaLibre('${e.id}',-1)" title="Enviar atrás">▼</i>`
+       + `<i class="del" onclick="event.stopPropagation();borrarLibre('${e.id}')" title="Eliminar">×</i></span></button>`).join("") + `</div>`;
+  }
+  h += `</div>`;
+  cont.style.display=""; cont.innerHTML = h;
+  const tema=document.getElementById("diseno-tema"); if(tema) tema.style.display="none";
+  pintarIconos();
+}
+function nombreLibre(e){
+  if(e.tipo==="logo") return "Logo";
+  if(e.tipo==="figura") return (FIGURAS_LIBRE.find(f=>f[0]===e.forma)||["","Figura"])[1];
+  const t=String(e.texto||"").trim();
+  return t ? ("Texto · "+t.slice(0,22)+(t.length>22?"…":"")) : "Cuadro de texto";
+}
+// Propiedades del elemento seleccionado, según su tipo.
+function propsLibreHTML(e){
+  const S=(campo,expr)=>`setElLibre('${e.id}','${campo}',${expr})`;
+  const num=(etq,campo,mn,mx,def)=>`<div class="se-f se-tam"><label>${etq}</label><div class="se-tamrow">`
+    +`<button type="button" onclick="nudgeElLibre('${e.id}','${campo}',-1,${mn},${mx})">−</button>`
+    +`<input type="number" min="${mn}" max="${mx}" value="${parseFloat(e[campo])||def}" oninput="${S(campo,'this.value')}" onchange="renderPanelLibre()">`
+    +`<button type="button" onclick="nudgeElLibre('${e.id}','${campo}',1,${mn},${mx})">+</button></div></div>`;
+  const color=(etq,campo,def)=>`<div class="se-col"><label>${etq}</label><input type="color" value="${esc(e[campo]||def)}" oninput="${S(campo,'this.value')}">`
+    +`<div class="se-sw">${swatchesElLibre(e.id,campo)}</div>`
+    +`<input type="text" class="se-hex" placeholder="#hex" value="${escAttr(e[campo]||"")}" onchange="${S(campo,'this.value')};renderPanelLibre()"></div>`;
+  let h = "";
+  if(e.tipo==="texto"){
+    h += `<div class="se-f"><label>Texto</label><textarea oninput="${S('texto','this.value')}">${esc(e.texto||"")}</textarea></div>`;
+    h += `<div class="se-f"><label>Tipografía</label><select onchange="${S('fuente','this.value')};renderPanelLibre()"><option value="">La del tema</option>`
+       + FUENTES.map(([v,l])=>`<option value="${esc(v)}" ${(e.fuente||"")===v?"selected":""}>${esc(l)}</option>`).join("")+`</select></div>`;
+    h += num("Tamaño de letra","tam",6,200,18);
+    h += color("Color","color","#111111");
+    h += `<div class="se-f"><label>Alineación</label><div class="cmp-alin">`
+       + ["left","center","right"].map(a=>`<button class="${(e.alinH||"left")===a?"on":""}" onclick="${S('alinH',"'"+a+"'")};renderPanelLibre()">${ICONS[a==="left"?"alignLeft":a==="center"?"alignCenter":"alignRight"]}</button>`).join("")
+       + `</div></div>`;
+    h += `<div class="se-f"><label>Estilo</label><div class="cmp-alin"><button class="${e.negrita?"on":""}" onclick="${S('negrita',!e.negrita)};renderPanelLibre()"><b>B</b></button>`
+       + `<button class="${e.italica?"on":""}" onclick="${S('italica',!e.italica)};renderPanelLibre()"><i>i</i></button></div></div>`;
+    h += `<div class="se-h2">Margen del cuadro</div>`;
+    h += `<div class="lb-pads">`+[["padT","Arriba"],["padB","Abajo"],["padL","Izq."],["padR","Der."]]
+       .map(([c2,l])=>`<label>${l}<input type="number" min="0" max="80" value="${parseFloat(e[c2])||0}" oninput="${S(c2,'this.value')}"></label>`).join("")+`</div>`;
+  }
+  if(e.tipo==="figura"){
+    h += `<div class="se-f"><label>Forma</label><select onchange="${S('forma','this.value')};renderPanelLibre()">`
+       + FIGURAS_LIBRE.map(([v,l])=>`<option value="${v}" ${(e.forma||"rect")===v?"selected":""}>${l}</option>`).join("")+`</select></div>`;
+    h += color("Color de fondo","relleno","#1c73cb");
+    h += color("Color de borde","borde","#000000");
+    h += num("Grosor del borde","bordeAncho",0,20,0);
+    if(e.forma!=="circulo") h += num("Redondear puntas","radio",0,60,0);
+  }
+  if(e.tipo==="logo"){
+    h += `<div class="se-acc"><button type="button" onclick="logoDeMarcaLibre('${e.id}')">${svgIcon("paleta",{size:"14px"})} El de la marca</button>`
+       + `<button type="button" onclick="elegirLogoLibre('${e.id}')">${svgIcon("imagen",{size:"14px"})} Subir o elegir</button></div>`;
+    h += `<div class="se-f"><label>Dirección</label><input type="text" value="${escAttr(e.url||"")}" onchange="${S('url','this.value')};renderTablero()"></div>`;
+  }
+  // Comunes: tamaño, posición y enlace.
+  h += `<div class="se-h2">Tamaño y posición</div>`;
+  h += `<div class="lb-pads"><label>Ancho<input type="number" min="4" max="2000" value="${Math.round(parseFloat(e.w)||10)}" oninput="${S('w','this.value')}"></label>`
+     + `<label>Alto<input type="number" min="4" max="2000" value="${Math.round(parseFloat(e.h)||10)}" oninput="${S('h','this.value')}"></label></div>`;
+  h += `<div class="se-f"><label>Anclado a</label><select onchange="${S('ancla','this.value')};renderTablero()">`
+     + ANCLAS_LIBRE.map(([v,l])=>`<option value="${v}" ${(e.ancla||"tl")===v?"selected":""}>${l}</option>`).join("")+`</select></div>`;
+  h += `<p class="se-nota">El ancla es lo que hace que al <b>replicar</b> el elemento se quede en su esquina en todos los tamaños.</p>`;
+  h += `<div class="se-h2">Enlace</div>`;
+  h += `<div class="se-f"><label>URL de destino</label><input type="text" placeholder="https://…" value="${escAttr(e.url&&e.tipo!=="logo"?e.url:(e.link||""))}" onchange="${S('link','this.value')}"></div>`;
+  h += `<div class="se-f"><label><input type="checkbox" ${e.nuevaVentana!==false?"checked":""} onchange="${S('nuevaVentana','this.checked')}"> Abrir en una ventana nueva</label></div>`;
+  h += `<button class="lb-borrar" onclick="borrarLibre('${e.id}')">${svgIcon("basura",{size:"13px"})} Eliminar este elemento</button>`;
+  return h;
+}
+// ── MUTADORES DEL LIENZO LIBRE ──────────────────────────────────────────
+function setLibre(path, val){
+  const p=pieza(); if(!p||!esLibre(p.composicion)) return;
+  setPath(p.composicion, path, val);
+  marcarSinGuardar(); renderTablero();
+}
+function setElLibre(id, campo, val){
+  const p=pieza(); const e=elLibre(p,id); if(!e) return;
+  const nums=["tam","w","h","padT","padR","padB","padL","radio","bordeAncho"];
+  e[campo] = nums.includes(campo) ? (parseFloat(val)||0) : val;
+  marcarSinGuardar(); renderTablero();
+}
+function nudgeElLibre(id, campo, delta, mn, mx){
+  const p=pieza(); const e=elLibre(p,id); if(!e) return;
+  const v = Math.max(mn, Math.min(mx, Math.round((parseFloat(e[campo])||0) + delta)));
+  e[campo]=v; marcarSinGuardar(); renderTablero(); renderPanelLibre();
+}
+function anadirLibre(tipo, forma){
+  const p=pieza(); if(!p||!esLibre(p.composicion)) return;
+  const c=p.composicion; c.elementos=c.elementos||[];
+  const zMax=c.elementos.reduce((m,x)=>Math.max(m,x.z||0),0);
+  const e=nuevoElementoLibre(tipo, forma?{forma}:null);
+  e.z=zMax+1;
+  c.elementos.push(e);
+  elLibreSel=e.id;
+  // Un logo sin imagen no se dibuja, así que parecería que no pasó nada: se le
+  // pone el de la marca aplicada y, si no hay marca, se abre la biblioteca.
+  if(tipo==="logo"){
+    const mid=p.tema&&p.tema.marcaId;
+    const m=mid?(workspace.marcas||[]).find(x=>x.id===mid):null;
+    if(m){ const M=normalizarMarca(m);
+      const oscuro=(c.fondo&&c.fondo.tipo==="color")?esColorOscuro(c.fondo.color):true;
+      e.url = logoDeMarca(M,oscuro) || logoDeMarca(M,false) || ""; }
+    if(!e.url){ marcarSinGuardar(); renderTablero(); renderPanelLibre();
+      return abrirImagenes(url=>{ e.url=url; marcarSinGuardar(); renderTablero(); renderPanelLibre(); }); }
+  }
+  marcarSinGuardar(); renderTablero(); renderPanelLibre();
+}
+function borrarLibre(id){
+  const p=pieza(); const c=p&&p.composicion; if(!c) return;
+  c.elementos=(c.elementos||[]).filter(e=>e.id!==id);
+  if(elLibreSel===id) elLibreSel=null;
+  marcarSinGuardar(); renderTablero(); renderPanelLibre();
+}
+function moverCapaLibre(id, delta){
+  const p=pieza(); const c=p&&p.composicion; if(!c) return;
+  const els=(c.elementos||[]).slice().sort((a,b)=>(a.z||0)-(b.z||0));
+  const i=els.findIndex(e=>e.id===id); if(i<0) return;
+  const j=i+delta; if(j<0||j>=els.length) return;
+  const zi=els[i].z||0, zj=els[j].z||0;
+  els[i].z=zj; els[j].z=zi;
+  marcarSinGuardar(); renderTablero(); renderPanelLibre();
+}
+function fondoLibre(modo){
+  const p=pieza(); const c=p&&p.composicion; if(!c) return;
+  c.fondo=c.fondo||{};
+  if(modo==="color"){ c.fondo.tipo="color"; }
+  else { c.fondo.tipo="imagen"; c.fondo.imagen=c.fondo.imagen||{url:"",fit:"cover",foco:"center",zoom:100}; }
+  marcarSinGuardar(); renderTablero(); renderPanelLibre();
+}
+function elegirFotoLibre(){ abrirImagenes(url=>{ setLibre("fondo.imagen.url",url); setLibre("fondo.tipo","imagen"); renderPanelLibre(); }); }
+function elegirLogoLibre(id){ abrirImagenes(url=>{ setElLibre(id,"url",url); renderPanelLibre(); }); }
+function logoDeMarcaLibre(id){
+  const p=pieza(); const mid=p.tema&&p.tema.marcaId;
+  const m=mid?(workspace.marcas||[]).find(x=>x.id===mid):null;
+  if(!m){ toast("Aplica una marca primero"); return; }
+  const M=normalizarMarca(m);
+  const c=p.composicion, oscuro=(c.fondo&&c.fondo.tipo==="color")?esColorOscuro(c.fondo.color):true;
+  setElLibre(id,"url", logoDeMarca(M,oscuro) || logoDeMarca(M,false) || "");
+  renderPanelLibre();
+}
+async function subirFotoLibre(files){
+  if(!files||!files.length) return;
+  toast("Subiendo la foto…");
+  try{ await subirImagenes(files); const ult=(workspace.imagenes||[])[0];
+    if(ult){ setLibre("fondo.imagen.url",ult.url); setLibre("fondo.tipo","imagen"); renderPanelLibre(); }
+  }catch(e){ toast("No se pudo subir la foto"); }
+}
+// ── GUARDADO EXPLÍCITO ──────────────────────────────────────────────────
+// El modelo pide un botón de guardar. `persistir()` sigue existiendo, pero los
+// cambios del lienzo libre quedan marcados como pendientes hasta que se pulsa.
+let _libreSinGuardar = false;
+function marcarSinGuardar(){ _libreSinGuardar = true; pintarEstadoGuardado(); persistir(); }
+function guardarBanner(){ _libreSinGuardar = false; persistir(); pintarEstadoGuardado(); toast("Banner guardado"); }
+function pintarEstadoGuardado(){
+  const b=document.getElementById("lb-guardar"); if(!b) return;
+  b.classList.toggle("pend", _libreSinGuardar);
+  const t=b.querySelector(".lb-gtxt"); if(t) t.textContent = _libreSinGuardar ? "Guardar cambios" : "Guardado";
+}
+// ── REPLICAR ────────────────────────────────────────────────────────────
+// El corazón del modelo: diseñas el 300×250 y el resto se ajusta. Como cada
+// elemento guarda su ANCLA y su tamaño en unidades base, replicar es limpiar los
+// ajustes propios de cada tamaño para que todos vuelvan a seguir al máster.
+function replicarBanner(){
+  const p=pieza(); if(!p||!esLibre(p.composicion)) return;
+  const otros=(p.artboards||[]).filter(a=>a.fmt!==p.masterFmt);
+  const tocados=otros.filter(a=>a.ov&&Object.keys(a.ov).length);
+  if(tocados.length && !confirm(`${tocados.length} tamaño(s) tienen ajustes propios que hiciste a mano.\n\nAl replicar vuelven a seguir al diseño del máster y esos ajustes se pierden.\n\n¿Replicar igual?`)) return;
+  otros.forEach(a=>{ a.ov={}; });
+  persistir(); renderTablero();
+  toast(`Replicado a ${otros.length} tamaños · revisando…`);
+  // El inspector dice cuáles quedaron bien y cuáles hay que mirar.
+  setTimeout(()=>{
+    const res=p._inspeccion||{};
+    const malos=Object.keys(res).filter(f=>!res[f].ok);
+    const n=Object.keys(res).length;
+    const cartel=document.getElementById("lb-resultado");
+    if(cartel){
+      cartel.className = "lb-resultado " + (malos.length?"aviso":"ok");
+      cartel.innerHTML = malos.length
+        ? `${svgIcon("info",{size:"14px"})} <b>${n-malos.length} de ${n}</b> quedaron bien. Revisa: ${malos.map(f=>FORMATOS[f]?FORMATOS[f].ancho+"×"+FORMATOS[f].alto:f).join(" · ")}`
+        : `${svgIcon("check",{size:"14px"})} <b>Los ${n} tamaños</b> quedaron bien.`;
+      pintarIconos();
+    }
+  }, 2200);
+}
+// ── SELECCIÓN DE BANNERS para vista previa y exportación ────────────────
+function bannerMarcado(p, fmt){
+  if(!p._sel) return true;                 // por defecto, todos
+  return p._sel.indexOf(fmt) >= 0;
+}
+function marcarBanner(fmt, on){
+  const p=pieza(); if(!p) return;
+  if(!p._sel) p._sel=(p.artboards||[]).map(a=>a.fmt);
+  p._sel = on ? [...new Set(p._sel.concat([fmt]))] : p._sel.filter(f=>f!==fmt);
+  persistir();
+  const n=document.getElementById("lb-nsel"); if(n) n.textContent=p._sel.length;
+}
+function marcarTodosBanners(on){
+  const p=pieza(); if(!p) return;
+  p._sel = on ? (p.artboards||[]).map(a=>a.fmt) : [];
+  persistir(); renderTablero();
+}
+function bannersMarcados(p){
+  return (p.artboards||[]).map(a=>a.fmt).filter(f=>bannerMarcado(p,f));
+}
+function swatchesLibre(path){
+  const cols = (typeof coloresDeMarca==="function") ? coloresDeMarca() : [];
+  if(!cols.length) return `<span class="cmp-sw-vacio">Aplica una marca para ver su paleta</span>`;
+  return cols.map(c=>`<button class="cmp-sw" style="background:${esc(c)}" title="${esc(c)}" onclick="setLibre('${path}','${c}');renderPanelLibre()"></button>`).join("");
+}
+function swatchesElLibre(id, campo){
+  const cols = (typeof coloresDeMarca==="function") ? coloresDeMarca() : [];
+  if(!cols.length) return `<span class="cmp-sw-vacio">Aplica una marca</span>`;
+  return cols.map(c=>`<button class="cmp-sw" style="background:${esc(c)}" title="${esc(c)}" onclick="setElLibre('${id}','${campo}','${c}');renderPanelLibre()"></button>`).join("");
+}
+function guiaLibre(ovl, orient, pos){
+  const g=document.createElement("div"); g.className="lz-guia "+orient;
+  if(orient==="v") g.style.left=pos+"px"; else g.style.top=pos+"px";
+  ovl.appendChild(g); return g;
+}
+
 function composicionDefault(tema){
   // Los textos parten en blanco (#fff): el fondo del tema solo se adopta si es
   // OSCURO. Un tema claro dejaba el prearmado blanco-sobre-blanco → "no
@@ -5431,6 +6144,9 @@ function migrarComposicion(c, tema){
   return n;
 }
 function asegurarComposicionNueva(p){
+  // El lienzo LIBRE no tiene zonas y no hay nada que migrar: sin esta salida se
+  // le aplicaba la migración al modelo de 3 zonas y se perdía el modelo nuevo.
+  if(p && esLibre(p.composicion)) return;
   if(p && p.esSet && p.composicion && !p.composicion.zonas){
     p.composicion = migrarComposicion(p.composicion, p.tema);
     (p.artboards||[]).forEach(a=>{ if(a.ov) a.ov={}; });   // overrides viejos no son compatibles
@@ -5656,13 +6372,22 @@ function capaImagenHTML(im, cls, esFondoBanner){
 }
 // Render del contenido propio de cada zona, con las medidas del PLAN (tabla
 // cerrada) y el espaciado fijo del manual.
+// Desplazamiento fino de un elemento, en unidades base escaladas por k.
+// Se aplica con transform: no toca el flujo, asi que no empuja a los vecinos
+// ni obliga a recalcular la caida de elementos.
+function offCSS(o, P){
+  const x = parseFloat(o && o.off && o.off.x) || 0;
+  const y = parseFloat(o && o.off && o.off.y) || 0;
+  if(!x && !y) return "";
+  return `transform:translate(${Math.round(x*P.g.k)}px,${Math.round(y*P.g.k)}px);`;
+}
 function zonaContenido(zk, z, P, c){
   const fmt = P.fmt;
   const px = (v,base)=>Math.round((parseFloat(v)||base)*P.g.k);
   if(zk==="logo"){
     if(!z.url) return "";
     const maxw=Math.max(15,Math.min(100,parseInt(z.maxw)||70));
-    return `<img class="cmp-logo" src="${esc(z.url)}" style="height:${P.logoAlto}px;max-width:${maxw}%;">`;
+    return `<img class="cmp-logo" draggable="false" src="${esc(z.url)}" style="height:${P.logoAlto}px;max-width:${maxw}%;${offCSS(z,P)}">`;
   }
   if(zk==="texto"){
     const ti=z.titular||{}, cu=z.cuerpo||{}, et=z.etiqueta||{};
@@ -5674,9 +6399,10 @@ function zonaContenido(zk, z, P, c){
     const anchoA=(o)=>{ const v=parseFloat(o.ancho); return (v&&v>=20&&v<=100)?`width:${v}%;`:""; };
     // Epígrafe: píldora chica con el nombre corto del producto. Su fondo por
     // defecto es un blanco translúcido, que sobre navy da contraste real.
-    const etEl = et.texto ? `<div><span class="cmp-etq" style="font-size:${P.cuerpo.epigrafe}px;padding:${Math.round(P.cuerpo.epigrafe*0.35)}px ${Math.round(P.cuerpo.epigrafe*0.9)}px;background:${esc(et.color||'rgba(255,255,255,.22)')};color:${esc(et.colorTexto||ti.color||'#fff')};${fam}">${esc(et.texto)}</span></div>` : "";
-    const tiEl = ti.texto ? `<div class="cmp-tit" style="font-size:${P.cuerpo.titulo}px;color:${esc(ti.color||'#fff')};text-align:${alinText(z.alinH)};${sepA(ti, et.texto?aireDe(fmt,"epiTit"):0)}${anchoA(ti)}${fam}${est(ti)}">${escMultiline(ti.texto)}</div>` : "";
-    const cuEl = cu.texto ? `<div class="cmp-cue" style="font-size:${P.cuerpo.bajada}px;color:${esc(cu.color||'#fff')};text-align:${alinText(z.alinH)};${sepA(cu, ti.texto?aireDe(fmt,"titBaj"):0)}${anchoA(cu)}${fam}${est(cu)}">${escMultiline(cu.texto)}</div>` : "";
+    const etEl = et.texto ? `<div style="${offCSS(et,P)}"><span class="cmp-etq" style="font-size:${P.cuerpo.epigrafe}px;padding:${Math.round(P.cuerpo.epigrafe*0.35)}px ${Math.round(P.cuerpo.epigrafe*0.9)}px;background:${esc(et.color||'rgba(255,255,255,.22)')};color:${esc(et.colorTexto||ti.color||'#fff')};${fam}">${esc(et.texto)}</span></div>` : "";
+    const offEt = offCSS(et,P), offTi = offCSS(ti,P), offCu = offCSS(cu,P);
+    const tiEl = ti.texto ? `<div class="cmp-tit" style="font-size:${P.cuerpo.titulo}px;color:${esc(ti.color||'#fff')};text-align:${alinText(z.alinH)};${sepA(ti, et.texto?aireDe(fmt,"epiTit"):0)}${anchoA(ti)}${fam}${est(ti)}${offTi}">${escMultiline(ti.texto)}</div>` : "";
+    const cuEl = cu.texto ? `<div class="cmp-cue" style="font-size:${P.cuerpo.bajada}px;color:${esc(cu.color||'#fff')};text-align:${alinText(z.alinH)};${sepA(cu, ti.texto?aireDe(fmt,"titBaj"):0)}${anchoA(cu)}${fam}${est(cu)}${offCu}">${escMultiline(cu.texto)}</div>` : "";
     return etEl+tiEl+cuEl;
   }
   if(zk==="cta"){
@@ -5687,7 +6413,7 @@ function zonaContenido(zk, z, P, c){
     // El botón nunca se cae. El legal NO va aquí: tiene su propia banda inferior
     // reservada (bandaLegalHTML), para que nunca se monte sobre el contenido.
     return (P.hay.cta && z.texto)
-      ? `<a class="cmp-cta" href="${esc(z.url||'#')}" target="_blank" rel="noopener" style="font-size:${t}px;background:${esc(z.colorFondo||'#2f80ed')};color:${esc(z.colorTexto||'#fff')};border-radius:${px(z.radio,0)}px;padding:${Math.round(t*0.55)}px ${Math.round(t*1.25)}px;${sepC}${fam}${est}">${esc(z.texto)}</a>` : "";
+      ? `<a class="cmp-cta" href="${esc(z.url||'#')}" target="_blank" rel="noopener" style="font-size:${t}px;background:${esc(z.colorFondo||'#2f80ed')};color:${esc(z.colorTexto||'#fff')};border-radius:${px(z.radio,0)}px;padding:${Math.round(t*0.55)}px ${Math.round(t*1.25)}px;${sepC}${fam}${est}${offCSS(z,P)}">${esc(z.texto)}</a>` : "";
   }
   return "";
 }
@@ -6097,6 +6823,9 @@ function planQueCabe(c, fmt, nivelMin){
 // cerrada del manual. `nivelMin` fuerza peldaños de caída (lo usa el inspector
 // cuando, midiendo el render, encuentra que aún no cabe).
 function renderComposicion(comp, fmt, nivelMin){
+  // Modelo LIBRE (elementos que crea el usuario). El de 3 zonas sigue vivo,
+  // intacto, para las piezas que ya estaban guardadas.
+  if(esLibre(comp)) return renderLibre(comp, fmt);
   // Estilo de marca: disposiciones cerradas. Si no hay layout de marca, sigue
   // el modelo de 3 zonas de siempre (las piezas existentes no cambian).
   if(comp && esLayoutMarca(comp.layout)) return renderLayoutMarca(comp, fmt, comp.layout);
@@ -6256,6 +6985,12 @@ function _insFondo(el, raiz){
 const _insContraste = (L1,L2) => (Math.max(L1,L2)+0.05)/(Math.min(L1,L2)+0.05);
 // Mide un banner ya pintado. Devuelve { ok, fallos:[{id,que,detalle}], datos }.
 function inspeccionarCmp(cmp){
+  // LIENZO LIBRE: las comprobaciones no son las mismas. No existe "el título"
+  // ni "el botón" —los pone el usuario, y puede no ponerlos—, y el solape ya no
+  // es un fallo: poner un texto ENCIMA de una figura es justamente el modelo.
+  // Quedan las que sí siguen siendo ciertas: que nada se salga del marco, que
+  // nada quede por debajo del piso de legibilidad y que el texto se lea.
+  if(cmp.classList.contains("cmp-libre")) return inspeccionarLibre(cmp);
   const fallos = [];
   if(!cmp) return { ok:false, fallos:[{id:"vacio",que:"No se pudo medir el banner"}], datos:{} };
   const fmt = cmp.dataset.fmt || "display-300x250";
@@ -6289,13 +7024,9 @@ function inspeccionarCmp(cmp){
     const e = el[k]; if(!e) return;
     if(e.scrollHeight > e.clientHeight+1 || e.scrollWidth > e.clientWidth+1)
       fallos.push({ id:"cortado", que:`El ${nm(k)} está cortado`, detalle:`${e.scrollWidth}×${e.scrollHeight} en ${e.clientWidth}×${e.clientHeight}` });
-    const zona = e.closest(".cmp-zona");
-    if(zona){
-      const rz = zona.getBoundingClientRect(), re = e.getBoundingClientRect();
-      if(re.bottom > rz.bottom+1 || re.top < rz.top-1 || re.right > rz.right+1)
-        fallos.push({ id:"cortado", que:`El ${nm(k)} no cabe en su zona y se recorta`,
-          detalle:`sobresale ${Math.round(Math.max(re.bottom-rz.bottom, rz.top-re.top, re.right-rz.right)/s)} px` });
-    }
+    // (Antes había aquí una segunda comprobación: el elemento contra su ZONA.
+    //  Tenía sentido cuando las zonas recortaban; hoy no recortan, así que salir
+    //  de la zona ya no esconde nada — lo cubren "colision" y "desborde".)
   });
   // El legal es de UNA línea: si el texto no cabe, hay que acortarlo (no se corta
   // la frase con puntos suspensivos y se hace como si nada).
@@ -6485,7 +7216,7 @@ function renderTableroComposicion(p, c){
     const f=FORMATOS[fmt]; const master = fmt===(p.masterFmt||"display-300x250");
     const activo = fmt===p.activaFmt; const ajustado = tieneOverride(p, fmt);
     return `<div class="ab${activo?' activo':''}" data-fmt="${fmt}">
-      <div class="ab-bar"><span class="ab-tit">${f.ancho}×${f.alto}${master?' <span class="mtag">máster</span>':''}${ajustado?' <span class="ajtag">· ajustado</span>':''}</span><span class="ab-insp" data-insp="${fmt}"></span><button class="ab-dl" onclick="exportarArtboard('${fmt}');event.stopPropagation();" title="Descargar este banner">${svgIcon("exportar",{size:"12px"})}</button></div>
+      <div class="ab-bar">${esLibre(p.composicion)?`<label class="ab-check" title="Incluir en la vista previa y en la exportación" onclick="event.stopPropagation()"><input type="checkbox" ${bannerMarcado(p,fmt)?"checked":""} onchange="marcarBanner('${fmt}',this.checked)"></label>`:""}<span class="ab-tit">${f.ancho}×${f.alto}${master?' <span class="mtag">máster</span>':''}${ajustado?' <span class="ajtag">· ajustado</span>':''}</span><span class="ab-insp" data-insp="${fmt}"></span><button class="ab-dl" onclick="exportarArtboard('${fmt}');event.stopPropagation();" title="Descargar este banner">${svgIcon("exportar",{size:"12px"})}</button></div>
       <div class="ab-stage" style="width:${Math.round(f.ancho*zoom)}px;height:${Math.round(f.alto*zoom)}px;"><div class="ab-scale" style="transform:scale(${zoom});">${renderComposicion(composicionEfectiva(p, fmt), fmt)}</div></div>
       <div class="ab-aviso" data-aviso="${fmt}"></div>
     </div>`;
@@ -6497,7 +7228,19 @@ function renderTableroComposicion(p, c){
     const activo=fmt===p.activaFmt; const ajustado=tieneOverride(p,fmt);
     return `<button type="button" class="fmt-pill${activo?' on':''}${ajustado?' aj':''}" data-fmt="${fmt}" title="${master?'Máster: editarlo edita el diseño base de todos':''}${ajustado?' · tiene ajustes propios':''}">${f.ancho}×${f.alto}${master?'<span class="fp-m">M</span>':''}</button>`;
   }).join("");
-  let html = `<div class="fmt-pills">${pills}</div>`;
+  let html = "";
+  if(esLibre(p.composicion)){
+    const marcados = bannersMarcados(p).length;
+    html += `<div class="lb-barra">
+      <button class="lb-guardar" id="lb-guardar" onclick="guardarBanner()">${svgIcon("check",{size:"14px"})} <span class="lb-gtxt">Guardado</span></button>
+      <button class="lb-replicar" onclick="replicarBanner()">${svgIcon("plantilla",{size:"14px"})} Replicar a los demás tamaños</button>
+      <span class="lb-sep"></span>
+      <span class="lb-selinfo"><b id="lb-nsel">${marcados}</b> de ${(p.artboards||[]).length} seleccionados</span>
+      <button class="lb-link" onclick="marcarTodosBanners(true)">Todos</button>
+      <button class="lb-link" onclick="marcarTodosBanners(false)">Ninguno</button>
+    </div><div class="lb-resultado" id="lb-resultado"></div>`;
+  }
+  html += `<div class="fmt-pills">${pills}</div>`;
   // Lienzo de edición directa del tamaño activo (arrastrar de verdad) + tablero.
   html += renderLienzoEdicion(p);
   html += `<div class="tablero-hint">${svgIcon("info",{size:"13px"})} Arriba editas el tamaño activo arrastrando. Abajo están <b>todos los tamaños</b>: <b>clic en uno</b> lo activa para ajustarlo (lo que no toques hereda de todos).</div>`;
@@ -6617,7 +7360,9 @@ function renderLienzoEdicion(p){
   return `<div class="lienzo" data-fmt="${fmt}" data-escala="${s}">
     <div class="lienzo-head">
       <div class="lz-tit"><span class="lz-badge">${F.ancho}×${F.alto}</span> ${esMaster?'Máster · '+alcance:alcance}</div>
-      <div class="lz-ayuda">${svgIcon("info",{size:"13px"})} Arrastra los <b>divisores</b> para el espacio de cada zona · arrastra la <b>burbuja</b> para moverla · <b>clic</b> en una zona para editarla</div>
+      <div class="lz-ayuda">${svgIcon("info",{size:"13px"})} ${esLibre(p.composicion)
+        ? 'Arrastra cualquier elemento para <b>moverlo</b> · tira de una <b>punta</b> para agrandarlo o achicarlo · <b>clic</b> para seleccionarlo'
+        : 'Arrastra los <b>divisores</b> para el espacio de cada zona · arrastra la <b>burbuja</b> para moverla · <b>clic</b> en una zona para editarla'}</div>
     </div>
     <div class="lienzo-vp"><div class="lienzo-stage" style="width:${Ws}px;height:${Hs}px;">
       <div class="lienzo-scale" style="width:${F.ancho}px;height:${F.alto}px;transform:scale(${s});">${renderComposicion(ef, fmt)}</div>
@@ -6628,6 +7373,8 @@ function renderLienzoEdicion(p){
 // Mide las zonas reales y coloca zonas clicables, divisores y la burbuja. Todo
 // el arrastre actualiza el DOM en vivo y solo PERSISTE al soltar (estable).
 function attachLienzoInteraccion(p, root){
+  // Lienzo LIBRE: su propia interacción (mover y redimensionar por las puntas).
+  if(esLibre(p.composicion)) return attachLibre(p, root);
   const wrap = root.querySelector(".lienzo"); if(!wrap) return;
   const fmt = wrap.dataset.fmt;
   const stage = wrap.querySelector(".lienzo-stage");
@@ -6678,111 +7425,268 @@ function attachLienzoInteraccion(p, root){
     arrastrarDivisor(div, fmt, a, b, fila, stage, cmp, zonasDom);
     ovl.appendChild(div);
   }
-  // 3) Burbuja arrastrable (si está visible).
+  // 3) La burbuja se mueve agarrándola (motor único). Aquí solo su botón de
+  //    quitar, que es otra acción.
   const bub = cmp.querySelector(".cmp-burbuja");
   if(bub){
-    const rc=rel(bub);
-    const h=document.createElement("div"); h.className="lienzo-burbuja";
-    h.style.cssText=`left:${rc.x}px;top:${rc.y}px;width:${rc.w}px;height:${rc.h}px;`;
-    arrastrarBurbuja(h, fmt, stage, bub);
-    ovl.appendChild(h);
-    // Botón para QUITAR la burbuja desde el propio lienzo.
-    const x=document.createElement("button"); x.type="button"; x.className="lienzo-quitar"; x.title="Quitar la burbuja"; x.textContent="×";
-    x.style.cssText=`left:${rc.x+rc.w-13}px;top:${rc.y-9}px;`;
-    x.addEventListener("pointerdown",e=>e.stopPropagation());
-    x.addEventListener("click",e=>{ e.stopPropagation(); setCompScope(fmt,"burbuja.visible",false); persistir(); renderTablero(); });
+    const rc = rel(bub);
+    const x = document.createElement("button");
+    x.type = "button"; x.className = "lienzo-quitar"; x.title = "Quitar el círculo de oferta"; x.textContent = "×";
+    x.style.cssText = `left:${rc.x + rc.w - 13}px;top:${rc.y - 9}px;`;
+    x.addEventListener("pointerdown", e=>e.stopPropagation());
+    x.addEventListener("click", e=>{ e.stopPropagation(); setCompScope(fmt,"burbuja.visible",false); persistir(); renderTablero(); });
     ovl.appendChild(x);
   }
-  // 4) LOGO: se arrastra por el banner y se le cambia el tamaño con su tirador.
+  // 4) TIRADOR DE TAMAÑO DEL LOGO. Moverlo ya lo hace el motor único (se agarra
+  //    el logo directamente); aquí solo queda el asa que cambia su alto.
   const logoEl = cmp.querySelector(".cmp-logo");
   if(logoEl){
     const ponerAsaLogo = ()=>{
-      if(!ovl.isConnected || ovl.querySelector(".lienzo-logo")) return;
-      const rc=rel(logoEl); if(rc.w<=4 || rc.h<=4) return;
-      const hl=document.createElement("div"); hl.className="lienzo-logo"+(elSelComp==="logo"?" sel":"");
-      hl.style.cssText=`left:${rc.x}px;top:${rc.y}px;width:${rc.w}px;height:${rc.h}px;`;
-      hl.title="Arrastra para mover el logo · el tirador cambia su tamaño";
-      hl.addEventListener("click",(e)=>{ e.stopPropagation(); elegirElemento("logo"); });
-      arrastrarLogo(hl, fmt, stage, logoEl, ovl);
-      ovl.appendChild(hl);
+      if(!ovl.isConnected || ovl.querySelector(".lienzo-rzlogo")) return;
+      const rc = rel(logoEl); if(rc.w <= 4 || rc.h <= 4) return;
+      const rz = document.createElement("div");
+      rz.className = "lienzo-rzlogo"; rz.title = "Arrastra para cambiar el tamaño del logo";
+      rz.style.cssText = `left:${rc.x + rc.w - 6}px;top:${rc.y + rc.h - 6}px;`;
+      redimensionarLogo(rz, fmt, stage, logoEl);
+      ovl.appendChild(rz);
     };
     // Una imagen sin cargar mide 0x0: el asa se ponía y se descartaba sola.
     if(logoEl.complete && logoEl.naturalWidth) ponerAsaLogo();
     else logoEl.addEventListener("load", ponerAsaLogo, {once:true});
   }
+  // Clic en el fondo del banner (fuera de cualquier elemento): edita el fondo.
+  cmp.addEventListener("click",(e)=>{
+    if(e.target.closest(".cmp-mov")) return;
+    if(typeof elegirElemento === "function") elegirElemento("fondo");
+  });
   // Texto editable DIRECTO sobre el banner (Título y Bajada).
   hacerTextoEditableLienzo(cmp, ovl, stage, fmt, rel);
   // Mover cada texto y el CTA en vertical + ajustar el ancho de la caja.
-  hacerElementosMovibles(cmp, ovl, stage, fmt, rel);
+  hacerArrastrables(cmp, ovl, stage, fmt, rel);
 }
 // Grips de arrastre por elemento: ▲▼ mueve Título/Bajada/CTA (escribe su "sep"
 // por alcance: global si editas el máster, override si es un tamaño) y el
 // tirador lateral cambia el ANCHO de la caja de texto (%).
-function hacerElementosMovibles(cmp, ovl, stage, fmt, rel){
+// ── MOTOR ÚNICO DE ARRASTRE ─────────────────────────────────────────────
+// Antes había cuatro gestos distintos y no se parecían en nada: el logo y la
+// burbuja se agarraban directo; el título, la bajada y el botón NO se podían
+// agarrar (había que encontrar un tirador de 14 px a su izquierda, y solo movía
+// en vertical); y los divisores eran una franja fina entre zonas. Por eso no se
+// sentía fluido: el gesto natural —tomar el elemento y moverlo— no funcionaba
+// en la mayoría de los elementos.
+//
+// Ahora todos se agarran igual. Lo que se guarda al soltar NO son píxeles:
+//   · si sueltas cerca de un borde o del centro, se guarda la ALINEACIÓN
+//     (izquierda / centro / derecha, arriba / medio / abajo) y el desplazamiento
+//     vuelve a cero — así el elemento se comporta bien en los 11 tamaños;
+//   · si sueltas en cualquier otro sitio, se guarda un DESPLAZAMIENTO en
+//     unidades base, que se multiplica por la k de cada formato al replicar.
+// Es lo que permite mover a mano sin romper la herencia entre tamaños.
+const ARRASTRABLES = [
+  { k:"logo",     sel:".cmp-logo",     off:"zonas.logo.off",           alinH:"zonas.logo.alinH", alinV:"zonas.logo.alinV" },
+  { k:"epigrafe", sel:".cmp-etq",      off:"zonas.texto.etiqueta.off" },
+  { k:"titulo",   sel:".cmp-tit",      off:"zonas.texto.titular.off",  ancho:"zonas.texto.titular.ancho" },
+  { k:"bajada",   sel:".cmp-cue",      off:"zonas.texto.cuerpo.off",   ancho:"zonas.texto.cuerpo.ancho" },
+  { k:"cta",      sel:".cmp-cta",      off:"zonas.cta.off",            alinH:"zonas.cta.alinH" },
+  { k:"oferta",   sel:".cmp-burbuja",  off:"burbuja.off",              pos:"burbuja.pos" }
+];
+const IMAN = 9;   // px de pantalla dentro de los cuales se pega a una guía
+
+function hacerArrastrables(cmp, ovl, stage, fmt, rel){
   const F = FORMATOS[fmt]; if(!F) return;
-  const escF = factorK(fmt);   // la MISMA k que usa el render (tabla cerrada)
-  const sLienzo = parseFloat(cmp.closest(".lienzo")?.dataset.escala) || 1;
-  const k = escF * sLienzo;   // px de pantalla por unidad base
-  const items = [
-    {sel:".cmp-tit", sep:"zonas.texto.titular.sep", ancho:"zonas.texto.titular.ancho"},
-    {sel:".cmp-cue", sep:"zonas.texto.cuerpo.sep",  ancho:"zonas.texto.cuerpo.ancho"},
-    {sel:".cmp-cta", sep:"zonas.cta.sep"}
-  ];
-  items.forEach(it=>{
-    const el = cmp.querySelector(it.sel); if(!el) return;
-    const rc = rel(el);
-    // El feedback en vivo debe verse: para Título/Bajada el original está oculto
-    // bajo su clon editable — hay que mover el CLON (overlay sin escala).
-    const clon = ()=> ovl.querySelector(`.lienzo-edit[data-for="${it.sel}"]`);
-    // — Grip vertical (mover) —
-    const g=document.createElement("div"); g.className="lienzo-grip"; g.title="Arrastra para mover arriba/abajo";
-    g.style.cssText=`left:${Math.max(0,rc.x-16)}px;top:${rc.y+rc.h/2-9}px;`;
-    g.innerHTML="⋮";
-    g.addEventListener("pointerdown",(e)=>{
-      e.preventDefault(); e.stopPropagation();
-      const y0=e.clientY; let dy=0; const c=clon();
-      const mv=(ev)=>{ dy=ev.clientY-y0;
-        el.style.transform=`translateY(${dy/sLienzo}px)`;      // el original vive escalado
-        if(c) c.style.transform=`translateY(${dy}px)`;          // el clon, en px de pantalla
-        g.style.transform=`translateY(${dy}px)`;
-      };
-      const up=()=>{ window.removeEventListener("pointermove",mv); window.removeEventListener("pointerup",up);
-        el.style.transform=""; if(c) c.style.transform=""; g.style.transform="";
-        if(Math.abs(dy)>2){
-          const cur=parseFloat(getPath(composicionEfectiva(pieza(),fmt), it.sep))||0;
-          setCompScope(fmt, it.sep, String(Math.round(cur + dy/k)));
-          persistir(); renderTablero();
-        }
-      };
-      window.addEventListener("pointermove",mv); window.addEventListener("pointerup",up);
-    });
-    ovl.appendChild(g);
-    // — Tirador de ANCHO (solo cajas de texto) —
-    if(it.ancho){
-      const zona = el.closest(".cmp-zona"); const zw = zona ? rel(zona).w : rc.w;
-      const w=document.createElement("div"); w.className="lienzo-wh"; w.title="Arrastra para cambiar el ancho de la caja";
-      w.style.cssText=`left:${rc.x+rc.w-4}px;top:${rc.y+rc.h/2-11}px;`;
-      w.addEventListener("pointerdown",(e)=>{
-        e.preventDefault(); e.stopPropagation();
-        const x0=e.clientX; let dx=0; const c=clon();
-        const mv=(ev)=>{ dx=ev.clientX-x0;
-          el.style.width=(rc.w+dx)/sLienzo+"px";
-          if(c) c.style.width=(rc.w+dx+4)+"px";                // feedback visible en el clon
-          w.style.transform=`translateX(${dx}px)`;
-        };
-        const up=()=>{ window.removeEventListener("pointermove",mv); window.removeEventListener("pointerup",up);
-          el.style.width=""; if(c) c.style.width=""; w.style.transform="";
-          if(Math.abs(dx)>2 && zw>0){
-            const pct=Math.max(20, Math.min(100, Math.round((rc.w+dx)/zw*100)));
-            setCompScope(fmt, it.ancho, String(pct));
-            persistir(); renderTablero();
-          }
-        };
-        window.addEventListener("pointermove",mv); window.addEventListener("pointerup",up);
-      });
-      ovl.appendChild(w);
-    }
+  const sL = parseFloat(cmp.closest(".lienzo")?.dataset.escala) || 1;
+  const k  = factorK(fmt) * sL;              // px de pantalla por unidad base
+  const marco = cmp.getBoundingClientRect();
+  ARRASTRABLES.forEach(item=>{
+    const el = cmp.querySelector(item.sel); if(!el) return;
+    const enganchar = ()=>{
+      const rc = rel(el); if(rc.w < 4 || rc.h < 4) return;
+      hacerArrastrable(el, item, { fmt, stage, ovl, cmp, sL, k, marco, rel });
+      if(item.ancho) tiradorDeAncho(el, item, { fmt, stage, ovl, cmp, sL, k, rel });
+    };
+    // Una imagen que aún no cargó mide 0×0 y se descartaría sola.
+    if(el.tagName === "IMG" && !(el.complete && el.naturalWidth))
+      el.addEventListener("load", enganchar, { once:true });
+    else enganchar();
   });
+}
+
+// Guías de alineación: se dibujan mientras arrastras y se apagan al soltar.
+function guiaLienzo(ovl, orient, pos){
+  const g = document.createElement("div");
+  g.className = "lz-guia " + orient;
+  if(orient==="v") g.style.left = pos+"px"; else g.style.top = pos+"px";
+  ovl.appendChild(g);
+  return g;
+}
+
+function hacerArrastrable(el, item, ctx){
+  const { fmt, ovl, cmp, sL, k, rel } = ctx;
+  // El lienzo se re-engancha varias veces (hay más de un requestAnimationFrame
+  // en cola). Cada nodo lleva SU propio guardia: los manejadores del banner se
+  // apilaban (un arrastre de 40 px se guardaba seis veces, o sea 240), pero el
+  // clon editable vive en el overlay, que sí se limpia y se vuelve a crear —
+  // si el guardia cortara la función entera, el clon nuevo se quedaría sin
+  // manejador y el texto dejaría de arrastrarse.
+  const iniciar = (e)=>{
+    if(e.button !== 0) return;
+    // Un <img> o un <a> arrancan el arrastre nativo del navegador y se quedan
+    // con el gesto: hay que impedirlo o el elemento no se mueve nunca.
+    if(el.tagName === "IMG" || el.tagName === "A") e.preventDefault();
+    // Un clic corto sigue sirviendo para escribir el texto: el arrastre solo
+    // empieza a partir de 4 px, así los dos gestos conviven en el mismo sitio.
+    const x0 = e.clientX, y0 = e.clientY;
+    let arrastrando = false, dx = 0, dy = 0, raf = null;
+    let guias = [], snapH = null, snapV = null;
+
+    // Caja del elemento y de su zona, medidas UNA vez (nada de medir por frame).
+    const rEl   = rel(el);
+    const zona  = el.closest(".cmp-zona") || cmp;
+    const rZona = rel(zona);
+    const rCmp  = rel(cmp);
+    // Posiciones a las que se imanta: bordes y centro de su zona.
+    const holguraX = rZona.w - rEl.w, holguraY = rZona.h - rEl.h;
+    const anclasX = [
+      { v:"left",   px:rZona.x },
+      { v:"center", px:rZona.x + rZona.w/2 - rEl.w/2 },
+      { v:"right",  px:rZona.x + rZona.w - rEl.w }
+    ];
+    const anclasY = [
+      { v:"top",    px:rZona.y },
+      { v:"center", px:rZona.y + rZona.h/2 - rEl.h/2 },
+      { v:"bottom", px:rZona.y + rZona.h - rEl.h }
+    ];
+    // El clon editable del texto vive en el overlay, sin escalar: hay que
+    // moverlo a la par o el arrastre no se ve.
+    const clon = ovl.querySelector(`.lienzo-edit[data-for="${item.sel}"]`);
+
+    const pintar = ()=>{
+      raf = null;
+      el.style.transform = `translate(${dx/sL}px, ${dy/sL}px)`;
+      if(clon) clon.style.transform = `translate(${dx}px, ${dy}px)`;
+    };
+    const mover = (ev)=>{
+      const ddx = ev.clientX - x0, ddy = ev.clientY - y0;
+      if(!arrastrando){
+        if(Math.abs(ddx) < 4 && Math.abs(ddy) < 4) return;   // todavía es un clic
+        arrastrando = true;
+        el.classList.add("arrastrando");
+        ovl.classList.add("arrastrando");
+        document.body.classList.add("sbb-arrastrando");
+        if(el.isContentEditable) el.blur();
+      }
+      // Acotado al marco: un elemento no se puede arrastrar fuera del banner.
+      dx = Math.max(rCmp.x - rEl.x, Math.min(rCmp.x + rCmp.w - (rEl.x + rEl.w), ddx));
+      dy = Math.max(rCmp.y - rEl.y, Math.min(rCmp.y + rCmp.h - (rEl.y + rEl.h), ddy));
+      // Imantado: si el borde queda a menos de IMAN px de una guía, se pega.
+      guias.forEach(g=>g.remove()); guias = []; snapH = null; snapV = null;
+      const cx = rEl.x + dx, cy = rEl.y + dy;
+      // Solo se puede ALINEAR lo que tiene holgura dentro de su zona. Un titular
+      // que ocupa todo el ancho tiene sus tres anclas en el mismo sitio: ahí no
+      // hay nada que alinear, y hacerlo lo devolvía a su posición de partida.
+      if(holguraX >= 4){
+        let mejorX = null, dMinX = IMAN;
+        anclasX.forEach(a=>{ const d = Math.abs(cx - a.px); if(d < dMinX){ dMinX = d; mejorX = a; } });
+        // Lanzarlo contra un borde cuenta como soltarlo en ese borde.
+        if(!mejorX && cx <= anclasX[0].px) mejorX = anclasX[0];
+        if(!mejorX && cx >= anclasX[2].px) mejorX = anclasX[2];
+        if(mejorX){ dx = mejorX.px - rEl.x; snapH = mejorX.v; guias.push(guiaLienzo(ovl,"v", mejorX.px + (mejorX.v==="right"?rEl.w:mejorX.v==="center"?rEl.w/2:0))); }
+      }
+      if(holguraY >= 4){
+        let mejorY = null, dMinY = IMAN;
+        anclasY.forEach(a=>{ const d = Math.abs(cy - a.px); if(d < dMinY){ dMinY = d; mejorY = a; } });
+        if(!mejorY && cy <= anclasY[0].px) mejorY = anclasY[0];
+        if(!mejorY && cy >= anclasY[2].px) mejorY = anclasY[2];
+        if(mejorY){ dy = mejorY.px - rEl.y; snapV = mejorY.v; guias.push(guiaLienzo(ovl,"h", mejorY.px + (mejorY.v==="bottom"?rEl.h:mejorY.v==="center"?rEl.h/2:0))); }
+      }
+      if(!raf) raf = requestAnimationFrame(pintar);
+    };
+    const soltar = ()=>{
+      window.removeEventListener("pointermove", mover);
+      window.removeEventListener("pointerup", soltar);
+      if(raf) cancelAnimationFrame(raf);
+      guias.forEach(g=>g.remove());
+      el.classList.remove("arrastrando");
+      ovl.classList.remove("arrastrando");
+      document.body.classList.remove("sbb-arrastrando");
+      el.style.transform = ""; if(clon) clon.style.transform = "";
+      if(!arrastrando){
+        // Fue un clic: selecciona ese elemento en el panel y no mueve nada.
+        if(typeof elegirElemento === "function") elegirElemento(item.k);
+        return;
+      }
+
+      // Se guarda ALINEACIÓN cuando cayó sobre una guía, y DESPLAZAMIENTO en
+      // unidades base cuando cayó libre. Nunca píxeles de pantalla.
+      const offAct = getPath(composicionEfectiva(pieza(), fmt), item.off) || {};
+      let ox = parseFloat(offAct.x) || 0, oy = parseFloat(offAct.y) || 0;
+      if(snapH && item.alinH){ setCompScope(fmt, item.alinH, snapH); ox = 0; }
+      else ox = Math.round(ox + dx/k);
+      if(snapV && item.alinV){ setCompScope(fmt, item.alinV, snapV); oy = 0; }
+      else oy = Math.round(oy + dy/k);
+      // La burbuja tiene sus cinco posiciones con nombre: si cayó en una esquina
+      // se guarda esa, que es lo que entiende su render.
+      if(item.pos && (snapH || snapV)){
+        const h = snapH || "right", v = snapV || "top";
+        const mapa = { "left-top":"tl", "left-bottom":"bl", "right-top":"tr",
+                       "right-bottom":"br", "right-center":"cr" };
+        const nom = mapa[h+"-"+v];
+        if(nom){ setCompScope(fmt, item.pos, nom); ox = 0; oy = 0; }
+      }
+      setCompScope(fmt, item.off, { x:ox, y:oy });
+      persistir(); renderTablero();
+    };
+    window.addEventListener("pointermove", mover);
+    window.addEventListener("pointerup", soltar);
+  };
+  if(!el.dataset.arrastrable){
+    el.dataset.arrastrable = "1";
+    el.classList.add("cmp-mov");
+    el.addEventListener("pointerdown", iniciar);
+    el.addEventListener("dragstart", (e)=>e.preventDefault());
+    if(el.tagName === "A") el.addEventListener("click", (e)=>e.preventDefault());
+    if(el.tagName === "IMG" || el.tagName === "A") el.setAttribute("draggable","false");
+  }
+  // El clon editable (Título y Bajada) se dibuja ENCIMA en el overlay: sin esto
+  // se quedaba con el gesto y el texto no se podía arrastrar nunca.
+  const clonEd = ovl.querySelector(`.lienzo-edit[data-for="${item.sel}"]`);
+  if(clonEd && !clonEd.dataset.arrastrable){
+    clonEd.dataset.arrastrable = "1";
+    clonEd.classList.add("cmp-mov");
+    clonEd.addEventListener("pointerdown", iniciar);
+  }
+}
+
+// Tirador lateral: cambia el ANCHO de la caja de texto (en % de su zona).
+function tiradorDeAncho(el, item, ctx){
+  const { fmt, ovl, sL, rel } = ctx;
+  const rc = rel(el);
+  const zona = el.closest(".cmp-zona");
+  const zw = zona ? rel(zona).w : rc.w;
+  const w = document.createElement("div");
+  w.className = "lienzo-wh"; w.title = "Arrastra para cambiar el ancho de la caja";
+  w.style.cssText = `left:${rc.x + rc.w - 4}px;top:${rc.y + rc.h/2 - 11}px;`;
+  w.addEventListener("pointerdown",(e)=>{
+    e.preventDefault(); e.stopPropagation();
+    const x0 = e.clientX; let dx = 0;
+    const clon = ovl.querySelector(`.lienzo-edit[data-for="${item.sel}"]`);
+    const mv = (ev)=>{ dx = ev.clientX - x0;
+      el.style.width = (rc.w + dx)/sL + "px";
+      if(clon) clon.style.width = (rc.w + dx + 4) + "px";
+      w.style.transform = `translateX(${dx}px)`;
+    };
+    const up = ()=>{
+      window.removeEventListener("pointermove", mv); window.removeEventListener("pointerup", up);
+      el.style.width = ""; if(clon) clon.style.width = ""; w.style.transform = "";
+      if(Math.abs(dx) > 2 && zw > 0){
+        const pct = Math.max(20, Math.min(100, Math.round((rc.w + dx)/zw*100)));
+        setCompScope(fmt, item.ancho, String(pct));
+        persistir(); renderTablero();
+      }
+    };
+    window.addEventListener("pointermove", mv); window.addEventListener("pointerup", up);
+  });
+  ovl.appendChild(w);
 }
 // Edición inline del texto en el lienzo: clic → escribir, Enter = salto de línea,
 // y una barrita con tamaño (A-/A+) y alineación (izq/centro/der).
@@ -6885,73 +7789,28 @@ function seleccionarZonaLienzo(fmt, i){
 // Arrastrar el LOGO por el banner (se imanta a las 9 posiciones) y su tirador
 // para agrandarlo o achicarlo. Es la peticion mas repetida del usuario y no
 // rompe el modelo de 3 zonas: lo que se escribe es su alineacion y su alto.
-function arrastrarLogo(h, fmt, stage, logoEl, ovl){
-  const ANCLAS = [
-    ["left","top"],["center","top"],["right","top"],
-    ["left","center"],["center","center"],["right","center"],
-    ["left","bottom"],["center","bottom"],["right","bottom"]
-  ];
-  // Puntos guia que se encienden mientras arrastras.
-  ANCLAS.forEach(([ah,av],idx)=>{
-    const a=document.createElement("div"); a.className="lz-ancla"; a.dataset.i=idx;
-    a.style.left = (ah==="left"?6:ah==="center"?50:94)+"%";
-    a.style.top  = (av==="top"?6:av==="center"?50:94)+"%";
-    ovl.appendChild(a);
-  });
-  const anclasDom = ()=> [...ovl.querySelectorAll(".lz-ancla")];
-  h.addEventListener("pointerdown",(e)=>{
-    if(e.target.classList.contains("lz-rz")) return;      // el tirador es otra cosa
-    e.preventDefault(); e.stopPropagation();
-    h.classList.add("drag"); ovl.classList.add("arrastrando"); h.setPointerCapture(e.pointerId);
-    const sr=stage.getBoundingClientRect();
-    const W=sr.width, H=sr.height, bw=h.offsetWidth, bh=h.offsetHeight;
-    let destino=["left","top"], iDest=0;
-    const mover=(ev)=>{
-      let x=Math.max(0,Math.min(W-bw, ev.clientX-sr.left-bw/2));
-      let y=Math.max(0,Math.min(H-bh, ev.clientY-sr.top-bh/2));
-      h.style.left=x+"px"; h.style.top=y+"px";
-      const cx=(x+bw/2)/W, cy=(y+bh/2)/H;
-      let mejor=0, dmin=9;
-      ANCLAS.forEach(([ah,av],idx)=>{
-        const ax = ah==="left"?0.06:ah==="center"?0.5:0.94;
-        const ay = av==="top"?0.06:av==="center"?0.5:0.94;
-        const d=(cx-ax)*(cx-ax)+(cy-ay)*(cy-ay);
-        if(d<dmin){ dmin=d; mejor=idx; }
-      });
-      iDest=mejor; destino=ANCLAS[mejor];
-      anclasDom().forEach((a,idx)=>a.classList.toggle("cerca", idx===mejor));
-    };
-    const soltar=()=>{
-      document.removeEventListener("pointermove",mover); document.removeEventListener("pointerup",soltar);
-      h.classList.remove("drag"); ovl.classList.remove("arrastrando");
-      anclasDom().forEach(a=>a.classList.remove("cerca"));
-      setCompScope(fmt,"zonas.logo.alinH",destino[0]);
-      setCompScope(fmt,"zonas.logo.alinV",destino[1]);
-      persistir(); renderTablero();
-    };
-    document.addEventListener("pointermove",mover); document.addEventListener("pointerup",soltar);
-  });
-  // Tirador de tamaño: arrastrar en diagonal cambia el ALTO del logo.
-  const rz=document.createElement("div"); rz.className="lz-rz"; rz.title="Arrastra para cambiar el tamaño del logo";
-  h.appendChild(rz);
+// Tirador de tamaño del logo: arrastrar en diagonal cambia su ALTO en unidades
+// base, así que el cambio se replica proporcional en los once tamaños.
+function redimensionarLogo(rz, fmt, stage, logoEl){
   rz.addEventListener("pointerdown",(e)=>{
-    e.preventDefault(); e.stopPropagation(); rz.setPointerCapture(e.pointerId);
-    const sLienzo = parseFloat(stage.closest(".lienzo")?.dataset.escala) || 1;
-    const k = factorK(fmt) * sLienzo;                        // px de pantalla por unidad base
-    const p0=pieza(); const C=composicionEfectiva(p0,fmt);
-    const alto0 = parseFloat(getPath(C,"zonas.logo.alto"));
-    const base = isNaN(alto0) ? 40 : alto0;
-    const y0=e.clientY; let val=base;
-    const mv=(ev)=>{
-      val = Math.max(10, Math.min(200, Math.round(base + (ev.clientY-y0)/Math.max(0.2,k))));
-      logoEl.style.height=(val*factorK(fmt))+"px";
-      h.style.height=(logoEl.getBoundingClientRect().height)+"px";
+    e.preventDefault(); e.stopPropagation();
+    const sL = parseFloat(stage.closest(".lienzo")?.dataset.escala) || 1;
+    const k  = factorK(fmt) * sL;
+    const C  = composicionEfectiva(pieza(), fmt);
+    const a0 = parseFloat(getPath(C,"zonas.logo.alto"));
+    const base = isNaN(a0) ? 40 : a0;
+    const y0 = e.clientY; let val = base;
+    const mv = (ev)=>{
+      val = Math.max(10, Math.min(200, Math.round(base + (ev.clientY - y0)/Math.max(0.2,k))));
+      logoEl.style.height = (val*factorK(fmt)) + "px";
+      rz.style.transform = `translateY(${ev.clientY - y0}px)`;
     };
-    const up=()=>{
-      document.removeEventListener("pointermove",mv); document.removeEventListener("pointerup",up);
+    const up = ()=>{
+      window.removeEventListener("pointermove",mv); window.removeEventListener("pointerup",up);
+      rz.style.transform = "";
       setCompScope(fmt,"zonas.logo.alto",val); persistir(); renderTablero();
     };
-    document.addEventListener("pointermove",mv); document.addEventListener("pointerup",up);
+    window.addEventListener("pointermove",mv); window.addEventListener("pointerup",up);
   });
 }
 function arrastrarDivisor(div, fmt, a, b, fila, stage, cmp, zonasDom){
@@ -6978,31 +7837,6 @@ function arrastrarDivisor(div, fmt, a, b, fila, stage, cmp, zonasDom){
       div.classList.remove("drag");
       if(div._nA!=null){ const prop=propScope(fmt).slice(); prop[a.i]=Math.round(div._nA); prop[b.i]=Math.round(div._nB);
         setCompScope(fmt,"prop",prop); persistir(); renderTablero(); }
-    };
-    document.addEventListener("pointermove",mover); document.addEventListener("pointerup",soltar);
-  });
-}
-function arrastrarBurbuja(h, fmt, stage, bub){
-  h.addEventListener("pointerdown",(e)=>{
-    e.preventDefault(); h.classList.add("drag"); stage.classList.add("arrastrando-burbuja"); h.setPointerCapture(e.pointerId);
-    const sr=stage.getBoundingClientRect();
-    const W=sr.width, H=sr.height, bw=h.offsetWidth, bh=h.offsetHeight;
-    // Posiciones imantadas: 5 anclas (esquinas + centro-derecha).
-    const anclas={ tl:[0.02,0.02], tr:[0.98,0.02], bl:[0.02,0.98], br:[0.98,0.98], cr:[0.98,0.5] };
-    let destino="tr";
-    const mover=(ev)=>{
-      let x=ev.clientX-sr.left-bw/2, y=ev.clientY-sr.top-bh/2;
-      x=Math.max(0,Math.min(W-bw,x)); y=Math.max(0,Math.min(H-bh,y));
-      h.style.left=x+"px"; h.style.top=y+"px"; bub.style.transition="none";
-      // ancla más cercana al centro de la burbuja
-      const cx=(x+bw/2)/W, cy=(y+bh/2)/H; let mejor="tr",dmin=9;
-      for(const k in anclas){ const dx=cx-anclas[k][0], dy=cy-anclas[k][1]; const d=dx*dx+dy*dy; if(d<dmin){dmin=d;mejor=k;} }
-      destino=mejor;
-    };
-    const soltar=()=>{
-      document.removeEventListener("pointermove",mover); document.removeEventListener("pointerup",soltar);
-      h.classList.remove("drag"); stage.classList.remove("arrastrando-burbuja");
-      setCompScope(fmt,"burbuja.pos",destino); persistir(); renderTablero();
     };
     document.addEventListener("pointermove",mover); document.addEventListener("pointerup",soltar);
   });
@@ -7571,6 +8405,7 @@ function renderComposicionEditor(){
   const p=pieza();
   if(!cont) return;
   if(!esComposicion(p)){ cont.style.display="none"; cont.innerHTML=""; if(tema) tema.style.display=""; return; }
+  if(esLibre(p.composicion)){ cont.style.display=""; if(tema) tema.style.display="none"; return renderPanelLibre(); }
   asegurarComposicionNueva(p);
   cont.style.display=""; if(tema) tema.style.display="none";
   // Sobre el tamaño activo: si es el máster, escribe el diseño de todos.

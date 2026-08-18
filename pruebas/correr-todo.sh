@@ -33,7 +33,7 @@ done
 if [ "$listo" != "1" ]; then echo "El servidor de pruebas no arrancó. Mira /tmp/sbb-srv.log"; exit 1; fi
 
 # ── Qué se corre (orden: primero lo que no necesita navegador) ───────────
-TODAS=(audita-estatica login geom medir insp panel alcance iaq asis xls fb tablet migra cierres regres recorrido)
+TODAS=(audita-estatica login geom medir insp panel arrastre alcance iaq asis xls fb tablet migra cierres regres recorrido)
 descripcion() {
   case "$1" in
     audita-estatica) echo "controles muertos, íconos y rutas (sin navegador)";;
@@ -42,6 +42,7 @@ descripcion() {
     medir)     echo "los 11 banners medidos sobre el render real";;
     insp)      echo "inspector: las 6 comprobaciones y sus avisos";;
     panel)     echo "editor de banners: cuantos controles y si lo escrito se ve";;
+    arrastre)  echo "arrastre: agarrar cualquier elemento, fluidez y replica";;
     alcance)   echo "las 3 plataformas del manual y las paginas del §05";;
     iaq)       echo "calidad de IA: límites, carpetas de fotos, avisos";;
     asis)      echo "asistente en una sola ventana";;
