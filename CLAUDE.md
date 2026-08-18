@@ -635,3 +635,52 @@ exportar `SBB_CHROMIUM` antes de correr la batería.**
 cambio mueve un píxel de una diagramación aprobada. (2) §04 **creación de marca conversacional** (la IA
 propone la ficha y el usuario corrige; hoy sigue siendo formulario). (3) `LAYOUTS_MARCA` sigue apagado.
 (4) En email la IA todavía no ve fotos. (5) Ctrl+Z no cubre `adsData`.
+
+## Sesión 18-ago-2026: EDITOR DE BANNERS reconstruido (ESTADO ACTUAL — no rehacer)
+El usuario: *"el editor es un desastre… estoy MUY decepcionado, es el peor de todas las versiones"*, con
+diez puntos concretos. **Todos eran ciertos y la causa era el panel «simple» del día anterior**: escondió
+64 controles en un acordeón y, peor, el panel POR TAMAÑO quedó con solo 5 interruptores — y clicar un
+banner del tablero saltaba justo a ese panel. Por eso "no se puede editar ningún texto".
+
+**UN SOLO MÓDULO.** En banners se ocultan las pestañas (Bloques · Diseño · Editar bloque · Plantillas):
+antes quedaban a la vista, deshabilitadas. Todo vive en `#comp-editor` (`moduloBannerHTML`), y el panel
+se abre siempre sobre el TAMAÑO ACTIVO — máster = diseño de todos, otro = solo ese. `renderFormTamaño`
+quedó como cartel ("se edita en el panel de la izquierda"): antes pintaba una copia invisible del módulo
+entero, o sea el trabajo dos veces por tecla. **Todo camino que repinta el panel del banner llama ahora a
+`renderComposicionEditor()`** (antes varios llamaban `renderForm()`, que ya no pinta nada).
+
+**PANEL POR ELEMENTO (`compPanelUnico`).** Fila de 8 chips — Logo · Epígrafe · Título · Bajada · Botón ·
+Oferta · Legal · Fondo (`ELEMENTOS_COMP`, estado `elSelComp`, `elegirElemento`) — y al elegir uno se ven
+TODOS sus controles juntos: texto, tipografía (`FUENTES`), tamaño de letra con −/+ (`nudgeComp`), color
+con la paleta de la marca, negrita/cursiva, alineación H y V. El logo suma alto, ancho máximo y posición;
+el botón su link, radio y colores; el legal su tamaño. Clic en el banner grande selecciona ese elemento
+(`seleccionarZonaLienzo` → chip, ya no busca una sección del formulario con scroll).
+
+**FILTRO DE LA FOTO.** `fondo.imagen.oscurecer` tiene deslizador en primer plano y botón **Quitar filtro**.
+Era el punto "la foto tiene un filtro que no se puede ajustar ni borrar": estaba enterrado en avanzados.
+
+**ARRASTRE.** Además de los divisores, la burbuja y los grips de texto que ya existían: el **LOGO se
+arrastra** por el banner (`arrastrarLogo`, se imanta a 9 anclas que se encienden al mover, escribe
+`zonas.logo.alinH/alinV` por alcance) y tiene **tirador de tamaño** (escribe `zonas.logo.alto`). El asa se
+coloca cuando la imagen CARGA — antes se medía 0×0 y se descartaba sola.
+
+**PLANTILLAS (`PLANTILLAS_BANNER`).** Cinco: Clásico · Oferta · Centrado · Sobre la foto · Tipográfico,
+con **miniaturas dibujadas por el render real del banner y el contenido real de la pieza**
+(`miniaturaPlantilla`). Una plantilla es una combinación de decisiones sobre el MISMO modelo de 3 zonas
+(alineaciones, posición del logo, círculo, adornos, velo, proporciones): no toca textos, colores ni foto.
+**Se hizo así a propósito**: se encendió `LAYOUTS_MARCA` para medirlo y los 4 layouts fallaron **11/11**
+en el inspector (`completa`×3 + `aire`) porque son una vía de render paralela con otras clases, ajena a
+la geometría y a la escalera de prioridad. Sigue apagado. Las plantillas nuevas heredan el motor medido:
+tras aplicarlas, los 11 tamaños siguen pasando las comprobaciones.
+
+**Refresco del panel** (`refrescarPanelBanner`, 420 ms): al escribir se actualizan SOLO los chips y las
+miniaturas — nunca el panel entero, para no robarle el foco a lo que estás tecleando. Antes las
+miniaturas decían "Tu mensaje aquí" y los chips salían en gris con contenido puesto.
+
+**Trampa de medición nueva:** las miniaturas son banners REALES dentro del panel y están antes en el DOM,
+así que `document.querySelector(".cmp-tit")` ya NO es el banner grande — hay que acotar a `.lienzo` o a
+`.ab`. El inspector ya estaba a salvo (mide dentro de `.ab`).
+
+**Verificación:** `panel.js` reescrito para medir la lista del usuario punto por punto — **60/60**, con
+arrastre real del logo a una esquina, el filtro quitándose, las plantillas sin tocar contenido y los 11
+tamaños sanos después. Batería completa (16 pruebas) EN VERDE, recorrido SIN HALLAZGOS.

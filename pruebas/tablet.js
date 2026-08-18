@@ -88,10 +88,10 @@ const prepararColeccion = () => {
   T(rEsc.tablero === 0, "escribir no repinta el tablero", "renders=" + rEsc.tablero);
 
   // A+ tres veces seguidas: sin repintar, sin perder foco ni barrita
-  const antesPx = await pg.evaluate(() => parseFloat(getComputedStyle(document.querySelector(".cmp-tit")).fontSize));
+  const antesPx = await pg.evaluate(() => parseFloat(getComputedStyle(document.querySelector(".lienzo .cmp-tit")).fontSize));
   for (let i = 0; i < 3; i++) { await pg.click('.lienzo-textbar button[data-act="mas"]'); await pg.waitForTimeout(60); }
   const rMas = await pg.evaluate(() => ({ ...window._n,
-    px: parseFloat(getComputedStyle(document.querySelector(".cmp-tit")).fontSize),
+    px: parseFloat(getComputedStyle(document.querySelector(".lienzo .cmp-tit")).fontSize),
     barra: !!document.getElementById("lienzo-textbar"),
     foco: document.activeElement && document.activeElement.className }));
   T(rMas.tablero === 0, "tres clics en A+ no repintan el tablero", "renders=" + rMas.tablero);
@@ -103,7 +103,7 @@ const prepararColeccion = () => {
   await pg.click('.lienzo-textbar button[data-aln="center"]');
   await pg.waitForTimeout(80);
   const rAln = await pg.evaluate(() => ({ ...window._n,
-    align: getComputedStyle(document.querySelector(".cmp-tit")).textAlign,
+    align: getComputedStyle(document.querySelector(".lienzo .cmp-tit")).textAlign,
     barra: !!document.getElementById("lienzo-textbar") }));
   T(rAln.tablero === 0, "alinear no repinta el tablero", "renders=" + rAln.tablero);
   T(rAln.align === "center", "el texto se centró en vivo", rAln.align);

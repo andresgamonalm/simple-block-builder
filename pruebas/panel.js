@@ -27,65 +27,154 @@ const T=(c,n,e)=>{ if(c){ok++;console.log("  ok   "+n);} else {mal++;console.log
     crearComposicion("display-desktop");
     setComp("zonas.logo.url","/logo.svg");   // el logo va en todas las piezas
     setComp("fondo.color","#23366F");
+    setComp("zonas.texto.titular.texto","Protege tu auto");
+    setComp("zonas.cta.texto","Cotiza");
+    setCompOferta("60% dcto.",null);          // sin oferta no hay circulo que arrastrar
     cambiarPanelTab("diseno");
   });
   await pg.waitForTimeout(400);
 
-  console.log("\n1 · Cuántos controles hay que atravesar al abrir");
+  console.log("\n1 · Un solo módulo de edición, y todo alcanzable");
   const c1=await pg.evaluate(()=>{
+    const tabs=document.querySelector(".panel-tabs");
     const ed=document.getElementById("comp-editor");
-    const vis=(el)=>{ const r=el.getBoundingClientRect(); return r.width>0 && r.height>0; };
-    const ctr=[...ed.querySelectorAll("input,select,textarea,button")].filter(vis);
-    // Lo que está dentro de un <details> cerrado no cuenta: no se ve.
-    const dentroCerrado=(el)=>{ const d=el.closest("details"); return d && !d.open; };
-    const enPrimerPlano=ctr.filter(el=>!dentroCerrado(el));
-    const avz=ed.querySelector("details.se-avz");
+    const vis=(el)=>{const r=el.getBoundingClientRect();return r.width>0&&r.height>0;};
     return {
-      total:ctr.length, primerPlano:enPrimerPlano.length,
-      avanzadoCerrado: !!avz && !avz.open,
-      grupos:[...ed.querySelectorAll(".se-h")].map(h=>h.textContent.replace(/\s+/g," ").trim()),
-      escondidos: avz ? avz.querySelectorAll("input,select,textarea,button").length : 0
+      tabsOcultas: getComputedStyle(tabs).display==="none",
+      copias: document.querySelectorAll(".se-chips").length,
+      chips:[...ed.querySelectorAll(".se-chip")].map(x=>x.textContent.trim()),
+      plantillas:[...ed.querySelectorAll(".plt-op .plt-nom")].map(x=>x.textContent.trim()),
+      miniaturas: ed.querySelectorAll(".plt-mini .cmp").length
     };
   });
-  console.log("     grupos: "+c1.grupos.join(" | "));
-  console.log("     controles en primer plano: "+c1.primerPlano+"  ·  guardados en avanzados: "+c1.escondidos);
-  T(c1.avanzadoCerrado,"«Ajustes avanzados» viene cerrado");
-  T(c1.primerPlano<=26,"en primer plano hay 26 controles o menos (antes: todos)",c1.primerPlano);
-  T(c1.escondidos>=30,"los controles finos siguen existiendo, guardados",c1.escondidos);
-  T(c1.grupos.length===4,"cuatro grupos con nombre: Textos, Foto, Colores, Logo",c1.grupos.length);
+  console.log("     elementos:  "+c1.chips.join(" · "));
+  console.log("     plantillas: "+c1.plantillas.join(" · "));
+  T(c1.tabsOcultas,"en un banner NO se ven Bloques / Diseño / Editar bloque / Plantillas");
+  T(c1.copias===1,"el módulo se pinta una sola vez, no dos",c1.copias);
+  T(c1.chips.length===8,"los 8 elementos del banner están a un clic",c1.chips.join(","));
+  T(c1.plantillas.length===5,"hay 5 plantillas de diagramación",c1.plantillas.length);
+  T(c1.miniaturas===5,"y sus miniaturas se dibujan con el render real del banner",c1.miniaturas);
+
+  console.log("\n1b · Cada punto de la lista tiene su control (medido uno a uno)");
+  // Se busca el control en el panel del elemento correspondiente, no en el HTML suelto.
+  const controles=await pg.evaluate(async()=>{
+    const out={};
+    const panel=()=>document.getElementById("comp-editor");
+    const etiquetas=()=>[...panel().querySelectorAll(".se-elem .se-f > label, .se-elem .se-col > label")]
+      .map(l=>l.textContent.split("·")[0].trim().toLowerCase());
+    const ver=async(k)=>{ elegirElemento(k); await new Promise(r=>setTimeout(r,220)); return etiquetas(); };
+    out.logo   = await ver("logo");
+    out.titulo = await ver("titulo");
+    out.cta    = await ver("cta");
+    out.fondo  = await ver("fondo");
+    out.legal  = await ver("legal");
+    return out;
+  });
+  const tiene=(lista,txt)=>lista.some(l=>l.includes(txt));
+  T(tiene(controles.logo,"alto del logo") && tiene(controles.logo,"ancho máximo"),
+    "LOGO: se puede agrandar y achicar",controles.logo.join("/"));
+  T(tiene(controles.logo,"posición horizontal") && tiene(controles.logo,"posición vertical"),
+    "LOGO: se puede mover",controles.logo.join("/"));
+  T(tiene(controles.titulo,"tipografía"),"TEXTO: se puede cambiar la tipografía",controles.titulo.join("/"));
+  T(tiene(controles.titulo,"tamaño de letra"),"TEXTO: se puede cambiar el tamaño de letra",controles.titulo.join("/"));
+  T(tiene(controles.titulo,"color"),"TEXTO: se puede cambiar el color",controles.titulo.join("/"));
+  T(tiene(controles.titulo,"alineación"),"TEXTO: se puede alinear",controles.titulo.join("/"));
+  T(tiene(controles.cta,"alineación") && tiene(controles.cta,"posición vertical"),
+    "BOTÓN: se puede mover y alinear",controles.cta.join("/"));
+  T(tiene(controles.cta,"tamaño de letra") && tiene(controles.cta,"tipografía"),
+    "BOTÓN: tiene su tipografía y su tamaño",controles.cta.join("/"));
+  T(tiene(controles.fondo,"color de fondo"),"FONDO: hay color de fondo",controles.fondo.join("/"));
+  T(tiene(controles.legal,"texto legal") && tiene(controles.legal,"tamaño de letra"),
+    "LEGAL: tiene texto y tamaño",controles.legal.join("/"));
+
+  console.log("\n1c · El filtro de la foto se ajusta y se quita");
+  const filtro=await pg.evaluate(async()=>{
+    setCompFoto((workspace.imagenes||[]).filter(sirveComoFondo)[0].url,null);
+    await new Promise(r=>setTimeout(r,300));
+    elegirElemento("fondo"); await new Promise(r=>setTimeout(r,300));
+    const ed=document.getElementById("comp-editor");
+    const slider=ed.querySelector('.se-elem input[type=range]');
+    const quitar=[...ed.querySelectorAll(".se-quitar")].find(b=>/quitar filtro/i.test(b.textContent));
+    const antes=parseFloat(getPath(pieza().composicion,"fondo.imagen.oscurecer"));
+    if(quitar){ quitar.click(); await new Promise(r=>setTimeout(r,350)); }
+    const despues=parseFloat(getPath(pieza().composicion,"fondo.imagen.oscurecer"));
+    return { haySlider:!!slider, hayQuitar:!!quitar, antes, despues };
+  });
+  T(filtro.haySlider,"el filtro tiene deslizador para ajustarlo");
+  T(filtro.hayQuitar && filtro.despues===0,"y un botón que lo quita del todo",filtro.antes+" → "+filtro.despues);
+
+  console.log("\n1d · Arrastrar (drag and drop) sobre el banner");
+  await pg.waitForTimeout(1200);   // el overlay se reconstruye tras repintar
+  const dnd=await pg.evaluate(()=>({
+    logo: !!document.querySelector(".lienzo-logo"),
+    tirador: !!document.querySelector(".lienzo-logo .lz-rz"),
+    divisores: document.querySelectorAll(".lienzo-div").length,
+    burbuja: !!document.querySelector(".lienzo-burbuja"),
+    textos: document.querySelectorAll(".lienzo-edit").length,
+    grips: document.querySelectorAll(".lienzo-grip").length
+  }));
+  T(dnd.logo && dnd.tirador,"el LOGO se arrastra y tiene tirador de tamaño",JSON.stringify(dnd));
+  T(dnd.divisores>=1,"los divisores de zona se arrastran",dnd.divisores);
+  T(dnd.burbuja,"el círculo de oferta se arrastra");
+  T(dnd.textos>=1,"los textos se editan sobre el propio banner",dnd.textos);
+  T(dnd.grips>=1,"y se mueven con su tirador",dnd.grips);
+  // Arrastre REAL del logo: de su sitio a la esquina de abajo a la derecha.
+  const arr=await pg.evaluate(()=>{const c=pieza().composicion;return {h:getPath(c,"zonas.logo.alinH"),v:getPath(c,"zonas.logo.alinV")};});
+  const caja=await pg.evaluate(()=>{const e=document.querySelector(".lienzo-logo");const r=e.getBoundingClientRect();
+    const s=document.querySelector(".lienzo-stage").getBoundingClientRect();
+    return {x:r.left+r.width/2,y:r.top+r.height/2,sx:s.left,sy:s.top,sw:s.width,sh:s.height};});
+  await pg.mouse.move(caja.x,caja.y); await pg.mouse.down();
+  await pg.mouse.move(caja.sx+caja.sw-14, caja.sy+caja.sh-14, {steps:12});
+  await pg.mouse.up(); await pg.waitForTimeout(700);
+  const arr2=await pg.evaluate(()=>{const c=pieza().composicion;return {h:getPath(c,"zonas.logo.alinH"),v:getPath(c,"zonas.logo.alinV")};});
+  console.log("     logo: "+arr.h+"/"+arr.v+"  →  "+arr2.h+"/"+arr2.v);
+  T(arr2.h==="right" && arr2.v==="bottom","arrastrar el logo a una esquina lo deja ahí de verdad",arr2.h+"/"+arr2.v);
+
+  console.log("\n1e · Las plantillas cambian la disposición sin tocar el contenido");
+  const plt=await pg.evaluate(async()=>{
+    const antes=JSON.stringify({tit:getPath(pieza().composicion,"zonas.texto.titular.texto"),
+                                cta:getPath(pieza().composicion,"zonas.cta.texto")});
+    aplicarPlantillaBanner("centrado",null); await new Promise(r=>setTimeout(r,900));
+    const c=pieza().composicion;
+    const despues=JSON.stringify({tit:getPath(c,"zonas.texto.titular.texto"),cta:getPath(c,"zonas.cta.texto")});
+    return { igual:antes===despues, alin:getPath(c,"zonas.texto.alinH"), deco:getPath(c,"deco.visible") };
+  });
+  T(plt.alin==="center","aplicar «Centrado» centra el texto",plt.alin);
+  T(plt.igual,"y NO toca los textos que escribiste");
+  await pg.evaluate(async()=>{ aplicarPlantillaBanner("clasico",null); await new Promise(r=>setTimeout(r,600)); });
+  await pg.waitForTimeout(1400);
+  const pltInsp=await pg.evaluate(()=>{const r=pieza()._inspeccion||{};
+    return Object.keys(r).filter(f=>!r[f].ok).map(f=>f+":"+r[f].fallos.map(x=>x.id).join("/"));});
+  T(pltInsp.length===0,"y el banner sigue pasando las comprobaciones en los 11 tamaños",pltInsp.join(" · "));
 
   console.log("\n2 · Escribir en un campo se ve en el banner");
   // Se escribe con el teclado en el campo real, como lo haría una persona.
-  const campos=await pg.evaluate(()=>{
-    const ed=document.getElementById("comp-editor");
-    const et=[...ed.querySelectorAll(".se-f > label")].map(l=>l.textContent.replace(/\s+/g," ").trim());
-    return et;
-  });
-  console.log("     campos: "+campos.join(" · "));
-  const escribir=async(etiqueta,texto)=>{
-    const sel = await pg.evaluateHandle((etq)=>{
+
+  // El panel muestra un elemento a la vez: se elige el elemento y se escribe en
+  // su campo de texto, que dentro de su panel se llama simplemente "Texto".
+  const escribir=async(elemento,texto)=>{
+    await pg.evaluate(k=>elegirElemento(k), elemento);
+    await pg.waitForTimeout(240);
+    const sel = await pg.evaluateHandle(()=>{
       const ed=document.getElementById("comp-editor");
-      const cajas=[...ed.querySelectorAll(".se-f, .se-f.se-2 > div")];
-      const f=cajas.find(d=>{
+      const f=[...ed.querySelectorAll(".se-elem .se-f")].find(d=>{
         const l=d.querySelector("label"); if(!l) return false;
-        // Solo el nombre del campo: lo que va tras el "·" es texto de ayuda.
-        const nom=l.textContent.split("·")[0].trim().toLowerCase();
-        return nom.startsWith(etq.toLowerCase());   // "Oferta" encuentra "Oferta en círculo"
+        return l.textContent.split("·")[0].trim().toLowerCase().startsWith("texto");
       });
-      return f ? (f.querySelector("input,textarea")) : null;
-    }, etiqueta);
+      return f ? f.querySelector("input[type=text],textarea") : null;
+    });
     const el = sel.asElement();
     if(!el) return false;
     await el.fill(texto);
-    await pg.waitForTimeout(260);
+    await pg.waitForTimeout(280);
     return true;
   };
-  T(await escribir("Título","Protege tu auto"),"el campo Título existe y acepta escritura");
-  T(await escribir("Bajada","Cobertura desde hoy"),"el campo Bajada existe");
-  T(await escribir("Botón","Cotiza aquí"),"el campo Botón existe");
-  T(await escribir("Oferta","60% dcto."),"el campo Oferta existe");
-  T(await escribir("Legal","Sujeto a evaluación. Infórmate en el sitio"),"el campo Legal existe (antes NO había dónde escribirlo)");
-  T(await escribir("Epígrafe","Seguro Auto"),"el campo Epígrafe existe");
+  T(await escribir("titulo","Protege tu auto"),"TÍTULO: se escribe y se guarda");
+  T(await escribir("bajada","Cobertura desde hoy"),"BAJADA: se escribe");
+  T(await escribir("cta","Cotiza aquí"),"BOTÓN: se escribe");
+  T(await escribir("oferta","60% dcto."),"OFERTA: se escribe");
+  T(await escribir("legal","Sujeto a evaluación. Infórmate en el sitio"),"LEGAL: se escribe (antes no había dónde)");
+  T(await escribir("epigrafe","Seguro Auto"),"EPÍGRAFE: se escribe");
   await pg.waitForTimeout(700);
 
   const r2=await pg.evaluate(()=>{
@@ -132,6 +221,7 @@ const T=(c,n,e)=>{ if(c){ok++;console.log("  ok   "+n);} else {mal++;console.log
 
   console.log("\n4 · La foto se elige de miniaturas, y «Sin foto» vuelve al color");
   const r4=await pg.evaluate(async()=>{
+    elegirElemento("fondo"); await new Promise(r=>setTimeout(r,260));
     const ed=document.getElementById("comp-editor");
     const bts=[...ed.querySelectorAll(".se-fotos button")];
     const logos=bts.filter(x=>/logos\//i.test(x.title||""));
@@ -148,31 +238,35 @@ const T=(c,n,e)=>{ if(c){ok++;console.log("  ok   "+n);} else {mal++;console.log
   T(r4.conFoto.tipo==="imagen" && /^data:image\/png/.test(String(r4.conFoto.url)),"un clic en la miniatura pone la foto",r4.conFoto.tipo);
   T(r4.sinFoto==="color","«Sin foto» vuelve al fondo de color",r4.sinFoto);
 
-  console.log("\n5 · Los colores son la paleta de la marca");
+  console.log("\n5 · Cada elemento lleva SUS colores, con la paleta de la marca");
   const r5=await pg.evaluate(async()=>{
-    const filas=[...document.getElementById("comp-editor").querySelectorAll(".se-col")]
-      .map(f=>f.querySelector("label").textContent.trim());
-    const sw=document.querySelector("#comp-editor .se-col .cmp-sw");
+    elegirElemento("cta"); await new Promise(r=>setTimeout(r,260));
+    const ed=document.getElementById("comp-editor");
+    const filas=[...ed.querySelectorAll(".se-elem .se-col label")].map(l=>l.textContent.trim());
+    const sw=ed.querySelector(".se-elem .se-col .cmp-sw");
     let aplicado=null;
-    if(sw){ sw.click(); await new Promise(r=>setTimeout(r,300)); aplicado=pieza().composicion.fondo.color; }
-    return { filas, aplicado };
+    if(sw){ sw.click(); await new Promise(r=>setTimeout(r,320)); aplicado=getPath(pieza().composicion,"zonas.cta.colorFondo"); }
+    elegirElemento("titulo"); await new Promise(r=>setTimeout(r,260));
+    const delTitulo=[...document.querySelectorAll("#comp-editor .se-elem .se-col label")].map(l=>l.textContent.trim());
+    return { filas, aplicado, delTitulo };
   });
-  T(r5.filas.length===3,"tres colores: Fondo, Botón y Oferta",r5.filas.join("/"));
-  T(r5.aplicado===null || /^#/.test(String(r5.aplicado)),"un clic en el swatch aplica el color",r5.aplicado);
+  T(r5.filas.length===2,"el botón tiene su color de fondo y el de su letra",r5.filas.join("/"));
+  T(r5.aplicado===null || /^#/.test(String(r5.aplicado)),"un clic en el swatch de la marca lo aplica",r5.aplicado);
+  T(r5.delTitulo.length>=1,"el título tiene su propio color",r5.delTitulo.join("/"));
 
   console.log("\n6 · Un tamaño concreto pregunta lo justo: qué se ve y qué no");
   const r6=await pg.evaluate(async()=>{
-    const p=pieza(); p.activaFmt="display-320x50"; cambiarPanelTab("editar");
-    renderForm(); await new Promise(r=>setTimeout(r,350));
-    const f=document.getElementById("pane-editar")||document.getElementById("form-bloque");
-    const cont=document.querySelector(".cmp-ed");
+    const p=pieza(); p.activaFmt="display-320x50";
+    renderComposicionEditor(); await new Promise(r=>setTimeout(r,350));
     const tg=[...document.querySelectorAll(".se-toggles button")].map(x=>x.textContent.replace(/\s+/g," ").trim());
     const avz=document.querySelector(".cmp-ed details.se-avz");
-    return { toggles:tg, avanzadoCerrado: !!avz && !avz.open };
+    const chips=document.querySelectorAll("#comp-editor .se-chip").length;
+    return { toggles:tg, avanzadoCerrado: !!avz && !avz.open, chips };
   });
   console.log("     "+r6.toggles.join(" | "));
   T(r6.toggles.length===5,"cinco interruptores: Logo, Textos, Botón, Círculo y Adornos",r6.toggles.length);
   T(r6.avanzadoCerrado,"y lo fino sigue guardado en avanzados");
+  T(r6.chips===8,"ajustando un tamaño se siguen editando los 8 elementos (antes solo había interruptores)",r6.chips);
   const r6b=await pg.evaluate(async()=>{
     const b=[...document.querySelectorAll(".se-toggles button")].find(x=>/Círculo/.test(x.textContent));
     b.click(); await new Promise(r=>setTimeout(r,400));
@@ -184,7 +278,7 @@ const T=(c,n,e)=>{ if(c){ok++;console.log("  ok   "+n);} else {mal++;console.log
   T(r6b.otro===true,"apagar algo en un tamaño NO toca los demás",r6b.otro);
 
   console.log("\n7 · El inspector sigue conforme tras editar a mano");
-  await pg.evaluate(()=>{ pieza().activaFmt=pieza().masterFmt; cambiarPanelTab("diseno"); renderTablero(); });
+  await pg.evaluate(()=>{ pieza().activaFmt=pieza().masterFmt; renderComposicionEditor(); renderTablero(); });
   await pg.waitForTimeout(1400);
   const r7=await pg.evaluate(()=>{const res=pieza()._inspeccion||{};
     return { n:Object.keys(res).length, malos:Object.keys(res).filter(f=>!res[f].ok)

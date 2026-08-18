@@ -1084,6 +1084,52 @@ button,input,select,textarea{font-family:inherit;}
 .se-toggles button .se-tp{margin-left:auto;font-size:11.5px;font-weight:500;color:#0D7332;}
 .se-toggles button.off{color:var(--ink3,#8890a8);}
 .se-toggles button.off .se-tp{color:#8890a8;}
+/* ── Modulo UNICO de edicion: fila de elementos + controles del elegido ── */
+.se-chips{display:flex;flex-wrap:wrap;gap:5px;margin:0 0 8px;}
+.se-chip{display:inline-flex;align-items:center;gap:5px;height:32px;padding:0 10px;border:1px solid #dfe4f2;border-radius:8px;background:#fff;font-family:var(--f);font-size:12.5px;font-weight:500;color:var(--ink2,#3a4056);cursor:pointer;transition:border-color .12s,background .12s,color .12s;}
+.se-chip:hover{border-color:var(--blue,#1C73CB);color:var(--navy,#040764);}
+.se-chip.on{background:var(--navy,#040764);border-color:var(--navy,#040764);color:#fff;}
+.se-chip.vacio:not(.on){color:#a6adbe;border-style:dashed;}
+.se-chip svg{flex-shrink:0;}
+.se-elem{border:1px solid #e4e8f0;border-radius:10px;padding:13px 13px 4px;background:#fbfcfe;margin-bottom:4px;}
+.se-h2{display:flex;align-items:center;gap:7px;margin:0 0 11px;font-size:13.5px;font-weight:600;color:var(--navy,#040764);}
+.se-h2 small{font-weight:400;font-size:12px;color:var(--ink3,#8890a8);}
+.se-elem .se-f > label{font-size:12px;}
+.se-tamrow{display:flex;align-items:center;gap:6px;}
+.se-tamrow > button{width:32px;height:34px;flex-shrink:0;border:1px solid #dfe4f2;border-radius:8px;background:#fff;font-family:var(--f);font-size:16px;font-weight:500;color:var(--ink2,#3a4056);cursor:pointer;line-height:1;}
+.se-tamrow > button:hover{border-color:var(--blue,#1C73CB);color:var(--navy,#040764);}
+.se-tamrow > input[type=number]{flex:1;min-width:0;height:34px;font-family:var(--f);font-size:13.5px;text-align:center;border:1px solid #dfe4f2;border-radius:8px;padding:0 6px;background:#fff;color:var(--ink,#12173d);}
+.se-tamrow > input[type=range]{flex:1;min-width:0;}
+.se-tamrow .se-un{font-size:11.5px;color:var(--ink3,#8890a8);flex-shrink:0;}
+.se-tamrow .se-quitar{width:auto;padding:0 11px;font-size:12.5px;white-space:nowrap;}
+.se-hex{width:74px;flex-shrink:0;font-family:var(--f);font-size:11.5px;border:1px solid #dfe4f2;border-radius:7px;padding:6px 7px;text-align:center;}
+.se-seg2{display:flex;gap:4px;background:#f0f2f7;border-radius:9px;padding:3px;margin-bottom:11px;}
+.se-seg2 button{flex:1;height:32px;border:none;border-radius:7px;background:transparent;font-family:var(--f);font-size:12.5px;font-weight:500;color:var(--ink2,#3a4056);cursor:pointer;}
+.se-seg2 button.on{background:#fff;color:var(--navy,#040764);box-shadow:0 1px 3px rgba(18,23,61,.10);}
+.se-elem .cmp-alin{display:inline-flex;border:1px solid #dfe4f2;border-radius:8px;overflow:hidden;}
+.se-elem .cmp-alin button{border:none;background:#fff;padding:8px 13px;cursor:pointer;color:var(--ink2,#3a4056);font-family:var(--f);font-size:12.5px;display:flex;align-items:center;}
+.se-elem .cmp-alin button.on{background:var(--navy,#040764);color:#fff;}
+.se-elem .cmp-alin svg{width:15px;height:15px;}
+/* El elemento elegido, resaltado sobre el banner grande. */
+.lienzo-ovl[data-sel] .lienzo-zona.sel{border-color:var(--blue,#1C73CB);background:rgba(28,115,203,.10);}
+/* Logo: se arrastra para moverlo y tiene tirador para su tamano. */
+.lienzo-logo{position:absolute;z-index:24;cursor:grab;border:2px dashed transparent;border-radius:5px;touch-action:none;}
+.lienzo-logo:hover,.lienzo-logo.sel{border-color:rgba(28,115,203,.85);}
+.lienzo-logo.drag{cursor:grabbing;border-color:var(--blue,#1C73CB);}
+.lienzo-logo .lz-rz{position:absolute;right:-7px;bottom:-7px;width:14px;height:14px;border-radius:50%;background:#fff;border:1.5px solid var(--blue,#1C73CB);box-shadow:0 1px 4px rgba(8,14,28,.3);cursor:nwse-resize;}
+/* Anclas de posicion que se encienden al arrastrar un elemento. */
+.lz-ancla{position:absolute;width:16px;height:16px;margin:-8px 0 0 -8px;border-radius:50%;border:2px solid var(--blue,#1C73CB);background:rgba(255,255,255,.9);opacity:0;transition:opacity .12s,transform .12s;pointer-events:none;z-index:23;}
+.lienzo-ovl.arrastrando .lz-ancla{opacity:.75;}
+.lz-ancla.cerca{opacity:1;transform:scale(1.45);background:var(--blue,#1C73CB);}
+/* Plantillas: miniaturas dibujadas con el render real del banner. */
+.plt-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(104px,1fr));gap:8px;margin:0 0 6px;}
+.plt-op{display:flex;flex-direction:column;align-items:center;gap:6px;padding:7px 5px;border:1px solid #dfe4f2;border-radius:10px;background:#fff;cursor:pointer;transition:border-color .12s,box-shadow .12s;}
+.plt-op:hover{border-color:var(--blue,#1C73CB);}
+.plt-op.on{border-color:var(--navy,#040764);box-shadow:0 0 0 2px rgba(4,7,100,.16);}
+.plt-mini{position:relative;overflow:hidden;border-radius:5px;background:#f0f2f7;flex-shrink:0;}
+.plt-mini .plt-scale{position:absolute;left:0;top:0;transform-origin:0 0;pointer-events:none;}
+.plt-nom{font-family:var(--f);font-size:11.5px;font-weight:500;color:var(--ink2,#3a4056);line-height:1.2;text-align:center;}
+.plt-op.on .plt-nom{color:var(--navy,#040764);font-weight:600;}
 /* ── Paginas En curso / Realizados / Historial (§05 del manual) ────────── */
 .cm-card{background:#fff;border:1px solid #e4e8f0;border-radius:10px;padding:15px 17px;margin-bottom:11px;}
 .cm-card.cerrada{background:#fbfcfe;}
@@ -6409,10 +6455,10 @@ function composicionEfectiva(p, fmt){
 }
 function ovTieneValor(o){ if(o==null||o==="") return false; if(typeof o==="object"){ return Object.keys(o).some(k=>ovTieneValor(o[k])); } return true; }
 function tieneOverride(p, fmt){ const ab=(p.artboards||[]).find(a=>a.fmt===fmt); return !!(ab&&ab.ov&&ovTieneValor(ab.ov)); }
-function setCompOv(fmt, path, val){ const p=pieza(); if(!esComposicion(p))return; setPath(ovDeFmt(p,fmt), path, val); persistir(); renderTablero(); }
-function toggleCompVisOv(fmt, path){ const p=pieza(); if(!esComposicion(p))return; const ef=composicionEfectiva(p,fmt); const cur=getPath(ef,path); setCompOv(fmt,path,!(cur!==false)); renderForm(); }
-function resetTamaño(fmt){ const p=pieza(); const ab=(p.artboards||[]).find(a=>a.fmt===fmt); if(ab) ab.ov={}; persistir(); renderTablero(); renderForm(); toast("Tamaño restablecido al Diseño global"); }
-function resetCapaTamaño(fmt, path){ const p=pieza(); const ab=(p.artboards||[]).find(a=>a.fmt===fmt); if(ab&&ab.ov){ delPath(ab.ov, path); } persistir(); renderTablero(); renderForm(); }
+function setCompOv(fmt, path, val){ const p=pieza(); if(!esComposicion(p))return; setPath(ovDeFmt(p,fmt), path, val); persistir(); renderTablero(); refrescarPanelBanner(); }
+function toggleCompVisOv(fmt, path){ const p=pieza(); if(!esComposicion(p))return; const ef=composicionEfectiva(p,fmt); const cur=getPath(ef,path); setCompOv(fmt,path,!(cur!==false)); renderComposicionEditor(); }
+function resetTamaño(fmt){ const p=pieza(); const ab=(p.artboards||[]).find(a=>a.fmt===fmt); if(ab) ab.ov={}; persistir(); renderTablero(); renderComposicionEditor(); toast("Tamaño restablecido al diseño de todos"); }
+function resetCapaTamaño(fmt, path){ const p=pieza(); const ab=(p.artboards||[]).find(a=>a.fmt===fmt); if(ab&&ab.ov){ delPath(ab.ov, path); } persistir(); renderTablero(); renderComposicionEditor(); }
 function familiaDeFormato(fmt){ const f=FORMATOS[fmt]; if(!f) return "cuadrado"; const r=f.ancho/f.alto; return r>=2.2?"franja":(r<=0.6?"vertical":"cuadrado"); }
 // Pone el logo de la marca aplicada en la zona Logo de la composición (global o por tamaño).
 function usarLogoMarcaEnZona(fmt){
@@ -6460,8 +6506,9 @@ function renderTableroComposicion(p, c){
     html += `<div class="tab-grupo"><div class="tab-grupo-tit">${titulos[g]}</div><div class="tablero grupo-${g}">${grupos[g].map(celda).join("")}</div></div>`;
   });
   c.innerHTML = html;
-  c.querySelectorAll(".ab").forEach(el=>el.addEventListener("click",()=>{ p.activaFmt=el.dataset.fmt; renderTablero(); renderForm(); cambiarPanelTab("editar"); }));
-  c.querySelectorAll(".fmt-pill").forEach(el=>el.addEventListener("click",()=>{ p.activaFmt=el.dataset.fmt; renderTablero(); renderForm(); cambiarPanelTab("editar"); }));
+  const irATamano = (f)=>{ p.activaFmt=f; renderTablero(); renderComposicionEditor(); };
+  c.querySelectorAll(".ab").forEach(el=>el.addEventListener("click",()=>irATamano(el.dataset.fmt)));
+  c.querySelectorAll(".fmt-pill").forEach(el=>el.addEventListener("click",()=>irATamano(el.dataset.fmt)));
   // El overlay del lienzo se mide DESPUÉS de pintar (necesita tamaños reales).
   requestAnimationFrame(()=>{ try{ attachLienzoInteraccion(p, c); }catch(e){ console.warn("lienzo:",e); } });
   // El INSPECTOR corre sobre el render ya pintado, también sobre las ediciones
@@ -6540,7 +6587,7 @@ function pintarResumenInspector(res){
   };
 }
 // Mutadores de la composición global (por ruta, ej. "zonas.texto.titular.texto").
-function setComp(path, val){ const p=pieza(); if(!esComposicion(p))return; setPath(p.composicion, path, val); persistir(); renderTablero(); }
+function setComp(path, val){ const p=pieza(); if(!esComposicion(p))return; setPath(p.composicion, path, val); persistir(); renderTablero(); refrescarPanelBanner(); }
 function toggleCompVis(path){ const p=pieza(); if(!esComposicion(p))return; const cur=getPath(p.composicion,path); setComp(path, !(cur!==false)); renderComposicionEditor(); }
 // Numéricos con CLAMP: nunca se guardan dimensiones fuera del rango permitido.
 function clampN(v, mn, mx){ v=parseFloat(v); if(isNaN(v)) return mn; return Math.max(mn, Math.min(mx, v)); }
@@ -6619,6 +6666,7 @@ function attachLienzoInteraccion(p, root){
     hs.style.cssText=`left:${rc.x}px;top:${rc.y}px;width:${rc.w}px;height:${rc.h}px;`;
     hs.innerHTML=`<span class="lz-ztag">${nombres[i]}</span>`;
     hs.addEventListener("click",(e)=>{ e.stopPropagation(); seleccionarZonaLienzo(fmt, i); });
+    if(["logo","titulo","cta"][i]===elSelComp) hs.classList.add("sel");
     ovl.appendChild(hs);
   });
   // 2) Divisores entre zonas visibles consecutivas.
@@ -6644,6 +6692,23 @@ function attachLienzoInteraccion(p, root){
     x.addEventListener("pointerdown",e=>e.stopPropagation());
     x.addEventListener("click",e=>{ e.stopPropagation(); setCompScope(fmt,"burbuja.visible",false); persistir(); renderTablero(); });
     ovl.appendChild(x);
+  }
+  // 4) LOGO: se arrastra por el banner y se le cambia el tamaño con su tirador.
+  const logoEl = cmp.querySelector(".cmp-logo");
+  if(logoEl){
+    const ponerAsaLogo = ()=>{
+      if(!ovl.isConnected || ovl.querySelector(".lienzo-logo")) return;
+      const rc=rel(logoEl); if(rc.w<=4 || rc.h<=4) return;
+      const hl=document.createElement("div"); hl.className="lienzo-logo"+(elSelComp==="logo"?" sel":"");
+      hl.style.cssText=`left:${rc.x}px;top:${rc.y}px;width:${rc.w}px;height:${rc.h}px;`;
+      hl.title="Arrastra para mover el logo · el tirador cambia su tamaño";
+      hl.addEventListener("click",(e)=>{ e.stopPropagation(); elegirElemento("logo"); });
+      arrastrarLogo(hl, fmt, stage, logoEl, ovl);
+      ovl.appendChild(hl);
+    };
+    // Una imagen sin cargar mide 0x0: el asa se ponía y se descartaba sola.
+    if(logoEl.complete && logoEl.naturalWidth) ponerAsaLogo();
+    else logoEl.addEventListener("load", ponerAsaLogo, {once:true});
   }
   // Texto editable DIRECTO sobre el banner (Título y Bajada).
   hacerTextoEditableLienzo(cmp, ovl, stage, fmt, rel);
@@ -6812,16 +6877,82 @@ function mostrarBarraTexto(ed, stage, fmt, pt){
   stage.querySelector(".lienzo-ovl").appendChild(bar);
 }
 function seleccionarZonaLienzo(fmt, i){
-  const p=pieza(); p.activaFmt=fmt; renderForm(); cambiarPanelTab("editar");
-  // Busca la sección de la zona por su NOMBRE (el orden del formulario no calza
-  // con el índice de zona: hay "Burbujas decorativas" antes de Logo).
-  const claves = ["Logo","Texto","Botón (CTA)"];
-  const nom = claves[i]||"";
-  setTimeout(()=>{
-    let sec=null;
-    document.querySelectorAll("#form .cmp-zona-sec").forEach(s=>{ if(!sec){ const l=s.querySelector(".zlbl"); if(l && l.textContent.trim().indexOf(nom)===0) sec=s; } });
-    if(sec){ sec.scrollIntoView({block:"center",behavior:"smooth"}); sec.classList.add("zona-foco"); setTimeout(()=>sec.classList.remove("zona-foco"),1400); }
-  }, 80);
+  const p=pieza(); p.activaFmt=fmt;
+  // Zona 0 = logo · 1 = textos · 2 = boton. El panel se abre en ESE elemento.
+  elSelComp = ["logo","titulo","cta"][i] || "titulo";
+  renderComposicionEditor();
+}
+// Arrastrar el LOGO por el banner (se imanta a las 9 posiciones) y su tirador
+// para agrandarlo o achicarlo. Es la peticion mas repetida del usuario y no
+// rompe el modelo de 3 zonas: lo que se escribe es su alineacion y su alto.
+function arrastrarLogo(h, fmt, stage, logoEl, ovl){
+  const ANCLAS = [
+    ["left","top"],["center","top"],["right","top"],
+    ["left","center"],["center","center"],["right","center"],
+    ["left","bottom"],["center","bottom"],["right","bottom"]
+  ];
+  // Puntos guia que se encienden mientras arrastras.
+  ANCLAS.forEach(([ah,av],idx)=>{
+    const a=document.createElement("div"); a.className="lz-ancla"; a.dataset.i=idx;
+    a.style.left = (ah==="left"?6:ah==="center"?50:94)+"%";
+    a.style.top  = (av==="top"?6:av==="center"?50:94)+"%";
+    ovl.appendChild(a);
+  });
+  const anclasDom = ()=> [...ovl.querySelectorAll(".lz-ancla")];
+  h.addEventListener("pointerdown",(e)=>{
+    if(e.target.classList.contains("lz-rz")) return;      // el tirador es otra cosa
+    e.preventDefault(); e.stopPropagation();
+    h.classList.add("drag"); ovl.classList.add("arrastrando"); h.setPointerCapture(e.pointerId);
+    const sr=stage.getBoundingClientRect();
+    const W=sr.width, H=sr.height, bw=h.offsetWidth, bh=h.offsetHeight;
+    let destino=["left","top"], iDest=0;
+    const mover=(ev)=>{
+      let x=Math.max(0,Math.min(W-bw, ev.clientX-sr.left-bw/2));
+      let y=Math.max(0,Math.min(H-bh, ev.clientY-sr.top-bh/2));
+      h.style.left=x+"px"; h.style.top=y+"px";
+      const cx=(x+bw/2)/W, cy=(y+bh/2)/H;
+      let mejor=0, dmin=9;
+      ANCLAS.forEach(([ah,av],idx)=>{
+        const ax = ah==="left"?0.06:ah==="center"?0.5:0.94;
+        const ay = av==="top"?0.06:av==="center"?0.5:0.94;
+        const d=(cx-ax)*(cx-ax)+(cy-ay)*(cy-ay);
+        if(d<dmin){ dmin=d; mejor=idx; }
+      });
+      iDest=mejor; destino=ANCLAS[mejor];
+      anclasDom().forEach((a,idx)=>a.classList.toggle("cerca", idx===mejor));
+    };
+    const soltar=()=>{
+      document.removeEventListener("pointermove",mover); document.removeEventListener("pointerup",soltar);
+      h.classList.remove("drag"); ovl.classList.remove("arrastrando");
+      anclasDom().forEach(a=>a.classList.remove("cerca"));
+      setCompScope(fmt,"zonas.logo.alinH",destino[0]);
+      setCompScope(fmt,"zonas.logo.alinV",destino[1]);
+      persistir(); renderTablero();
+    };
+    document.addEventListener("pointermove",mover); document.addEventListener("pointerup",soltar);
+  });
+  // Tirador de tamaño: arrastrar en diagonal cambia el ALTO del logo.
+  const rz=document.createElement("div"); rz.className="lz-rz"; rz.title="Arrastra para cambiar el tamaño del logo";
+  h.appendChild(rz);
+  rz.addEventListener("pointerdown",(e)=>{
+    e.preventDefault(); e.stopPropagation(); rz.setPointerCapture(e.pointerId);
+    const sLienzo = parseFloat(stage.closest(".lienzo")?.dataset.escala) || 1;
+    const k = factorK(fmt) * sLienzo;                        // px de pantalla por unidad base
+    const p0=pieza(); const C=composicionEfectiva(p0,fmt);
+    const alto0 = parseFloat(getPath(C,"zonas.logo.alto"));
+    const base = isNaN(alto0) ? 40 : alto0;
+    const y0=e.clientY; let val=base;
+    const mv=(ev)=>{
+      val = Math.max(10, Math.min(200, Math.round(base + (ev.clientY-y0)/Math.max(0.2,k))));
+      logoEl.style.height=(val*factorK(fmt))+"px";
+      h.style.height=(logoEl.getBoundingClientRect().height)+"px";
+    };
+    const up=()=>{
+      document.removeEventListener("pointermove",mv); document.removeEventListener("pointerup",up);
+      setCompScope(fmt,"zonas.logo.alto",val); persistir(); renderTablero();
+    };
+    document.addEventListener("pointermove",mv); document.addEventListener("pointerup",up);
+  });
 }
 function arrastrarDivisor(div, fmt, a, b, fila, stage, cmp, zonasDom){
   div.addEventListener("pointerdown",(e)=>{
@@ -6877,14 +7008,14 @@ function arrastrarBurbuja(h, fmt, stage, bub){
   });
 }
 // Biblioteca: elegir imagen/logo y aplicarla a una ruta (global o por tamaño).
-function elegirImagenPath(path, fmt){ abrirImagenes(url=>{ if(fmt){ setCompOv(fmt,path,url); renderForm(); } else { setComp(path,url); renderComposicionEditor(); } }); }
+function elegirImagenPath(path, fmt){ abrirImagenes(url=>{ if(fmt) setCompOv(fmt,path,url); else setComp(path,url); renderComposicionEditor(); }); }
 function elegirImagenComp(path){ elegirImagenPath(path, null); }
 // 🪄 Miniaturas de la biblioteca, clic = aplicar (regla 5: sin copiar URL).
 function jsAttr(s){ return String(s).replace(/\\/g,"\\\\").replace(/'/g,"\\'"); }
 function miniaturasBiblioteca(path, fmt){
   const imgs=(workspace.imagenes||[]).slice(0,8);
   if(!imgs.length) return "";
-  const call=(u)=> fmt ? `setCompOv('${fmt}','${path}','${jsAttr(u)}');renderForm()` : `setComp('${path}','${jsAttr(u)}');renderComposicionEditor()`;
+  const call=(u)=> (fmt ? `setCompOv('${fmt}','${path}','${jsAttr(u)}')` : `setComp('${path}','${jsAttr(u)}')`)+`;renderComposicionEditor()`;
   return `<div class="cmp-bibmini">${imgs.map(im=>`<button class="bibmini" title="${escAttr(im.nombre||im.url)}" onclick="${call(im.url)}"><img src="${esc(im.url)}" alt=""></button>`).join("")}</div>`;
 }
 function coloresMarcaPreset(){
@@ -6901,7 +7032,7 @@ function coloresDeMarca(){
 }
 // Swatches de color = SOLO colores de la marca; escriben en una ruta (global o por tamaño).
 function swatchesColor(path, fmt){
-  const re = fmt ? "renderForm()" : "renderComposicionEditor()";
+  const re = "renderComposicionEditor()";
   const set = (c)=> fmt ? `setCompOv('${fmt}','${path}','${c}')` : `setComp('${path}','${c}')`;
   const cols = coloresDeMarca();
   if(!cols.length) return `<span class="cmp-sw-vacio">Aplica una marca para ver su paleta · o usa el HEX</span>`;
@@ -6966,104 +7097,322 @@ function toggleExtraComp(path, fmt){
 // propaga a todos los que heredan, y el máster nunca queda tapado por un override.
 // Selector de DIAGRAMACION: la disposicion del banner. "Libre" = el modelo de
 // 3 zonas de siempre; las demas son las diagramaciones de marca.
-function selectorLayout(C, RE){
-  if(!LAYOUTS_MARCA_ACTIVOS) return "";   // apagadas: ver nota en esLayoutMarca
-  const act = esLayoutMarca(C.layout) ? C.layout : "";
-  const opt = (v,n,sub)=>`<button type="button" class="lay-op${act===v?" on":""}" onclick="setComp('layout','${v}');${RE}" title="${escAttr(sub||"")}">${esc(n)}</button>`;
-  return `<div class="dz-sec">Diagramación</div>
-    <div class="lay-grid">${opt("","Libre","Las 3 zonas de siempre: logo, texto y CTA apilados")}${
-      Object.keys(LAYOUTS_MARCA).map(k=>opt(k,LAYOUTS_MARCA[k].nombre,LAYOUTS_MARCA[k].sub)).join("")}</div>
-    <div class="lay-hint">${act?esc(LAYOUTS_MARCA[act].sub):"Disposición libre: puedes mover los divisores de cada zona."}</div>`;
+// ── PLANTILLAS DE BANNER (las "gráficas modelo") ────────────────────────
+// Una plantilla NO es otro motor de dibujo: es una combinación guardada de
+// decisiones sobre el mismo modelo de 3 zonas — dónde va el logo, cómo se
+// alinea el texto, si hay círculo de oferta y dónde, si hay adornos, cuánto
+// filtro lleva la foto y cómo se reparte el alto. Se hizo así a propósito:
+// las diagramaciones que vivían en su propio render (LAYOUTS_MARCA) fallaban
+// las comprobaciones del inspector en los 11 tamaños, porque no compartían ni
+// las clases ni la escalera de prioridad. Estas heredan las dos cosas, así que
+// una plantilla nunca puede romper un banner.
+const PLANTILLAS_BANNER = {
+  "clasico": { nombre:"Clásico", sub:"logo arriba, texto a la izquierda", set:{
+    "zonas.logo.alinH":"left","zonas.logo.alinV":"top",
+    "zonas.texto.alinH":"left","zonas.cta.alinH":"left",
+    "prop":[25,50,25],"burbuja.visible":false,"deco.visible":false,"fondo.imagen.oscurecer":40 } },
+  "oferta": { nombre:"Oferta", sub:"la cifra manda, en un círculo", set:{
+    "zonas.logo.alinH":"left","zonas.logo.alinV":"top",
+    "zonas.texto.alinH":"left","zonas.cta.alinH":"left",
+    "prop":[22,53,25],"burbuja.visible":true,"burbuja.pos":"tr","deco.visible":false,"fondo.imagen.oscurecer":45 } },
+  "centrado": { nombre:"Centrado", sub:"todo al centro, con adornos", set:{
+    "zonas.logo.alinH":"center","zonas.logo.alinV":"top",
+    "zonas.texto.alinH":"center","zonas.cta.alinH":"center",
+    "prop":[24,50,26],"burbuja.visible":false,"deco.visible":true,"fondo.imagen.oscurecer":50 } },
+  "foto": { nombre:"Sobre la foto", sub:"la fotografía manda, texto abajo", set:{
+    "zonas.logo.alinH":"left","zonas.logo.alinV":"top",
+    "zonas.texto.alinH":"left","zonas.texto.alinV":"bottom","zonas.cta.alinH":"left",
+    "prop":[20,45,35],"burbuja.visible":false,"deco.visible":false,"fondo.imagen.oscurecer":58 } },
+  "tipografico": { nombre:"Tipográfico", sub:"sin foto, manda el mensaje", set:{
+    "zonas.logo.alinH":"left","zonas.logo.alinV":"top",
+    "zonas.texto.alinH":"left","zonas.cta.alinH":"left",
+    "prop":[20,55,25],"burbuja.visible":false,"deco.visible":true,"fondo.tipo":"color" } }
+};
+function aplicarPlantillaBanner(k, fmt){
+  const P = PLANTILLAS_BANNER[k]; if(!P) return;
+  const p = pieza(); if(!esComposicion(p)) return;
+  // La plantilla NO toca el contenido: ni textos, ni colores de marca, ni la
+  // foto elegida. Solo la disposición.
+  Object.keys(P.set).forEach(path=>{
+    const val = P.set[path];
+    if(fmt) setCompOv(fmt, path, Array.isArray(val)?val.slice():val);
+    else    setComp(path, Array.isArray(val)?val.slice():val);
+  });
+  // El círculo solo se enciende si de verdad hay una oferta con cifra.
+  const C = fmt ? composicionEfectiva(p,fmt) : p.composicion;
+  if(P.set["burbuja.visible"]===true && !tieneCifra(getPath(C,"burbuja.texto")||"")){
+    if(fmt) setCompOv(fmt,"burbuja.visible",false); else setComp("burbuja.visible",false);
+  }
+  p._plantilla = k;
+  persistir(); renderTablero(); renderComposicionEditor();
+  toast(`Plantilla «${P.nombre}» aplicada a ${fmt?"este tamaño":"todos los tamaños"}`);
 }
-// ── PANEL SIMPLE del banner ─────────────────────────────────────────────
-// Para dejar un banner listo hay que llenar seis cosas: el titular, la bajada,
-// el botón, la oferta, el legal y la foto. El panel de antes las tenía repartidas
-// entre 35 controles (tamaños, alineaciones, proporciones, fondos por zona,
-// márgenes de cuatro lados) en una sola columna sin jerarquía, y encontrarlas
-// era el trabajo. Este panel muestra SOLO eso, con el nombre encima de cada
-// campo, y manda el resto a "Ajustes avanzados", cerrado.
+// Miniatura de verdad: se dibuja con el MISMO render del banner, con la
+// plantilla aplicada sobre el contenido real de la pieza. Lo que ves es lo que
+// sale.
+function miniaturaPlantilla(p, k){
+  const base = clone(p.composicion || composicionDefault(p.tema));
+  Object.keys(PLANTILLAS_BANNER[k].set).forEach(path=>{
+    const v = PLANTILLAS_BANNER[k].set[path];
+    setPath(base, path, Array.isArray(v)?v.slice():v);
+  });
+  if(getPath(base,"burbuja.visible")===true && !tieneCifra(getPath(base,"burbuja.texto")||""))
+    setPath(base,"burbuja.visible",false);
+  const W=300,H=250,esc=0.34;
+  return `<div class="plt-mini" aria-hidden="true" style="width:${Math.round(W*esc)}px;height:${Math.round(H*esc)}px;">`+
+    `<div class="plt-scale" style="width:${W}px;height:${H}px;transform:scale(${esc});">${renderComposicion(base,"display-300x250")}</div></div>`;
+}
+function selectorLayout(C, RE){
+  const p = pieza(); if(!p || !esComposicion(p)) return "";
+  const act = p._plantilla || "";
+  const fmt = (typeof arguments[2]!=="undefined") ? arguments[2] : null;
+  return `<div class="se-h">${svgIcon("plantilla",{size:"15px"})} Plantilla</div>`+
+    `<div class="plt-grid">`+
+    Object.keys(PLANTILLAS_BANNER).map(k=>{
+      const P=PLANTILLAS_BANNER[k];
+      return `<button type="button" class="plt-op${act===k?" on":""}" onclick="aplicarPlantillaBanner('${k}',${fmt?`'${fmt}'`:"null"})" title="${escAttr(P.sub)}">`+
+             miniaturaPlantilla(p,k)+`<span class="plt-nom">${esc(P.nombre)}</span></button>`;
+    }).join("")+
+    `</div><p class="se-nota">La plantilla cambia la <b>disposición</b>: no toca tus textos, tus colores ni tu foto.</p>`;
+}
+// ── MÓDULO ÚNICO DE EDICIÓN DEL BANNER ──────────────────────────────────
+// Un banner tiene siete elementos: logo, epígrafe, título, bajada, botón,
+// oferta y legal, sobre un fondo. Este panel es UNO SOLO y funciona por
+// ELEMENTO SELECCIONADO: eliges uno (en la fila de arriba o haciendo clic
+// sobre él en el banner) y ves TODOS sus controles a la vez — su texto, su
+// tipografía, su tamaño, su color y su posición. Nada de bucear en acordeones.
 //
-// No hay un segundo modelo de datos: escribe por los MISMOS mutadores
-// (setComp / setCompOv) y respeta el alcance (global o un tamaño). El panel
-// avanzado sigue existiendo entero, así que nada de lo que ya funcionaba se
-// perdió — solo dejó de estar en primer plano.
-function compEditorSimple(p, fmt, ctx){
-  const esMaster = !!fmt && fmt === (p.masterFmt||"display-300x250");
+// Escribe por los mismos mutadores de siempre (setComp / setCompOv) y respeta
+// el alcance: si editas el máster cambia el diseño de todos los tamaños; si
+// editas otro tamaño, solo ese.
+let elSelComp = "titulo";
+function elegirElemento(k){
+  elSelComp = k;
+  renderComposicionEditor();
+  // Marca el elemento en el banner grande para que se vea cuál es.
+  setTimeout(()=>{ const l=document.querySelector(".lienzo-ovl"); if(l) l.dataset.sel=k; }, 30);
+}
+let _refrescoPanel = null;
+function refrescarPanelBanner(){
+  clearTimeout(_refrescoPanel);
+  _refrescoPanel = setTimeout(()=>{
+    const ed = document.getElementById("comp-editor");
+    if(!ed || !ed.innerHTML) return;
+    const p = pieza(); if(!p || !esComposicion(p)) return;
+    const act = p.activaFmt || p.masterFmt;
+    const fmt = (act && act !== (p.masterFmt||"display-300x250")) ? act : null;
+    const C = fmt ? composicionEfectiva(p,fmt) : (p.composicion||composicionDefault(p.tema));
+    // Chips: cuáles tienen contenido y cuál está elegido.
+    ed.querySelectorAll(".se-chip").forEach((b,i)=>{
+      const e = ELEMENTOS_COMP[i]; if(!e) return;
+      const vacio = e.ruta ? !String(getPath(C,e.ruta)||"").trim() : false;
+      b.classList.toggle("vacio", vacio);
+      b.classList.toggle("on", elSelComp===e.k);
+    });
+    // Miniaturas de plantilla: se redibujan con el contenido real de la pieza.
+    const grid = ed.querySelector(".plt-grid");
+    if(grid) grid.querySelectorAll(".plt-op").forEach(op=>{
+      const k = (/aplicarPlantillaBanner\('([^']+)'/.exec(op.getAttribute("onclick"))||[])[1];
+      if(!k) return;
+      const mini = op.querySelector(".plt-mini");
+      if(mini) mini.outerHTML = miniaturaPlantilla(p, k);
+    });
+  }, 420);
+}
+// −/+ de un número: sumar y restar es lo que se hace de verdad con un tamaño.
+function nudgeComp(path, delta, mn, mx, fmt){
+  const p=pieza(); if(!esComposicion(p)) return;
+  const C = fmt ? composicionEfectiva(p,fmt) : p.composicion;
+  const act = parseFloat(getPath(C,path));
+  const base = isNaN(act) ? (mn+mx)/2 : act;
+  const val = Math.max(mn, Math.min(mx, Math.round(base + delta)));
+  if(fmt) setCompOv(fmt,path,val); else setComp(path,val);
+  renderComposicionEditor();
+}
+// Los elementos del banner, en el orden en que se leen de arriba abajo.
+const ELEMENTOS_COMP = [
+  { k:"logo",     nom:"Logo",     ico:"imagen",    ruta:"zonas.logo.url" },
+  { k:"epigrafe", nom:"Epígrafe", ico:"tag",       ruta:"zonas.texto.etiqueta.texto" },
+  { k:"titulo",   nom:"Título",   ico:"documento", ruta:"zonas.texto.titular.texto" },
+  { k:"bajada",   nom:"Bajada",   ico:"documento", ruta:"zonas.texto.cuerpo.texto" },
+  { k:"cta",      nom:"Botón",    ico:"compartir", ruta:"zonas.cta.texto" },
+  { k:"oferta",   nom:"Oferta",   ico:"estrella",  ruta:"burbuja.texto" },
+  { k:"legal",    nom:"Legal",    ico:"info",      ruta:"legal" },
+  { k:"fondo",    nom:"Fondo",    ico:"paleta",    ruta:null }
+];
+function compPanelUnico(p, fmt, ctx){
+  const esMaster = !fmt || fmt === (p.masterFmt||"display-300x250");
   const isOv = !!fmt && !esMaster;
   const C = isOv ? composicionEfectiva(p,fmt) : (p.composicion||composicionDefault(p.tema));
-  const RE = (ctx==='form') ? "renderForm()" : "renderComposicionEditor()";
-  const F = fmt ? FORMATOS[fmt] : null;
+  const RE = "renderComposicionEditor()";
+  const F  = fmt ? FORMATOS[fmt] : null;
   const S  = (path,expr)=> isOv ? `setCompOv('${fmt}','${path}',${expr})` : `setComp('${path}',${expr})`;
-  const val = (path)=> escAttr(getPath(C,path)||"");
-  const hex = (path)=>`<input type="text" class="cmp-hex" placeholder="#hex" value="${val(path)}" onchange="${S(path,'this.value')};${RE}" style="width:74px;font-family:var(--f);font-size:11.5px;border:1px solid #dfe4f2;border-radius:7px;padding:6px 7px;text-align:center;">`;
-  const colorFila = (etq,path,def)=>`<div class="se-col"><label>${esc(etq)}</label><input type="color" value="${esc(getPath(C,path)||def)}" oninput="${S(path,'this.value')}"><div class="se-sw">${swatchesColor(path, isOv?fmt:null)}</div>${hex(path)}</div>`;
-  const campo = (etq,path,ph,extra)=>`<div class="se-f"><label>${etq}</label><input type="text" placeholder="${escAttr(ph)}" value="${val(path)}" oninput="${S(path,'this.value')}${extra||''}"></div>`;
+  const SV = (path,val )=> isOv ? `setCompOv('${fmt}','${path}','${val}')` : `setComp('${path}','${val}')`;
+  const TG = (path)=> isOv ? `setCompOvTog('${fmt}','${path}')` : `setCompTog('${path}')`;
+  const NUMF = isOv ? `'${fmt}'` : "null";
+  const V  = (path)=> escAttr(getPath(C,path)||"");
+  const N  = (path,def)=> { const v=parseFloat(getPath(C,path)); return isNaN(v)?def:v; };
 
-  // ── Un tamaño concreto: aquí NO se rediseña, se ajusta. Lo único que se
-  //    necesita casi siempre es esconder algo que no cabe en ese formato.
-  if(isOv){
-    const zonas = [["logo","Logo"],["texto","Textos"],["cta","Botón"]];
-    const tg = (path,nom,extra)=>{
+  // ── Piezas de formulario, todas del mismo tamaño y con su nombre encima ──
+  const fTexto = (etq,path,ph,multi)=> multi
+    ? `<div class="se-f"><label>${etq}</label><textarea placeholder="${escAttr(ph)}" oninput="${S(path,'this.value')}">${esc(getPath(C,path)||'')}</textarea></div>`
+    : `<div class="se-f"><label>${etq}</label><input type="text" placeholder="${escAttr(ph)}" value="${V(path)}" oninput="${S(path,'this.value')}"></div>`;
+  const fFuente = (path)=>`<div class="se-f"><label>Tipografía</label><select onchange="${S(path,'this.value')};${RE}">`+
+    `<option value="">La del banner</option>`+
+    FUENTES.map(([v,l])=>`<option value="${esc(v)}" ${(getPath(C,path)||'')===v?'selected':''}>${esc(l)}</option>`).join("")+`</select></div>`;
+  // Tamaño: número escribible + los botones − y +, que es como se ajusta de verdad.
+  const fTam = (etq,path,mn,mx,def)=>`<div class="se-f se-tam"><label>${etq}</label><div class="se-tamrow">`+
+    `<button type="button" onclick="nudgeComp('${path}',-1,${mn},${mx},${NUMF})" title="Más chico">−</button>`+
+    `<input type="number" min="${mn}" max="${mx}" value="${N(path,def)}" oninput="${isOv?`setCompOvN('${fmt}','${path}',this.value,${mn},${mx})`:`setCompN('${path}',this.value,${mn},${mx})`}" onchange="${RE}">`+
+    `<button type="button" onclick="nudgeComp('${path}',1,${mn},${mx},${NUMF})" title="Más grande">+</button>`+
+    `<span class="se-un">px</span></div></div>`;
+  const fColor = (etq,path,def)=>`<div class="se-col"><label>${esc(etq)}</label>`+
+    `<input type="color" value="${esc(getPath(C,path)||def)}" oninput="${S(path,'this.value')}">`+
+    `<div class="se-sw">${swatchesColor(path, isOv?fmt:null)}</div>`+
+    `<input type="text" class="se-hex" placeholder="#hex" value="${V(path)}" onchange="${S(path,'this.value')};${RE}"></div>`;
+  const fAlinH = (etq,path,def)=>`<div class="se-f"><label>${etq}</label><div class="cmp-alin">`+
+    ['left','center','right'].map(a=>`<button class="${(getPath(C,path)||def)===a?'on':''}" onclick="${SV(path,a)};${RE}" title="${a}">${ICONS[a==='left'?'alignLeft':a==='center'?'alignCenter':'alignRight']}</button>`).join("")+
+    `</div></div>`;
+  const fAlinV = (etq,path,def)=>`<div class="se-f"><label>${etq}</label><div class="cmp-alin">`+
+    [['top','Arriba'],['center','Centro'],['bottom','Abajo']].map(([a,l])=>`<button class="${(getPath(C,path)||def)===a?'on':''}" onclick="${SV(path,a)};${RE}">${l}</button>`).join("")+
+    `</div></div>`;
+  const fEstilo = (base)=>`<div class="se-f"><label>Estilo</label><div class="cmp-alin cmp-estilo">`+
+    `<button class="${getPath(C,base+'.negrita')===true?'on':''}" title="Negrita" onclick="${TG(base+'.negrita')};${RE}"><b>B</b></button>`+
+    `<button class="${getPath(C,base+'.italica')===true?'on':''}" title="Cursiva" onclick="${TG(base+'.italica')};${RE}"><i>i</i></button></div></div>`;
+
+  // ── Fila de elementos: se elige cuál se edita ──────────────────────────
+  const chips = ELEMENTOS_COMP.map(e=>{
+    const vacio = e.ruta ? !String(getPath(C,e.ruta)||"").trim() : false;
+    return `<button type="button" class="se-chip${elSelComp===e.k?' on':''}${vacio?' vacio':''}" onclick="elegirElemento('${e.k}')" title="${vacio?'Todavía sin contenido':''}">`+
+           `${svgIcon(e.ico,{size:"14px"})} ${esc(e.nom)}</button>`;
+  }).join("");
+  let h = `<div class="se-h">${svgIcon("editar",{size:"15px"})} ¿Qué elemento quieres editar?</div>`;
+  h += `<div class="se-chips">${chips}</div>`;
+  h += `<p class="se-nota">También puedes hacer <b>clic sobre el elemento en el banner</b> de arriba, y arrastrarlo para moverlo.</p>`;
+
+  // ── Controles del elemento seleccionado ───────────────────────────────
+  h += `<div class="se-elem">`;
+  if(elSelComp==="logo"){
+    h += `<div class="se-h2">${svgIcon("imagen",{size:"14px"})} Logo</div>`;
+    h += `<div class="se-acc"><button type="button" onclick="usarLogoMarcaEnZona(${NUMF})">${svgIcon("paleta",{size:"14px"})} El de la marca</button>`+
+         `<button type="button" onclick="elegirImagenPath('zonas.logo.url',${NUMF})">${svgIcon("imagen",{size:"14px"})} Elegir otro</button></div>`;
+    h += `<div class="se-f"><label>Dirección del archivo</label><input type="text" placeholder="${isOv?'Hereda del diseño general':'URL del logo (PNG/SVG)'}" value="${escAttr(isOv?(getPath(ovDeFmt(p,fmt),'zonas.logo.url')||""):(getPath(C,'zonas.logo.url')||""))}" onchange="${S('zonas.logo.url','this.value')}"></div>`;
+    h += fTam("Alto del logo",'zonas.logo.alto',10,200,40);
+    h += fTam("Ancho máximo (%)",'zonas.logo.maxw',15,100,70);
+    h += fAlinH("Posición horizontal",'zonas.logo.alinH','left');
+    h += fAlinV("Posición vertical",'zonas.logo.alinV','center');
+    h += `<p class="se-nota">En el banner puedes <b>arrastrar el logo</b> para moverlo y usar su tirador para agrandarlo o achicarlo.</p>`;
+  }
+  else if(elSelComp==="epigrafe"){
+    h += `<div class="se-h2">${svgIcon("tag",{size:"14px"})} Epígrafe <small>la píldora chica sobre el título</small></div>`;
+    h += fTexto("Texto",'zonas.texto.etiqueta.texto',"Ej. Seguro Auto (opcional)");
+    h += fTam("Tamaño de letra",'zonas.texto.etiqueta.tamano',7,40,11);
+    h += fColor("Fondo",'zonas.texto.etiqueta.color','#3d55a8');
+    h += fColor("Letra",'zonas.texto.etiqueta.colorTexto','#ffffff');
+  }
+  else if(elSelComp==="titulo" || elSelComp==="bajada"){
+    const esTit = elSelComp==="titulo";
+    const B = esTit ? 'zonas.texto.titular' : 'zonas.texto.cuerpo';
+    h += `<div class="se-h2">${svgIcon("documento",{size:"14px"})} ${esTit?"Título":"Bajada"} <small>${esTit?"el mensaje principal":"la frase de apoyo"}</small></div>`;
+    h += fTexto("Texto",B+'.texto', esTit?"Protege lo que más quieres":"Contrátalo en línea en 3 minutos", !esTit);
+    h += fFuente('zonas.texto.fuente');
+    h += fTam("Tamaño de letra",B+'.tamano', esTit?10:8, esTit?200:140, esTit?26:13);
+    h += fEstilo(B);
+    h += fColor("Color",B+'.color','#ffffff');
+    h += fAlinH("Alineación",'zonas.texto.alinH','left');
+    h += fAlinV("Posición del bloque de texto",'zonas.texto.alinV','center');
+    h += fTam("Ancho de la caja (%)",B+'.ancho',20,100,100);
+    h += `<p class="se-nota">También puedes escribir <b>directamente sobre el banner</b>: haz clic en el texto y edítalo ahí.</p>`;
+  }
+  else if(elSelComp==="cta"){
+    h += `<div class="se-h2">${svgIcon("compartir",{size:"14px"})} Botón</div>`;
+    h += fTexto("Texto del botón",'zonas.cta.texto',"Cotiza aquí");
+    h += fTexto("Link al que lleva",'zonas.cta.url',"https://…");
+    h += fFuente('zonas.cta.fuente');
+    h += fTam("Tamaño de letra",'zonas.cta.tamano',8,120,13);
+    h += fEstilo('zonas.cta');
+    h += fColor("Fondo del botón",'zonas.cta.colorFondo','#2f80ed');
+    h += fColor("Letra",'zonas.cta.colorTexto','#ffffff');
+    h += fTam("Redondeo de las esquinas",'zonas.cta.radio',0,60,0);
+    h += fAlinH("Alineación",'zonas.cta.alinH','left');
+    h += fAlinV("Posición vertical",'zonas.cta.alinV','center');
+  }
+  else if(elSelComp==="oferta"){
+    h += `<div class="se-h2">${svgIcon("estrella",{size:"14px"})} Oferta <small>el círculo de promoción</small></div>`;
+    h += `<div class="se-f"><label>Texto de la oferta <small>· se enciende al escribirla</small></label><input type="text" placeholder="Ej. 60% dcto. · 2 cuotas gratis" value="${V('burbuja.texto')}" oninput="setCompOferta(this.value,${NUMF})"></div>`;
+    h += fTam("Tamaño del círculo",'burbuja.tamano',40,400,96);
+    h += fColor("Color del círculo",'burbuja.color','#d9e05f');
+    h += fColor("Letra",'burbuja.colorTexto','#0e2748');
+    h += `<div class="se-f"><label>Posición</label><select onchange="${S('burbuja.pos','this.value')};${RE}">`+
+      [['tr','Arriba derecha'],['cr','Centro derecha'],['br','Abajo derecha'],['tl','Arriba izquierda'],['bl','Abajo izquierda']]
+      .map(([v,l])=>`<option value="${v}" ${(getPath(C,'burbuja.pos')||'tr')===v?'selected':''}>${l}</option>`).join("")+`</select></div>`;
+    h += `<p class="se-nota">Si el texto parte con un número («60% dcto.»), el número sale grande. En el banner puedes <b>arrastrar el círculo</b> para moverlo.</p>`;
+  }
+  else if(elSelComp==="legal"){
+    h += `<div class="se-h2">${svgIcon("info",{size:"14px"})} Legal <small>una línea, en la banda de abajo</small></div>`;
+    h += fTexto("Texto legal",'legal',"Ej. Sujeto a evaluación. Infórmate en el sitio.");
+    h += fTam("Tamaño de letra",'legalTamano',6,40,9);
+    h += `<p class="se-nota">Va en su propia banda inferior, nunca encima de la foto. En los formatos más chicos cae, porque no hay sitio para una línea legible.</p>`;
+  }
+  else {   // fondo
+    const esFoto = (getPath(C,'fondo.tipo')||'color')==='imagen';
+    h += `<div class="se-h2">${svgIcon("paleta",{size:"14px"})} Fondo del banner</div>`;
+    h += `<div class="se-seg2"><button type="button" class="${esFoto?'':'on'}" onclick="setCompFoto('',${NUMF})">Color</button>`+
+         `<button type="button" class="${esFoto?'on':''}" onclick="elegirImagenPath('fondo.imagen.url',${NUMF})">Fotografía</button></div>`;
+    h += fColor("Color de fondo",'fondo.color','#0e2748');
+    const fotos = (workspace.imagenes||[]).filter(sirveComoFondo).slice(0,7);
+    const urlAct = String(getPath(C,'fondo.imagen.url')||"");
+    h += `<div class="se-f"><label>Fotografía</label><div class="se-fotos">`+
+         `<button type="button" class="se-nofoto${esFoto?'':' on'}" onclick="setCompFoto('',${NUMF})">Sin foto</button>`+
+         fotos.map(im=>`<button type="button" class="${esFoto&&im.url===urlAct?'on':''}" title="${escAttr(im.nombre||im.url)}" onclick="setCompFoto('${jsAttr(im.url)}',${NUMF})"><img src="${esc(im.url)}" alt=""></button>`).join("")+
+         `</div></div>`;
+    if(!fotos.length){
+      const total=(workspace.imagenes||[]).length;
+      h += total
+        ? `<div class="se-vacio">En tu biblioteca hay ${total} imagen${total===1?"":"es"}, pero ninguna sirve de fondo: son logotipos o vectores. Un logo de fondo sale gigante y deformado.</div>`
+        : `<div class="se-vacio">Tu biblioteca no tiene fotos todavía. Súbelas o pídele una a Char-B.</div>`;
+    }
+    h += `<div class="se-acc"><button type="button" onclick="elegirImagenPath('fondo.imagen.url',${NUMF})">${svgIcon("imagen",{size:"14px"})} Toda la biblioteca</button>`+
+         `<button type="button" class="se-ia" onclick="generarFondoIA()">${svgIcon("estrella",{size:"14px"})} Generar con IA</button></div>`;
+    if(esFoto){
+      // EL FILTRO. Es lo que oscurece la foto para que el texto se lea encima;
+      // se ajusta con el deslizador y se quita del todo con el botón.
+      const vel = N('fondo.imagen.oscurecer',40);
+      h += `<div class="se-f"><label>Filtro oscuro sobre la foto <small>· ${vel}%</small></label>`+
+           `<div class="se-tamrow"><input type="range" min="0" max="80" value="${vel}" oninput="${isOv?`setCompOvN('${fmt}','fondo.imagen.oscurecer',this.value,0,80)`:`setCompN('fondo.imagen.oscurecer',this.value,0,80)`}" onchange="${RE}">`+
+           `<button type="button" class="se-quitar" onclick="${SV('fondo.imagen.oscurecer','0')};${RE}">Quitar filtro</button></div>`+
+           `<p class="se-nota">El filtro existe para que el texto se lea sobre la foto. Si lo quitas del todo, revisa que el titular siga legible.</p></div>`;
+      h += `<div class="se-f"><label>Encuadre</label><select onchange="${S('fondo.imagen.fit','this.value')};${RE}">`+
+        [['cover','Cubrir todo el banner'],['contain','Mostrar la foto entera']].map(([v,l])=>`<option value="${v}" ${(getPath(C,'fondo.imagen.fit')||'cover')===v?'selected':''}>${l}</option>`).join("")+`</select></div>`;
+      h += `<div class="se-f"><label>Parte de la foto que manda</label><select onchange="${S('fondo.imagen.foco','this.value')};${RE}">`+
+        [['center','El centro'],['top','La parte de arriba'],['bottom','La de abajo'],['left','La izquierda'],['right','La derecha']].map(([v,l])=>`<option value="${v}" ${(getPath(C,'fondo.imagen.foco')||'center')===v?'selected':''}>${l}</option>`).join("")+`</select></div>`;
+      h += fTam("Acercar la foto (%)",'fondo.imagen.zoom',50,300,100);
+    }
+  }
+  h += `</div>`;
+
+  // ── Tipografía y ajustes que valen para TODO el banner ────────────────
+  if(!isOv){
+    h += `<div class="se-h">${svgIcon("paleta",{size:"15px"})} Todo el banner</div>`;
+    const fuenteG = getPath(C,'zonas.texto.fuente')||'';
+    h += `<div class="se-f"><label>Tipografía del banner</label><select onchange="setComp('zonas.texto.fuente',this.value);setComp('zonas.cta.fuente',this.value);renderComposicionEditor()">`+
+      `<option value="">La del tema</option>`+
+      FUENTES.map(([v,l])=>`<option value="${esc(v)}" ${fuenteG===v?'selected':''}>${esc(l)}</option>`).join("")+`</select></div>`;
+  } else {
+    h += `<div class="se-h">${svgIcon("ojo",{size:"15px"})} ¿Qué se ve en ${F?F.ancho+"×"+F.alto:"este tamaño"}?</div>`;
+    const tg=(path,nom,extra)=>{
       const off = extra ? getPath(C,path)!==true : getPath(C,path)===false;
-      const click = extra
-        ? `toggleExtraComp('${path}','${fmt}')`
-        : `toggleCompVisOv('${fmt}','${path}')`;
+      const click = extra ? `toggleExtraComp('${path}','${fmt}')` : `toggleCompVisOv('${fmt}','${path}')`;
       return `<button type="button" class="${off?'off':''}" onclick="${click}">${esc(nom)}<span class="se-tp">${off?"Oculto":"Se ve"}</span></button>`;
     };
-    let h = `<div class="se-h">${svgIcon("ojo",{size:"15px"})} ¿Qué se ve en ${F?F.ancho+"×"+F.alto:"este tamaño"}?</div>`;
-    h += `<p class="se-nota">Este tamaño toma todo del diseño general. Apaga aquí lo que no le calce, sin tocar los demás.</p>`;
-    h += `<div class="se-toggles">${zonas.map(([k,n])=>tg('zonas.'+k+'.visible',n)).join("")}`
-       + tg('burbuja.visible','Círculo de oferta',true)
-       + tg('deco.visible','Adornos',true) + `</div>`;
-    h += `<details class="se-avz"><summary>Ajustes avanzados de este tamaño (textos propios, colores, posiciones)</summary><div>${compEditorHTML(p,fmt,ctx)}</div></details>`;
-    return h;
+    h += `<div class="se-toggles">`+[["logo","Logo"],["texto","Textos"],["cta","Botón"]].map(([k,n])=>tg('zonas.'+k+'.visible',n)).join("")
+       + tg('burbuja.visible','Círculo de oferta',true) + tg('deco.visible','Adornos',true) + `</div>`;
   }
-
-  // ── Diseño general (lo que heredan los 11 tamaños) ─────────────────────
-  let h = "";
-  // 1 · TEXTOS. En el orden en que aparecen en el banco, de arriba abajo.
-  h += `<div class="se-h"><span class="se-n">1</span> Textos</div>`;
-  h += campo(`Epígrafe <small>· la píldora chica sobre el título</small>`,'zonas.texto.etiqueta.texto',"Ej. Seguro Auto (opcional)");
-  h += campo(`Título <small>· el mensaje principal</small>`,'zonas.texto.titular.texto',"Protege lo que más quieres");
-  h += `<div class="se-f"><label>Bajada <small>· una frase de apoyo</small></label><textarea placeholder="Contrátalo en línea en 3 minutos" oninput="${S('zonas.texto.cuerpo.texto','this.value')}">${esc(getPath(C,'zonas.texto.cuerpo.texto')||'')}</textarea></div>`;
-  h += `<div class="se-f se-2"><div><label>Botón</label><input type="text" placeholder="Cotiza aquí" value="${val('zonas.cta.texto')}" oninput="${S('zonas.cta.texto','this.value')}"></div><div><label>Link del botón</label><input type="text" placeholder="https://…" value="${val('zonas.cta.url')}" onchange="${S('zonas.cta.url','this.value')}"></div></div>`;
-  // La oferta enciende el círculo sola: tener que escribir el texto Y además
-  // acordarse de un interruptor aparte era uno de los pasos que se perdían.
-  h += `<div class="se-f"><label>Oferta en círculo <small>· se enciende al escribirla</small></label><input type="text" placeholder="Ej. 60% dcto. · 2 cuotas gratis" value="${val('burbuja.texto')}" oninput="setCompOferta(this.value,null)"></div>`;
-  if(!tieneCifra(getPath(C,'burbuja.texto')||"")&&String(getPath(C,'burbuja.texto')||"").trim())
-    h += `<p class="se-nota">El círculo se muestra solo cuando la oferta trae una cifra («60%», «2 cuotas»). Sin número, el texto va en la bajada.</p>`;
-  // El legal se renderizaba en su banda inferior pero NO habia donde escribirlo.
-  h += campo(`Legal <small>· una línea, en la banda de abajo</small>`,'legal',"Ej. Sujeto a evaluación. Infórmate en zurich.cl");
-  // 2 · FOTO
-  const esFoto = (getPath(C,'fondo.tipo')||'color')==='imagen';
-  const urlAct = String(getPath(C,'fondo.imagen.url')||"");
-  const fotos = (workspace.imagenes||[]).filter(sirveComoFondo).slice(0,7);
-  h += `<div class="se-h"><span class="se-n">2</span> Foto de fondo</div>`;
-  h += `<div class="se-fotos"><button type="button" class="se-nofoto${esFoto?'':' on'}" onclick="setCompFoto('',null)" title="Fondo de color plano">Sin foto</button>`
-     + fotos.map(im=>`<button type="button" class="${esFoto&&im.url===urlAct?'on':''}" title="${escAttr(im.nombre||im.url)}" onclick="setCompFoto('${jsAttr(im.url)}',null)"><img src="${esc(im.url)}" alt=""></button>`).join("")
-     + `</div>`;
-  // Dos vacíos distintos: no tener fotos y tener solo logotipos. El segundo se
-  // explica, porque si no parece que la biblioteca esté rota.
-  if(!fotos.length){
-    const total = (workspace.imagenes||[]).length;
-    h += total
-      ? `<div class="se-vacio">En tu biblioteca hay ${total} imagen${total===1?"":"es"}, pero ninguna sirve de fondo: son logotipos o vectores. Un logo de fondo sale gigante y deformado — el logo va en su esquina. Sube una fotografía o pídele una a Char-B.</div>`
-      : `<div class="se-vacio">Tu biblioteca no tiene fotos todavía. Súbelas o pídele una a Char-B.</div>`;
-  }
-  h += `<div class="se-acc"><button type="button" onclick="elegirImagenPath('fondo.imagen.url',null)">${svgIcon("imagen",{size:"14px"})} Toda la biblioteca</button><button type="button" class="se-ia" onclick="generarFondoIA()">${svgIcon("estrella",{size:"14px"})} Generar con IA</button></div>`;
-  // 3 · COLORES. Los tres que se cambian de verdad; el resto, en avanzados.
-  h += `<div class="se-h"><span class="se-n">3</span> Colores</div>`;
-  h += colorFila("Fondo",'fondo.color','#0e2748');
-  h += colorFila("Botón",'zonas.cta.colorFondo','#2f80ed');
-  h += colorFila("Oferta",'burbuja.color','#d9e05f');
-  h += `<p class="se-nota">Los cuadraditos son la paleta de la marca aplicada. El texto se aclara u oscurece solo según el fondo.</p>`;
-  // 4 · LOGO: una sola decisión (cuál), no tres (url + alto + ancho máx).
-  h += `<div class="se-h"><span class="se-n">4</span> Logo</div>`;
-  h += `<div class="se-acc"><button type="button" onclick="usarLogoMarcaEnZona(null)">${svgIcon("paleta",{size:"14px"})} El de la marca</button><button type="button" onclick="elegirImagenPath('zonas.logo.url',null)">${svgIcon("imagen",{size:"14px"})} Elegir otro</button></div>`;
-  h += `<p class="se-nota">Va en todas las piezas y nunca se cae: si el fondo es oscuro se usa la versión clara, y su tamaño lo pone el formato.</p>`;
-  h += `<details class="se-avz"><summary>Ajustes avanzados (tipografía, tamaños, alineaciones, proporciones, márgenes, adornos)</summary><div>${compEditorHTML(p,fmt,ctx)}</div></details>`;
+  h += `<details class="se-avz"><summary>Ajustes finos (proporciones de las zonas, márgenes, adornos, fondo por zona)</summary><div>${compEditorHTML(p,fmt,ctx)}</div></details>`;
   return h;
 }
+// Se conserva el nombre anterior: lo llaman renderComposicionEditor y renderFormTamaño.
+function compEditorSimple(p, fmt, ctx){ return compPanelUnico(p, fmt, ctx); }
 // La oferta y el círculo son una sola cosa para el usuario: al escribir se
 // enciende, al borrar se apaga. Antes eran dos pasos y el segundo se olvidaba.
 function setCompOferta(txt, fmt){
@@ -7077,14 +7426,14 @@ function setCompFoto(url, fmt){
   const set = (p,v)=> fmt ? setCompOv(fmt,p,v) : setComp(p,v);
   if(u){ set('fondo.imagen.url',u); set('fondo.tipo','imagen'); }
   else { set('fondo.tipo','color'); }
-  if(fmt) renderForm(); else renderComposicionEditor();
+  renderComposicionEditor();
 }
 function compEditorHTML(p, fmt, ctx){
   const esMaster = !!fmt && fmt === (p.masterFmt||"display-300x250");
   const isOv = !!fmt && !esMaster;
   const C = isOv ? composicionEfectiva(p,fmt) : (p.composicion||composicionDefault(p.tema));
   const ov = isOv ? ovDeFmt(p,fmt) : null;
-  const RE = (ctx==='form') ? "renderForm()" : "renderComposicionEditor()";
+  const RE = "renderComposicionEditor()";
   const S = (path,expr)=> isOv ? `setCompOv('${fmt}','${path}',${expr})` : `setComp('${path}',${expr})`;
   const SV = (path,val)=> isOv ? `setCompOv('${fmt}','${path}','${val}')` : `setComp('${path}','${val}')`;
   const NUM = (path,mn,mx)=> isOv ? `setCompOvN('${fmt}','${path}',this.value,${mn},${mx})` : `setCompN('${path}',this.value,${mn},${mx})`;
@@ -7197,7 +7546,26 @@ function compScopeHeader(fmt){
     : `Lo que cambies aquí afecta <b>solo este tamaño</b>; los demás siguen igual.`;
   return `<div class="cmp-scope"><div class="cmp-scope-lbl">¿Qué estás editando?</div><div class="cmp-scope-seg">${btnTodos}${btnUno}</div><p class="cmp-scope-hint">${hint}</p></div>`;
 }
-// Editor del Diseño global (3 zonas con controles por zona).
+// ── EL MÓDULO DE EDICIÓN DEL BANNER (uno solo) ──────────────────────────
+// Mismo contenido lo abras por donde lo abras: alcance, marca, diagramación y
+// los controles del elemento seleccionado. Lo que cambia es SOBRE QUÉ escribe:
+// si el tamaño activo es el máster, sobre el diseño de todos; si es otro, solo
+// sobre ese. Antes había dos paneles distintos ("Diseño global" y "Ajustar
+// tamaño") y el segundo se quedó sin controles.
+function moduloBannerHTML(p, fmt, ctx){
+  const marcas = workspace.marcas||[];
+  const C0 = p.composicion || composicionDefault(p.tema);
+  const marcaSel = `<div class="se-f"><label>Marca</label><div class="se-tamrow">`+
+    `<select onchange="if(this.value)aplicarMarca(this.value)">`+
+    `<option value="">${marcas.length?'— Aplicar una marca —':'— Sin marcas (crea una) —'}</option>`+
+    marcas.map(m=>`<option value="${m.id}" ${p.tema&&p.tema.marcaId===m.id?'selected':''}>${esc(m.nombre)}</option>`).join('')+
+    `</select><button type="button" class="cmp-bib" onclick="abrirMarcas()" title="Gestionar marcas">${svgIcon("paleta",{size:"13px"})}</button></div></div>`;
+  const RE = "renderComposicionEditor()";
+  return `<div class="cmp-ed">${compScopeHeader(fmt)}${marcaSel}${panelFacebookHTML()}`+
+    `${selectorLayout(C0, RE+";renderTablero()", fmt && fmt!==(p.masterFmt||"display-300x250") ? fmt : null)}`+
+    `<button class="ia-sugerir" onclick="sugerirTextosIA()">${svgIcon("estrella",{size:"13px"})} Sugerir textos con Char-B</button>`+
+    `${compPanelUnico(p, fmt, ctx)}</div>`;
+}
 function renderComposicionEditor(){
   const cont=document.getElementById("comp-editor"), tema=document.getElementById("diseno-tema");
   const p=pieza();
@@ -7205,21 +7573,17 @@ function renderComposicionEditor(){
   if(!esComposicion(p)){ cont.style.display="none"; cont.innerHTML=""; if(tema) tema.style.display=""; return; }
   asegurarComposicionNueva(p);
   cont.style.display=""; if(tema) tema.style.display="none";
-  const marcas = workspace.marcas||[];
-  const marcaSel = `<div class="dz-sec">Marca</div><div class="cmp-row"><select onchange="if(this.value)aplicarMarca(this.value)">`+
-    `<option value="">${marcas.length?'— Aplicar marca —':'— Sin marcas (crea una) —'}</option>`+
-    marcas.map(m=>`<option value="${m.id}" ${p.tema&&p.tema.marcaId===m.id?'selected':''}>${esc(m.nombre)}</option>`).join('')+
-    `</select><button class="cmp-bib" onclick="abrirMarcas()" title="Gestionar marcas">${svgIcon("paleta",{size:"12px"})}</button></div>`;
-  const C0 = p.composicion || composicionDefault(p.tema);
-  cont.innerHTML=`<div class="cmp-ed">${compScopeHeader(null)}${marcaSel}${panelFacebookHTML()}${selectorLayout(C0,"renderComposicionEditor();renderTablero()")}<button class="ia-sugerir" onclick="sugerirTextosIA()">${svgIcon("estrella",{size:"13px"})} Sugerir textos con Char-B</button>${compEditorSimple(p,null,'diseno')}</div>`;
+  // Sobre el tamaño activo: si es el máster, escribe el diseño de todos.
+  const act = p.activaFmt || p.masterFmt;
+  const fmtMod = (act && act !== (p.masterFmt||"display-300x250")) ? act : null;
+  cont.innerHTML = moduloBannerHTML(p, fmtMod, 'diseno');
+  pintarIconos();
 }
-// Panel "Ajustar este tamaño" (overrides sobre el global) en la pestaña Editar.
+// El panel de un banner es UNO SOLO y vive en "diseno". Este hueco existía
+// para el editor de bloques y se quedó pintando una copia invisible del módulo
+// entero: mismo trabajo dos veces por cada tecla.
 function renderFormTamaño(f){
-  const p=pieza(); asegurarComposicionNueva(p); const fmt=p.activaFmt; const F=FORMATOS[fmt];
-  if(!fmt||!F){ f.innerHTML=`<div class="form-empty"><div class="form-empty-ico">${svgIcon("editar",{size:"32px"})}</div>Haz clic en un banner del tablero<br>para ajustar ese tamaño</div>`; return; }
-  const esMaster = fmt === (p.masterFmt||"display-300x250");
-  const reset = esMaster ? "" : `<button class="set-aj-reset" onclick="resetTamaño('${fmt}')">${svgIcon("deshacer",{size:"12px"})} Restablecer este tamaño (volver al de todos)</button>`;
-  f.innerHTML=`<div class="cmp-ed">${compScopeHeader(fmt)}${compEditorSimple(p,fmt,'form')}${reset}</div>`;
+  f.innerHTML = `<div class="form-empty"><div class="form-empty-ico">${svgIcon("editar",{size:"32px"})}</div>El banner se edita en el panel de la izquierda</div>`;
 }
 function cssComponentes(){
   const cssFull = (document.querySelector("style") && document.querySelector("style").textContent) || "";
@@ -7454,7 +7818,10 @@ function actualizarUISet(){
   if(typeof renderComposicionEditor === "function") renderComposicionEditor();
   // Panel izquierdo: la campaña Search tiene SU panel (no bloques/plantillas,
   // que no existen ahí); el resto usa las pestañas de siempre.
-  const tabs = document.querySelector(".panel-tabs"); if(tabs) tabs.style.display = esAds ? "none" : "";
+  // Un banner se edita en UN SOLO modulo: las pestanas (Bloques / Diseno /
+  // Editar bloque / Plantillas) son del editor de documentos y aqui solo
+  // estorban — antes quedaban a la vista, deshabilitadas.
+  const tabs = document.querySelector(".panel-tabs"); if(tabs) tabs.style.display = (esAds || esCap) ? "none" : "";
   const paneAds = document.getElementById("pane-ads"); if(paneAds) paneAds.style.display = esAds ? "" : "none";
   if(esAds){
     document.querySelectorAll(".ptab-pane").forEach(p => { if(p.id !== "pane-ads") p.style.display = "none"; });
@@ -7467,7 +7834,7 @@ function actualizarUISet(){
   setTab("ptab-plantillas", es || esAds, esAds ? "La campaña Search se genera con Char-B y se edita en su consola" : "No aplica en colecciones (edita cada banner del tablero)");
   setTab("ptab-bloques", esCap || esAds, esAds ? "La campaña Search se edita directo en su consola (clic en los textos)" : "En colecciones edita las CAPAS (Diseño global / Ajustar tamaño)");
   // Si la pestaña activa quedó bloqueada, mover a una válida.
-  if(!esAds && (esCap) && (panelTab==="bloques" || panelTab==="plantillas")) cambiarPanelTab("diseno");
+  if(!esAds && esCap && panelTab!=="diseno") cambiarPanelTab("diseno");   // un solo modulo
   actualizarModoEmail3();
 }
 // (compat) el set ya no usa ventana; el tablero vive en el lienzo.
