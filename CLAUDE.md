@@ -737,3 +737,41 @@ Ese motor sigue protegido por la batería: es el de las piezas ya guardadas.
 
 **PENDIENTE de esta línea:** edición del texto directamente sobre el banner (hoy se escribe en el
 panel); y que el asistente de IA sepa generar en este modelo.
+
+## 8-sep-2026: "se murió el aplicativo" — dos causas, ninguna del aplicativo
+El usuario abrió la app tras tres semanas: al pulsar **Google Display** en el Home salía el error
+*"No se pudo interpretar la respuesta de la IA como JSON. Inicio: …? Wait, what about `https://lh3…`?
+Let's re-read: «IMÁGENES CANDIDATAS (mira…"*. El dashboard, los proyectos y todo lo demás cargaban:
+lo que se cayó fue la generación con Gemini. **Dos fallos que se sumaban.**
+
+**1 · EL RUTEO ESTABA MAL, y es la causa de fondo.** Las tarjetas del Home llamaban a
+`crearConIA(plat)` → asistente → Gemini. Eso se cableó el 17-ago, cuando la regla vigente era la del
+§01 ("sin lienzo en blanco, toda pieza nace de la IA"), y **no se volvió a tocar cuando el usuario
+entregó su modelo el 18-ago**, que dice lo contrario: *"sale el banner de 300x250 en blanco… empiezo a
+diseñar… guardo y aprieto replicar"*. Ahora `crearConIA` reparte por producto:
+- **Google Display y Facebook Ads → `crearBannerEnBlanco(plat)`**: proyecto nuevo, colección con sus
+  tamaños, lienzo libre VACÍO y derecho al editor. **La IA no dibuja el banner.**
+- **Google Search → asistente**: grupos, keywords y RSA no se dibujan a mano.
+- **Campaña completa** → las gráficas en blanco en el MISMO proyecto y después el asistente para Search.
+
+**2 · GEMINI DEVOLVÍA SU RAZONAMIENTO PEGADO AL JSON.** `intentarGemini` hacía
+`parts.map(p => p.text).join('')` — **concatenaba TODAS las partes, incluidas las de pensamiento**
+(`thought: true`), que los modelos nuevos devuelven junto a la respuesta. Por qué "funcionaba y dejó de
+funcionar" sin tocar el código: la cadena empieza por **`gemini-flash-latest`**, que es un **ALIAS** que
+Google repunta; el modelo al que apunta hoy piensa aunque se le pida `thinkingBudget: 0`. Arreglado en
+cuatro capas:
+- Se **filtran las partes `thought`**, con red de seguridad si el modelo no las marca (o las marca todas).
+- **`extraerJSON` ya no se rinde con el primer `{`**: probaba ese, fallaba el `JSON.parse` y devolvía
+  `undefined` aunque la respuesta buena viniera después. Ahora prueba todos los comienzos (tope 80) y se
+  queda con el bloque válido **más grande** — el razonamiento cita fragmentos pequeños, la respuesta es
+  la grande.
+- Un **400 reintenta sin `thinkingConfig`** aunque se hubiera pedido 0 (antes solo si `pensar !== 0`;
+  hay modelos que rechazan que se les desactive el pensamiento).
+- **`finishReason: MAX_TOKENS`** se reporta como lo que es ("se quedó sin espacio y el JSON llegó
+  cortado"), no como "no es JSON", que manda a buscar el problema donde no está.
+
+**Verificación:** `pruebas/ia-json.js` (nueva, sin navegador, registrada en `correr-todo.sh`) **16/16**
+con la respuesta REAL que rompió la app; `libre.js` **28/28** con un espía sobre `abrirIA` que caza si
+alguien vuelve a cablear las gráficas a la IA; `alcance.js` **42/42** — su sección 2 se reescribió,
+porque afirmaba la regla del §01 que el modelo del usuario sustituyó. Batería completa (18 pruebas) EN
+VERDE y recorrido SIN HALLAZGOS.

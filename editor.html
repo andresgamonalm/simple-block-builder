@@ -10743,15 +10743,50 @@ function iaPintaPiezas(){
 // plataforma ya marcada en vez de dejar un banner vacío que el usuario tenga que
 // llenar control por control — que era justamente lo que hacía el editor
 // inentendible: se llegaba a una pieza en cero.
+// Crear una pieza. DOS caminos, y la diferencia es del producto, no del capricho:
+//
+//   · GRÁFICAS (Google Display · Facebook Ads) → LIENZO EN BLANCO. Es el modelo
+//     del usuario: diseña el máster a mano con sus herramientas, guarda y pulsa
+//     "Replicar". La IA no dibuja el banner. (Esto SUSTITUYE la regla "sin
+//     lienzo en blanco" del §01 del manual: el usuario la cambió por escrito.)
+//   · GOOGLE SEARCH → asistente. Una campaña de Search son grupos, keywords y
+//     anuncios RSA: eso no se dibuja a mano, lo escribe la IA.
+//
+// Hasta hoy las cuatro tarjetas llamaban al asistente; por eso pulsar "Google
+// Display" se iba a Gemini y, cuando Gemini falló, parecía que se había muerto
+// el aplicativo entero.
 function crearConIA(plat){
-  if(plat==="todas"){
-    iaPiezas = { banner:true, facebook:true, ads:true, email:false };
-    iaPintaPiezas();
-  } else {
-    if(!puedePlat(plat)){ toast("Tu usuario no tiene acceso a este servicio"); return; }
-    iaSetFormato(plat);
+  if(plat==="ads"){
+    if(!puedePlat("ads")){ toast("Tu usuario no tiene acceso a este servicio"); return; }
+    iaSetFormato("ads"); abrirIA(true); return;
   }
-  abrirIA(true);
+  if(plat==="todas"){
+    // La campaña completa: las gráficas nacen en blanco en ESTE proyecto y
+    // después se abre el asistente para la parte de Search.
+    if(!crearBannerEnBlanco("banner", true)) return;
+    if(puedePlat("facebook")) crearBannerEnBlanco("facebook", true);
+    if(puedePlat("ads")){ iaSetFormato("ads"); abrirIA(true); }
+    return;
+  }
+  crearBannerEnBlanco(plat);
+}
+// Crea una colección de banners VACÍA y la abre en el editor.
+// mantenerProyecto = no crear un proyecto nuevo (para la campaña completa).
+function crearBannerEnBlanco(plat, mantenerProyecto){
+  if(!puedePlat(plat)){ toast("Tu usuario no tiene acceso a este servicio"); return false; }
+  const tipoCol = (plat === "facebook") ? "facebook" : "display-desktop";
+  if(!mantenerProyecto || !proyecto){
+    const nom = (plat === "facebook") ? "Facebook Ads" : "Google Display";
+    const pr = { id:uid(), nombre:nom+" · "+new Date().toLocaleDateString("es-CL",{day:"2-digit",month:"short"}),
+                 creado:Date.now(), piezas:[], activa:null };
+    workspace.proyectos.push(pr); proyecto = pr; proyectoVistoId = pr.id;
+  }
+  _rutaActual = (plat === "facebook") ? "/fb-ia" : "/gdn-ia";
+  crearComposicion(tipoCol);          // nace con el lienzo libre, en blanco
+  elLibreSel = null;
+  persistir();
+  setURL(_rutaActual);
+  return true;
 }
 /* Flujo por pasos del Asistente IA (1 Producto · 2 Brief · 3 Resultado). */
 // El asistente es UNA SOLA VENTANA: todos los campos a la vista. `iaIrPaso` ya no

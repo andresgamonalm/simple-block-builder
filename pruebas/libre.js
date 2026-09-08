@@ -144,6 +144,45 @@ const T=(c,n,e)=>{ if(c){ok++;console.log("  ok   "+n);} else {mal++;console.log
   T(/300 × 250/.test(ex.preview) && /728 × 90/.test(ex.preview) && !/336 × 280/.test(ex.preview),
     "y la vista previa muestra esos mismos, no todos");
 
+  console.log("\n6 · Las gráficas nacen EN BLANCO, sin pasar por la IA");
+  // El modelo del usuario: él diseña el máster y pulsa Replicar. La IA no dibuja
+  // el banner. Antes las tarjetas del Home llamaban al asistente y, al fallar
+  // Gemini, parecía que se había caído el aplicativo entero.
+  const cr = await pg.evaluate(async()=>{
+    workspace.proyectos=[]; proyecto=null; proyectoVistoId=null;
+    workspace.marcas=[{id:"m1",nombre:"Zurich",primary:"#2167ae",secondary:"#23366f",cta:"#2167ae",ctaText:"#fff",accent1:"#fff773",accent2:"#91bfe3"}];
+    // Si alguien vuelve a cablear esto a la IA, este espía lo caza.
+    window._ia = 0; const _o = window.abrirIA; window.abrirIA = function(){ window._ia++; return _o.apply(this,arguments); };
+    crearConIA("banner");
+    await new Promise(r=>setTimeout(r,900));
+    const p = pieza();
+    return { asistente:window._ia, hayPieza:!!p, modo:p&&p.composicion&&p.composicion.modo,
+             elementos:p&&p.composicion&&(p.composicion.elementos||[]).length,
+             tamanos:p&&(p.artboards||[]).length, ruta:p&&rutaDeProducto(p),
+             enEditor:!document.getElementById("galeria").classList.contains("show") };
+  });
+  console.log("     "+JSON.stringify(cr));
+  T(cr.asistente===0, "«Google Display» NO abre el asistente de IA", "abrirIA llamado "+cr.asistente+" veces");
+  T(cr.hayPieza && cr.enEditor, "abre el editor directamente");
+  T(cr.modo==="libre", "con el lienzo libre, que es tu modelo", cr.modo);
+  T(cr.elementos===0, "y EN BLANCO: cero elementos", cr.elementos);
+  T(cr.tamanos===11, "con los 11 tamaños listos para replicar", cr.tamanos);
+  const cf = await pg.evaluate(async()=>{
+    window._ia=0; workspace.proyectos=[]; proyecto=null;
+    crearConIA("facebook"); await new Promise(r=>setTimeout(r,900));
+    const p=pieza();
+    return { asistente:window._ia, tipo:p&&p.setTipo, master:p&&p.masterFmt, n:p&&(p.artboards||[]).length };
+  });
+  T(cf.asistente===0 && cf.tipo==="facebook" && cf.n===3,
+    "Facebook Ads igual: en blanco, sus 3 tamaños, sin IA", JSON.stringify(cf));
+  const cs = await pg.evaluate(async()=>{
+    window._ia=0; crearConIA("ads"); await new Promise(r=>setTimeout(r,500));
+    const abierto=document.getElementById("modal-ia").classList.contains("show");
+    cerrarModal("ia"); return { asistente:window._ia, abierto };
+  });
+  T(cs.asistente===1 && cs.abierto,
+    "Google Search SÍ usa el asistente (grupos y keywords no se dibujan a mano)", JSON.stringify(cs));
+
   T(errs.length===0, "sin errores de consola", errs.slice(0,3).join(" | "));
   console.log("\n"+(mal?"FALLA":"TODO OK")+` — ${ok} ok · ${mal} mal`);
   await b.close();

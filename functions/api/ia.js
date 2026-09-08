@@ -521,20 +521,40 @@ function avisosDeReferencias(refs, brief) {
 function extraerJSON(texto) {
   let t = String(texto || '').trim().replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/i, '').trim();
   try { return JSON.parse(t); } catch {}
-  const iObj = t.indexOf('{'), iArr = t.indexOf('[');
-  let start = (iObj < 0) ? iArr : (iArr < 0 ? iObj : Math.min(iObj, iArr));
-  if (start < 0) return undefined;
-  const open = t[start], close = open === '{' ? '}' : ']';
-  let depth = 0, inStr = false, escaped = false;
-  for (let i = start; i < t.length; i++) {
+  // Devuelve el indice donde CIERRA el bloque que abre en `start`, o -1.
+  const cierre = (s, start) => {
+    const open = s[start], close = open === '{' ? '}' : ']';
+    let depth = 0, inStr = false, escaped = false;
+    for (let i = start; i < s.length; i++) {
+      const ch = s[i];
+      if (inStr) { if (escaped) escaped = false; else if (ch === '\\') escaped = true; else if (ch === '"') inStr = false; continue; }
+      if (ch === '"') inStr = true;
+      else if (ch === open) depth++;
+      else if (ch === close) { depth--; if (depth === 0) return i; }
+    }
+    return -1;
+  };
+  // Se prueban TODOS los comienzos posibles, no solo el primero. Cuando el
+  // modelo razona antes de responder, el primer "{" suele estar DENTRO del
+  // razonamiento (un fragmento que el modelo cita): antes se intentaba ese,
+  // fallaba el JSON.parse y se abandonaba devolviendo undefined, aunque la
+  // respuesta buena viniera despues. Nos quedamos con el bloque valido MAS
+  // GRANDE, que es la respuesta y no una cita.
+  let mejor, mejorLargo = -1, probados = 0;
+  for (let i = 0; i < t.length && probados < 80; i++) {
     const ch = t[i];
-    if (inStr) { if (escaped) escaped = false; else if (ch === '\\') escaped = true; else if (ch === '"') inStr = false; continue; }
-    if (ch === '"') inStr = true;
-    else if (ch === open) depth++;
-    else if (ch === close) { depth--; if (depth === 0) { try { return JSON.parse(t.slice(start, i + 1)); } catch { return undefined; } } }
+    if (ch !== '{' && ch !== '[') continue;
+    probados++;
+    const j = cierre(t, i);
+    if (j < 0) continue;
+    try {
+      const v = JSON.parse(t.slice(i, j + 1));
+      if (v && typeof v === 'object' && (j - i) > mejorLargo) { mejor = v; mejorLargo = j - i; }
+    } catch {}
   }
-  return undefined;
+  return mejor;
 }
+
 // Dos gamas de modelo, según la tarea:
 //   COPY (escribir el aviso)  → el modelo que RAZONA. Encontrar el ángulo de un
 //     titular exige descartar las tres ideas obvias antes de escribir; eso es
@@ -578,6 +598,9 @@ async function intentarGemini(env, promptOrParts, maxTokens, temp, o, model) {
 
   // Pensar cuesta tokens de salida: si no se amplía el tope, el modelo gasta el
   // presupuesto razonando y devuelve vacío (el bug que llevó a apagarlo del todo).
+  // Cuerpo sin NINGUN thinkingConfig: para el reintento cuando el modelo
+  // rechaza el parametro (no es lo mismo que pedir presupuesto 0).
+  const cuerpoSinThinking = () => JSON.stringify({ contents: [{ role: 'user', parts: partesEntrada }], generationConfig: { ...genCfg } });
   const cuerpoCon = (conThinking) => {
     const g = { ...genCfg };
     if (conThinking) { g.thinkingConfig = { thinkingBudget: pensar }; if (pensar !== 0) g.maxOutputTokens = (maxTokens || 4096) * 3; }
@@ -597,7 +620,10 @@ async function intentarGemini(env, promptOrParts, maxTokens, temp, o, model) {
     res = await pedir(cuerpoCon(true), espera);
     // Si el modelo o la cuenta no aceptan este thinkingBudget, se reintenta sin
     // él en vez de fallar: la generación nunca se cae por este parámetro.
-    if (!res.ok && res.status === 400 && pensar !== 0) res = await pedir(cuerpoCon(false), 40000);
+    // Algunos modelos NO admiten que se les desactive el pensamiento y
+    // responden 400. Antes solo se reintentaba si se habia pedido pensar; con
+    // thinkingBudget 0 (el caso normal) la generacion se caia sin red.
+    if (!res.ok && res.status === 400) res = await pedir(cuerpoSinThinking(), 40000);
   } catch (e) {
     return { error: (e && e.name === 'AbortError') ? `Gemini (${model}) tardó demasiado. Prueba con GEMINI_MODEL_COPY=gemini-2.5-flash.` : 'No se pudo contactar a Gemini: ' + (e.message || e) };
   }
@@ -609,13 +635,31 @@ async function intentarGemini(env, promptOrParts, maxTokens, temp, o, model) {
   }
   let data; try { data = await res.json(); } catch { return { error: 'Respuesta de Gemini no es JSON.' }; }
   const parts = data && data.candidates && data.candidates[0] && data.candidates[0].content && data.candidates[0].content.parts;
-  let texto = Array.isArray(parts) ? parts.map(p => (p && p.text) || '').join('') : '';
+  // Los modelos que RAZONAN devuelven su cadena de pensamiento en partes
+  // marcadas con `thought: true`, ADEMAS de la respuesta. Concatenarlas todas
+  // metia el razonamiento delante del JSON y la generacion se caia con "no se
+  // pudo interpretar la respuesta como JSON" (el usuario veia el modelo
+  // pensando en voz alta: "Wait, what about... Let's re-read"). Paso el
+  // 8-sep-2026 sin tocar el codigo: `gemini-flash-latest` es un ALIAS que
+  // Google repunta, y el modelo nuevo piensa aunque se le pida thinkingBudget 0.
+  const utiles = Array.isArray(parts) ? parts.filter(p => p && p.thought !== true) : [];
+  let texto = utiles.map(p => (p && p.text) || '').join('');
+  // Red de seguridad: si el modelo marco TODAS las partes como pensamiento (o
+  // no las marco y el filtro no dejo nada), se usa el texto completo y que
+  // decida extraerJSON, que ahora sabe saltarse la prosa.
+  if (!texto && Array.isArray(parts)) texto = parts.map(p => (p && p.text) || '').join('');
   if (!texto) {
     const motivo = (data && data.candidates && data.candidates[0] && data.candidates[0].finishReason) || (data && data.promptFeedback && data.promptFeedback.blockReason) || 'sin contenido';
     return { error: 'Gemini no devolvió contenido (' + motivo + ').' };
   }
   const parsed = extraerJSON(texto);
-  if (parsed === undefined) return { error: 'No se pudo interpretar la respuesta de la IA como JSON. Inicio: ' + String(texto).slice(0, 160) };
+  if (parsed === undefined) {
+    const fin = (data && data.candidates && data.candidates[0] && data.candidates[0].finishReason) || '';
+    // Si se quedo sin tokens, el JSON viene cortado: hay que decirlo asi, no
+    // "no es JSON", que manda a buscar el problema donde no esta.
+    if (fin === 'MAX_TOKENS') return { error: `Gemini (${model}) se quedo sin espacio de respuesta y el JSON llego cortado. Reintenta; si se repite, sube el tope.` };
+    return { error: 'No se pudo interpretar la respuesta de la IA como JSON. Inicio: ' + String(texto).slice(0, 160) };
+  }
   return { parsed };
 }
 

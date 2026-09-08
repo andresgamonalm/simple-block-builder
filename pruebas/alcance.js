@@ -42,25 +42,35 @@ const T=(c,n,e)=>{ if(c){ok++;console.log("  ok   "+n);} else {mal++;console.log
     s1.home.map(x=>x.on).join(" "));
   T(!/crearTrabajoHome/.test(textoTodo),"ya no queda ningún acceso a «crear vacío»");
 
-  console.log("\n2 · «Sin lienzo en blanco»: el acceso abre el asistente");
+  console.log("\n2 · Cada producto por su camino: gráficas a mano, Search con IA");
+  // OJO: esto SUSTITUYE la regla "sin lienzo en blanco" del §01. El usuario la
+  // cambió por escrito con su propio modelo (18-ago): él diseña el máster del
+  // banner con sus herramientas y pulsa Replicar; la IA no dibuja el banner.
+  // Google Search sigue siendo IA: grupos, keywords y RSA no se dibujan a mano.
   const s2=await pg.evaluate(async()=>{
     workspace.marcas=[{id:"m1",nombre:"Marca Prueba",primary:"#2167ae",secondary:"#23366f",cta:"#2167ae",ctaText:"#fff",accent1:"#fff773",accent2:"#91bfe3"}];
+    workspace.proyectos=[]; proyecto=null; proyectoVistoId=null;
+    window._ia=0; const _o=window.abrirIA; window.abrirIA=function(){ window._ia++; return _o.apply(this,arguments); };
     crearConIA("facebook");
-    await new Promise(r=>setTimeout(r,300));
-    const abierto=document.getElementById("modal-ia").classList.contains("show");
-    const marcadas=IA_PLATAFORMAS.filter(k=>iaPiezas[k]);
-    const piezas=(workspace.proyectos||[]).reduce((n,p)=>n+(p.piezas||[]).length,0);
-    cerrarModal("ia");
-    return { abierto, marcadas, piezas };
+    await new Promise(r=>setTimeout(r,900));
+    const p=pieza();
+    return { asistente:window._ia, modo:p&&p.composicion&&p.composicion.modo,
+             vacio:p?((p.composicion.elementos||[]).length===0):false,
+             tipo:p&&p.setTipo,
+             enEditor:!document.getElementById("galeria").classList.contains("show") };
   });
-  T(s2.abierto,"se abre el asistente, no el editor");
-  T(s2.marcadas.join(",")==="facebook","con la plataforma ya marcada",s2.marcadas.join(","));
-  T(s2.piezas===0,"y no se creó ninguna pieza vacía por el camino",s2.piezas);
+  T(s2.asistente===0,"una gráfica NO llama a la IA: se abre el lienzo para diseñarla","abrirIA "+s2.asistente);
+  T(s2.enEditor && s2.modo==="libre","abre el editor con el lienzo libre",JSON.stringify(s2));
+  T(s2.vacio,"y nace EN BLANCO, como pide el modelo del usuario",s2.vacio);
+  T(s2.tipo==="facebook","Facebook crea su propia colección",s2.tipo);
   const s2b=await pg.evaluate(async()=>{
-    crearConIA("todas"); await new Promise(r=>setTimeout(r,250));
-    const m=IA_PLATAFORMAS.filter(k=>iaPiezas[k]); cerrarModal("ia"); return m;
+    window._ia=0; crearConIA("ads"); await new Promise(r=>setTimeout(r,400));
+    const abierto=document.getElementById("modal-ia").classList.contains("show");
+    const m=IA_PLATAFORMAS.filter(k=>iaPiezas[k]); cerrarModal("ia");
+    return { asistente:window._ia, abierto, marcadas:m };
   });
-  T(s2b.length===3,"«Campaña completa» marca las tres plataformas",s2b.join(","));
+  T(s2b.asistente===1 && s2b.abierto,"Google Search SÍ abre el asistente",JSON.stringify(s2b));
+  T(s2b.marcadas.join(",")==="ads","con Search marcado",s2b.marcadas.join(","));
 
   console.log("\n3 · Facebook genera SU colección, no la de Display");
   const s3=await pg.evaluate(()=>{
