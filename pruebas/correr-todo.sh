@@ -33,7 +33,7 @@ done
 if [ "$listo" != "1" ]; then echo "El servidor de pruebas no arrancó. Mira /tmp/sbb-srv.log"; exit 1; fi
 
 # ── Qué se corre (orden: primero lo que no necesita navegador) ───────────
-TODAS=(audita-estatica login ia-json geom medir insp panel arrastre libre proporciones alcance iaq asis xls fb tablet migra cierres regres recorrido)
+TODAS=(audita-estatica login ia-json geom medir insp panel arrastre libre proporciones escribir alcance iaq asis xls fb tablet migra cierres regres recorrido)
 descripcion() {
   case "$1" in
     audita-estatica) echo "controles muertos, íconos y rutas (sin navegador)";;
@@ -46,6 +46,7 @@ descripcion() {
     arrastre)  echo "arrastre: agarrar cualquier elemento, fluidez y replica";;
     libre)     echo "lienzo libre: anclas, replica, export JPG/PNG/HTML5";;
     proporciones) echo "las maquetas del usuario: franja 25/50/25 y lateral 20/50/20/10";;
+    escribir)  echo "escribir sobre el banner y que la IA genere en el lienzo libre";;
     alcance)   echo "las 3 plataformas del manual y las paginas del §05";;
     iaq)       echo "calidad de IA: límites, carpetas de fotos, avisos";;
     asis)      echo "asistente en una sola ventana";;

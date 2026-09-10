@@ -34,6 +34,7 @@ servidor sirve un `/foto.svg` y un `/logo.svg` locales.
 | `arrastre` | El **arrastre**: que se agarre cualquier elemento del banner (logo, textos, botón), que el gesto sea fluido y que lo movido sobreviva a replicar. |
 | `libre` | El **lienzo libre** —el modelo del usuario—: anclas que sobreviven a los 11 tamaños, replicar, y la exportación en JPG, PNG y HTML5. |
 | `proporciones` | Las **maquetas del usuario**: la franja horizontal en 25 / 50 / 25 y el lateral en 20 / 50 / 20 / 10, medidas sobre el render real después de replicar. Y que el legal caiga —sin encogerse hasta ser ilegible— donde no cabe. |
+| `escribir` | Escribir el texto **sobre el banner** (doble clic, barrita de tamaño/negrita/alineación, el cuadro que crece para no cortar lo escrito) y que el asistente genere **en el lienzo libre**: sus elementos se arrastran, se editan y se replican como los dibujados a mano. |
 | `alcance` | El **alcance del manual (§01)**: que las superficies de creación ofrezcan solo las tres plataformas de pago, que ninguna abra un lienzo vacío, y que quitar el email NO haya roto las piezas de email ya guardadas. Además las páginas del §05 (en curso · realizados · historial) y la zona horaria. |
 | `iaq` | Los límites de caracteres que se le pasan a la IA, la exclusión de logos por carpeta, el encogido antes de partir una palabra y los avisos en pantalla. |
 | `asis` | El asistente en una sola ventana: todos los campos a la vista, Limpiar y Generar en su sitio. |

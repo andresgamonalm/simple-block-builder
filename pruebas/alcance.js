@@ -74,6 +74,12 @@ const T=(c,n,e)=>{ if(c){ok++;console.log("  ok   "+n);} else {mal++;console.log
 
   console.log("\n3 · Facebook genera SU colección, no la de Display");
   const s3=await pg.evaluate(()=>{
+    const textoLegalDe = (p)=>{
+      const c=p.composicion||{};
+      if(c.legal) return String(c.legal);
+      const e=(c.elementos||[]).find(x=>rolLibre(x)==="legal");
+      return e ? String(e.texto||"") : "";
+    };
     const pr={id:uid(),nombre:"Camp",creado:Date.now(),piezas:[],activa:null};
     workspace.proyectos=[pr]; proyecto=pr; proyectoVistoId=pr.id;
     const marca={id:"m1",nombre:"Marca Prueba",primary:"#2167ae",secondary:"#23366f",cta:"#2167ae",ctaText:"#ffffff",accent1:"#fff773",accent2:"#91bfe3",disclaimer:"Infórmate en el sitio."};
@@ -85,7 +91,10 @@ const T=(c,n,e)=>{ if(c){ok++;console.log("  ok   "+n);} else {mal++;console.log
     return {
       fb:{ tipo:fb.setTipo, master:fb.masterFmt, n:(fb.artboards||[]).length, ruta:rutaDeProducto(fb) },
       gd:{ tipo:gd.setTipo, master:gd.masterFmt, n:(gd.artboards||[]).length, ruta:rutaDeProducto(gd) },
-      legalFb: fb.composicion.legal, legalGd: gd.composicion.legal,
+      // El legal vive donde viva el modelo: campo `legal` en el de 3 zonas,
+      // elemento con papel "legal" en el lienzo libre (que es donde caen ahora
+      // las piezas generadas). Lo que se exige es que ESTÉ, no dónde.
+      legalFb: textoLegalDe(fb), legalGd: textoLegalDe(gd),
       enMismoProyecto: (proyecto.piezas||[]).length
     };
   });

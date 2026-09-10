@@ -774,6 +774,10 @@ button,input,select,textarea{font-family:inherit;}
    agarrar. Se le devuelve el puntero; la navegacion se sigue impidiendo en el
    manejador de clic. */
 #canvas a.cmp-mov{pointer-events:auto!important;cursor:grab;}
+/* Solo en el lienzo grande: ahí se agarran y se editan. En los banners chicos
+   del tablero el enlace sigue inerte — un clic debe SELECCIONAR ese tamaño, no
+   sacarte del aplicativo. */
+#canvas .lienzo a.lb-el{pointer-events:auto!important;cursor:grab;}
 #canvas a.cmp-mov.arrastrando{cursor:grabbing;}
 #canvas iframe{pointer-events:none;}
 
@@ -1141,6 +1145,18 @@ body.sbb-arrastrando{user-select:none;-webkit-user-select:none;cursor:grabbing;}
 .lz-guia.v{top:0;bottom:0;width:1px;}
 .lz-guia.h{left:0;right:0;height:1px;}
 /* Marco de seleccion del lienzo libre, con sus cuatro puntas. */
+/* Escribir sobre el banner: el elemento REAL pasa a editable dentro de la
+   vista escalada, así que lo que escribes se ve del tamaño con que va a salir. */
+.cmp-libre .lb-el.lb-editando{outline:1.5px solid var(--blue,#1C73CB);outline-offset:2px;cursor:text!important;}
+.cmp-libre .lb-el.lb-editando .lb-txt-in{outline:none;min-height:1em;cursor:text;}
+.lb-textbar{position:absolute;z-index:34;display:flex;align-items:center;gap:2px;background:#fff;border:1px solid #dfe4ee;border-radius:9px;padding:4px;box-shadow:0 6px 20px rgba(8,14,28,.16);}
+.lb-textbar button{border:0;background:transparent;border-radius:6px;height:26px;min-width:26px;padding:0 6px;cursor:pointer;color:var(--ink,#12173d);font-size:12.5px;display:inline-flex;align-items:center;justify-content:center;}
+.lb-textbar button:hover{background:#eef2f9;}
+.lb-textbar button.on{background:var(--navy,#040764);color:#fff;}
+.lb-textbar button svg{width:14px;height:14px;}
+.lb-textbar .sep{width:1px;height:16px;background:#e4e8f0;margin:0 3px;}
+.lb-tb-n{font-size:11.5px;color:#6a7288;min-width:20px;text-align:center;}
+.lb-textbar .lb-tb-ok{background:var(--navy,#040764);color:#fff;font-size:12px;padding:0 9px;}
 .lb-sel{position:absolute;z-index:29;border:1.5px solid var(--blue,#1C73CB);pointer-events:none;}
 .lb-punta{position:absolute;width:12px;height:12px;border-radius:50%;background:#fff;border:1.5px solid var(--blue,#1C73CB);box-shadow:0 1px 4px rgba(8,14,28,.28);pointer-events:auto;}
 .lb-punta.tl{left:-7px;top:-7px;cursor:nwse-resize;}
@@ -1190,7 +1206,8 @@ body.sbb-arrastrando{user-select:none;-webkit-user-select:none;cursor:grabbing;}
 /* El overlay es una capa de asas: no debe interceptar el puntero, o nada del
    banner (logo, boton, textos) se puede agarrar. Solo sus asas lo reciben. */
 .lienzo-ovl > .lienzo-div,.lienzo-ovl > .lienzo-wh,.lienzo-ovl > .lienzo-rzlogo,
-.lienzo-ovl > .lienzo-quitar,.lienzo-ovl > .lienzo-edit,.lienzo-ovl > .lienzo-textbar{pointer-events:auto;}
+.lienzo-ovl > .lienzo-quitar,.lienzo-ovl > .lienzo-edit,.lienzo-ovl > .lienzo-textbar,
+.lienzo-ovl > .lb-textbar{pointer-events:auto;}
 /* Tirador de tamano del logo. */
 .lienzo-rzlogo{position:absolute;z-index:28;width:12px;height:12px;border-radius:50%;background:#fff;border:1.5px solid var(--blue,#1C73CB);box-shadow:0 1px 4px rgba(8,14,28,.3);cursor:nwse-resize;}
 .lienzo-rzlogo:hover{transform:scale(1.2);}
@@ -5526,10 +5543,21 @@ function nuevoElementoLibre(tipo, extra){
   const base = { id:uid(), tipo, ancla:"mc", dx:0, dy:0, w:120, h:40, z:1, rot:0 };
   if(tipo==="texto") Object.assign(base, {
     texto:"Escribe aquí", fuente:"", tam:18, color:"#111111", alinH:"left", alinV:"top",
-    negrita:false, italica:false, padT:0, padR:0, padB:0, padL:0, w:150, h:44 });
+    negrita:false, italica:false, padT:0, padR:0, padB:0, padL:0, w:150, h:44,
+    // Un cuadro de texto con FONDO y REDONDEO es un botón completo en UN solo
+    // elemento. Antes hacía falta una figura + un texto encima: dos cosas que
+    // arrastrar por separado, y que el reparto por bandas separaba al replicar.
+    fondo:"", radio:0 });
   if(tipo==="figura") Object.assign(base, {
     forma:"rect", relleno:"#1c73cb", borde:"", bordeAncho:0, radio:0, w:120, h:40 });
   if(tipo==="logo") Object.assign(base, { url:"", w:90, h:32, ancla:"tl", dx:14, dy:14 });
+  if(tipo==="boton"){
+    base.tipo = "texto";
+    Object.assign(base, { texto:"Cotiza aquí", fuente:"", tam:14, color:"#ffffff",
+      alinH:"center", alinV:"center", negrita:true, italica:false,
+      padT:6, padR:14, padB:6, padL:14, w:120, h:34,
+      fondo:"#1c73cb", radio:0, link:"", rol:"cta" });
+  }
   return Object.assign(base, extra||{});
 }
 // Dónde y de qué tamaño cae un elemento en un formato concreto.
@@ -5609,26 +5637,33 @@ function renderLibre(comp, fmt){
   const els = (comp.elementos||[]).slice().sort((a,b)=>(a.z||0)-(b.z||0)).map(el=>{
     const c = cajaLibre(el, fmt);
     const pos = `left:${c.left}px;top:${c.top}px;width:${c.w}px;height:${c.h}px;`;
+    // Un elemento con enlace sale como <a> — así el banner exportado es
+    // clicable de verdad. En el editor no navega (se anula el clic).
+    const lk = String(el.link||"").trim();
+    const et = lk ? "a" : "div";
+    const at = lk ? ` href="${escAttr(lk)}"${el.nuevaVentana===false?"":' target="_blank" rel="noopener"'}` : "";
     if(el.tipo==="logo"){
       if(!el.url) return "";
-      return `<div class="lb-el lb-logo" data-el="${esc(el.id)}" style="${pos}">`
-           + `<img draggable="false" src="${escAttr(el.url)}" style="width:100%;height:100%;object-fit:contain;object-position:center;"></div>`;
+      return `<${et} class="lb-el lb-logo" data-el="${esc(el.id)}"${at} style="${pos}">`
+           + `<img draggable="false" src="${escAttr(el.url)}" style="width:100%;height:100%;object-fit:contain;object-position:center;"></${et}>`;
     }
     if(el.tipo==="figura"){
       const r = el.forma==="circulo" ? "50%" : Math.round((parseFloat(el.radio)||0)*k)+"px";
       const bw = Math.round((parseFloat(el.bordeAncho)||0)*k);
       const bd = (bw && el.borde) ? `border:${bw}px solid ${esc(el.borde)};` : "";
-      return `<div class="lb-el lb-fig" data-el="${esc(el.id)}" style="${pos}background:${esc(el.relleno||"transparent")};border-radius:${r};${bd}"></div>`;
+      return `<${et} class="lb-el lb-fig" data-el="${esc(el.id)}"${at} style="${pos}background:${esc(el.relleno||"transparent")};border-radius:${r};${bd}"></${et}>`;
     }
     // Texto
     const fam = el.fuente ? `font-family:'${esc(el.fuente)}',Arial,sans-serif;` : "";
     const pad = `padding:${Math.round((parseFloat(el.padT)||0)*k)}px ${Math.round((parseFloat(el.padR)||0)*k)}px `
               + `${Math.round((parseFloat(el.padB)||0)*k)}px ${Math.round((parseFloat(el.padL)||0)*k)}px;`;
     const just = el.alinV==="center" ? "center" : el.alinV==="bottom" ? "flex-end" : "flex-start";
-    return `<div class="lb-el lb-txt" data-el="${esc(el.id)}" style="${pos}${pad}display:flex;flex-direction:column;justify-content:${just};`
+    const bgTxt = el.fondo ? `background:${esc(el.fondo)};` : "";
+    const rTxt  = parseFloat(el.radio) ? `border-radius:${Math.round(parseFloat(el.radio)*k)}px;` : "";
+    return `<${et} class="lb-el lb-txt" data-el="${esc(el.id)}"${at} style="${pos}${pad}${bgTxt}${rTxt}display:flex;flex-direction:column;justify-content:${just};`
          + `font-size:${Math.round((parseFloat(el.tam)||14)*k)}px;color:${esc(el.color||"#111")};text-align:${alinText(el.alinH)};`
-         + `${fam}${el.negrita?"font-weight:700;":""}${el.italica?"font-style:italic;":""}line-height:1.22;">`
-         + `<div class="lb-txt-in">${escMultiline(el.texto||"")}</div></div>`;
+         + `${fam}${el.negrita?"font-weight:700;":""}${el.italica?"font-style:italic;":""}line-height:1.22;text-decoration:none;">`
+         + `<div class="lb-txt-in">${escMultiline(el.texto||"")}</div></${et}>`;
   }).join("");
   const bgCol = (!esFoto && fo.color) ? `background:${esc(fo.color)};` : (!esFoto ? "background:#ffffff;" : "");
   const borde = (!esFoto && fo.color && !esColorOscuro(fo.color)) ? "box-shadow:inset 0 0 0 1px rgba(0,0,0,.12);" : "";
@@ -5687,6 +5722,17 @@ function bandasDe(fmt, conLegal){
     cta:   { x:0, y:a+b,     w:1, h:c },
     legal: legal ? { x:0, y:a+b+c, w:1, h:d } : null };
 }
+// Cuántas líneas ocupa un texto en una caja de ancho dado. Es una estimación
+// (ancho medio de carácter ≈ 0,54 del cuerpo, el mismo modelo que usa
+// `limitesParaIA`), pero al alza: más vale sobrar caja que cortar el texto.
+function lineasDe(texto, anchoCaja, cuerpo){
+  const t = String(texto || "");
+  const c = Math.max(1, parseFloat(cuerpo) || 10);
+  const cabenPorLinea = Math.max(1, Math.floor(Math.max(1, anchoCaja) / (c * 0.54)));
+  let n = 0;
+  t.split(/\n/).forEach(linea => { n += Math.max(1, Math.ceil(linea.length / cabenPorLinea)); });
+  return Math.max(1, n);
+}
 // REACOMODO POR BANDAS. Es el arreglo de los horizontales y los laterales:
 // en vez de escalar el diseño del máster (que en una franja de 728×90 deja el
 // logo enorme y el botón fuera de sitio), cada elemento se COLOCA en la banda
@@ -5713,19 +5759,33 @@ function acomodarEnBanda(el, fmt, banda){
   // La letra encoge con la caja, pero nunca por debajo del piso de legibilidad.
   let tam = parseFloat(el.tam);
   let oculto = false;
+  let wFin = w;
   if(el.tipo === "texto" && !isNaN(tam)){
     tam = Math.max(1, Math.round(tam * escala));
     const piso = Math.max(1, Math.ceil(pisoDe(fmt) / k));   // en unidades base
     if(tam < piso) tam = piso;
-    // Si ni con el piso cabe en su banda, el elemento NO se encoge hasta ser
-    // ilegible: CAE en ese formato. Es la regla del manual, y es justo lo que
-    // el usuario dijo del legal: «es relativo, no siempre está».
-    const lineas = Math.max(1, String(el.texto || "").split(/\n/).length);
-    const altoNecesario = Math.ceil(tam * 1.35 * lineas);
-    if(altoNecesario > bh) oculto = true;
-    else if(altoNecesario > h) h = altoNecesario;   // que su propia caja no lo corte
+    // CUENTA LAS LÍNEAS QUE EL TEXTO PARTE SOLO. Contar solo los saltos escritos
+    // daba una caja de una línea para un titular que ocupaba tres: el texto se
+    // cortaba en silencio en los once tamaños.
+    // El MARGEN INTERNO del cuadro cuenta: el texto vive dentro de él, no en el
+    // borde. Sin sumarlo, la burbuja de oferta se cortaba por dos píxeles.
+    const pv = (parseFloat(el.padT)||0) + (parseFloat(el.padB)||0);
+    const ph = (parseFloat(el.padL)||0) + (parseFloat(el.padR)||0);
+    const alto = (anchoCaja, cuerpo) =>
+      Math.ceil(cuerpo * 1.35 * lineasDe(el.texto, Math.max(4, anchoCaja - ph), cuerpo)) + pv;
+    // 1) Si no cabe, se ENSANCHA hasta el ancho de su banda (menos líneas).
+    if(alto(wFin, tam) > Math.min(bh, h) && wFin < bw) wFin = Math.round(bw);
+    // 2) Si sigue sin caber en la banda, se ENCOGE la letra hasta el piso —
+    //    la regla del manual: encoger antes de partir o de dejar caer.
+    while(alto(wFin, tam) > bh && tam > piso) tam--;
+    const necesita = alto(wFin, tam);
+    // 3) Si ni al piso cabe, el elemento CAE en ese formato en vez de salir
+    //    ilegible o recortado. Es lo que el usuario dijo del legal: «es
+    //    relativo, no siempre está».
+    if(necesita > bh) oculto = true;
+    else if(necesita > h) h = necesita;             // que su propia caja no lo corte
   }
-  return posFinal(w, h, tam, oculto);
+  return posFinal(wFin, h, tam, oculto);
 
   // Centrado en su banda, guardado con ancla para que siga comportándose bien
   // si después lo retocas a mano.
@@ -5738,6 +5798,17 @@ function acomodarEnBanda(el, fmt, banda){
     return out;
   }
 }
+// PRIORIDAD de un elemento dentro de su banda: 1 manda y nunca cae. Si no está
+// puesta a mano, se deduce — dentro de la promoción, el texto MÁS GRANDE es el
+// titular, y por debajo van bajada, epígrafe y adornos. Es la escalera de caída
+// del manual, aplicada al modelo del usuario.
+function prioLibre(el){
+  const n = parseFloat(el && el.prio);
+  if(!isNaN(n) && n > 0) return n;
+  if(!el) return 3;
+  if(el.tipo === "logo") return 1;
+  return 2;
+}
 // Coloca TODOS los elementos de la pieza en las bandas del formato dado.
 function acomodarPieza(p, fmt){
   const c = p.composicion; if(!esLibre(c)) return null;
@@ -5745,22 +5816,55 @@ function acomodarPieza(p, fmt){
   const hayLegal = els.some(e => rolLibre(e) === "legal");
   const B = bandasDe(fmt, hayLegal);
   const pos = {};
-  // Varios elementos con el mismo papel se apilan DENTRO de su banda, en el
-  // orden en que están (arriba a abajo en columnas, izquierda a derecha en fila).
   const porRol = { logo:[], promo:[], cta:[], legal:[] };
   els.forEach(e => { (porRol[rolLibre(e)] || porRol.promo).push(e); });
   Object.keys(porRol).forEach(rol => {
-    const lista = porRol[rol];
     const banda = B[rol] || B.promo;
-    if(!lista.length || !banda) return;
-    lista.forEach((e, i) => {
-      // Se reparte la banda entre los elementos de ese papel.
+    if(!porRol[rol].length || !banda) return;
+    // Por importancia: primero lo que manda; a igual prioridad, el texto más
+    // grande antes (dentro de la promoción, ese es el titular).
+    const orden = porRol[rol].slice().sort((a,b)=>
+      (prioLibre(a) - prioLibre(b)) || ((parseFloat(b.tam)||0) - (parseFloat(a.tam)||0)));
+    // Si algo no cabe legible, NO se encoge a todos: cae el MENOS importante y
+    // la banda se reparte de nuevo entre los que quedan. Sin esto, en una franja
+    // de 728×90 el titular se quedaba con un cuarto de banda por culpa de un
+    // epígrafe que igual no cabía.
+    let vivos = orden.slice();
+    const caidos = [];
+    for(let vuelta = 0; vuelta < orden.length; vuelta++){
+      const calc = repartir(vivos);
+      const sobra = vivos.length > 1;                    // el último nunca se toca
+      const iMalo = calc.findIndex(q => q && q.oculto);
+      if(iMalo < 0 || !sobra){
+        // Logo, promoción y botón NUNCA caen del todo: si al último que queda
+        // no le alcanza, sale igual (y el inspector lo dirá). Solo el legal
+        // puede desaparecer, que es lo que dijo el usuario.
+        calc.forEach((q,i)=>{ if(q && q.oculto && rol !== "legal") delete q.oculto; pos[vivos[i].id] = q; });
+        break;
+      }
+      // Cae el menos importante de los que no caben (el más al final del orden).
+      let fuera = -1;
+      for(let i = vivos.length - 1; i >= 0; i--) if(calc[i] && calc[i].oculto){ fuera = i; break; }
+      if(fuera < 0){ calc.forEach((q,i)=>{ pos[vivos[i].id] = q; }); break; }
+      caidos.push(vivos[fuera]); vivos = vivos.filter((_,i)=>i!==fuera);
+    }
+    caidos.forEach(e => { pos[e.id] = Object.assign(acomodarEnBanda(e, fmt, banda), { oculto:true }); });
+
+    // Reparte la banda entre los que quedan, dando más sitio a lo importante.
+    function repartir(lista){
       const n = lista.length;
-      const sub = (B.dir === "row" && rol === "promo") || B.dir === "col"
-        ? { x:banda.x, y:banda.y + banda.h*(i/n), w:banda.w, h:banda.h/n }   // apilados
-        : { x:banda.x + banda.w*(i/n), y:banda.y, w:banda.w/n, h:banda.h };  // en fila
-      pos[e.id] = acomodarEnBanda(e, fmt, sub);
-    });
+      const pesos = lista.map(e => { const pr = prioLibre(e); return pr <= 1 ? 3 : pr <= 2 ? 2 : 1; });
+      const total = pesos.reduce((a,b)=>a+b, 0) || 1;
+      let acum = 0;
+      return lista.map((e, i) => {
+        const ini = acum / total, frac = pesos[i] / total; acum += pesos[i];
+        const apila = (B.dir === "row" && rol === "promo") || B.dir === "col";
+        const sub = apila
+          ? { x:banda.x, y:banda.y + banda.h*ini, w:banda.w, h:banda.h*frac }
+          : { x:banda.x + banda.w*ini, y:banda.y, w:banda.w*frac, h:banda.h };
+        return acomodarEnBanda(e, fmt, n === 1 ? banda : sub);
+      });
+    }
   });
   return pos;
 }
@@ -5842,11 +5946,27 @@ function attachLibre(p, root){
     const id = el.dataset.el;
     const dato = elLibre(p, id); if(!dato) return;
     el.style.cursor = "grab";
+    // Un elemento con enlace es un <a>: en el editor no debe navegar.
+    if(el.tagName === "A") el.addEventListener("click", e=>e.preventDefault());
     el.addEventListener("pointerdown",(e)=>{
       if(e.button!==0) return;
+      if(el.isContentEditable) return;          // ya se está escribiendo dentro
       e.preventDefault(); e.stopPropagation();
+      // ESCRIBIR EN EL BANNER: clic en un texto que YA estaba seleccionado
+      // entra a editarlo, como en cualquier herramienta de diseño. El primer
+      // clic selecciona (y permite arrastrar), el segundo escribe.
+      const yaEstaba = (elLibreSel === id);
       elLibreSel = id; pintarSelLibre(); renderPanelLibre();
+      if(yaEstaba && dato.tipo === "texto"){
+        return editarTextoLibre(el, dato, { fmt, stage, ovl, cmp, sL, k, F, pintarSel:pintarSelLibre });
+      }
       arrastrarLibre(e, el, dato, { fmt, stage, ovl, cmp, sL, k, F });
+    });
+    // El doble clic entra siempre, aunque no estuviera seleccionado.
+    if(dato.tipo === "texto") el.addEventListener("dblclick",(e)=>{
+      e.preventDefault(); e.stopPropagation();
+      elLibreSel = id; pintarSelLibre();
+      editarTextoLibre(el, dato, { fmt, stage, ovl, cmp, sL, k, F, pintarSel:pintarSelLibre });
     });
   });
 
@@ -5975,6 +6095,129 @@ function redimensionarLibre(e0, el, dato, punta, ctx){
   };
   window.addEventListener("pointermove",mover); window.addEventListener("pointerup",soltar);
 }
+// ── ESCRIBIR DIRECTAMENTE SOBRE EL BANNER ───────────────────────────────
+// Pedido del usuario: el texto se edita EN EL BANNER, no en un formulario al
+// lado. Se hace `contenteditable` sobre el elemento REAL, dentro de la vista
+// escalada: lo que se escribe se ve exactamente del tamaño y con la tipografía
+// con que va a salir. (El motor de 3 zonas usa un clon en el overlay porque sus
+// zonas son flex y editarlas en su sitio las reflujaba; aquí cada texto es una
+// caja absoluta, así que no hace falta clon ni compensar la escala.)
+let _editandoLibre = null;
+function editarTextoLibre(el, dato, ctx){
+  // Ya se está escribiendo en ESTE texto: no reentrar. Un doble clic dispara
+  // el segundo pointerdown Y el dblclick, y la segunda entrada cerraba la
+  // primera y repintaba el tablero — el cuadro se abría y se cerraba solo.
+  if(_editandoLibre && _editandoLibre.dato === dato) return;
+  if(_editandoLibre) cerrarTextoLibre();
+  const { fmt, stage, ovl, cmp } = ctx;
+  const k = factorK(fmt);
+  const inner = el.querySelector(".lb-txt-in") || el;
+  el.classList.add("lb-editando");
+  inner.contentEditable = "true";
+  inner.spellcheck = false;
+  // La caja de selección estorba mientras escribes; vuelve al salir.
+  ovl.querySelectorAll(".lb-sel").forEach(n=>n.style.display="none");
+  _editandoLibre = { el, inner, dato, ctx };
+  inner.focus();
+  // Si aún dice el texto de ejemplo, se selecciona entero: escribes encima.
+  const rango = document.createRange();
+  if(String(dato.texto||"").trim() === "Escribe aquí"){
+    rango.selectNodeContents(inner);
+  } else {
+    rango.selectNodeContents(inner); rango.collapse(false);
+  }
+  const selDoc = window.getSelection(); selDoc.removeAllRanges(); selDoc.addRange(rango);
+  barraTextoLibre(el, dato, ctx);
+  inner.addEventListener("keydown", (e)=>{
+    if(e.key === "Escape"){ e.preventDefault(); cerrarTextoLibre(); }
+    // Enter = salto de línea (el render usa escMultiline). Ctrl/Cmd+Enter cierra.
+    if(e.key === "Enter" && (e.metaKey || e.ctrlKey)){ e.preventDefault(); cerrarTextoLibre(); }
+  });
+  inner.addEventListener("blur", ()=>{
+    // Si el foco se fue a la barrita, se sigue escribiendo.
+    setTimeout(()=>{
+      const a = document.activeElement;
+      if(a && a.closest && a.closest(".lb-textbar")) return;
+      if(_editandoLibre && _editandoLibre.inner === inner) cerrarTextoLibre();
+    }, 60);
+  });
+}
+// Guarda lo escrito y repinta UNA vez. Los 11 banners más el inspector son
+// trabajo real: hacerlo por tecla es justo lo que se siente como "va lento".
+function cerrarTextoLibre(){
+  const E = _editandoLibre; if(!E) return;
+  _editandoLibre = null;
+  const { el, inner, dato, ctx } = E;
+  const txt = String(inner.innerText || "")
+    .replace(/\u00a0/g, " ").replace(/\n{3,}/g, "\n\n").replace(/[ \t]+\n/g, "\n").trim();
+  inner.contentEditable = "false";
+  el.classList.remove("lb-editando");
+  quitarBarraTextoLibre();
+  dato.texto = txt;
+  // QUE NO SE CORTE EN SILENCIO: si lo escrito no cabe en su cuadro, el cuadro
+  // crece hasta que quepa. Antes el texto se recortaba y solo lo avisaba el
+  // inspector, con el trabajo ya hecho.
+  const k = factorK(ctx.fmt);
+  const necesita = Math.ceil((inner.scrollHeight || 0) / k)
+                 + (parseFloat(dato.padT)||0) + (parseFloat(dato.padB)||0);
+  if(necesita > (parseFloat(dato.h)||0)) dato.h = necesita;
+  marcarSinGuardar(); persistir(); renderTablero(); renderPanelLibre();
+}
+function quitarBarraTextoLibre(){ const b=document.getElementById("lb-textbar"); if(b) b.remove(); }
+// Barrita flotante sobre el texto: tamaño, negrita/cursiva y alineación. Los
+// cambios se ven EN VIVO sobre el banco y el tablero se repinta al salir, para
+// no perder el foco de lo que estás escribiendo.
+function barraTextoLibre(el, dato, ctx){
+  quitarBarraTextoLibre();
+  const { stage, ovl, fmt } = ctx;
+  const k = factorK(fmt);
+  const sL = parseFloat(stage.closest(".lienzo")?.dataset.escala) || 1;
+  const bar = document.createElement("div");
+  bar.className = "lb-textbar"; bar.id = "lb-textbar";
+  const aln = [["left","alignLeft"],["center","alignCenter"],["right","alignRight"]];
+  bar.innerHTML =
+      `<button type="button" data-tam="-1" title="Más chico">A−</button>`
+    + `<span class="lb-tb-n">${Math.round(parseFloat(dato.tam)||18)}</span>`
+    + `<button type="button" data-tam="1" title="Más grande">A+</button>`
+    + `<span class="sep"></span>`
+    + `<button type="button" data-est="negrita" class="${dato.negrita?"on":""}" title="Negrita"><b>B</b></button>`
+    + `<button type="button" data-est="italica" class="${dato.italica?"on":""}" title="Cursiva"><i>i</i></button>`
+    + `<span class="sep"></span>`
+    + aln.map(([a,ic])=>`<button type="button" data-aln="${a}" class="${(dato.alinH||"left")===a?"on":""}" title="Alinear">${ICONS[ic]||a}</button>`).join("")
+    + `<span class="sep"></span>`
+    + `<button type="button" data-fin="1" class="lb-tb-ok" title="Terminar">Listo</button>`;
+  const er = el.getBoundingClientRect(), sr = stage.getBoundingClientRect();
+  const arriba = er.top - sr.top - 38;
+  bar.style.left = Math.max(2, Math.min(er.left - sr.left, sr.width - 250)) + "px";
+  bar.style.top  = (arriba >= 2 ? arriba : Math.min(er.bottom - sr.top + 6, sr.height - 36)) + "px";
+  bar.querySelectorAll("button").forEach(b=>{
+    b.addEventListener("pointerdown", e=>e.preventDefault());   // no robar el foco
+    b.addEventListener("click", e=>{
+      e.preventDefault();
+      if(b.dataset.fin){ return cerrarTextoLibre(); }
+      if(b.dataset.tam){
+        const nv = Math.max(6, Math.min(200, Math.round((parseFloat(dato.tam)||18) + (b.dataset.tam==="1"?1:-1))));
+        dato.tam = nv;
+        el.style.fontSize = Math.round(nv*k) + "px";
+        const n = bar.querySelector(".lb-tb-n"); if(n) n.textContent = nv;
+      } else if(b.dataset.est){
+        dato[b.dataset.est] = !dato[b.dataset.est];
+        b.classList.toggle("on", !!dato[b.dataset.est]);
+        if(b.dataset.est==="negrita") el.style.fontWeight = dato.negrita ? "700" : "";
+        else el.style.fontStyle = dato.italica ? "italic" : "";
+      } else if(b.dataset.aln){
+        dato.alinH = b.dataset.aln;
+        el.style.textAlign = b.dataset.aln;
+        bar.querySelectorAll("[data-aln]").forEach(x=>x.classList.toggle("on", x.dataset.aln===dato.alinH));
+      }
+      marcarSinGuardar();
+      const foco = _editandoLibre && _editandoLibre.inner;
+      if(foco) foco.focus();
+    });
+  });
+  ovl.appendChild(bar);
+}
+
 // ── PANEL DEL LIENZO LIBRE ──────────────────────────────────────────────
 // La estructura del documento del usuario: Marca · Fondo · Logo · Formas para
 // dibujar · Cuadro de texto · Enlace CTA. Arriba, lo que se añade; abajo, las
@@ -5999,10 +6242,11 @@ function renderPanelLibre(){
   h += `<div class="se-h">${svgIcon("mas",{size:"15px"})} Añadir al banner</div>`;
   h += `<div class="lb-add">`
      + `<button type="button" onclick="anadirLibre('texto')">${svgIcon("documento",{size:"15px"})} Cuadro de texto</button>`
+     + `<button type="button" onclick="anadirLibre('boton')">${svgIcon("enlace",{size:"15px"})} Botón</button>`
      + `<button type="button" onclick="anadirLibre('logo')">${svgIcon("imagen",{size:"15px"})} Logo</button>`
      + FIGURAS_LIBRE.map(([f,n])=>`<button type="button" onclick="anadirLibre('figura','${f}')"><span class="lb-ico ${f}"></span> ${n}</button>`).join("")
      + `</div>`;
-  h += `<p class="se-nota">Una figura con un texto encima y un enlace es tu botón. Puedes poner las que quieras.</p>`;
+  h += `<p class="se-nota">Haz <b>doble clic</b> en un texto del banner para escribirlo ahí mismo. El botón es un cuadro de texto con fondo y enlace: uno solo, se arrastra entero.</p>`;
 
   // ── FONDO
   const fo = c.fondo||{}; const esFoto = fo.tipo==="imagen" && fo.imagen && fo.imagen.url;
@@ -6057,6 +6301,10 @@ function renderPanelLibre(){
 }
 function nombreLibre(e){
   if(e.tipo==="logo") return "Logo";
+  if(e.tipo==="texto" && e.fondo && String(e.link||"").trim()){
+    const t=String(e.texto||"").trim();
+    return t ? ("Botón · "+t.slice(0,18)+(t.length>18?"…":"")) : "Botón";
+  }
   if(e.tipo==="figura") return (FIGURAS_LIBRE.find(f=>f[0]===e.forma)||["","Figura"])[1];
   const t=String(e.texto||"").trim();
   return t ? ("Texto · "+t.slice(0,22)+(t.length>22?"…":"")) : "Cuadro de texto";
@@ -6083,6 +6331,10 @@ function propsLibreHTML(e){
        + `</div></div>`;
     h += `<div class="se-f"><label>Estilo</label><div class="cmp-alin"><button class="${e.negrita?"on":""}" onclick="${S('negrita',!e.negrita)};renderPanelLibre()"><b>B</b></button>`
        + `<button class="${e.italica?"on":""}" onclick="${S('italica',!e.italica)};renderPanelLibre()"><i>i</i></button></div></div>`;
+    h += `<div class="se-h2">Fondo del cuadro <small>· con fondo, es un botón</small></div>`;
+    h += color("Color de fondo","fondo","#1c73cb");
+    h += `<div class="se-acc"><button type="button" onclick="${S('fondo',"''")};renderPanelLibre()">Sin fondo</button></div>`;
+    h += num("Redondear puntas","radio",0,60,0);
     h += `<div class="se-h2">Margen del cuadro</div>`;
     h += `<div class="lb-pads">`+[["padT","Arriba"],["padB","Abajo"],["padL","Izq."],["padR","Der."]]
        .map(([c2,l])=>`<label>${l}<input type="number" min="0" max="80" value="${parseFloat(e[c2])||0}" oninput="${S(c2,'this.value')}"></label>`).join("")+`</div>`;
@@ -6143,6 +6395,12 @@ function anadirLibre(tipo, forma){
   const zMax=c.elementos.reduce((m,x)=>Math.max(m,x.z||0),0);
   const e=nuevoElementoLibre(tipo, forma?{forma}:null);
   e.z=zMax+1;
+  // El botón toma los colores de CTA de la marca aplicada, si la hay.
+  if(tipo==="boton"){
+    const mid=p.tema&&p.tema.marcaId;
+    const m=mid?(workspace.marcas||[]).find(x=>x.id===mid):null;
+    if(m){ const M=normalizarMarca(m); if(M.cta) e.fondo=M.cta; if(M.ctaText) e.color=M.ctaText; }
+  }
   c.elementos.push(e);
   elLibreSel=e.id;
   // Un logo sin imagen no se dibuja, así que parecería que no pasó nada: se le
@@ -11370,6 +11628,98 @@ function _quitarOfertaDelTitular(titular, oferta){
 // tipoCol: "display-desktop" (los 11 tamaños de Google) o "facebook" (los 3 de
 // Meta, con máster propio 1080x1350). Es la MISMA generación de banner: cambia
 // la colección de tamaños en la que se deposita.
+// ── LA IA DIBUJA EN EL LIENZO LIBRE ─────────────────────────────────────
+// Char-B entrega el copy (etiqueta, titular, bajada, botón, oferta y foto) y
+// aquí se convierte en ELEMENTOS del modelo del usuario, colocados con SUS
+// maquetas: el máster se arma con `bandasDe` + `acomodarEnBanda`, y los demás
+// tamaños salen del mismo reparto que usa "Replicar". Así lo generado y lo
+// dibujado a mano viven en el mismo modelo: se edita igual y se replica igual.
+function composicionLibreDesdeIA(data, M, masterFmt){
+  const c = libreDefault({ bg:(M && M.secondary) || "#0e2748" });
+  const z = data.zonas || {};
+  const fondoOscuro = M ? esColorOscuro(M.secondary) : true;
+  let tinta = fondoOscuro ? "#ffffff" : ((M && M.text) || "#12173d");
+  const fuente = (M && (M.fontTitulo || M.fontCuerpo)) || "";
+  c.fondo.color = (M && M.secondary) || "#0e2748";
+
+  // FOTO: la elige la IA de la biblioteca; si no eligió, se pone una (un banner
+  // de color plano se ve pobre). Los logotipos nunca sirven de fondo.
+  let foto = (data.imagen && /^https?:\/\/|^data:/.test(data.imagen)) ? data.imagen : "";
+  if(!foto){
+    const cand = (workspace.imagenes||[]).filter(sirveComoFondo);
+    if(cand.length){
+      let hh=0; const sem=String(data.nombre||z.titular||"x");
+      for(let i=0;i<sem.length;i++) hh=(hh*31+sem.charCodeAt(i))>>>0;
+      foto = cand[hh % cand.length].url;
+    }
+  }
+  if(foto){
+    c.fondo.tipo = "imagen";
+    c.fondo.imagen = { url:foto, fit:"cover", foco:"center", zoom:100 };
+    c.fondo.filtro = { tipo:"oscurecer", intensidad:48, color:"" };
+    // Sobre una foto con velo oscuro el texto va en blanco, aunque la marca
+    // tenga el fondo claro: si no, sale tinta oscura sobre foto oscura.
+    tinta = "#ffffff";
+  }
+
+  const els = [];
+  const add = (tipo, extra) => { const e = nuevoElementoLibre(tipo, extra); els.push(e); return e; };
+  // Las medidas salen del ancho REAL del máster en unidades base: el de Display
+  // es 300 y el de Facebook 1080, así que un "ancho 180" fijo servía en uno y
+  // era ridículo en el otro.
+  const Wm = (FORMATOS[masterFmt] ? FORMATOS[masterFmt].ancho : 300) / factorK(masterFmt);
+  const u = (frac) => Math.round(Wm * frac);
+
+  // LOGO (nunca cae).
+  const urlLogo = M ? (logoDeMarca(M, fondoOscuro) || logoDeMarca(M, false)) : "";
+  if(urlLogo) add("logo", { url:urlLogo, w:u(0.30), h:Math.round(u(0.30)/3), rol:"logo", prio:1, z:5 });
+
+  // PROMOCIÓN, por orden de importancia: titular · oferta · bajada · epígrafe.
+  const oferta = data.burbuja ? String(data.burbuja).slice(0,40).trim() : "";
+  let titular = z.titular ? String(z.titular).slice(0,80).trim() : "";
+  if(titular && oferta) titular = _quitarOfertaDelTitular(titular, oferta);
+  if(titular) add("texto", { texto:titular, tam:Math.round(Wm*0.08), color:tinta, fuente, negrita:true,
+                             alinH:"left", alinV:"center", w:u(0.86), h:u(0.22), rol:"promo", prio:1, z:3 });
+  if(oferta){
+    // La oferta es un cuadro de texto redondo: UN elemento, con su fondo de
+    // acento. No hace falta figura + texto encima.
+    const acc = (M && M.accent1) || "#fff773";
+    add("texto", { texto:oferta, tam:Math.round(Wm*0.052), color: esColorOscuro(acc) ? "#ffffff" : "#23366F",
+                   fondo:acc, radio:u(0.2), negrita:true, alinH:"center", alinV:"center",
+                   w:u(0.30), h:u(0.30), padT:u(0.02), padR:u(0.02), padB:u(0.02), padL:u(0.02),
+                   rol:"promo", prio:2, z:4 });
+  }
+  if(z.cuerpo) add("texto", { texto:String(z.cuerpo).slice(0,160), tam:Math.round(Wm*0.044), color:tinta, fuente,
+                              alinH:"left", alinV:"top", w:u(0.86), h:u(0.14), rol:"promo", prio:3, z:3 });
+  if(z.etiqueta) add("texto", { texto:String(z.etiqueta).slice(0,30), tam:Math.round(Wm*0.034), color:tinta, fuente,
+                                alinH:"left", alinV:"center", w:u(0.40), h:u(0.07), rol:"promo", prio:4, z:3 });
+
+  // BOTÓN (nunca cae): un solo elemento con fondo, enlace y los colores de marca.
+  const txtCta = z.cta ? String(z.cta).slice(0,40) : "Saber más";
+  add("boton", { texto:txtCta, fuente, link:String(data.ctaUrl||"").trim(),
+                 fondo:(M && M.cta) || "#1c73cb", color:(M && M.ctaText) || "#ffffff",
+                 tam:Math.round(Wm*0.047), w:u(0.42), h:u(0.115),
+                 padT:u(0.015), padR:u(0.03), padB:u(0.015), padL:u(0.03), rol:"cta", prio:1, z:4 });
+
+  // LEGAL: la frase del formulario. Con «no» declarado no se cae al descargo
+  // de la marca — decidir que no lleva es una decisión, no un olvido.
+  const legal = String(data.legal || (data.legalDeclarado ? "" : (M && M.disclaimer) || "")).trim();
+  if(legal) add("texto", { texto:legal.slice(0,140), tam:Math.max(8, Math.round(Wm*0.028)), color:tinta, fuente,
+                           alinH:"center", alinV:"center", w:u(0.90), h:u(0.05),
+                           rol:"legal", esLegal:true, prio:1, z:2 });
+
+  c.elementos = els;
+  // El MÁSTER se coloca con las maquetas del usuario. Los demás tamaños los
+  // reparte `acomodarPieza` igual que al pulsar Replicar.
+  const base = acomodarPieza({ composicion:c }, masterFmt) || {};
+  els.forEach(e => {
+    const q = base[e.id]; if(!q || q.oculto) return;
+    Object.assign(e, { w:q.w, h:q.h, ancla:q.ancla, dx:q.dx, dy:q.dy });
+    if(q.tam != null) e.tam = q.tam;
+  });
+  return c;
+}
+
 function insertarBannerIA(data, marca, tipoCol){
   asegurarProyectoIA();
   const M = marca ? normalizarMarca(marca) : null;
@@ -11467,19 +11817,19 @@ function insertarBannerIA(data, marca, tipoCol){
   const p = crearPieza(cfg.master, data.nombre || (tipoSet==="facebook" ? "Facebook Ads IA" : "Banners IA"));
   p.tema = tema;
   p.esSet=true; p.setTipo=tipoSet; p.masterFmt=cfg.master; p.activaFmt=cfg.master; p.formato=cfg.master;
-  p.canvas=[]; p.composicion=comp; p.artboards=cfg.fmts.map(fmt=>({fmt}));
+  // LO QUE GENERA LA IA SE EDITA COMO LO QUE DIBUJAS TÚ. Antes salía en el
+  // modelo de 3 zonas y el editor del banner era otro: no se podía arrastrar
+  // nada, ni añadir un cuadro de texto sobre lo generado. Ahora cae en el
+  // LIENZO LIBRE, con las maquetas del usuario como diagramación de partida.
+  let compLibre;
+  try { compLibre = composicionLibreDesdeIA(data, M, cfg.master); }
+  catch(err){ console.warn("lienzo libre desde IA:", err); compLibre = comp; }
+  p.canvas=[]; p.composicion=compLibre; p.artboards=cfg.fmts.map(fmt=>({fmt}));
+  // Los demás tamaños se reparten igual que al pulsar "Replicar".
+  p.artboards.forEach(ab=>{ if(ab.fmt!==cfg.master) ab.pos = acomodarPieza(p, ab.fmt) || {}; });
   // VARIANTES por formato (como las campañas display reales: la burbuja no va
   // igual en todos): fuera en franjas bajas y cuadrados chicos (se come el
   // banner), centro-derecha en verticales, abajo-derecha en el 1200x1200.
-  if(oferta){
-    p.artboards.forEach(ab=>{
-      const F2=FORMATOS[ab.fmt]; if(!F2) return;
-      const fam=familiaDeFormato(ab.fmt);
-      if(fam==="franja" || Math.max(F2.ancho,F2.alto)<=250) ab.ov={burbuja:{visible:false}};
-      else if(fam==="vertical") ab.ov={burbuja:{pos:"cr"}};
-      else if(ab.fmt==="display-1200x1200") ab.ov={burbuja:{pos:"br"}};
-    });
-  }
   proyecto.activa = p.id;
   document.getElementById("galeria").classList.remove("show");
   activarPieza(p.id);

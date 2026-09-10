@@ -823,3 +823,58 @@ volvía a colar un legal que nadie pidió.
 **26/26** — las bandas contra las maquetas, la deducción del papel, dónde acaba cada elemento tras
 replicar en 728×90 y 160×600, que el máster no se toca, que el legal cae solo donde no cabe legible,
 y que los **11 formatos siguen pasando el inspector** después del reparto. Batería completa en verde.
+
+## 10-sep-2026 (parte 2): ESCRIBIR SOBRE EL BANNER + la IA genera en el lienzo libre
+Los dos pendientes que quedaban del modelo del usuario (18-ago). Ambos hechos y medidos.
+
+**ESCRIBIR EN EL BANNER (`editarTextoLibre`, `cerrarTextoLibre`, `barraTextoLibre`).** El texto se
+edita EN EL BANNER, no en el panel de al lado. **Doble clic** —o clic sobre un texto ya
+seleccionado, como en cualquier herramienta de diseño— pone el elemento REAL en `contenteditable`
+dentro de la vista escalada: lo que escribes se ve con el cuerpo y la tipografía con que va a salir.
+- **A diferencia del motor de 3 zonas, aquí NO hay clon en el overlay.** Aquel lo necesita porque sus
+  zonas son flex y editarlas en su sitio las reflujaba; en el lienzo libre cada texto es una caja
+  absoluta, así que se edita en su sitio y no hay que compensar la escala a mano.
+- **Barrita flotante** (`.lb-textbar`): A−/A+ con el número a la vista, negrita, cursiva, alineación
+  y **Listo**. Los cambios se aplican EN VIVO al banner y el tablero se repinta **al salir** — pintar
+  los 11 banners más el inspector por cada tecla es justo lo que se siente como "va lento".
+- **El cuadro CRECE si lo escrito no cabía** (mide `scrollHeight` y suma los márgenes internos).
+  Antes el texto se recortaba y solo lo avisaba el inspector, con el trabajo ya hecho.
+- **Dos fallos reales que cazó la prueba, no el ojo:** (1) el doble clic entraba a editar DOS veces
+  (el segundo `pointerdown` y el `dblclick`), y la segunda entrada cerraba la primera y repintaba
+  → el cuadro se abría y se cerraba solo. Ahora `editarTextoLibre` no reentra en el mismo elemento.
+  (2) `.lienzo-ovl` es `pointer-events:none` salvo una lista de controles: la barrita no estaba en
+  esa lista, así que **el banner se comía los clics** de A+ y de la alineación.
+
+**EL BOTÓN ES UN SOLO ELEMENTO.** El cuadro de texto acepta `fondo` y `radio`, así que un botón =
+texto con fondo, redondeo y enlace. Antes eran una figura MÁS un texto encima: dos cosas que
+arrastrar por separado y que el reparto por bandas separaba al replicar. Botón nuevo desde el panel
+(**Añadir → Botón**), con los colores de CTA de la marca aplicada. Además, **un elemento con enlace
+se renderiza como `<a>`** → el banner exportado es clicable de verdad (en el editor no navega).
+
+**LA IA GENERA EN EL LIENZO LIBRE (`composicionLibreDesdeIA`).** Char-B entrega el copy y aquí se
+convierte en ELEMENTOS del modelo del usuario, colocados con SUS maquetas: el máster se arma con
+`bandasDe` + `acomodarEnBanda`, y los demás tamaños salen del mismo reparto que usa "Replicar".
+`insertarBannerIA` deposita esa composición (el modelo de 3 zonas queda como respaldo en un `try`).
+Consecuencia práctica: **lo generado se edita, se arrastra y se replica igual que lo dibujado a
+mano** — antes salía en 3 zonas y el editor era otro, no se podía mover nada ni añadirle un cuadro.
+Las medidas salen del **ancho real del máster** en unidades base (300 en Display, 1080 en Facebook):
+un "ancho 180" fijo servía en uno y era ridículo en el otro. La variante por formato de la burbuja
+se retiró: el reparto por bandas ya decide qué cabe en cada tamaño.
+
+**PRIORIDAD DENTRO DE LA BANDA (`prioLibre`, reparto en `acomodarPieza`).** El reparto a partes
+iguales dejaba al titular con un cuarto de su banda por culpa de un epígrafe que igual no cabía.
+Ahora cada elemento tiene prioridad (1 manda; si no está puesta, dentro de la promoción el texto
+MÁS GRANDE es el titular), la banda se reparte **por peso**, y si algo no cabe legible **cae el
+menos importante y la banda se reparte de nuevo** entre los que quedan. Logo, promoción y botón
+nunca desaparecen del todo; solo el legal puede, que es lo que dijo el usuario.
+
+**EL TEXTO YA NO SE CORTA EN SILENCIO (`lineasDe`).** `acomodarEnBanda` contaba solo los saltos de
+línea ESCRITOS, así que a un titular de tres líneas le daba una caja de una: se cortaba en los 11
+tamaños. Ahora estima las líneas que el texto parte solo (ancho medio de carácter ≈ 0,54 del cuerpo,
+el mismo modelo de `limitesParaIA`), **ensancha** hasta el ancho de su banda, luego **encoge** la
+letra hasta el piso, y solo entonces deja caer. Y cuenta el **margen interno** del cuadro — sin eso
+la burbuja de oferta se cortaba por dos píxeles.
+
+**Verificado:** `pruebas/escribir.js` (nueva, registrada en `correr-todo.sh` y en `LEEME.md`)
+**31/31**, con tecleo real, clics reales en la barrita y arrastre real de un elemento generado por
+la IA. Batería completa en verde.
