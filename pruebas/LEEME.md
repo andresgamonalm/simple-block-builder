@@ -26,10 +26,14 @@ servidor sirve un `/foto.svg` y un `/logo.svg` locales.
 |---|---|
 | `audita-estatica` | **Sin navegador.** Botones muertos (un `onclick` que llama a algo que no existe no da error: simplemente no hace nada), íconos que no están en el registro, y rutas del código que `_redirects` no sirve. |
 | `login` | **Sin navegador.** Que se pueda entrar con el `usuario` y también con el **correo** (el identificador que hubo durante meses), contra la lógica real de `_shared.js` y la ficha real de `usuarios.js`. Comprueba además que la contraseña siga mandando y que un correo ajeno o un workspace que no es correo NO abran nada. |
+| `ia-json` | **Sin navegador.** Que la respuesta de Gemini se interprete aunque el modelo devuelva su razonamiento pegado al JSON. Corre con la respuesta REAL que tumbó la app. |
 | `geom` | La tabla de geometría cerrada calza con `mockups/flash-campaign-spec.json` en los 11 formatos. Si alguien toca una fórmula, esto lo grita. |
 | `medir` | Los 11 banners **medidos sobre el render real**: desborde, colisión, cuerpos de letra, contraste, elementos presentes y zona muerta. Corre con copy dentro de los límites y con copy que los excede. |
 | `insp` | El inspector: que corra sobre el tablero, que avise junto a la pieza, y que **detecte de verdad** una pieza rota a mano. |
 | `panel` | El **editor de banners**: cuántos controles hay que atravesar al abrir (la queja fue "es tremendamente complejo"), que escribir en un campo se vea en el banner, que la oferta encienda el círculo sola y que el legal —que antes no tenía dónde escribirse— salga en su banda. |
+| `arrastre` | El **arrastre**: que se agarre cualquier elemento del banner (logo, textos, botón), que el gesto sea fluido y que lo movido sobreviva a replicar. |
+| `libre` | El **lienzo libre** —el modelo del usuario—: anclas que sobreviven a los 11 tamaños, replicar, y la exportación en JPG, PNG y HTML5. |
+| `proporciones` | Las **maquetas del usuario**: la franja horizontal en 25 / 50 / 25 y el lateral en 20 / 50 / 20 / 10, medidas sobre el render real después de replicar. Y que el legal caiga —sin encogerse hasta ser ilegible— donde no cabe. |
 | `alcance` | El **alcance del manual (§01)**: que las superficies de creación ofrezcan solo las tres plataformas de pago, que ninguna abra un lienzo vacío, y que quitar el email NO haya roto las piezas de email ya guardadas. Además las páginas del §05 (en curso · realizados · historial) y la zona horaria. |
 | `iaq` | Los límites de caracteres que se le pasan a la IA, la exclusión de logos por carpeta, el encogido antes de partir una palabra y los avisos en pantalla. |
 | `asis` | El asistente en una sola ventana: todos los campos a la vista, Limpiar y Generar en su sitio. |

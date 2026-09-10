@@ -775,3 +775,51 @@ con la respuesta REAL que rompió la app; `libre.js` **28/28** con un espía sob
 alguien vuelve a cablear las gráficas a la IA; `alcance.js` **42/42** — su sección 2 se reescribió,
 porque afirmaba la regla del §01 que el modelo del usuario sustituyó. Batería completa (18 pruebas) EN
 VERDE y recorrido SIN HALLAZGOS.
+
+## 10-sep-2026: LAS MAQUETAS DEL USUARIO — proporciones de franja y lateral + frase legal obligatoria
+El usuario entregó dos maquetas ("los colores no son los de Zurich, esto no es un entregable; lo
+importante son los porcentajes y las proporciones") para arreglar los banners **horizontales** y
+**laterales**, que salían con la publicidad mal armada. Y una regla de formulario: *"deberían pedir
+siempre la frase legal; si no te la ponen, que uno ponga «no», para que quede registro"*.
+
+**REPARTO POR BANDAS (`PROPORCIONES_BANNER`, `bandasDe(fmt, conLegal)`).** Los números, literales:
+- **FRANJA (horizontal)** — reparto en **COLUMNAS**: 25 % logo | 50 % promoción | 25 % CTA. Dentro
+  del 50 % del medio: 40 % promoción arriba + **10 % legal abajo** (`bandasDe` lo devuelve como una
+  banda hija con la misma `x` y `w` que la promoción, ocupando la quinta parte de su alto).
+- **VERTICAL (lateral)** — **APILADO**: 20 % logo · 50 % promoción · 20 % CTA · 10 % legal.
+- Cuadrados y grandes no tenían maqueta: se mantiene el apilado que ya funcionaba.
+- *"Legal es relativo, no siempre está"*: sin legal, `bandasDe` **reparte su 10 %** entre las otras
+  bandas en vez de dejar hueco muerto (las fracciones siempre suman 1).
+
+**PAPEL DE CADA ELEMENTO (`rolLibre`, `ROLES_LIBRE`).** Se deduce solo: el logo es logo, lo que lleva
+enlace es el botón, un texto marcado `esLegal` es el legal, y todo lo demás es promoción. El usuario
+puede fijarlo a mano con el selector **Papel** del panel del elemento (`el.rol` manda sobre la
+deducción). Varios elementos con el mismo papel se reparten su banda.
+
+**REPLICAR AHORA REACOMODA (`acomodarPieza` / `acomodarEnBanda` → `ab.pos`).** `replicarBanner` deja
+`a.ov = {}` y escribe `a.pos`, que `composicionEfectiva` aplica sobre los elementos del lienzo libre
+(w/h/ancla/dx/dy/tam, y filtra los `oculto`). Retocar un tamaño a mano sigue mandando
+(`fijarPosLibre`), y `resetTamaño` borra también `pos`.
+- **El diseño NO se agranda.** `escala = Math.min(1, bw/w0, bh/h0)`: las unidades base ya escalan
+  solas con la `k` del formato, así que el reparto solo COLOCA cada elemento en su banda y lo encoge
+  lo justo si ahí no cabe. La primera versión permitía crecer ×4 y deformaba el diseño del usuario.
+- **Margen POR EJE y acotado a la banda** (`mx`/`my`, tope 15 % de la banda). Con un margen calculado
+  sobre el marco entero, la banda del legal de una franja (22 unidades de alto) se quedaba en nada
+  contra 13 unidades de margen por lado, y el elemento "no cabía" y caía en TODOS los formatos.
+- **La letra encoge con la caja pero nunca bajo el piso de legibilidad** del formato. Si ni al piso
+  cabe en su banda, el elemento **CAE** en ese tamaño (`oculto:true`) en vez de pintarse ilegible:
+  es la regla del manual y la nota del usuario. Medido: el legal se cae solo en **468×60**, que es
+  justo el formato donde `noVan` ya lo excluía.
+
+**FRASE LEGAL OBLIGATORIA EN EL FORMULARIO.** Campo `#ia-legal` en el asistente, marcado
+`·obligatoria`, con la instrucción a la vista ("si la campaña no lleva, escribe «no»"). `generarConIA`
+**bloquea** la generación si está vacío (toast + `.ia-falta` sobre el campo) y lo manda en el `brief`
+—también al `modo:'concepto'`—. En el servidor, `legalDelBrief(brief)` reconoce «no / n/a / ninguna /
+sin legal» y devuelve `{texto:'', declarado:true}`; `generarBanner` responde `legal` + `legalDeclarado`,
+y el cliente respeta la declaración: con «no» **no cae al descargo de la marca**, que es lo que antes
+volvía a colar un legal que nadie pidió.
+
+**Verificado:** `pruebas/proporciones.js` (nueva, registrada en `correr-todo.sh` y en `LEEME.md`)
+**26/26** — las bandas contra las maquetas, la deducción del papel, dónde acaba cada elemento tras
+replicar en 728×90 y 160×600, que el máster no se toca, que el legal cae solo donde no cabe legible,
+y que los **11 formatos siguen pasando el inspector** después del reparto. Batería completa en verde.

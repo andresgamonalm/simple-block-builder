@@ -318,6 +318,15 @@ function encargoDelUsuario(brief) {
 // prompts de banner y de Google Search, donde esos conceptos no existen — y
 // además se contradecía con la regla de la burbuja: le ordenaba poner el gancho
 // en el titular Y le prohibía poner el gancho en el titular, en el mismo prompt.
+// La frase legal la pide SIEMPRE el formulario. "no" (o "n/a", "ninguna") es una
+// respuesta válida y significa que esta campaña no lleva legal — no es un campo
+// vacío por descuido, es una decisión registrada.
+export function legalDelBrief(brief) {
+  const t = String((brief && brief.legal) || '').trim();
+  if (!t) return { texto: '', declarado: false };
+  if (/^(no|n\/a|na|ninguna|ninguno|sin legal)\.?$/i.test(t)) return { texto: '', declarado: true };
+  return { texto: t, declarado: true };
+}
 function reglasBrief(brief, promos, producto) {
   const tipo = brief.tipo || 'comercial';
   const out = [];
@@ -852,7 +861,11 @@ async function generarBanner({ env, brief, marca, imagenes, refsTxt, promos, est
     zonas: { etiqueta: limpia(z.etiqueta, 3), titular: limpia(z.titular, 8), cuerpo: limpia(z.cuerpo, 18), cta: limpia(z.cta, 4) },
     // La burbuja solo existe con gancho del brief o promoción REAL de la landing.
     burbuja: (brief.gancho || (promos && promos.length)) ? limpia(parsed.burbuja, 5) : '',
-    imagen: (typeof parsed.imagen === 'string' && /^https?:\/\//.test(parsed.imagen)) ? parsed.imagen : ''
+    imagen: (typeof parsed.imagen === 'string' && /^https?:\/\//.test(parsed.imagen)) ? parsed.imagen : '',
+    // La frase legal la escribe el usuario en el formulario (obligatoria); "no"
+    // significa que esta campaña no lleva. La IA NO la inventa nunca.
+    legal: legalDelBrief(brief).texto,
+    legalDeclarado: legalDelBrief(brief).declarado
   };
   if (!out.zonas.titular && !out.zonas.cuerpo) return json({ ok: false, error: 'La IA no produjo textos. Reformula el brief.' }, 500);
   // Segunda pasada: corrector ortográfico RAE sobre todo texto visible.

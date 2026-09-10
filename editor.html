@@ -1147,6 +1147,8 @@ body.sbb-arrastrando{user-select:none;-webkit-user-select:none;cursor:grabbing;}
 .lb-punta.tr{right:-7px;top:-7px;cursor:nesw-resize;}
 .lb-punta.bl{left:-7px;bottom:-7px;cursor:nesw-resize;}
 .lb-punta.br{right:-7px;bottom:-7px;cursor:nwse-resize;}
+/* Campo obligatorio que falta: se marca sin sacar al usuario del formulario. */
+.ia-falta{border-color:#A8206E!important;box-shadow:0 0 0 3px rgba(168,32,110,.14);}
 /* ── Panel y barra del lienzo libre ────────────────────────────────────── */
 .lb-add{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:6px;}
 .lb-add button{display:inline-flex;align-items:center;gap:7px;height:38px;padding:0 11px;border:1px solid #dfe4f2;border-radius:9px;background:#fff;font-family:var(--f);font-size:12.5px;font-weight:500;color:var(--ink,#12173d);cursor:pointer;}
@@ -2277,6 +2279,8 @@ body.sbb-arrastrando{user-select:none;-webkit-user-select:none;cursor:grabbing;}
         <label class="ia-col">Acción (el CTA)<input type="text" id="ia-objetivo" placeholder="Probar / Registrarse / Comprar / Saber más" list="ia-acciones"><datalist id="ia-acciones"><option>Probar gratis</option><option>Registrarse</option><option>Comprar</option><option>Suscribirse</option><option>Reservar</option><option>Saber más</option><option>Descargar</option><option>Contactar</option></datalist></label>
         <label class="ia-col">Gancho / oferta <small>(dato exacto; la IA no lo inventa)</small><input type="text" id="ia-gancho" placeholder="Ej: Demo gratis por 30 días"></label>
       </div>
+      <label class="ia-label">Frase legal <span class="ia-req">·obligatoria</span> <small>(si la campaña no lleva, escribe «no»)</small></label>
+      <input type="text" id="ia-legal" class="dz-inp" placeholder="Ej: Sujeto a evaluación. Infórmate en zurich.cl — o escribe «no»">
       <label class="ia-label">Destino del CTA <small>(el link al que lleva el botón)</small></label>
       <input type="text" id="ia-ctaurl" class="dz-inp" placeholder="https://tuproducto.com/registro">
       <div class="ia-row">
@@ -5631,6 +5635,148 @@ function renderLibre(comp, fmt){
   return `<div class="cmp cmp-libre" data-fmt="${esc(fmt)}" style="width:${F.ancho}px;height:${F.alto}px;${bgCol}${borde}">${fondo}${els}</div>`;
 }
 function esLibre(c){ return !!(c && c.modo === "libre"); }
+// ── PROPORCIONES POR FAMILIA (maquetas del usuario, 10-sep-2026) ────────
+// El usuario entregó dos maquetas medidas con los repartos que usa de verdad.
+// Son la razón por la que los HORIZONTALES y los LATERALES salían mal: un
+// diseño pensado para un cuadrado, escalado a una franja de 728×90, deja el
+// logo, la promoción y el botón donde no corresponde. Aquí están sus números,
+// literales:
+//
+//   FRANJA (horizontal) — reparto en COLUMNAS
+//     25 % logo · 50 % promoción · 25 % CTA
+//     dentro del 50 % del medio: 40 % promoción + 10 % legal (abajo)
+//
+//   VERTICAL (lateral) — reparto APILADO
+//     20 % logo · 50 % promoción · 20 % CTA · 10 % legal
+//
+// Y su nota, que manda: «Legal es relativo, no siempre está». Cuando no hay
+// legal, su porcentaje se reparte entre las demás bandas en vez de dejar un
+// hueco muerto.
+const PROPORCIONES_BANNER = {
+  franja:   { dir:"row", logo:25, promo:50, cta:25, legal:10 },   // legal dentro del bloque de promoción
+  vertical: { dir:"col", logo:20, promo:50, cta:20, legal:10 },
+  // Cuadrados y grandes: el usuario no dio maqueta; se mantiene el reparto
+  // apilado de siempre, que sí funcionaba.
+  cuadrado: { dir:"col", logo:25, promo:50, cta:25, legal:10 },
+  grande:   { dir:"col", logo:25, promo:50, cta:25, legal:10 }
+};
+// Las cuatro bandas de un formato, ya resueltas en fracciones 0..1 del lado que
+// corresponda. `conLegal` decide si la banda legal existe.
+function bandasDe(fmt, conLegal){
+  const fam = familiaGeom(fmt);
+  const P = PROPORCIONES_BANNER[fam] || PROPORCIONES_BANNER.cuadrado;
+  const legal = conLegal ? P.legal : 0;
+  if(P.dir === "row"){
+    // Columnas: logo | promoción | CTA. El legal va DENTRO de la del medio,
+    // pegado abajo, ocupando su parte del alto.
+    const total = P.logo + P.promo + P.cta;
+    const l = P.logo/total, m = P.promo/total, c = P.cta/total;
+    const altoLegal = legal ? (legal / P.promo) : 0;   // del alto de la banda del medio
+    return { dir:"row", conLegal:!!legal,
+      logo:  { x:0,     y:0, w:l, h:1 },
+      promo: { x:l,     y:0, w:m, h:1-altoLegal },
+      legal: legal ? { x:l, y:1-altoLegal, w:m, h:altoLegal } : null,
+      cta:   { x:l+m,   y:0, w:c, h:1 } };
+  }
+  // Apilado: logo · promoción · CTA · legal. Sin legal, su 10 % se reparte.
+  const total = P.logo + P.promo + P.cta + legal;
+  const a = P.logo/total, b = P.promo/total, c = P.cta/total, d = legal/total;
+  return { dir:"col", conLegal:!!legal,
+    logo:  { x:0, y:0,       w:1, h:a },
+    promo: { x:0, y:a,       w:1, h:b },
+    cta:   { x:0, y:a+b,     w:1, h:c },
+    legal: legal ? { x:0, y:a+b+c, w:1, h:d } : null };
+}
+// REACOMODO POR BANDAS. Es el arreglo de los horizontales y los laterales:
+// en vez de escalar el diseño del máster (que en una franja de 728×90 deja el
+// logo enorme y el botón fuera de sitio), cada elemento se COLOCA en la banda
+// que le toca por su papel, centrado y ajustado a esa banda sin deformarse.
+// Devuelve la posición ya en unidades base del formato destino.
+function acomodarEnBanda(el, fmt, banda){
+  const F = FORMATOS[fmt]; const k = factorK(fmt);
+  const W = F.ancho / k, H = F.alto / k;      // el marco, en unidades base
+  // MARGEN POR EJE Y ACOTADO A LA BANDA. Un margen calculado sobre el marco
+  // entero se comía enteras las bandas finas — la del legal en una franja mide
+  // 22 unidades y el margen valía 13 por lado — y el elemento «no cabía» y caía.
+  const mx = Math.min(Math.max(3, Math.round(W * 0.045)), banda.w * W * 0.15);
+  const my = Math.min(Math.max(3, Math.round(H * 0.045)), banda.h * H * 0.15);
+  const bx = banda.x * W + mx, by = banda.y * H + my;
+  const bw = Math.max(8, banda.w * W - mx*2), bh = Math.max(6, banda.h * H - my*2);
+  const w0 = Math.max(1, parseFloat(el.w) || 10), h0 = Math.max(1, parseFloat(el.h) || 10);
+  // EL DISEÑO NO SE AGRANDA. Las unidades base ya escalan solas con la k del
+  // formato (por eso un sello de 10 unidades queda a 10 px en 300×250 y a 40 en
+  // 1200×1200). El reparto solo COLOCA cada elemento en su banda y lo encoge lo
+  // justo si ahí no cabe; agrandarlo deformaba el diseño que el usuario hizo.
+  const escala = Math.min(1, bw / w0, bh / h0);
+  const w = Math.max(6, Math.round(w0 * escala));
+  let   h = Math.max(4, Math.round(h0 * escala));
+  // La letra encoge con la caja, pero nunca por debajo del piso de legibilidad.
+  let tam = parseFloat(el.tam);
+  let oculto = false;
+  if(el.tipo === "texto" && !isNaN(tam)){
+    tam = Math.max(1, Math.round(tam * escala));
+    const piso = Math.max(1, Math.ceil(pisoDe(fmt) / k));   // en unidades base
+    if(tam < piso) tam = piso;
+    // Si ni con el piso cabe en su banda, el elemento NO se encoge hasta ser
+    // ilegible: CAE en ese formato. Es la regla del manual, y es justo lo que
+    // el usuario dijo del legal: «es relativo, no siempre está».
+    const lineas = Math.max(1, String(el.texto || "").split(/\n/).length);
+    const altoNecesario = Math.ceil(tam * 1.35 * lineas);
+    if(altoNecesario > bh) oculto = true;
+    else if(altoNecesario > h) h = altoNecesario;   // que su propia caja no lo corte
+  }
+  return posFinal(w, h, tam, oculto);
+
+  // Centrado en su banda, guardado con ancla para que siga comportándose bien
+  // si después lo retocas a mano.
+  function posFinal(ww, hh, tt, oc){
+    const l = bx + (bw - ww)/2, t = by + (bh - hh)/2;
+    const prov = anclarLibre({ w:ww, h:hh }, fmt, l * k, t * k);
+    const out = { w:ww, h:hh, ancla:prov.ancla, dx:prov.dx, dy:prov.dy };
+    if(!isNaN(tt)) out.tam = tt;
+    if(oc) out.oculto = true;
+    return out;
+  }
+}
+// Coloca TODOS los elementos de la pieza en las bandas del formato dado.
+function acomodarPieza(p, fmt){
+  const c = p.composicion; if(!esLibre(c)) return null;
+  const els = c.elementos || [];
+  const hayLegal = els.some(e => rolLibre(e) === "legal");
+  const B = bandasDe(fmt, hayLegal);
+  const pos = {};
+  // Varios elementos con el mismo papel se apilan DENTRO de su banda, en el
+  // orden en que están (arriba a abajo en columnas, izquierda a derecha en fila).
+  const porRol = { logo:[], promo:[], cta:[], legal:[] };
+  els.forEach(e => { (porRol[rolLibre(e)] || porRol.promo).push(e); });
+  Object.keys(porRol).forEach(rol => {
+    const lista = porRol[rol];
+    const banda = B[rol] || B.promo;
+    if(!lista.length || !banda) return;
+    lista.forEach((e, i) => {
+      // Se reparte la banda entre los elementos de ese papel.
+      const n = lista.length;
+      const sub = (B.dir === "row" && rol === "promo") || B.dir === "col"
+        ? { x:banda.x, y:banda.y + banda.h*(i/n), w:banda.w, h:banda.h/n }   // apilados
+        : { x:banda.x + banda.w*(i/n), y:banda.y, w:banda.w/n, h:banda.h };  // en fila
+      pos[e.id] = acomodarEnBanda(e, fmt, sub);
+    });
+  });
+  return pos;
+}
+// Qué PAPEL cumple un elemento. El usuario puede fijarlo a mano (`rol`); si no,
+// se deduce: el logo es logo, lo que lleva enlace es el botón, y un texto
+// marcado como legal es el legal. Todo lo demás es promoción.
+function rolLibre(el){
+  if(!el) return "promo";
+  if(el.rol) return el.rol;
+  if(el.tipo === "logo") return "logo";
+  if(el.esLegal) return "legal";
+  if(String(el.link || "").trim()) return "cta";
+  return "promo";
+}
+const ROLES_LIBRE = [["","Automático"],["logo","Logo"],["promo","Promoción"],["cta","Botón (CTA)"],["legal","Legal"]];
+
 // Inspección del lienzo libre: desborde, legibilidad y contraste. Ni "completa"
 // ni "colisión" ni "aire" aplican aquí — el usuario decide qué pone y dónde.
 function inspeccionarLibre(cmp){
@@ -5780,6 +5926,7 @@ function arrastrarLibre(e0, el, dato, ctx){
     const nuevoLeft = (left0 + dx) * escala;
     const nuevoTop  = (top0  + dy) * escala;
     Object.assign(dato, anclarLibre(dato, fmt, nuevoLeft, nuevoTop));
+    fijarPosLibre(fmt, dato);      // en un tamaño que no es el máster, queda suyo
     persistir(); renderTablero(); renderPanelLibre();
   };
   window.addEventListener("pointermove",mover); window.addEventListener("pointerup",soltar);
@@ -5823,6 +5970,7 @@ function redimensionarLibre(e0, el, dato, punta, ctx){
     el.style.width=el.style.height=el.style.left=el.style.top="";
     dato.w = w; dato.h = h;
     Object.assign(dato, anclarLibre(dato, fmt, nl*escala, nt*escala));
+    fijarPosLibre(fmt, dato);
     persistir(); renderTablero(); renderPanelLibre();
   };
   window.addEventListener("pointermove",mover); window.addEventListener("pointerup",soltar);
@@ -5953,6 +6101,13 @@ function propsLibreHTML(e){
     h += `<div class="se-f"><label>Dirección</label><input type="text" value="${escAttr(e.url||"")}" onchange="${S('url','this.value')};renderTablero()"></div>`;
   }
   // Comunes: tamaño, posición y enlace.
+  // El PAPEL decide en qué banda cae al replicar (maquetas del usuario).
+  const rolAuto = rolLibre(Object.assign({}, e, { rol:"" }));
+  h += `<div class="se-h2">Papel en el banner</div>`;
+  h += `<div class="se-f"><label>Es el… <small>· decide su banda al replicar</small></label>`
+     + `<select onchange="${S('rol','this.value')};renderTablero()">`
+     + ROLES_LIBRE.map(([v,l])=>`<option value="${v}" ${(e.rol||"")===v?"selected":""}>${l}${v===""?" ("+(({logo:"Logo",promo:"Promoción",cta:"Botón",legal:"Legal"})[rolAuto])+")":""}</option>`).join("")
+     + `</select></div>`;
   h += `<div class="se-h2">Tamaño y posición</div>`;
   h += `<div class="lb-pads"><label>Ancho<input type="number" min="4" max="2000" value="${Math.round(parseFloat(e.w)||10)}" oninput="${S('w','this.value')}"></label>`
      + `<label>Alto<input type="number" min="4" max="2000" value="${Math.round(parseFloat(e.h)||10)}" oninput="${S('h','this.value')}"></label></div>`;
@@ -6063,7 +6218,10 @@ function replicarBanner(){
   const otros=(p.artboards||[]).filter(a=>a.fmt!==p.masterFmt);
   const tocados=otros.filter(a=>a.ov&&Object.keys(a.ov).length);
   if(tocados.length && !confirm(`${tocados.length} tamaño(s) tienen ajustes propios que hiciste a mano.\n\nAl replicar vuelven a seguir al diseño del máster y esos ajustes se pierden.\n\n¿Replicar igual?`)) return;
-  otros.forEach(a=>{ a.ov={}; });
+  // Cada tamaño recibe el diseño REPARTIDO en sus bandas (25/50/25 en franjas,
+  // 20/50/20/10 en verticales — las maquetas del usuario). El máster se queda
+  // como lo dibujaste.
+  otros.forEach(a=>{ a.ov={}; a.pos = acomodarPieza(p, a.fmt) || {}; });
   persistir(); renderTablero();
   toast(`Replicado a ${otros.length} tamaños · revisando…`);
   // El inspector dice cuáles quedaron bien y cuáles hay que mirar.
@@ -6110,6 +6268,16 @@ function swatchesElLibre(id, campo){
   const cols = (typeof coloresDeMarca==="function") ? coloresDeMarca() : [];
   if(!cols.length) return `<span class="cmp-sw-vacio">Aplica una marca</span>`;
   return cols.map(c=>`<button class="cmp-sw" style="background:${esc(c)}" title="${esc(c)}" onclick="setElLibre('${id}','${campo}','${c}');renderPanelLibre()"></button>`).join("");
+}
+// Si estás ajustando un tamaño que NO es el máster, lo que mueves ahí queda
+// guardado para ese tamaño (pisa el reacomodo automático de "Replicar"). En el
+// máster no: ahí estás definiendo el diseño que se replica.
+function fijarPosLibre(fmt, el){
+  const p = pieza(); if(!p || !el) return;
+  if(fmt === (p.masterFmt || "display-300x250")) return;
+  const ab = (p.artboards||[]).find(a=>a.fmt===fmt); if(!ab) return;
+  ab.pos = ab.pos || {};
+  ab.pos[el.id] = { w:el.w, h:el.h, ancla:el.ancla, dx:el.dx, dy:el.dy };
 }
 function guiaLibre(ovl, orient, pos){
   const g=document.createElement("div"); g.className="lz-guia "+orient;
@@ -7186,13 +7354,30 @@ function deepMergeOv(base, ov){
 function composicionEfectiva(p, fmt){
   asegurarComposicionNueva(p);
   const g = p.composicion||{}; const ab=(p.artboards||[]).find(a=>a.fmt===fmt); const ov=(ab&&ab.ov)||{};
-  return deepMergeOv(g, ov);
+  const ef = deepMergeOv(g, ov);
+  // LIENZO LIBRE: si este tamaño tiene un reacomodo por bandas (lo escribe
+  // "Replicar"), sus posiciones mandan sobre las del máster. Es lo que hace que
+  // una franja no sea el cuadrado escalado, sino el diseño REPARTIDO según las
+  // proporciones de su familia.
+  if(esLibre(ef) && ab && ab.pos && Array.isArray(ef.elementos)){
+    ef.elementos = ef.elementos
+      .map(e => {
+        const q = ab.pos[e.id];
+        if(!q) return e;
+        const n = Object.assign({}, e, { w:q.w, h:q.h, ancla:q.ancla, dx:q.dx, dy:q.dy });
+        if(q.tam != null) n.tam = q.tam;
+        n._oculto = !!q.oculto;
+        return n;
+      })
+      .filter(e => !e._oculto);   // lo que no cabe legible en este tamaño, cae
+  }
+  return ef;
 }
 function ovTieneValor(o){ if(o==null||o==="") return false; if(typeof o==="object"){ return Object.keys(o).some(k=>ovTieneValor(o[k])); } return true; }
 function tieneOverride(p, fmt){ const ab=(p.artboards||[]).find(a=>a.fmt===fmt); return !!(ab&&ab.ov&&ovTieneValor(ab.ov)); }
 function setCompOv(fmt, path, val){ const p=pieza(); if(!esComposicion(p))return; setPath(ovDeFmt(p,fmt), path, val); persistir(); renderTablero(); refrescarPanelBanner(); }
 function toggleCompVisOv(fmt, path){ const p=pieza(); if(!esComposicion(p))return; const ef=composicionEfectiva(p,fmt); const cur=getPath(ef,path); setCompOv(fmt,path,!(cur!==false)); renderComposicionEditor(); }
-function resetTamaño(fmt){ const p=pieza(); const ab=(p.artboards||[]).find(a=>a.fmt===fmt); if(ab) ab.ov={}; persistir(); renderTablero(); renderComposicionEditor(); toast("Tamaño restablecido al diseño de todos"); }
+function resetTamaño(fmt){ const p=pieza(); const ab=(p.artboards||[]).find(a=>a.fmt===fmt); if(ab){ ab.ov={}; delete ab.pos; } persistir(); renderTablero(); renderComposicionEditor(); toast("Tamaño restablecido al diseño de todos"); }
 function resetCapaTamaño(fmt, path){ const p=pieza(); const ab=(p.artboards||[]).find(a=>a.fmt===fmt); if(ab&&ab.ov){ delPath(ab.ov, path); } persistir(); renderTablero(); renderComposicionEditor(); }
 function familiaDeFormato(fmt){ const f=FORMATOS[fmt]; if(!f) return "cuadrado"; const r=f.ancho/f.alto; return r>=2.2?"franja":(r<=0.6?"vertical":"cuadrado"); }
 // Pone el logo de la marca aplicada en la zona Logo de la composición (global o por tamaño).
@@ -10811,7 +10996,7 @@ function iaAtras(){ iaIrPaso(1); }
 // Limpiar (a la izquierda del pie, como pide el manual): deja el formulario en
 // blanco sin cerrar la ventana. La marca y las piezas marcadas se conservan.
 function iaLimpiar(){
-  ["ia-que","ia-objetivo","ia-gancho","ia-ctaurl","ia-ref1","ia-ref2","ia-notas"].forEach(id => {
+  ["ia-que","ia-objetivo","ia-gancho","ia-legal","ia-ctaurl","ia-ref1","ia-ref2","ia-notas"].forEach(id => {
     const e = document.getElementById(id); if(e) e.value = "";
   });
   _iaFotos = []; renderIaFotos();
@@ -10880,6 +11065,15 @@ async function generarConIA(){
   const accion = (document.getElementById("ia-objetivo").value || "").trim();
   const gancho = (document.getElementById("ia-gancho").value || "").trim();
   const ctaUrl = (document.getElementById("ia-ctaurl").value || "").trim();
+  // FRASE LEGAL: siempre se pide. Si la campaña no lleva, se escribe «no» —
+  // así queda REGISTRO de que se decidió, en vez de un campo vacío ambiguo.
+  const legal = (document.getElementById("ia-legal").value || "").trim();
+  if(!legal){
+    toast("Escribe la frase legal. Si esta campaña no lleva, escribe «no».", 5000);
+    const el = document.getElementById("ia-legal");
+    if(el){ el.focus(); el.classList.add("ia-falta"); setTimeout(()=>el.classList.remove("ia-falta"), 2500); }
+    return;
+  }
   const tipo = (document.getElementById("ia-tono") || {}).value || "comercial";
   let notas = (document.getElementById("ia-notas").value || "").trim();
   // Dos URLs de referencia (opcionales) → solo se leen las que pegues.
@@ -10929,7 +11123,7 @@ async function generarConIA(){
       let nombreCampana = "";
       try{
         const rc = await fetch("/api/ia", { method:"POST", credentials:"include", headers:{ "Content-Type":"application/json" },
-          body: JSON.stringify({ modo:"concepto", brief:{ que, accion, gancho, refs, notas }, marca: marcaAPI }) });
+          body: JSON.stringify({ modo:"concepto", brief:{ que, accion, gancho, refs, notas, legal }, marca: marcaAPI }) });
         const dc = await rc.json().catch(()=>null);
         if(dc && dc.ok && dc.concepto){
           nombreCampana = dc.nombre || "";
@@ -10989,7 +11183,7 @@ async function generarConIA(){
         // banner con otro máster, así que viaja como banner.
         producto: esGrafica ? "banner" : producto,
         plataforma: producto,
-        brief: { que, accion, gancho, refs, ctaUrl, tipo, notas },
+        brief: { que, accion, gancho, refs, ctaUrl, tipo, notas, legal },
         estilo: iaEstilo,
         formato: producto==="email" ? "email" : producto==="ads" ? "ads" : masterDe,
         marca: marcaAPI,
@@ -11263,7 +11457,10 @@ function insertarBannerIA(data, marca, tipoCol){
   if(M && M.accent2 && getPath(comp,"deco.color2")==null) setPath(comp,"deco.color2", M.accent2);
   // LEGAL: el manual lo pide en cada banner y tiene su banda inferior reservada.
   // Lo escribe la IA si el encargo trae condiciones; si no, el descargo de la marca.
-  const legal = String(data.legal || (M && M.disclaimer) || "").trim();
+  // La frase legal viene del formulario (obligatoria). Si el usuario escribió
+  // «no», `legal` llega vacío y `legalDeclarado` en true: NO se cae al descargo
+  // de la marca, porque decidir que no lleva es una decisión, no un olvido.
+  const legal = String(data.legal || (data.legalDeclarado ? "" : (M && M.disclaimer) || "")).trim();
   if(legal) setPath(comp,"legal", legal.slice(0,140));
   const tipoSet = (tipoCol==="facebook") ? "facebook" : "display-desktop";
   const cfg = COLECCIONES[tipoSet] || COLECCIONES["display-desktop"];
