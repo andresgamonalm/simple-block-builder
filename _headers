@@ -1,0 +1,17 @@
+# Cabeceras de seguridad. Adaptadas del paquete de referencia del usuario.
+# Lo suyo traía una excepción de Content-Security-Policy para el verificador
+# de Google Tag Manager; aquí no hay Tag Manager, así que no va.
+#
+# Deliberadamente NO se pone una CSP de contenido (script-src y compañía):
+# el aplicativo es un solo archivo con el JS y el CSS EN LÍNEA, y una CSP
+# estricta lo dejaría en blanco. Esto es lo que se puede activar sin romper
+# nada: enmarcado, adivinación de tipo, referente e indexación.
+/*
+  X-Frame-Options: SAMEORIGIN
+  Content-Security-Policy: frame-ancestors 'self'
+  X-Content-Type-Options: nosniff
+  Referrer-Policy: strict-origin-when-cross-origin
+  X-Robots-Tag: noindex, nofollow
+
+# Las imágenes servidas desde R2 ya viajan con su propia cache inmutable
+# (functions/api/upload.js); aquí no se toca.

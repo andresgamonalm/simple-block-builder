@@ -38,6 +38,25 @@ let guardado = null;
 function api(req, res, url) {
   const j = (o, s=200) => { res.writeHead(s, {"content-type":"application/json;charset=utf-8"}); res.end(JSON.stringify(o)); };
   const p = url.pathname;
+  // La pantalla de acceso necesita poder probarse SIN sesión. La prueba pone
+  // la galleta sbb-sin-sesion y entonces whoami responde 401, como en vivo.
+  if (p === "/api/whoami" && /sbb-sin-sesion=1/.test(req.headers.cookie || "")) {
+    return j({ ok:false, error:"No autenticado" }, 401);
+  }
+  if (p === "/api/auth/login") {
+    let b=""; req.on("data",d=>b+=d);
+    req.on("end",()=>{ let c={}; try{ c=JSON.parse(b); }catch{}
+      if (c.usuario === "andres" && c.password === "correcta") {
+        // Entrar ABRE la sesión: se apaga la galleta de "sin sesión" para que
+        // el escritorio no rebote de vuelta al formulario, igual que en vivo.
+        res.writeHead(200, {"content-type":"application/json;charset=utf-8",
+                            "set-cookie":"sbb-sin-sesion=0; Path=/"});
+        return res.end(JSON.stringify({ ok:true, usuario:"andres", rol:"admin", permisos:["*"] }));
+      }
+      j({ ok:false, error:"Usuario o contraseña incorrectos." }, 401);
+    });
+    return;
+  }
   if (p === "/api/whoami") return j({ ok:true, usuario:"andres", nombre:"Andrés", email:"andres",
       rol:"admin", permisos:["*"], isSuperAdmin:true,
       usuarios:[{usuario:"andres",rol:"admin",permisos:["*"],workspace:"andres"}],
