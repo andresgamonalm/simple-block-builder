@@ -71,13 +71,13 @@
     "fondos": [
       {
         "nombre": "navy",
-        "hex": "#23366F",
+        "hex": "#040764",
         "texto": "#FFFFFF",
         "fuente": "manual"
       },
       {
         "nombre": "azul",
-        "hex": "#2167AE",
+        "hex": "#1C73CB",
         "texto": "#FFFFFF",
         "fuente": "manual"
       },
@@ -96,19 +96,19 @@
       {
         "nombre": "beige",
         "hex": "#D9D2C5",
-        "texto": "#23366F",
+        "texto": "#040764",
         "fuente": "medido-en-pieza"
       },
       {
         "nombre": "durazno",
         "hex": "#E8B87A",
-        "texto": "#23366F",
+        "texto": "#040764",
         "fuente": "medido-en-pieza"
       },
       {
         "nombre": "blanco",
         "hex": "#FFFFFF",
-        "texto": "#23366F",
+        "texto": "#040764",
         "fuente": "manual",
         "obligaBorde": true
       }
@@ -116,7 +116,7 @@
     "acentos": [
       {
         "nombre": "celeste",
-        "hex": "#91BFE3",
+        "hex": "#378CE3",
         "uso": [
           "formas",
           "circulo-secundario"
@@ -171,7 +171,7 @@
         "cantidad": 1,
         "fondo": "navy",
         "colores": [
-          "#2167AE"
+          "#1C73CB"
         ],
         "textos": [
           "#FFFFFF"
@@ -181,7 +181,7 @@
         "cantidad": 1,
         "fondo": "coral",
         "colores": [
-          "#2167AE"
+          "#1C73CB"
         ],
         "textos": [
           "#FFFFFF"
@@ -194,14 +194,14 @@
           "#FFFFFF"
         ],
         "textos": [
-          "#23366F"
+          "#040764"
         ]
       },
       {
         "cantidad": 1,
         "fondo": "durazno",
         "colores": [
-          "#23366F"
+          "#040764"
         ],
         "textos": [
           "#FFFFFF"
@@ -221,7 +221,7 @@
         "cantidad": 2,
         "fondo": "navy",
         "colores": [
-          "#2167AE",
+          "#1C73CB",
           "#5B9BD5"
         ],
         "textos": [
@@ -233,20 +233,20 @@
         "cantidad": 2,
         "fondo": "coral",
         "colores": [
-          "#2167AE",
+          "#1C73CB",
           "#FFFFFF"
         ],
         "textos": [
           "#FFFFFF",
-          "#23366F"
+          "#040764"
         ]
       },
       {
         "cantidad": 2,
         "fondo": "foto",
         "colores": [
-          "#2167AE",
-          "#23366F"
+          "#1C73CB",
+          "#040764"
         ],
         "textos": [
           "#FFFFFF",
@@ -366,10 +366,10 @@
       "linea-divisoria"
     ],
     "colores": [
-      "#91BFE3",
+      "#378CE3",
       "#41B6E6",
-      "#2167AE",
-      "#23366F",
+      "#1C73CB",
+      "#040764",
       "#E9EDF2",
       "#D8D2BC"
     ],

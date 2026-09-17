@@ -2,7 +2,7 @@
 <style>
 :root{
   --ground:#F7F8FA; --panel:#FFFFFF; --ink:#1A1F2E; --muted:#6B7385;
-  --rule:#DFE3EB; --rule-soft:#EDF0F5; --accent:#2167AE; --accent-soft:#E7F0F8;
+  --rule:#DFE3EB; --rule-soft:#EDF0F5; --accent:#1C73CB; --accent-soft:#E7F0F8;
   --limit:#B4453C; --limit-soft:#FBEDEC; --ok:#2E7D5B;
   --mono:ui-monospace,"SF Mono","Cascadia Mono",Menlo,Consolas,monospace;
   --sans:ui-sans-serif,-apple-system,"Segoe UI",system-ui,Arial,sans-serif;
@@ -148,10 +148,10 @@ de marca, no preferencia.</p>
 <div class="tw"><table>
 <thead><tr><th>Color</th><th class="num">Hex</th><th>Uso</th><th>Color de texto encima</th></tr></thead>
 <tbody>
-<tr><td><span class="sw" style="background:#23366F"></span>Azul Oscuro</td><td class="num">#23366F</td><td>Fondo principal de banner</td><td>Blanco</td></tr>
-<tr><td><span class="sw" style="background:#2167AE"></span>Azul Zurich</td><td class="num">#2167AE</td><td>Fondo alternativo · botón</td><td>Blanco</td></tr>
+<tr><td><span class="sw" style="background:#040764"></span>Azul Oscuro</td><td class="num">#040764</td><td>Fondo principal de banner</td><td>Blanco</td></tr>
+<tr><td><span class="sw" style="background:#1C73CB"></span>Azul Matías</td><td class="num">#1C73CB</td><td>Fondo alternativo · botón</td><td>Blanco</td></tr>
 <tr><td><span class="sw" style="background:#F0736B"></span>Coral</td><td class="num">#F0736B</td><td>Fondo de campaña puntual</td><td>Blanco</td></tr>
-<tr><td><span class="sw" style="background:#ECEEEF"></span>Gris claro</td><td class="num">#ECEEEF</td><td>Fondo claro</td><td>Azul Oscuro</td></tr>
+<tr><td><span class="sw" style="background:#F5F5F5"></span>Gris claro</td><td class="num">#F5F5F5</td><td>Fondo claro</td><td>Azul Oscuro</td></tr>
 <tr><td><span class="sw" style="background:#FFFFFF"></span>Blanco</td><td class="num">#FFFFFF</td><td>Fondo claro · círculo del logo</td><td>Azul Oscuro</td></tr>
 </tbody></table></div>
 
@@ -159,8 +159,8 @@ de marca, no preferencia.</p>
 <div class="tw"><table>
 <thead><tr><th>Color</th><th class="num">Hex</th><th>Único uso permitido</th></tr></thead>
 <tbody>
-<tr><td><span class="sw" style="background:#FFF773"></span>Lima</td><td class="num">#FFF773</td><td>Círculo de oferta. <span class="no">Nunca</span> como fondo ni como texto.</td></tr>
-<tr><td><span class="sw" style="background:#91BFE3"></span>Azul claro</td><td class="num">#91BFE3</td><td>Adornos.</td></tr>
+<tr><td><span class="sw" style="background:#FCE865"></span>Lima</td><td class="num">#FCE865</td><td>Círculo de oferta. <span class="no">Nunca</span> como fondo ni como texto.</td></tr>
+<tr><td><span class="sw" style="background:#378CE3"></span>Azul claro</td><td class="num">#378CE3</td><td>Adornos.</td></tr>
 <tr><td><span class="sw" style="background:#41B6E6"></span>Cyan</td><td class="num">#41B6E6</td><td>Adornos.</td></tr>
 <tr><td><span class="sw" style="background:#D8D2BC"></span>Beige</td><td class="num">#D8D2BC</td><td>Adornos.</td></tr>
 <tr><td><span class="sw" style="background:#C0392B"></span>Rojo</td><td class="num">#C0392B</td><td>Botón, cuando la pieza es de venta directa.</td></tr>
@@ -179,7 +179,7 @@ oscuro el propio color lo separa; con fondo claro hace falta borde o el anuncio 
 <div class="tw"><table>
 <thead><tr><th>Fondo del banner</th><th>Borde</th><th class="num">Grosor</th></tr></thead>
 <tbody>
-<tr><td>Azul Oscuro · Azul Zurich · Coral</td><td>No lleva</td><td class="num">0</td></tr>
+<tr><td>Azul Oscuro · Azul Matías · Coral</td><td>No lleva</td><td class="num">0</td></tr>
 <tr><td>Blanco · Gris claro</td><td><b>Obligatorio</b>, Azul Oscuro</td><td class="num">1 px</td></tr>
 <tr><td>Foto con velo</td><td>No lleva</td><td class="num">0</td></tr>
 </tbody></table></div>
@@ -228,7 +228,7 @@ luz natural. <span class="no">No</span> poses de banco de imágenes, no grupos p
 <tr><td>Diámetro</td><td class="num">62 % del lado corto</td></tr>
 <tr><td>Sale por el borde</td><td class="num">8 % del lado corto</td></tr>
 <tr><td>Posición</td><td>Derecha (cuadrados) · <span class="no">no aplica</span> en franjas ni verticales estrechos</td></tr>
-<tr><td>Relleno</td><td>Azul Zurich o Lima</td></tr>
+<tr><td>Relleno</td><td>Azul Matías o Lima</td></tr>
 <tr><td>Texto dentro</td><td>Blanco si el círculo es azul · Azul Oscuro si es Lima</td></tr>
 <tr><td>Condición para existir</td><td><b>Solo si hay una oferta real con cifra.</b> Sin cifra, no hay círculo</td></tr>
 <tr><td>Segundo círculo</td><td>Permitido para oferta secundaria · ⌀ 62 % del primero · blanco</td></tr>
@@ -289,7 +289,7 @@ reduce la escala; si aun al mínimo no entra, <b>se quita el elemento menos impo
 Si tras tres intentos sigue fallando, se entrega con el aviso — nunca en silencio.</p>
 
 <footer>
-  Derivado de las 10 piezas reales de Zurich Chile y del Brandbook 2024.
+  Derivado de las 10 piezas reales de Matías y del manual de marca.
   Todo número de esta página se calcula al abrirla; corregir un valor de origen re-calcula la tabla entera.
 </footer>
 </div>
@@ -303,7 +303,7 @@ const FORMATOS = [
   {w:468,  h:60,   fam:'Franjas'},
   {w:1200, h:628,  fam:'Grandes'},   {w:1200,h:1200,fam:'Grandes'}
 ];
-const COLOR_FAM = {Cuadrados:'#2167AE', Verticales:'#7B5EA7', Franjas:'#2E7D5B', Grandes:'#C4762B'};
+const COLOR_FAM = {Cuadrados:'#1C73CB', Verticales:'#7B5EA7', Franjas:'#2E7D5B', Grandes:'#C4762B'};
 
 // k por familia. Verticales y franjas NO se escalan por el lado corto:
 // se romperían igual que se rompían antes.

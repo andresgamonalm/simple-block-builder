@@ -13,7 +13,7 @@ y cómo pasa una mejora de un lado al otro.
 | Dirección | simple-block-builder.gamonal.app | la URL de preview de Cloudflare |
 | Quién la usa | tú y tu equipo, de verdad | solo para probar |
 | Base de datos | `simple-block-builder` | `simple-block-builder-draft` |
-| Imágenes (R2) | `zurich-chile` | `zurich-chile-draft` |
+| Imágenes (R2) | `bucket-de-imagenes` | `bucket-de-imagenes-borrador` |
 
 **Lo importante: no comparten datos.** Puedes romper lo que quieras en el
 borrador — crear, borrar, exportar, generar con IA — y producción no se entera.
@@ -74,7 +74,7 @@ una cadena y prueba el siguiente si uno ya no existe.
 
 Se copiaron desde producción, solo lo necesario para poder probar:
 
-- **Marca Zurich** con la paleta oficial del Brandbook 2024, el eslogan real y las
+- **Marca Matías** con la paleta oficial del manual de marca, el eslogan real y las
   directrices (lo que la IA lee como manual de marca). Logo azul incrustado en la
   ficha; logo blanco apuntando al archivo de producción.
 - **51 fotos** de la biblioteca (50 de Drive + 1 subida).

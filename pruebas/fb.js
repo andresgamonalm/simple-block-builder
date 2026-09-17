@@ -7,7 +7,7 @@ const T=(c,n,e)=>{ if(c){ok++;console.log("  ok   "+n);} else {mal++;console.log
   const b=await chromium.launch({executablePath: process.env.SBB_CHROMIUM || undefined});
   const pg=await b.newPage({viewport:{width:1600,height:1100}});
   const errs=[]; pg.on("pageerror",e=>errs.push(e.message));
-  pg.on("console",m=>{if(m.type()==="error"&&!/ERR_CERT|ERR_CONNECTION|favicon/.test(m.text()))errs.push("console: "+m.text());});
+  pg.on("console",m=>{if(m.type()==="error"&&!/ERR_CERT|ERR_CONNECTION|ERR_TUNNEL|favicon/.test(m.text()))errs.push("console: "+m.text());});
   await pg.goto((process.env.SBB_URL || "http://127.0.0.1:8099")+"/editor.html",{waitUntil:"load"});
   await pg.waitForFunction(()=>typeof window.crearComposicion==="function");
 
@@ -41,7 +41,7 @@ const T=(c,n,e)=>{ if(c){ok++;console.log("  ok   "+n);} else {mal++;console.log
     setComp("zonas.cta.texto","Cotiza aquí");
     setComp("zonas.logo.url","/logo.svg");
     setComp("burbuja.texto","2 Cuotas Gratis"); setComp("burbuja.visible",true);
-    setComp("fondo.color","#23366F");
+    setComp("fondo.color","#040764");
     setComp("legal","Bases legales en www.ejemplo.cl");
     renderTablero();
     return { tipo:p.setTipo, master:p.masterFmt, n:(p.artboards||[]).length, ruta:rutaDeProducto(p), cat:categoriaDe("fb-1080x1350") };

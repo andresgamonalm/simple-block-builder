@@ -6,7 +6,7 @@ const { Document, Packer, Paragraph, TextRun, HeadingLevel, Table, TableRow, Tab
 
 const B = JSON.parse(fs.readFileSync('bloques.json','utf8'));
 const ANCHO = 9360;                     // Carta menos margenes de 1"
-const NAVY='23366F', AZUL='2167AE', GRIS='6B7385', LINEA='DFE3EB', SUAVE='F3F6FB';
+const NAVY='040764', AZUL='1C73CB', GRIS='6B7385', LINEA='DFE3EB', SUAVE='F3F6FB';
 const AVISO = { no:{borde:'B4453C', fondo:'FBEDEC'}, si:{borde:'2E7D5B', fondo:'EAF4EF'},
                 wa:{borde:'8A6212', fondo:'FBF3E0'}, info:{borde:AZUL, fondo:'E7F0F8'} };
 

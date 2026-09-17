@@ -20,7 +20,7 @@ const prepararColeccion = () => {
   setComp("zonas.texto.cuerpo.texto", "Cobertura desde hoy");
   setComp("zonas.cta.texto", "Cotiza aquí");
   setComp("zonas.logo.url", "/logo.svg");
-  setComp("fondo.color", "#23366F");
+  setComp("fondo.color", "#040764");
 };
 
 (async () => {

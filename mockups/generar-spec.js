@@ -87,16 +87,16 @@ const spec = {
 
   paleta: {
     fondos: [
-      { nombre:'navy',    hex:'#23366F', texto:'#FFFFFF', fuente:'manual' },
-      { nombre:'azul',    hex:'#2167AE', texto:'#FFFFFF', fuente:'manual' },
+      { nombre:'navy',    hex:'#040764', texto:'#FFFFFF', fuente:'manual' },
+      { nombre:'azul',    hex:'#1C73CB', texto:'#FFFFFF', fuente:'manual' },
       { nombre:'coral',   hex:'#F0736B', texto:'#FFFFFF', fuente:'medido-en-pieza' },
       { nombre:'magenta', hex:'#C2417F', texto:'#FFFFFF', fuente:'medido-en-pieza' },
-      { nombre:'beige',   hex:'#D9D2C5', texto:'#23366F', fuente:'medido-en-pieza' },
-      { nombre:'durazno', hex:'#E8B87A', texto:'#23366F', fuente:'medido-en-pieza' },
-      { nombre:'blanco',  hex:'#FFFFFF', texto:'#23366F', fuente:'manual', obligaBorde:true }
+      { nombre:'beige',   hex:'#D9D2C5', texto:'#040764', fuente:'medido-en-pieza' },
+      { nombre:'durazno', hex:'#E8B87A', texto:'#040764', fuente:'medido-en-pieza' },
+      { nombre:'blanco',  hex:'#FFFFFF', texto:'#040764', fuente:'manual', obligaBorde:true }
     ],
     acentos: [
-      { nombre:'celeste',      hex:'#91BFE3', uso:['formas','circulo-secundario'] },
+      { nombre:'celeste',      hex:'#378CE3', uso:['formas','circulo-secundario'] },
       { nombre:'cyan',         hex:'#41B6E6', uso:['formas'] },
       { nombre:'beige-forma',  hex:'#D8D2BC', uso:['formas'] },
       { nombre:'verde-salvia', hex:'#8FB89A', uso:['circulo-monto'], fuente:'medido-en-pieza' },
@@ -114,14 +114,14 @@ const spec = {
     cuerpoPalabraPctDiametro: 20,
     requiereCifraReal: true,
     combinaciones: [
-      { cantidad:1, fondo:'navy',    colores:['#2167AE'], textos:['#FFFFFF'] },
-      { cantidad:1, fondo:'coral',   colores:['#2167AE'], textos:['#FFFFFF'] },
-      { cantidad:1, fondo:'magenta', colores:['#FFFFFF'], textos:['#23366F'] },
-      { cantidad:1, fondo:'durazno', colores:['#23366F'], textos:['#FFFFFF'] },
+      { cantidad:1, fondo:'navy',    colores:['#1C73CB'], textos:['#FFFFFF'] },
+      { cantidad:1, fondo:'coral',   colores:['#1C73CB'], textos:['#FFFFFF'] },
+      { cantidad:1, fondo:'magenta', colores:['#FFFFFF'], textos:['#040764'] },
+      { cantidad:1, fondo:'durazno', colores:['#040764'], textos:['#FFFFFF'] },
       { cantidad:1, fondo:'foto',    colores:['#8FB89A'], textos:['#FFFFFF'] },
-      { cantidad:2, fondo:'navy',    colores:['#2167AE','#5B9BD5'], textos:['#FFFFFF','#FFFFFF'] },
-      { cantidad:2, fondo:'coral',   colores:['#2167AE','#FFFFFF'], textos:['#FFFFFF','#23366F'] },
-      { cantidad:2, fondo:'foto',    colores:['#2167AE','#23366F'], textos:['#FFFFFF','#FFFFFF'] }
+      { cantidad:2, fondo:'navy',    colores:['#1C73CB','#5B9BD5'], textos:['#FFFFFF','#FFFFFF'] },
+      { cantidad:2, fondo:'coral',   colores:['#1C73CB','#FFFFFF'], textos:['#FFFFFF','#040764'] },
+      { cantidad:2, fondo:'foto',    colores:['#1C73CB','#040764'], textos:['#FFFFFF','#FFFFFF'] }
     ],
     secundarioPuedeContener: ['cifra','foto-producto-recortada','logo-socio','linea-divisoria','legal']
   },
@@ -161,7 +161,7 @@ const spec = {
 
   formas: {
     repertorio:['circulo','cuarto-de-circulo','trazo-pincel','linea-divisoria'],
-    colores:['#91BFE3','#41B6E6','#2167AE','#23366F','#E9EDF2','#D8D2BC'],
+    colores:['#378CE3','#41B6E6','#1C73CB','#040764','#E9EDF2','#D8D2BC'],
     cantidadMin:3, cantidadMax:5,
     escalasPctLadoCorto:[28,16,9],
     anclaje:'borde', porDetrasDelContenido:true,

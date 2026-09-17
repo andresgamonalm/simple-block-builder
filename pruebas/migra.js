@@ -14,11 +14,11 @@ const VIEJAS = {
     id: "v1", nombre: "Campaña 6 capas", formato: "display-300x250", esSet: true,
     masterFmt: "display-300x250", activaFmt: "display-300x250",
     artboards: [{ fmt: "display-300x250" }, { fmt: "display-728x90" }, { fmt: "display-300x600" }],
-    canvas: [], tema: { font: "Arial", primary: "#2167AE", text: "#23366F", bg: "#ffffff" },
+    canvas: [], tema: { font: "Arial", primary: "#1C73CB", text: "#040764", bg: "#ffffff" },
     // modelo ANTIGUO: sin `zonas`
     composicion: {
       imagen: { url: "/foto.svg", foco: "center", fit: "cover", zoom: 100, oscurecer: 20 },
-      fondoColor: { color: "#23366F" },
+      fondoColor: { color: "#040764" },
       logo: { url: "/logo.svg", tamano: 60, maxw: 80, alinH: "left", visible: true },
       titular: { texto: "Seguro con todo incluido", tamano: 34, color: "#ffffff", alinH: "left" },
       cuerpo: { texto: "Cobertura completa para tu auto desde el primer día", tamano: 18, color: "#ffffff" },
@@ -29,33 +29,33 @@ const VIEJAS = {
     id: "v2", nombre: "Campaña con layout de marca", formato: "display-300x250", esSet: true,
     masterFmt: "display-300x250", activaFmt: "display-300x250",
     artboards: [{ fmt: "display-300x250" }, { fmt: "display-160x600" }],
-    canvas: [], tema: { font: "Arial", primary: "#2167AE", text: "#23366F", bg: "#ffffff" },
+    canvas: [], tema: { font: "Arial", primary: "#1C73CB", text: "#040764", bg: "#ffffff" },
     composicion: {
       layout: "z-circulo",                      // apagado hoy: debe caer a 3 zonas
-      fondo: { tipo: "color", color: "#1d2e7a", imagen: { url: "", oscurecer: 40 } },
+      fondo: { tipo: "color", color: "#040764", imagen: { url: "", oscurecer: 40 } },
       prop: [25, 50, 25],
       zonas: {
         logo: { bg: "hereda", url: "/logo.svg", alto: 48, maxw: 70, visible: true, alinH: "left", alinV: "center" },
         texto: { bg: "hereda", alinH: "left", alinV: "center",
-                 etiqueta: { texto: "Seguro", tamano: 11, color: "#d9e05f", colorTexto: "#23366F" },
+                 etiqueta: { texto: "Seguro", tamano: 11, color: "#FCE865", colorTexto: "#040764" },
                  titular: { texto: "2 cuotas gratis", tamano: 40, color: "#ffffff" },      // fuera de rango
                  cuerpo: { texto: "Aprovecha hasta el 14 de julio", tamano: 22, color: "#ffffff" } },
-        cta: { bg: "hereda", texto: "Contrata aquí", url: "", colorFondo: "#e71313", colorTexto: "#ffffff", radio: 20, tamano: 18 }
+        cta: { bg: "hereda", texto: "Contrata aquí", url: "", colorFondo: "#B318A3", colorTexto: "#ffffff", radio: 20, tamano: 18 }
       },
-      burbuja: { visible: true, texto: "2 Cuotas Gratis", color: "#d9e05f", colorTexto: "#23366F", tamano: 96, pos: "tr" },
-      deco: { visible: true, color1: "#72ccfd", color2: "#2167ae" }
+      burbuja: { visible: true, texto: "2 Cuotas Gratis", color: "#FCE865", colorTexto: "#040764", tamano: 96, pos: "tr" },
+      deco: { visible: true, color1: "#378CE3", color2: "#1C73CB" }
     }
   },
   displaySuelto: {
     id: "v3", nombre: "Display suelto (sin colección)", formato: "display-300x250",
     canvas: [{ id: "b1", tipo: "texto", datos: { texto: "Banner viejo por bloques", tamano: "16" } }],
-    tema: { font: "Arial", primary: "#2167AE", text: "#23366F", bg: "#ffffff" }
+    tema: { font: "Arial", primary: "#1C73CB", text: "#040764", bg: "#ffffff" }
   },
   emailViejo: {
     id: "v4", nombre: "Email de antes", formato: "email",
     canvas: [{ id: "e1", tipo: "hero", datos: { titulo: "Bienvenido", sub: "Gracias por sumarte", url: "/foto.svg" } },
              { id: "e2", tipo: "cta", datos: { texto: "Ver más", url: "https://ejemplo.cl" } }],
-    tema: { font: "Arial", primary: "#2167AE", text: "#23366F", bg: "#ffffff" }
+    tema: { font: "Arial", primary: "#1C73CB", text: "#040764", bg: "#ffffff" }
   }
 };
 

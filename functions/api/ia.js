@@ -799,7 +799,7 @@ async function generarBanner({ env, brief, marca, imagenes, refsTxt, promos, est
     '- El "cta" refleja la acción del encargo.',
     '',
     'EJEMPLOS (el nivel que se espera):',
-    'MAL  → "Zurich te ofrece la mejor cobertura del mercado"   (habla la empresa, genérico, sirve para cualquiera)',
+    'MAL  → "Te ofrecemos la mejor cobertura del mercado"   (habla la empresa, genérico, sirve para cualquiera)',
     'BIEN → "Tu auto protegido, pase lo que pase"               (habla al lector, concreto)',
     'MAL  → "Descubre nuestras soluciones de protección"        (vacío, no dice nada)',
     'BIEN → "Choca, roba o granice: estás cubierto"             (específico, imagen mental)',
@@ -953,7 +953,7 @@ async function generarEmail({ env, brief, marca, imagenes, refsTxt, promos }) {
     '- "imagen": si la biblioteca tiene fotos, DEBES elegir la URL EXACTA de la que mejor calce (no la dejes vacía); solo con biblioteca vacía va "". NUNCA un logo ni un ícono.',
     '',
     'EJEMPLOS (el nivel que se espera):',
-    'MAL  → "En Zurich nos complace presentarte nuestra nueva cobertura"  (comunicado, habla la empresa)',
+    'MAL  → "Nos complace presentarte nuestra nueva cobertura"  (comunicado, habla la empresa)',
     'BIEN → "Tu auto protegido, pase lo que pase"                          (habla al lector)',
     'MAL  → "Contamos con más de 150 años de experiencia"                  (dato de la empresa, al lector le da igual)',
     'BIEN → "Cotiza en 3 minutos, sin papeleo"                             (beneficio concreto para él)',
@@ -1013,11 +1013,11 @@ async function generarEmail({ env, brief, marca, imagenes, refsTxt, promos }) {
   // foto limpia a todo el ancho, y el botón dentro de la banda de cierre.
   // Nada de "hero" con texto encima (se rompe en Outlook) ni "alert" de aviso.
   const P = marca || {};
-  const cNavy  = P.secondary || P.primary || '#23366f';   // banda oscura
+  const cNavy  = P.secondary || P.primary || '#040764';   // banda oscura
   const cClaro = P.bg || '#ffffff';                        // banda clara
-  const cTexto = P.text || '#23366f';
-  const cAcento = P.accent1 || P.primary || '#2167ae';     // banda de oferta
-  const cBoton = P.cta || P.primary || '#2167ae';
+  const cTexto = P.text || '#040764';
+  const cAcento = P.accent1 || P.primary || '#1C73CB';     // banda de oferta
+  const cBoton = P.cta || P.primary || '#1C73CB';
   const cBotonTxt = P.ctaText || '#ffffff';
   const fTit = P.fontTitulo || '';
   const blanco = '#ffffff';

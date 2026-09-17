@@ -9,7 +9,7 @@ const T=(c,n,e)=>{ if(c){ok++;console.log("  ok   "+n);} else {mal++;console.log
   const errs=[]; pg.on("pageerror",e=>errs.push(e.message));
   await pg.goto((process.env.SBB_URL || "http://127.0.0.1:8099")+"/editor.html",{waitUntil:"load"});
   await pg.waitForFunction(()=>typeof window.abrirIA==="function");
-  await pg.evaluate(()=>{ workspace.marcas=[{id:"m1",nombre:"Zurich"}]; abrirIA(); });
+  await pg.evaluate(()=>{ workspace.marcas=[{id:"m1",nombre:"Matías"}]; abrirIA(); });
   await pg.waitForTimeout(400);
   const r=await pg.evaluate(()=>{
     const vis=id=>{const e=document.getElementById(id);return !!e && e.offsetParent!==null;};

@@ -2,7 +2,7 @@
 <style>
 :root{
   --ground:#F7F8FA; --panel:#FFFFFF; --ink:#1A1F2E; --muted:#6B7385;
-  --rule:#DFE3EB; --rule-soft:#EDF0F5; --accent:#2167AE; --accent-soft:#E7F0F8;
+  --rule:#DFE3EB; --rule-soft:#EDF0F5; --accent:#1C73CB; --accent-soft:#E7F0F8;
   --limit:#B4453C; --limit-soft:#FBEDEC; --ok:#2E7D5B; --ok-soft:#EAF4EF;
   --warn:#8A6212; --warn-soft:#FBF3E0;
   --mono:ui-monospace,"SF Mono","Cascadia Mono",Menlo,Consolas,monospace;
@@ -198,7 +198,7 @@ las directrices que entregue el usuario. La IA no inventa ofertas, precios ni fe
 <tr><td>Dirección pública</td><td><b>flash-campaign.gamonal.app</b></td><td>—</td></tr>
 <tr><td>Alojamiento</td><td>Cloudflare Pages, desplegando desde <code>main</code></td><td>—</td></tr>
 <tr><td>Base de datos</td><td>D1 · <code>flash-campaign</code><br><span style="color:var(--muted)">id <code>7bde6bd4-5481-4a03-91f3-a3ef37d144c0</code></span></td><td><code>env.DB</code></td></tr>
-<tr><td>Imágenes</td><td>R2 · <code>zurich-chile</code></td><td><code>env.IMAGENES</code></td></tr>
+<tr><td>Imágenes</td><td>R2 · <code>bucket-de-imagenes</code></td><td><code>env.IMAGENES</code></td></tr>
 <tr><td>Clave de la IA</td><td>Secreto</td><td><code>env.GEMINI_API_KEY</code></td></tr>
 <tr><td>Clave de sesión</td><td>Secreto</td><td><code>env.JWT_SECRET</code></td></tr>
 <tr><td>Dirección del sitio</td><td>https://flash-campaign.gamonal.app</td><td><code>env.SITE_URL</code></td></tr>
@@ -769,7 +769,7 @@ de referencia. Nada es criterio propio: si un valor no aparece en las piezas, no
 
 <div class="box wa">
   <span class="t">Los colores marcados con · están leídos de las piezas</span>
-  <p>Los tonos de navy, azul Zurich, celeste y cyan vienen del manual de marca. El <b>magenta, el
+  <p>Los tonos de navy, azul Matías, celeste y cyan vienen del manual de marca. El <b>magenta, el
   beige, el durazno y el verde salvia</b> están medidos sobre las gráficas y hay que
   <b>confirmarlos contra el manual</b> antes de darlos por buenos.</p>
 </div>
@@ -779,8 +779,8 @@ de referencia. Nada es criterio propio: si un valor no aparece en las piezas, no
 <thead><tr><th>Si es</th><th>Valores permitidos</th><th>Color del texto encima</th></tr></thead>
 <tbody>
 <tr><td rowspan="7"><b>Color entero</b><br><span style="color:var(--muted)">plano, sin degradados</span></td>
-    <td><span class="sw" style="background:#23366F"></span>Navy <code>#23366F</code></td><td>Blanco</td></tr>
-<tr><td><span class="sw" style="background:#2167AE"></span>Azul Zurich <code>#2167AE</code></td><td>Blanco</td></tr>
+    <td><span class="sw" style="background:#040764"></span>Navy <code>#040764</code></td><td>Blanco</td></tr>
+<tr><td><span class="sw" style="background:#1C73CB"></span>Azul Matías <code>#1C73CB</code></td><td>Blanco</td></tr>
 <tr><td><span class="sw" style="background:#F0736B"></span>Coral <code>#F0736B</code> ·</td><td>Blanco</td></tr>
 <tr><td><span class="sw" style="background:#C2417F"></span>Magenta <code>#C2417F</code> ·</td><td>Blanco</td></tr>
 <tr><td><span class="sw" style="background:#D9D2C5"></span>Beige <code>#D9D2C5</code> ·</td><td>Navy</td></tr>
@@ -798,14 +798,14 @@ qué fondo van.</p>
 <thead><tr><th>Si hay</th><th>Colores</th><th>Texto</th><th>Observado en</th></tr></thead>
 <tbody>
 <tr><td rowspan="4"><b>Un círculo</b></td>
-    <td><span class="sw" style="background:#2167AE"></span>Azul Zurich</td><td>Blanco</td><td>Sobre navy y sobre coral</td></tr>
+    <td><span class="sw" style="background:#1C73CB"></span>Azul Matías</td><td>Blanco</td><td>Sobre navy y sobre coral</td></tr>
 <tr><td><span class="sw" style="background:#FFFFFF"></span>Blanco</td><td>Navy</td><td>Sobre magenta</td></tr>
-<tr><td><span class="sw" style="background:#23366F"></span>Navy</td><td>Blanco</td><td>Sobre durazno</td></tr>
+<tr><td><span class="sw" style="background:#040764"></span>Navy</td><td>Blanco</td><td>Sobre durazno</td></tr>
 <tr><td><span class="sw" style="background:#8FB89A"></span>Verde salvia <code>#8FB89A</code> ·</td><td>Blanco</td><td>Sobre foto</td></tr>
 <tr><td rowspan="3"><b>Dos círculos</b><br><span style="color:var(--muted)">principal + secundario</span></td>
-    <td><span class="sw" style="background:#2167AE"></span>Azul <b>+</b> <span class="sw" style="background:#5B9BD5"></span>Celeste</td><td>Blanco en ambos</td><td>Fondo navy</td></tr>
-<tr><td><span class="sw" style="background:#2167AE"></span>Azul <b>+</b> <span class="sw" style="background:#FFFFFF"></span>Blanco</td><td>Blanco · Navy</td><td>Fondo coral</td></tr>
-<tr><td><span class="sw" style="background:#2167AE"></span>Azul <b>+</b> <span class="sw" style="background:#23366F"></span>Navy</td><td>Blanco en ambos</td><td>Fondo foto</td></tr>
+    <td><span class="sw" style="background:#1C73CB"></span>Azul <b>+</b> <span class="sw" style="background:#5B9BD5"></span>Celeste</td><td>Blanco en ambos</td><td>Fondo navy</td></tr>
+<tr><td><span class="sw" style="background:#1C73CB"></span>Azul <b>+</b> <span class="sw" style="background:#FFFFFF"></span>Blanco</td><td>Blanco · Navy</td><td>Fondo coral</td></tr>
+<tr><td><span class="sw" style="background:#1C73CB"></span>Azul <b>+</b> <span class="sw" style="background:#040764"></span>Navy</td><td>Blanco en ambos</td><td>Fondo foto</td></tr>
 </tbody></table></div>
 <p><b>Nunca tres.</b> El secundario siempre es más chico que el principal y se solapa parcialmente
 con él. Puede contener, además del texto: una <b>cifra grande</b>, una <b>foto de producto</b>
@@ -820,7 +820,7 @@ recortada y el <b>logotipo de un socio comercial</b>.</p>
 <tr><td><b>Frase de gancho</b></td><td><b>Serif display</b>, peso fino</td><td>Igual que el nombre</td><td>«¡Aprovecha sus tarifas renovadas!»</td></tr>
 <tr><td><b>Bajada</b></td><td>Sans regular, con <b>negrita en lo esencial</b></td><td>Blanco o navy</td><td>La cobertura o el argumento</td></tr>
 <tr><td><b>Entradilla del círculo</b></td><td>Sans regular</td><td>Igual que el círculo</td><td>«Aprovecha» · «Hasta el 14 de julio» · «Planes desde»</td></tr>
-<tr><td><b>Legal</b></td><td>Sans regular, cuerpo mínimo</td><td>El del fondo, atenuado</td><td>«Bases legales y condiciones en www.zurich.cl»</td></tr>
+<tr><td><b>Legal</b></td><td>Sans regular, cuerpo mínimo</td><td>El del fondo, atenuado</td><td>«Bases legales y condiciones en www.lamarca.cl»</td></tr>
 </tbody></table></div>
 
 <div class="box">
@@ -879,7 +879,7 @@ recortada y el <b>logotipo de un socio comercial</b>.</p>
 <tbody>
 <tr><td><b>Círculo completo</b></td><td>Celeste · cyan · azul · navy · gris claro · beige</td><td>Asomando por un borde</td></tr>
 <tr><td><b>Cuarto de círculo</b></td><td>Los mismos</td><td>Siempre en una esquina, con los lados rectos pegados al borde</td></tr>
-<tr><td><b>Trazo de pincel</b></td><td>Azul Zurich</td><td>Detrás de un nombre de producto destacado, con los bordes irregulares</td></tr>
+<tr><td><b>Trazo de pincel</b></td><td>Azul Matías</td><td>Detrás de un nombre de producto destacado, con los bordes irregulares</td></tr>
 <tr><td><b>Línea divisoria</b></td><td>Del color del texto, muy fina</td><td>Separa el legal del contenido dentro de un círculo</td></tr>
 </tbody></table></div>
 <p>Entre tres y cinco formas por pieza, <b>de tamaños claramente distintos</b>, agrupadas en una
@@ -1063,7 +1063,7 @@ especialista, no como formulario — la unidad de agrupación es la <b>intenció
 <tr><td>Cobertura</td><td>Singular y plural, sinónimos, orden distinto, con «online», «precio», «chile» cuando aplique</td></tr>
 <tr><td>Negativas</td><td>Mínimo 5 de campaña, razonadas: qué búsquedas parecidas no queremos pagar</td></tr>
 <tr><td><b>Competencia</b></td><td class="no">Prohibida. Ninguna keyword ni ningún texto puede nombrar marcas de la competencia — ni como término ni como comparación</td></tr>
-<tr><td><b>Uso de la marca propia</b></td><td>Solo <b>acompañada de un producto o de una promoción</b> («seguro auto zurich», «zurich 2 cuotas gratis»). <span class="no">Nunca la marca sola</span>: atrae a quien ya es cliente y encarece sin sumar</td></tr>
+<tr><td><b>Uso de la marca propia</b></td><td>Solo <b>acompañada de un producto o de una promoción</b> («seguro auto matias», «matias 2 cuotas gratis»). <span class="no">Nunca la marca sola</span>: atrae a quien ya es cliente y encarece sin sumar</td></tr>
 </tbody></table></div>
 
 <div class="box wa">
@@ -1197,7 +1197,7 @@ const FORMATOS = [
   {w:728,h:90,fam:'Franjas'},{w:970,h:90,fam:'Franjas'},{w:468,h:60,fam:'Franjas'},
   {w:1200,h:628,fam:'Grandes'},{w:1200,h:1200,fam:'Grandes'}
 ];
-const COLOR_FAM={Cuadrados:'#2167AE',Verticales:'#7B5EA7',Franjas:'#2E7D5B',Grandes:'#C4762B'};
+const COLOR_FAM={Cuadrados:'#1C73CB',Verticales:'#7B5EA7',Franjas:'#2E7D5B',Grandes:'#C4762B'};
 const BASE={epigrafe:11,titulo:26,bajada:13,cta:13,legal:9,margen:5.5};
 const LINEAS={
   Cuadrados:{epigrafe:1,titulo:3,bajada:3,cta:1,legal:2},

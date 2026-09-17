@@ -48,7 +48,7 @@ const T=(c,n,e)=>{ if(c){ok++;console.log("  ok   "+n);} else {mal++;console.log
   // banner con sus herramientas y pulsa Replicar; la IA no dibuja el banner.
   // Google Search sigue siendo IA: grupos, keywords y RSA no se dibujan a mano.
   const s2=await pg.evaluate(async()=>{
-    workspace.marcas=[{id:"m1",nombre:"Marca Prueba",primary:"#2167ae",secondary:"#23366f",cta:"#2167ae",ctaText:"#fff",accent1:"#fff773",accent2:"#91bfe3"}];
+    workspace.marcas=[{id:"m1",nombre:"Marca Prueba",primary:"#1C73CB",secondary:"#040764",cta:"#1C73CB",ctaText:"#fff",accent1:"#FCE865",accent2:"#378CE3"}];
     workspace.proyectos=[]; proyecto=null; proyectoVistoId=null;
     window._ia=0; const _o=window.abrirIA; window.abrirIA=function(){ window._ia++; return _o.apply(this,arguments); };
     crearConIA("facebook");
@@ -82,7 +82,7 @@ const T=(c,n,e)=>{ if(c){ok++;console.log("  ok   "+n);} else {mal++;console.log
     };
     const pr={id:uid(),nombre:"Camp",creado:Date.now(),piezas:[],activa:null};
     workspace.proyectos=[pr]; proyecto=pr; proyectoVistoId=pr.id;
-    const marca={id:"m1",nombre:"Marca Prueba",primary:"#2167ae",secondary:"#23366f",cta:"#2167ae",ctaText:"#ffffff",accent1:"#fff773",accent2:"#91bfe3",disclaimer:"Infórmate en el sitio."};
+    const marca={id:"m1",nombre:"Marca Prueba",primary:"#1C73CB",secondary:"#040764",cta:"#1C73CB",ctaText:"#ffffff",accent1:"#FCE865",accent2:"#378CE3",disclaimer:"Infórmate en el sitio."};
     const data={nombre:"Promo",zonas:{titular:"Protege tu auto",cuerpo:"Cobertura hoy",cta:"Cotiza",etiqueta:"Seguro"},burbuja:"60% dcto.",imagen:""};
     insertarBannerIA(data, marca, "facebook");
     const fb=pieza();

@@ -14,7 +14,7 @@ decisiones se tomen sabiendo cuál es cuál.
 
 El techo de calidad no lo pone la IA: lo pone el motor de composición. Mientras
 un banner solo pueda ser *logo arriba / texto al medio / CTA abajo*, ningún
-modelo va a producir una pieza de nivel Zurich.
+modelo va a producir una pieza de nivel Matías.
 
 ---
 
@@ -126,7 +126,7 @@ vacío), los anuncios son imágenes y no hay API pública.
 entren al prompt como imágenes. El motor ya es multimodal.
 
 **[CRITERIO]** Es mejor que raspar, porque la curaduría la haces tú. Y ya
-funcionó una vez: de tus capturas de los anuncios reales de Zurich salieron la
+funcionó una vez: de tus capturas de los anuncios reales de Matías salieron la
 burbuja de oferta, las burbujas decorativas y la etiqueta de producto.
 
 **Tamaño:** pequeño-mediano.

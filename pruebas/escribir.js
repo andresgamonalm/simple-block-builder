@@ -19,7 +19,7 @@ const T=(c,n,e)=>{ if(c){ok++;console.log("  ok   "+n);} else {mal++;console.log
     workspace.proyectos=[pr]; proyecto=pr; proyectoVistoId=pr.id;
     crearComposicion("display-desktop");
     const p=pieza(), c=p.composicion;
-    c.fondo.color="#23366f";
+    c.fondo.color="#040764";
     c.elementos=[ nuevoElementoLibre("texto",{ancla:"mc",dx:0,dy:0,w:200,h:50,
       texto:"Escribe aquí",tam:20,color:"#ffffff",z:2}) ];
     elLibreSel=null; renderTablero();
@@ -102,7 +102,7 @@ const T=(c,n,e)=>{ if(c){ok++;console.log("  ok   "+n);} else {mal++;console.log
   const bot = await pg.evaluate(()=>{
     anadirLibre("boton");
     const e=(pieza().composicion.elementos||[]).slice(-1)[0];
-    setElLibre(e.id,"link","https://zurich.cl");
+    setElLibre(e.id,"link","https://ejemplo.cl");
     renderTablero();
     return { tipo:e.tipo, fondo:e.fondo, rol:e.rol, texto:e.texto };
   });
@@ -113,7 +113,7 @@ const T=(c,n,e)=>{ if(c){ok++;console.log("  ok   "+n);} else {mal++;console.log
     const p=pieza();
     const el=[...document.querySelectorAll(".lienzo .cmp-libre .lb-el")].find(n=>n.tagName==="A");
     const html=generarHTMLDeComposicion(p, p.masterFmt);
-    return { enEditor: !!el, enExport: /<a[^>]+href="https:\/\/zurich\.cl"/.test(html) };
+    return { enEditor: !!el, enExport: /<a[^>]+href="https:\/\/ejemplo\.cl"/.test(html) };
   });
   T(enlace.enEditor, "en el editor el botón es un enlace de verdad");
   T(enlace.enExport, "y el enlace VIAJA al banner exportado");
@@ -123,8 +123,8 @@ const T=(c,n,e)=>{ if(c){ok++;console.log("  ok   "+n);} else {mal++;console.log
     const r = await fetch("/api/ia",{method:"POST",headers:{"Content-Type":"application/json"},
       body:JSON.stringify({producto:"banner",brief:{que:"seguro de auto",legal:"Sujeto a evaluación"}})});
     const data = await r.json();
-    data.legal = "Sujeto a evaluación. Infórmate en zurich.cl";
-    data.ctaUrl = "https://zurich.cl/auto";
+    data.legal = "Sujeto a evaluación. Infórmate en ejemplo.cl";
+    data.ctaUrl = "https://ejemplo.cl/auto";
     insertarBannerIA(data, null, "display-desktop");
     await new Promise(r2=>setTimeout(r2,900));
     const p = pieza();

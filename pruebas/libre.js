@@ -65,9 +65,9 @@ const T=(c,n,e)=>{ if(c){ok++;console.log("  ok   "+n);} else {mal++;console.log
   console.log("\n3 · El banner se dibuja de verdad");
   const r3 = await pg.evaluate(()=>{
     const c = libreDefault({bg:"#ffffff"});
-    c.fondo.color = "#23366F";
+    c.fondo.color = "#040764";
     c.elementos = [
-      nuevoElementoLibre("figura",{ancla:"br",dx:0,dy:0,w:140,h:70,relleno:"#fff773",radio:8,z:1}),
+      nuevoElementoLibre("figura",{ancla:"br",dx:0,dy:0,w:140,h:70,relleno:"#FCE865",radio:8,z:1}),
       nuevoElementoLibre("texto",{ancla:"tl",dx:16,dy:60,w:200,h:70,texto:"Protege lo que más quieres",tam:22,color:"#ffffff",z:2}),
       nuevoElementoLibre("logo",{ancla:"tl",dx:14,dy:14,w:90,h:28,url:"/logo.svg",z:3})
     ];
@@ -86,7 +86,7 @@ const T=(c,n,e)=>{ if(c){ok++;console.log("  ok   "+n);} else {mal++;console.log
 
   console.log("\n4 · El modelo de 3 zonas sigue intacto para lo ya guardado");
   const r4 = await pg.evaluate(()=>{
-    const vieja = composicionDefault({bg:"#0e2748"});
+    const vieja = composicionDefault({bg:"#040764"});
     const html = renderComposicion(vieja, "display-300x250");
     return { esLibre: html.indexOf("cmp-libre")>=0, tieneZonas: html.indexOf("cmp-zona")>=0 };
   });
@@ -103,7 +103,7 @@ const T=(c,n,e)=>{ if(c){ok++;console.log("  ok   "+n);} else {mal++;console.log
     c.fondo.filtro={tipo:"oscurecer",intensidad:45};
     c.elementos=[
       nuevoElementoLibre("texto",{ancla:"tl",dx:14,dy:40,w:160,h:50,texto:"Protege tu auto",tam:20,color:"#ffffff",z:1}),
-      nuevoElementoLibre("figura",{ancla:"bl",dx:14,dy:14,w:96,h:28,forma:"rect",relleno:"#2167ae",radio:4,z:2}),
+      nuevoElementoLibre("figura",{ancla:"bl",dx:14,dy:14,w:96,h:28,forma:"rect",relleno:"#1C73CB",radio:4,z:2}),
       nuevoElementoLibre("logo",{ancla:"tr",dx:12,dy:12,w:70,h:22,url:"/logo.svg",z:3})
     ];
     renderTablero();
@@ -150,7 +150,7 @@ const T=(c,n,e)=>{ if(c){ok++;console.log("  ok   "+n);} else {mal++;console.log
   // Gemini, parecía que se había caído el aplicativo entero.
   const cr = await pg.evaluate(async()=>{
     workspace.proyectos=[]; proyecto=null; proyectoVistoId=null;
-    workspace.marcas=[{id:"m1",nombre:"Zurich",primary:"#2167ae",secondary:"#23366f",cta:"#2167ae",ctaText:"#fff",accent1:"#fff773",accent2:"#91bfe3"}];
+    workspace.marcas=[{id:"m1",nombre:"Matías",primary:"#1C73CB",secondary:"#040764",cta:"#1C73CB",ctaText:"#fff",accent1:"#FCE865",accent2:"#378CE3"}];
     // Si alguien vuelve a cablear esto a la IA, este espía lo caza.
     window._ia = 0; const _o = window.abrirIA; window.abrirIA = function(){ window._ia++; return _o.apply(this,arguments); };
     crearConIA("banner");

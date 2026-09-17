@@ -1,24 +1,29 @@
-# Marco teórico · Estilo Zurich para creatividades digitales
+<!-- PALETA GUARDADA. El usuario pidió conservar estos valores de color y
+     estas reglas de diagramación (17-sep-2026), y a la vez sacar del sitio
+     el nombre y los activos de la marca original. Aquí quedan los valores;
+     la marca se llama «Matías» por indicación suya. -->
 
-> Fuente: carpeta Drive del usuario (jul-2026) — Brandbook Zurich 2024 (oficial), logos digitales
+# Marco teórico · Estilo Matías para creatividades digitales
+
+> Fuente: carpeta Drive del usuario (jul-2026) — manual de marca (oficial), logos digitales
 > 2022, campañas reales de Display/Search/Email (Ads Transparency + piezas propias) y fotos
 > corporativas. Este documento es el "aprendizaje" persistente: lo que la app aplica está
-> grabado en la marca Zurich (campo Directrices), en el compositor y en los motores de IA.
+> grabado en la marca Matías (campo Directrices), en el compositor y en los motores de IA.
 > **Decisión del usuario: tipografía ARIAL** (alternativa oficial del manual cuando no está
-> Zurich Sans — pág. 6 del Brandbook).
+> la tipografía de marca — pág. 6 del Brandbook).
 
-## 1 · Paleta oficial (Brandbook 2024)
+## 1 · Paleta oficial (manual de marca)
 
 | Rol | Nombre | HEX |
 |---|---|---|
-| Héroe (uso constante) | **Azul Zurich** | `#2167AE` |
+| Héroe (uso constante) | **Azul Matías** | `#2167AE` |
 | Marca | Azul Oscuro | `#23366F` |
 | Marca | Azul Medio | `#5495CF` |
 | Marca | Azul Claro | `#91BFE3` |
 | Marca | Celeste | `#1FB1E6` |
 | Neutro | Piedra arenisca | `#DAD2BD` |
 | Neutro | Paloma | `#DDE4E3` |
-| Neutro | Blanco de Zurich | `#ECEEEF` |
+| Neutro | Blanco de Matías | `#ECEEEF` |
 | Acento | Celeste 2 | `#4870C6` |
 | Acento | Musgo | `#77A984` |
 | Acento | Cerceta | `#19BAB6` |
@@ -36,9 +41,9 @@ grande con texto o pictograma); con imagen, el fondo es color de marca. En la ap
 
 ## 2 · Tipografía
 
-- Oficial: Zurich Sans (5 pesos) + Ogg (caligráfica, solo 1–3 palabras de un titular, nunca sola,
-  nunca en bajadas, nunca la palabra "Zurich").
-- **Arial es la alternativa oficial** cuando Zurich Sans no está disponible → ES NUESTRO CASO.
+- Oficial: la tipografía de marca (5 pesos) + Ogg (caligráfica, solo 1–3 palabras de un titular, nunca sola,
+  nunca en bajadas, nunca la palabra "Matías").
+- **Arial es la alternativa oficial** cuando la tipografía de marca no está disponible → ES NUESTRO CASO.
   Toda pieza de la app usa Arial (títulos y cuerpo). El énfasis estilo Ogg se aproxima con
   *cursiva* en 1–3 palabras del titular (nunca todo el titular).
 
@@ -61,7 +66,7 @@ papel, fondos de color plano, objetos gráficos — calzan con la línea de ilus
 
 ## 5 · Anatomía del banner display (sistema de sus campañas + manual)
 
-1. Fondo plano Azul Oscuro `#23366F` o Azul Zurich (o foto con velo).
+1. Fondo plano Azul Oscuro `#23366F` o Azul Matías (o foto con velo).
 2. Logo blanco arriba-izquierda (regla de co-branding: siempre esquina superior izquierda).
 3. Etiqueta chica del tipo de producto ("Seguro") sobre el nombre del producto.
 4. **La oferta en un círculo Lima con el número gigante** — el elemento firma.
@@ -86,7 +91,7 @@ Sin degradados, sin sombras, sin bordes redondeados en contenido.
 
 ## 7 · Dónde quedó grabado el aprendizaje (no rehacer)
 
-- **Marca Zurich (D1 + plantilla)**: paleta oficial, Arial/Arial, eslogan real ("Tu mejor
+- **Marca Matías (D1 + plantilla)**: paleta oficial, Arial/Arial, eslogan real ("Tu mejor
   compañía para el futuro"), campo **Directrices** con las reglas de diagramación/foto/copy →
   `voorMarca()` las inyecta en TODOS los prompts (email, banner, search, textos, concepto).
 - **Compositor**: burbuja de oferta, etiqueta de producto y burbujas decorativas (ya existían);

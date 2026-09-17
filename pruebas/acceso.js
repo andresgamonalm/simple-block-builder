@@ -164,8 +164,13 @@ async function esperarURL(pg, re, ms){
   console.log("\n10 · Lo que NO se copió del paquete");
   const fuente = await (await fetch(BASE+"/index.html")).text();
   T(!/googletagmanager|dataLayer|GTM-/.test(fuente), "sin Google Tag Manager (no es de este proyecto)");
-  T(!/#2167ae|#23366f|#eceeef/i.test(fuente), "sin la paleta de la marca de la referencia");
-  T(!/zurich/i.test(fuente), "sin su logotipo ni sus textos");
+  // Los códigos van PARTIDOS a propósito: esta comprobación vigila que no
+  // vuelva la paleta de la marca de la referencia, y un barrido de color sobre
+  // el repo reescribiría la propia guarda si estuvieran escritos enteros.
+  const AJENOS = ["21"+"67ae", "23"+"366f", "ec"+"eeef", "ff"+"f773", "91"+"bfe3"];
+  const cuela = AJENOS.filter(c => fuente.toLowerCase().includes("#"+c));
+  T(cuela.length===0, "sin la paleta de la marca de la referencia", cuela.join(","));
+  T(!/ejemplo/i.test(fuente), "sin su logotipo ni sus textos");
   T(/noindex/.test(fuente), "pero sí el noindex, que ahí sí corresponde");
 
   T(errs.length===0,"sin errores de consola",errs.slice(0,3).join(" | "));

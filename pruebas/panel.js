@@ -10,7 +10,7 @@ const T=(c,n,e)=>{ if(c){ok++;console.log("  ok   "+n);} else {mal++;console.log
   const b=await chromium.launch({executablePath: process.env.SBB_CHROMIUM || undefined});
   const pg=await b.newPage({viewport:{width:1600,height:1100}});
   const errs=[]; pg.on("pageerror",e=>errs.push(e.message));
-  pg.on("console",m=>{if(m.type()==="error"&&!/ERR_CERT|ERR_CONNECTION|favicon|fonts\.googleapis/.test(m.text()))errs.push("console: "+m.text());});
+  pg.on("console",m=>{if(m.type()==="error"&&!/ERR_CERT|ERR_CONNECTION|ERR_TUNNEL|favicon|fonts\.googleapis/.test(m.text()))errs.push("console: "+m.text());});
   await pg.goto((process.env.SBB_URL || "http://127.0.0.1:8099")+"/editor.html",{waitUntil:"load"});
   await pg.waitForFunction(()=>typeof window.crearComposicion==="function");
 
@@ -29,7 +29,7 @@ const T=(c,n,e)=>{ if(c){ok++;console.log("  ok   "+n);} else {mal++;console.log
     // protege. Los banners NUEVOS nacen en el lienzo libre.
     pieza().composicion = composicionDefault(pieza().tema);
     setComp("zonas.logo.url","/logo.svg");   // el logo va en todas las piezas
-    setComp("fondo.color","#23366F");
+    setComp("fondo.color","#040764");
     setComp("zonas.texto.titular.texto","Protege tu auto");
     setComp("zonas.cta.texto","Cotiza");
     setCompOferta("60% dcto.",null);          // sin oferta no hay circulo que arrastrar

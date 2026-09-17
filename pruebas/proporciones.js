@@ -43,7 +43,7 @@ const T=(c,n,e)=>{ if(c){ok++;console.log("  ok   "+n);} else {mal++;console.log
   console.log("\n2 · El papel de cada elemento se deduce solo");
   const r2 = await pg.evaluate(()=>({
     logo:  rolLibre({tipo:"logo"}),
-    cta:   rolLibre({tipo:"figura", link:"https://zurich.cl"}),
+    cta:   rolLibre({tipo:"figura", link:"https://ejemplo.cl"}),
     legal: rolLibre({tipo:"texto", esLegal:true}),
     texto: rolLibre({tipo:"texto", texto:"Protege tu auto"}),
     manda: rolLibre({tipo:"texto", link:"https://x.cl", rol:"promo"})
@@ -58,11 +58,11 @@ const T=(c,n,e)=>{ if(c){ok++;console.log("  ok   "+n);} else {mal++;console.log
     workspace.proyectos=[pr]; proyecto=pr; proyectoVistoId=pr.id;
     crearComposicion("display-desktop");
     const p=pieza(), c=p.composicion;
-    c.fondo.color="#23366f";
+    c.fondo.color="#040764";
     c.elementos=[
       nuevoElementoLibre("logo",  {ancla:"tl",dx:14,dy:14,w:90,h:28,url:"/logo.svg",z:5}),
       nuevoElementoLibre("texto", {ancla:"mc",dx:0,dy:-10,w:200,h:60,texto:"Protege lo que más quieres",tam:22,color:"#fff",z:2}),
-      nuevoElementoLibre("figura",{ancla:"bc",dx:0,dy:40,w:120,h:34,forma:"rect",relleno:"#e8590c",radio:6,link:"https://zurich.cl",z:3}),
+      nuevoElementoLibre("figura",{ancla:"bc",dx:0,dy:40,w:120,h:34,forma:"rect",relleno:"#e8590c",radio:6,link:"https://ejemplo.cl",z:3}),
       nuevoElementoLibre("texto", {ancla:"bc",dx:0,dy:6,w:240,h:16,texto:"Legal — Legal — Legal",tam:10,color:"#fff",esLegal:true,z:4})
     ];
     renderTablero();

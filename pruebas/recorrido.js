@@ -20,7 +20,7 @@ const anota = (seccion, tipo, detalle) => hallazgos.push({ seccion, tipo, detall
   pg.on("console", m => {
     if (m.type() !== "error") return;
     const t = m.text();
-    if (/ERR_CERT|ERR_CONNECTION|favicon|net::ERR_FAILED|ERR_TUNNEL|ERR_NAME_NOT_RESOLVED|fonts\.googleapis|gstatic/.test(t)) return;
+    if (/ERR_CERT|ERR_CONNECTION|ERR_TUNNEL|favicon|net::ERR_FAILED|ERR_TUNNEL|ERR_NAME_NOT_RESOLVED|fonts\.googleapis|gstatic/.test(t)) return;
     anota(seccion, "CONSOLA", t.slice(0, 160));
   });
   pg.on("dialog", d => d.dismiss().catch(() => {}));

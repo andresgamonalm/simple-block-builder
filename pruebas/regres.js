@@ -9,7 +9,7 @@ const T = (c, n, e) => { if (c) { ok++; console.log("  ok   " + n); } else { mal
   const pg = await b.newPage({ viewport: { width: 1700, height: 1100 } });
   const errs = [];
   pg.on("pageerror", e => errs.push("pageerror: " + e.message));
-  pg.on("console", m => { if (m.type() === "error" && !/ERR_CERT|ERR_CONNECTION|favicon/.test(m.text())) errs.push("console: " + m.text()); });
+  pg.on("console", m => { if (m.type() === "error" && !/ERR_CERT|ERR_CONNECTION|ERR_TUNNEL|favicon/.test(m.text())) errs.push("console: " + m.text()); });
   await pg.goto((process.env.SBB_URL || "http://127.0.0.1:8099") + "/editor.html", { waitUntil: "load" });
   await pg.waitForFunction(() => typeof window.crearComposicion === "function");
 

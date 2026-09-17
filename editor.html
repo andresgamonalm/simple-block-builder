@@ -256,7 +256,7 @@ button,input,select,textarea{font-family:inherit;}
 .marca-card{display:flex;align-items:center;gap:12px;border:1px solid var(--bdr);border-radius:10px;padding:10px 12px;transition:border-color .14s,box-shadow .14s;}
 .marca-card:hover{border-color:var(--primary);box-shadow:var(--sh);}
 .marca-card .mlogo{width:54px;height:40px;border-radius:8px;background:var(--bg);flex-shrink:0;border:1px solid var(--bdr);display:flex;align-items:center;justify-content:center;overflow:hidden;}
-.marca-card .mlogo.dark{background:#0e2748;}
+.marca-card .mlogo.dark{background:#040764;}
 .marca-card .mlogo img{max-width:88%;max-height:78%;object-fit:contain;}
 .marca-card .minfo{flex:1;min-width:0;}
 .marca-card .mn{font-weight:600;font-size:13px;color:var(--ink);}
@@ -359,7 +359,7 @@ button,input,select,textarea{font-family:inherit;}
 .marca-form .mf-file{display:none;}
 .marca-form .mf-drop{width:100%;height:88px;border:1.5px dashed var(--bdr);border-radius:10px;background:var(--bg);display:flex;align-items:center;justify-content:center;cursor:pointer;overflow:hidden;padding:8px;transition:border-color .14s,background .14s;}
 .marca-form .mf-drop:hover{border-color:var(--primary);background:var(--white);}
-.marca-form .mf-drop.dark{background:#0e2748;border-color:#2c4a72;}
+.marca-form .mf-drop.dark{background:#040764;border-color:#11457A;}
 .marca-form .mf-drop img{max-width:100%;max-height:100%;object-fit:contain;}
 .marca-form .mf-drop-ph{display:flex;flex-direction:column;align-items:center;gap:5px;font-size:13px;font-weight:500;color:var(--ink3);}
 .marca-form .mf-drop.dark .mf-drop-ph{color:#8aa0c0;}
@@ -959,7 +959,7 @@ button,input,select,textarea{font-family:inherit;}
    partida en columnas sueltas en cuanto la pantalla se estrechaba (tablet). */
 .lienzo-head .lz-ayuda{font-size:13px;line-height:1.5;color:var(--ink3,#5b6178);max-width:100%;}
 .lienzo-head .lz-ayuda svg{vertical-align:-2px;margin-right:4px;}
-.lienzo-stage{position:relative;margin:0 auto;border-radius:6px;overflow:hidden;box-shadow:0 6px 26px rgba(8,14,28,.14);background:#0e2748;}
+.lienzo-stage{position:relative;margin:0 auto;border-radius:6px;overflow:hidden;box-shadow:0 6px 26px rgba(8,14,28,.14);background:#040764;}
 .lienzo-scale{position:absolute;top:0;left:0;transform-origin:top left;}
 .lienzo-ovl{position:absolute;inset:0;z-index:20;pointer-events:none;}
 /* Zonas clicables (para seleccionar y editar su contenido) */
@@ -1460,7 +1460,7 @@ body.sbb-arrastrando{user-select:none;-webkit-user-select:none;cursor:grabbing;}
 
 /* ── Composición por ZONAS (colecciones): fondo continuo + 3 zonas ── */
 /* La composición NO hereda la fuente de la app (Roboto): usa una pila sans
-   real (Arial por defecto, como Zurich). Cada zona puede sobrescribirla. */
+   real (Arial por defecto). Cada zona puede sobrescribirla. */
 .cmp{position:relative;overflow:hidden;font-family:Arial,"Helvetica Neue",Helvetica,sans-serif;box-sizing:border-box;-webkit-font-smoothing:antialiased;}
 .cmp .cmp-bg{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:0;}
 .cmp .cmp-veil{position:absolute;inset:0;z-index:0;}
@@ -1497,7 +1497,7 @@ body.sbb-arrastrando{user-select:none;-webkit-user-select:none;cursor:grabbing;}
    color detrás de las zonas, burbuja circular de OFERTA sobre todo, y etiqueta
    de producto (píldora chica) sobre el titular. */
 .cmp .cmp-deco{position:absolute;inset:0;z-index:0;pointer-events:none;}
-/* ── LAYOUTS DE MARCA (estilo Zurich) ───────────────────────────────────
+/* ── LAYOUTS DE MARCA ───────────────────────────────────────────────────
    Disposiciones cerradas, extraidas de las campanas reales. Conviven con el
    modelo de 3 zonas: solo se activan si comp.layout empieza con "z-". */
 .cmp .zl{position:absolute;inset:0;overflow:hidden;}
@@ -2196,7 +2196,7 @@ body.sbb-arrastrando{user-select:none;-webkit-user-select:none;cursor:grabbing;}
         <div class="mf-sec mf-full">Colores</div>
         <div class="mf-colores mf-full">
           <span class="mf-col"><input type="color" id="marca-primary" value="#1c73cb"><b>Principal</b></span>
-          <span class="mf-col"><input type="color" id="marca-secondary" value="#0e2748"><b>Secundario</b></span>
+          <span class="mf-col"><input type="color" id="marca-secondary" value="#040764"><b>Secundario</b></span>
           <span class="mf-col"><input type="color" id="marca-cta" value="#1c73cb"><b>CTA</b></span>
           <span class="mf-col"><input type="color" id="marca-ctaText" value="#ffffff"><b>Texto CTA</b></span>
           <span class="mf-col"><input type="color" id="marca-text" value="#1a1a1a"><b>Texto</b></span>
@@ -2228,12 +2228,12 @@ body.sbb-arrastrando{user-select:none;-webkit-user-select:none;cursor:grabbing;}
         <label class="mf-full">Estilo del header/footer de marca <small>(la IA y "Aplicar marca" usan este)</small><select id="marca-bandaEstilo"><option value="solido">Banda sólida (color de marca, logo claro)</option><option value="blanco">Banda blanca (logo a color)</option></select></label>
         <label class="mf-full">Bajada del encabezado <small>(junto al logo)</small><input type="text" id="marca-headerTagline" placeholder="Ej: Seguros que te respaldan"></label>
         <label class="mf-full">Dirección (pie)<input type="text" id="marca-direccion" placeholder="Av. Ejemplo 123, Santiago, Chile"></label>
-        <label>Copyright (pie)<input type="text" id="marca-copyright" placeholder="© 2026 Zurich Chile"></label>
+        <label>Copyright (pie)<input type="text" id="marca-copyright" placeholder="© 2026 Tu empresa"></label>
         <label>Texto link de baja<input type="text" id="marca-unsubTexto" placeholder="Darme de baja"></label>
         <label class="mf-full">Disclaimer legal <small>(va al pie de las piezas)</small><textarea id="marca-disclaimer" rows="2" placeholder="Texto legal/regulatorio que debe aparecer en las piezas"></textarea></label>
 
         <div class="mf-sec mf-full">Redes sociales <small>(salen en el footer de marca del email)</small></div>
-        <label>Sitio web<input type="text" id="marca-web" placeholder="https://www.zurich.cl"></label>
+        <label>Sitio web<input type="text" id="marca-web" placeholder="https://www.tumarca.cl"></label>
         <label>Facebook<input type="text" id="marca-facebook" placeholder="https://www.facebook.com/…"></label>
         <label>Instagram<input type="text" id="marca-instagram" placeholder="https://www.instagram.com/…"></label>
         <label>LinkedIn<input type="text" id="marca-linkedin" placeholder="https://www.linkedin.com/…"></label>
@@ -2248,7 +2248,7 @@ body.sbb-arrastrando{user-select:none;-webkit-user-select:none;cursor:grabbing;}
       <input type="hidden" id="marca-logoClaro-data">
       <input type="hidden" id="marca-edit-id">
       <div class="mf-actions">
-        <span class="mf-plantillas">Plantilla rápida: <button onclick="rellenarMarcaZurich()" title="Rellena con la identidad de Zurich">Zurich</button></span>
+        <span class="mf-plantillas">Plantilla rápida: <button onclick="rellenarMarcaEjemplo()" title="Rellena los campos con una identidad de ejemplo, sin logotipo">Ejemplo</button></span>
         <button onclick="cerrarMarcaForm()">Cancelar</button>
         <button class="primary" onclick="guardarMarca()">Guardar marca</button>
       </div>
@@ -2297,7 +2297,7 @@ body.sbb-arrastrando{user-select:none;-webkit-user-select:none;cursor:grabbing;}
         <label class="ia-col">Gancho / oferta <small>(dato exacto; la IA no lo inventa)</small><input type="text" id="ia-gancho" placeholder="Ej: Demo gratis por 30 días"></label>
       </div>
       <label class="ia-label">Frase legal <span class="ia-req">·obligatoria</span> <small>(si la campaña no lleva, escribe «no»)</small></label>
-      <input type="text" id="ia-legal" class="dz-inp" placeholder="Ej: Sujeto a evaluación. Infórmate en zurich.cl — o escribe «no»">
+      <input type="text" id="ia-legal" class="dz-inp" placeholder="Ej: Sujeto a evaluación. Infórmate en el sitio — o escribe «no»">
       <label class="ia-label">Destino del CTA <small>(el link al que lleva el botón)</small></label>
       <input type="text" id="ia-ctaurl" class="dz-inp" placeholder="https://tuproducto.com/registro">
       <div class="ia-row">
@@ -4086,7 +4086,7 @@ const BLOQUES = {
   seccion: {
     cat:"Estructura", nombre:"Sección con fondo", icono:"", sub:"Banda full-width: eyebrow + título + texto + botón",
     defaults: Object.assign({}, styleDefaults, { padTop:"0", padBottom:"0", padLeft:"0", padRight:"0", radioBloque:"0", alinH:"center",
-      bg:"#0e2748", colorTexto:"#ffffff", colorEyebrow:"", eyebrow:"ETIQUETA", titulo:"Título de la sección", subtitulo:"Texto de apoyo breve para acompañar el título de esta sección.",
+      bg:"#040764", colorTexto:"#ffffff", colorEyebrow:"", eyebrow:"ETIQUETA", titulo:"Título de la sección", subtitulo:"Texto de apoyo breve para acompañar el título de esta sección.",
       fuenteTitulo:"", tamTitulo:"30", tamSub:"15", padV:"44", padH:"32",
       botonTexto:"Saber más", botonUrl:"", botonVariante:"solido", botonColor:"", radioBoton:"6" }),
     campos: [
@@ -4119,14 +4119,14 @@ const BLOQUES = {
         const out = d.botonVariante==="outline";
         boton = `<div style="margin-top:20px;"><a href="${esc(d.botonUrl||'#')}" target="_blank" rel="noopener" data-edit="botonTexto" data-linea="1" data-edit-link="botonUrl" title="Doble clic para editar el enlace" style="display:inline-block;background:${out?'transparent':esc(acc)};color:${out?esc(acc):'#ffffff'};border:2px solid ${esc(acc)};padding:12px 26px;border-radius:${esc(d.radioBoton||'6')}px;font-size:14px;font-weight:600;text-decoration:none;">${esc(d.botonTexto)}</a></div>`;
       }
-      const inner = `<div style="background:${esc(d.bg||'#0e2748')};padding:${esc(d.padV||44)}px ${esc(d.padH||32)}px;text-align:${ta};box-sizing:border-box;">${ey}${tit}${sub}${boton}</div>`;
+      const inner = `<div style="background:${esc(d.bg||'#040764')};padding:${esc(d.padV||44)}px ${esc(d.padH||32)}px;text-align:${ta};box-sizing:border-box;">${ey}${tit}${sub}${boton}</div>`;
       return wrap(d, inner);
     }
   },
   // Header de marca: banda full-width con logo (email). Dos estilos: sólido (logo claro) o blanco (logo a color).
   bandaHeader: {
     cat:"Estructura", nombre:"Header de marca · azul", icono:"", sub:"Banda sólida con logo (email)",
-    defaults: Object.assign({}, styleDefaults, { padTop:"0", padBottom:"0", padLeft:"0", padRight:"0", radioBloque:"0", estilo:"solido", bg:"#2167ae", logoClaro:"", logoColor:"", alto:"30", alinH:"left" }),
+    defaults: Object.assign({}, styleDefaults, { padTop:"0", padBottom:"0", padLeft:"0", padRight:"0", radioBloque:"0", estilo:"solido", bg:"#1C73CB", logoClaro:"", logoColor:"", alto:"30", alinH:"left" }),
     campos: [
       {key:"estilo",label:"Estilo de banda",tipo:"select",opciones:[["solido","Sólido (logo claro)"],["blanco","Blanco (logo a color)"]]},
       {key:"bg",label:"Color de la banda (estilo sólido)",tipo:"color"},
@@ -4138,7 +4138,7 @@ const BLOQUES = {
     ],
     render: (d) => {
       const solido = (d.estilo||"solido")!=="blanco";
-      const band = solido ? (d.bg||"#2167ae") : "#ffffff";
+      const band = solido ? (d.bg||"#1C73CB") : "#ffffff";
       const borde = solido ? "none" : "1px solid #e3e6ec";
       const logo = solido ? (d.logoClaro||d.logoColor||"") : (d.logoColor||d.logoClaro||"");
       const ta = d.alinH || "left";
@@ -4150,7 +4150,7 @@ const BLOQUES = {
   // Footer de marca: banda con logo + "Síguenos" + íconos de redes, más línea legal (email).
   bandaFooter: {
     cat:"Estructura", nombre:"Footer de marca · azul", icono:"", sub:"Banda sólida + Síguenos (email)",
-    defaults: Object.assign({}, styleDefaults, { padTop:"0", padBottom:"0", padLeft:"0", padRight:"0", radioBloque:"0", estilo:"solido", bg:"#2167ae", logoClaro:"", logoColor:"", alto:"28", textoSeguir:"Síguenos",
+    defaults: Object.assign({}, styleDefaults, { padTop:"0", padBottom:"0", padLeft:"0", padRight:"0", radioBloque:"0", estilo:"solido", bg:"#1C73CB", logoClaro:"", logoColor:"", alto:"28", textoSeguir:"Síguenos",
       redes:[{tipo:"facebook",url:""},{tipo:"instagram",url:""},{tipo:"linkedin",url:""},{tipo:"youtube",url:""}],
       copyright:"", direccion:"", mostrarUnsub:false, unsubTexto:"Darme de baja", unsubUrl:"", disclaimer:"", web:"" }),
     campos: [
@@ -4182,9 +4182,9 @@ const BLOQUES = {
     ],
     render: (d) => {
       const solido = (d.estilo||"solido")!=="blanco";
-      const band = solido ? (d.bg||"#2167ae") : "#ffffff";
+      const band = solido ? (d.bg||"#1C73CB") : "#ffffff";
       const borde = solido ? "none" : "1px solid #e3e6ec";
-      const fg = solido ? "#ffffff" : (d.bg||"#2167ae");
+      const fg = solido ? "#ffffff" : (d.bg||"#1C73CB");
       const logo = solido ? (d.logoClaro||d.logoColor||"") : (d.logoColor||d.logoClaro||"");
       const iconos = (d.redes||[]).filter(r=>r.url).map(r=>`<a href="${esc(r.url)}" target="_blank" rel="noopener" style="color:${fg};display:inline-flex;text-decoration:none;">${svgIcon(r.tipo,{size:"20px"})}</a>`).join("");
       const seguir = iconos ? `<span style="display:inline-flex;align-items:center;gap:14px;">${d.textoSeguir?`<span style="color:${fg};font-size:14px;">${esc(d.textoSeguir)}</span>`:""}${iconos}</span>` : "";
@@ -6547,7 +6547,7 @@ function composicionDefault(tema){
   // Los textos parten en blanco (#fff): el fondo del tema solo se adopta si es
   // OSCURO. Un tema claro dejaba el prearmado blanco-sobre-blanco → "no
   // funciona nada" (escribías y no se veía). Default seguro: navy.
-  const bg=(tema&&tema.bg&&typeof esColorOscuro==="function"&&esColorOscuro(tema.bg))?tema.bg:"#0e2748";
+  const bg=(tema&&tema.bg&&typeof esColorOscuro==="function"&&esColorOscuro(tema.bg))?tema.bg:"#040764";
   const pri=(tema&&tema.primary)||"#2f80ed";
   const zona=(extra)=>Object.assign({ bg:"hereda", color:"", imagen:imgDefComp(), alinH:"left", alinV:"center", visible:true }, extra);
   return {
@@ -6868,8 +6868,8 @@ function bandaLegalHTML(P, c, bgColor, esFoto){
 // Tinta legible sobre un fondo claro: el color oscuro de la marca si lo hay.
 function colorTintaSobre(bg){
   const m = (workspace.marcas||[]).find(x=>x && x.text);
-  const t = (m && m.text) || "#23366F";
-  return esColorOscuro(t) ? t : "#23366F";
+  const t = (m && m.text) || "#040764";
+  return esColorOscuro(t) ? t : "#040764";
 }
 // ADORNOS (formas de apoyo). Manual: TRES formas de ⌀ 28 %, 16 % y 9 % del lado
 // corto, SIEMPRE asomando por el borde inferior — nunca flotando en el centro —,
@@ -6877,7 +6877,7 @@ function colorTintaSobre(bg){
 // dos que comparten color van en extremos opuestos). Se apagan en franjas y en
 // cualquier formato de lado corto ≤ 250: eso lo decide geomDe().noVan.
 function decoBurbujasHTML(deco, W, H){
-  const c1 = deco.color1 || "#91BFE3", c2 = deco.color2 || "#41B6E6";
+  const c1 = deco.color1 || "#378CE3", c2 = deco.color2 || "#41B6E6";
   const S = Math.min(W, H);
   const r = GEOM.decoPct.map(p => S*p/200);          // /200 = mitad del diámetro
   const cs = [
@@ -6904,7 +6904,7 @@ const ladoBurbuja = bu => /l$/.test(bu && bu.pos || "tr") ? "l" : "r";
 function burbujaHTML(bu, fmt){
   const dia = diametroBurbuja(bu, fmt);
   const g = geomDe(fmt);
-  const bg = bu.color || "#FFF773", fg = bu.colorTexto || "#23366F";
+  const bg = bu.color || "#FCE865", fg = bu.colorTexto || "#040764";
   const t = String(bu.texto||"").trim();
   const m = t.match(/^(\$?\d[\d.,]*%?)\s+([\s\S]+)$/);
   // La cifra manda: 45 % del DIÁMETRO (no del lienzo). La palabra, 20 %.
@@ -6922,7 +6922,7 @@ function burbujaHTML(bu, fmt){
         : `top:${-sale}px;right:${-sale}px;padding-top:${sale}px;padding-right:${sale}px;`;
   return `<div class="cmp-burbuja" style="width:${dia}px;height:${dia}px;background:${esc(bg)};color:${esc(fg)};${P}">${inner}</div>`;
 }
-// ── LAYOUTS DE MARCA (estilo Zurich) ────────────────────────────────────
+// ── LAYOUTS DE MARCA ─────────────────────────────────────────────────────
 // Cuatro disposiciones extraidas de las campanas reales. Reusan el MISMO
 // modelo de datos que las 3 zonas (zonas.texto, zonas.cta, zonas.logo,
 // burbuja, deco): lo que cambia es COMO se disponen, no que se guarda.
@@ -6958,10 +6958,10 @@ function renderLayoutMarca(c, fmt, layout){
   const D = detalleDe(W,H);
   const Z=c.zonas||{}, T=Z.texto||{}, ti=T.titular||{}, cu=T.cuerpo||{}, et=T.etiqueta||{}, cta=Z.cta||{}, lg=Z.logo||{};
   const fondo=c.fondo||{}, bu=c.burbuja||{};
-  const bgColor = fondo.color || "#23366F";
+  const bgColor = fondo.color || "#040764";
   const claro = !esColorOscuro(bgColor);
-  const tinta = claro ? (ti.color && ti.color!=="#ffffff" ? ti.color : "#23366F") : "#ffffff";
-  const acento = cta.colorFondo || "#2167AE";
+  const tinta = claro ? (ti.color && ti.color!=="#ffffff" ? ti.color : "#040764") : "#ffffff";
+  const acento = cta.colorFondo || "#1C73CB";
   const hayFoto = fondo.tipo==="imagen" && fondo.imagen && fondo.imagen.url;
   const M = px(14,14);                              // margen del banner
   const cap = (s,n)=>String(s||"").trim();
@@ -7273,7 +7273,7 @@ function renderComposicion(comp, fmt, nivelMin){
     if(!P.hay.epigrafe && T.etiqueta) T.etiqueta = Object.assign({}, T.etiqueta, {texto:""});
     Z = Object.assign({}, Z, { texto:T });
   }
-  const bgColor = fondo.color || "#0e2748";
+  const bgColor = fondo.color || "#040764";
   const esFoto = fondo.tipo==="imagen" && fondo.imagen && fondo.imagen.url;
   const fondoLayer = esFoto ? capaImagenHTML(fondo.imagen, "cmp-bg", true) : "";
   // Velo de legibilidad SOLO sobre foto (garantiza contraste del texto blanco).
@@ -7646,7 +7646,7 @@ function usarLogoMarcaEnZona(fmt){
   if(!m && (workspace.marcas||[]).length===1) m = workspace.marcas[0];
   if(!m){ toast("Elige una marca primero (selector «Marca» arriba)"); return; }
   m = normalizarMarca(m);
-  const fondoCol = (p.composicion && p.composicion.fondo && p.composicion.fondo.color) || "#0e2748";
+  const fondoCol = (p.composicion && p.composicion.fondo && p.composicion.fondo.color) || "#040764";
   const url = logoDeMarca(m, esColorOscuro(fondoCol));
   if(!url){ toast("La marca no tiene logo"); return; }
   if(fmt) setCompOv(fmt,'zonas.logo.url',url); else setComp('zonas.logo.url',url);
@@ -8302,7 +8302,7 @@ function miniaturasBiblioteca(path, fmt){
 function coloresMarcaPreset(){
   const cols=[]; const add=c=>{ if(c && !cols.includes(c)) cols.push(c); };
   (workspace.marcas||[]).forEach(m=>{ const n=normalizarMarca(m); add(n.primary); add(n.secondary); add(n.cta); add(n.accent1); add(n.accent2); add(n.bg); add(n.text); });
-  ["#0e2748","#102a43","#1c1c28","#0b7a4b","#1c73cb","#b3261e","#ffffff","#f5f5f5"].forEach(add);
+  ["#040764","#102a43","#1c1c28","#0b7a4b","#1c73cb","#b3261e","#ffffff","#f5f5f5"].forEach(add);
   return cols.slice(0,14);
 }
 // SOLO colores de la marca (sin presets genéricos). El resto se elige con el mezclador HEX.
@@ -8622,8 +8622,8 @@ function compPanelUnico(p, fmt, ctx){
     h += `<div class="se-h2">${svgIcon("estrella",{size:"14px"})} Oferta <small>el círculo de promoción</small></div>`;
     h += `<div class="se-f"><label>Texto de la oferta <small>· se enciende al escribirla</small></label><input type="text" placeholder="Ej. 60% dcto. · 2 cuotas gratis" value="${V('burbuja.texto')}" oninput="setCompOferta(this.value,${NUMF})"></div>`;
     h += fTam("Tamaño del círculo",'burbuja.tamano',40,400,96);
-    h += fColor("Color del círculo",'burbuja.color','#d9e05f');
-    h += fColor("Letra",'burbuja.colorTexto','#0e2748');
+    h += fColor("Color del círculo",'burbuja.color','#FCE865');
+    h += fColor("Letra",'burbuja.colorTexto','#040764');
     h += `<div class="se-f"><label>Posición</label><select onchange="${S('burbuja.pos','this.value')};${RE}">`+
       [['tr','Arriba derecha'],['cr','Centro derecha'],['br','Abajo derecha'],['tl','Arriba izquierda'],['bl','Abajo izquierda']]
       .map(([v,l])=>`<option value="${v}" ${(getPath(C,'burbuja.pos')||'tr')===v?'selected':''}>${l}</option>`).join("")+`</select></div>`;
@@ -8640,7 +8640,7 @@ function compPanelUnico(p, fmt, ctx){
     h += `<div class="se-h2">${svgIcon("paleta",{size:"14px"})} Fondo del banner</div>`;
     h += `<div class="se-seg2"><button type="button" class="${esFoto?'':'on'}" onclick="setCompFoto('',${NUMF})">Color</button>`+
          `<button type="button" class="${esFoto?'on':''}" onclick="elegirImagenPath('fondo.imagen.url',${NUMF})">Fotografía</button></div>`;
-    h += fColor("Color de fondo",'fondo.color','#0e2748');
+    h += fColor("Color de fondo",'fondo.color','#040764');
     const fotos = (workspace.imagenes||[]).filter(sirveComoFondo).slice(0,7);
     const urlAct = String(getPath(C,'fondo.imagen.url')||"");
     h += `<div class="se-f"><label>Fotografía</label><div class="se-fotos">`+
@@ -8755,7 +8755,7 @@ function compEditorHTML(p, fmt, ctx){
   const fondoTipo=getPath(C,'fondo.tipo')||'color';
   h+=`<div class="dz-sec">Fondo del banner (continúa en las 3 zonas)</div>`;
   h+=`<div class="cmp-row"><label>Tipo</label><select onchange="${S('fondo.tipo','this.value')};${RE}">${[['color','Color'],['imagen','Imagen']].map(([v,l])=>`<option value="${v}" ${fondoTipo===v?'selected':''}>${l}</option>`).join('')}</select></div>`;
-  if(fondoTipo==='color') h+=`<div class="cmp-row">${colorInp('fondo.color','#0e2748')}${hexInp('fondo.color')}</div><div class="cmp-row"><div class="cmp-sw-row" title="Colores de tu marca (solo marca)">${swatchesColor('fondo.color',isOv?fmt:null)}</div></div>`;
+  if(fondoTipo==='color') h+=`<div class="cmp-row">${colorInp('fondo.color','#040764')}${hexInp('fondo.color')}</div><div class="cmp-row"><div class="cmp-sw-row" title="Colores de tu marca (solo marca)">${swatchesColor('fondo.color',isOv?fmt:null)}</div></div>`;
   else h+=imgBlock('fondo.imagen');
   // Tipografía: se elige UNA sola vez para todo el banner (título, bajada y CTA
   // usan la misma). Solo en el Diseño global (no por tamaño).
@@ -8767,7 +8767,7 @@ function compEditorHTML(p, fmt, ctx){
   const decoVis = getPath(C,'deco.visible')===true;
   h+=`<div class="cmp-zona-sec"><span class="zlbl">${svgIcon("paleta",{size:"14px"})} Burbujas decorativas</span><button class="cmp-eye${decoVis?'':' off'}" onclick="toggleExtraComp('deco.visible',${isOv?`'${fmt}'`:'null'})" title="Mostrar/ocultar burbujas de color">${svgIcon("ojo",{size:"13px"})}</button></div>`;
   if(decoVis){
-    h+=`<div class="cmp-row"><label>Color 1</label>${colorInp('deco.color1','#72ccfd')}${hexInp('deco.color1')}</div>`;
+    h+=`<div class="cmp-row"><label>Color 1</label>${colorInp('deco.color1','#378CE3')}${hexInp('deco.color1')}</div>`;
     h+=`<div class="cmp-row"><label>Color 2</label>${colorInp('deco.color2','#2f80ed')}${hexInp('deco.color2')}</div>`;
     h+=`<div class="cmp-row"><div class="cmp-sw-row">${swatchesColor('deco.color1',isOv?fmt:null)}</div></div>`;
   }
@@ -8801,7 +8801,7 @@ function compEditorHTML(p, fmt, ctx){
   h+=`<div class="cmp-zona-sec"><span class="zlbl">${svgIcon("estrella",{size:"14px"})} Burbuja de oferta (círculo)</span><button class="cmp-eye${buVis?'':' off'}" onclick="toggleExtraComp('burbuja.visible',${isOv?`'${fmt}'`:'null'})" title="Mostrar/ocultar el círculo de oferta">${svgIcon("ojo",{size:"13px"})}</button></div>`;
   if(buVis){
     h+=`<div class="cmp-row"><input type="text" placeholder="La oferta (ej. 2 Cuotas Gratis · 60% dcto.)" value="${escAttr(getPath(C,'burbuja.texto')||'')}" oninput="${S('burbuja.texto','this.value')}"></div>`;
-    h+=`<div class="cmp-row"><label>Colores</label>${colorInp('burbuja.color','#d9e05f')}${colorInp('burbuja.colorTexto','#0e2748')}</div>`;
+    h+=`<div class="cmp-row"><label>Colores</label>${colorInp('burbuja.color','#FCE865')}${colorInp('burbuja.colorTexto','#040764')}</div>`;
     h+=`<div class="cmp-row"><div class="cmp-sw-row">${swatchesColor('burbuja.color',isOv?fmt:null)}</div></div>`;
     h+=`<div class="cmp-row"><label>Tamaño</label>${rng('burbuja.tamano',40,220,96)}<label style="min-width:auto;margin-left:10px">Posición</label><select onchange="${S('burbuja.pos','this.value')};${RE}">${[['tr','Arriba der.'],['cr','Centro der.'],['br','Abajo der.'],['tl','Arriba izq.'],['bl','Abajo izq.']].map(([v,l])=>`<option value="${v}" ${(getPath(C,'burbuja.pos')||'tr')===v?'selected':''}>${l}</option>`).join('')}</select></div>`;
     h+=`<p style="font-size:11px;color:#8890a8;margin:4px 0 0;line-height:1.5;">Si el texto parte con un número («2 Cuotas Gratis», «60% dcto.»), el número sale grande.</p>`;
@@ -9664,33 +9664,33 @@ const PLANTILLAS = {
   // ── EMAIL · plantillas pro (secciones full-bleed + marca Gamonal: navy #040764, azul #1c73cb, amarillo #fce865) ──
   "email-promo": { label:"Comercial \u00b7 Inversi\u00f3n", grupo:"Email", formato:"email", nombre:"Comercial",
     bloques:[
-      ["bandaHeader",{estilo:"solido",bg:"#2167ae",alto:"28"}],
+      ["bandaHeader",{estilo:"solido",bg:"#1C73CB",alto:"28"}],
       ["imagen",{url:"",anchoImg:"100",radio:"0",padTop:"0",padBottom:"0",padLeft:"0",padRight:"0"}],
-      ["seccion",{bg:"#ffffff",colorTexto:"#23366f",alinH:"center",eyebrow:"",titulo:"\u00a1Haz que tu dinero trabaje por ti!",fuenteTitulo:"Arial",tamTitulo:"26",subtitulo:"Empezar es simple, r\u00e1pido y para todos. Da el primer paso hoy.",tamSub:"15",botonTexto:"",padV:"32"}],
-      ["features",{titulo:"",disposicion:"fila",porFila:"3",orientacion:"vertical",colorIcono:"#2167ae",tamItemTitulo:"15",tamItemSub:"13",gapItems:"14",bgBloque:"#eaf3fb",items:[{ico:"barchart",t:"Desde $1.000",s:"Empieza con el monto que t\u00fa quieras."},{ico:"monitor",t:"100% online",s:"Gestiona todo digital, sin papeles."},{ico:"reloj",t:"Cuando quieras",s:"Retira tu dinero en cualquier momento."}]}],
-      ["seccion",{bg:"#eaf3fb",colorTexto:"#23366f",alinH:"center",eyebrow:"",titulo:"",subtitulo:"",botonTexto:"Comenzar hoy",botonVariante:"solido",botonColor:"#2167ae",padV:"6"}],
+      ["seccion",{bg:"#ffffff",colorTexto:"#040764",alinH:"center",eyebrow:"",titulo:"\u00a1Haz que tu dinero trabaje por ti!",fuenteTitulo:"Arial",tamTitulo:"26",subtitulo:"Empezar es simple, r\u00e1pido y para todos. Da el primer paso hoy.",tamSub:"15",botonTexto:"",padV:"32"}],
+      ["features",{titulo:"",disposicion:"fila",porFila:"3",orientacion:"vertical",colorIcono:"#1C73CB",tamItemTitulo:"15",tamItemSub:"13",gapItems:"14",bgBloque:"#eaf3fb",items:[{ico:"barchart",t:"Desde $1.000",s:"Empieza con el monto que t\u00fa quieras."},{ico:"monitor",t:"100% online",s:"Gestiona todo digital, sin papeles."},{ico:"reloj",t:"Cuando quieras",s:"Retira tu dinero en cualquier momento."}]}],
+      ["seccion",{bg:"#eaf3fb",colorTexto:"#040764",alinH:"center",eyebrow:"",titulo:"",subtitulo:"",botonTexto:"Comenzar hoy",botonVariante:"solido",botonColor:"#1C73CB",padV:"6"}],
       ["divisor",{}],
-      ["seccion",{bg:"#ffffff",colorTexto:"#23366f",alinH:"center",eyebrow:"\u00bfTE QUEDAN DUDAS?",colorEyebrow:"#2167ae",titulo:"Estamos para ayudarte",fuenteTitulo:"Arial",tamTitulo:"22",subtitulo:"Nuestros canales de comunicaci\u00f3n est\u00e1n disponibles para ti.",tamSub:"15",botonTexto:"Cont\u00e1ctanos",botonVariante:"outline",botonColor:"#2167ae",padV:"32"}],
-      ["bandaFooter",{estilo:"solido",bg:"#2167ae",textoSeguir:"S\u00edguenos"}]
+      ["seccion",{bg:"#ffffff",colorTexto:"#040764",alinH:"center",eyebrow:"\u00bfTE QUEDAN DUDAS?",colorEyebrow:"#1C73CB",titulo:"Estamos para ayudarte",fuenteTitulo:"Arial",tamTitulo:"22",subtitulo:"Nuestros canales de comunicaci\u00f3n est\u00e1n disponibles para ti.",tamSub:"15",botonTexto:"Cont\u00e1ctanos",botonVariante:"outline",botonColor:"#1C73CB",padV:"32"}],
+      ["bandaFooter",{estilo:"solido",bg:"#1C73CB",textoSeguir:"S\u00edguenos"}]
     ] },
   "email-newsletter": { label:"Informativo \u00b7 Documento", grupo:"Email", formato:"email", nombre:"Informativo",
     bloques:[
-      ["bandaHeader",{estilo:"solido",bg:"#2167ae",alto:"28"}],
-      ["seccion",{bg:"#2167ae",colorTexto:"#ffffff",alinH:"left",eyebrow:"",titulo:"\u00a1Ya est\u00e1 disponible tu documento!",fuenteTitulo:"Arial",tamTitulo:"30",subtitulo:"",tamSub:"15",botonTexto:"",padV:"44",padH:"36"}],
-      ["seccion",{bg:"#ffffff",colorTexto:"#23366f",alinH:"left",eyebrow:"",titulo:"Hola,",fuenteTitulo:"Arial",tamTitulo:"20",subtitulo:"Ya est\u00e1 disponible tu documento con los \u00faltimos movimientos de tu cuenta. Para abrirlo, sigue las instrucciones de aqu\u00ed abajo.",tamSub:"15",botonTexto:"",padV:"26",padH:"36"}],
+      ["bandaHeader",{estilo:"solido",bg:"#1C73CB",alto:"28"}],
+      ["seccion",{bg:"#1C73CB",colorTexto:"#ffffff",alinH:"left",eyebrow:"",titulo:"\u00a1Ya est\u00e1 disponible tu documento!",fuenteTitulo:"Arial",tamTitulo:"30",subtitulo:"",tamSub:"15",botonTexto:"",padV:"44",padH:"36"}],
+      ["seccion",{bg:"#ffffff",colorTexto:"#040764",alinH:"left",eyebrow:"",titulo:"Hola,",fuenteTitulo:"Arial",tamTitulo:"20",subtitulo:"Ya est\u00e1 disponible tu documento con los \u00faltimos movimientos de tu cuenta. Para abrirlo, sigue las instrucciones de aqu\u00ed abajo.",tamSub:"15",botonTexto:"",padV:"26",padH:"36"}],
       ["alert",{tipo:"warning",titulo:"Ejemplo de acceso",mensaje:"RUT: 16.222.432-3\nClave: 16222432 (tu RUT sin puntos ni d\u00edgito verificador)"}],
-      ["seccion",{bg:"#ffffff",colorTexto:"#23366f",alinH:"center",eyebrow:"",titulo:"\u00bfTienes dudas sobre c\u00f3mo obtener tu documento?",fuenteTitulo:"Arial",tamTitulo:"20",subtitulo:"Nuestros canales de comunicaci\u00f3n est\u00e1n disponibles para ti.",tamSub:"15",botonTexto:"Ir a mi portal",botonVariante:"solido",botonColor:"#2167ae",padV:"32"}],
-      ["bandaFooter",{estilo:"solido",bg:"#2167ae",textoSeguir:"S\u00edguenos"}]
+      ["seccion",{bg:"#ffffff",colorTexto:"#040764",alinH:"center",eyebrow:"",titulo:"\u00bfTienes dudas sobre c\u00f3mo obtener tu documento?",fuenteTitulo:"Arial",tamTitulo:"20",subtitulo:"Nuestros canales de comunicaci\u00f3n est\u00e1n disponibles para ti.",tamSub:"15",botonTexto:"Ir a mi portal",botonVariante:"solido",botonColor:"#1C73CB",padV:"32"}],
+      ["bandaFooter",{estilo:"solido",bg:"#1C73CB",textoSeguir:"S\u00edguenos"}]
     ] },
   "email-bienvenida": { label:"Concurso \u00b7 Promoci\u00f3n", grupo:"Email", formato:"email", nombre:"Concurso",
     bloques:[
-      ["bandaHeader",{estilo:"solido",bg:"#2167ae",alto:"28"}],
+      ["bandaHeader",{estilo:"solido",bg:"#1C73CB",alto:"28"}],
       ["imagen",{url:"",anchoImg:"100",radio:"0",padTop:"0",padBottom:"0",padLeft:"0",padRight:"0"}],
-      ["seccion",{bg:"#ffffff",colorTexto:"#23366f",alinH:"center",eyebrow:"",titulo:"Hola,",fuenteTitulo:"Arial",tamTitulo:"22",subtitulo:"Tenemos un concurso especial para ti, pensado para regalarte momentos llenos de alegr\u00eda.",tamSub:"15",botonTexto:"",padV:"28"}],
+      ["seccion",{bg:"#ffffff",colorTexto:"#040764",alinH:"center",eyebrow:"",titulo:"Hola,",fuenteTitulo:"Arial",tamTitulo:"22",subtitulo:"Tenemos un concurso especial para ti, pensado para regalarte momentos llenos de alegr\u00eda.",tamSub:"15",botonTexto:"",padV:"28"}],
       ["alert",{tipo:"info",titulo:"Gana 1 de las 15 entradas",mensaje:"Participa y ll\u00e9vate un premio. Sigue los pasos de aqu\u00ed abajo."}],
-      ["features",{titulo:"\u00bfC\u00f3mo participar?",disposicion:"fila",porFila:"3",orientacion:"vertical",colorIcono:"#2167ae",tamTitulo:"20",tamItemTitulo:"14",tamItemSub:"13",gapItems:"14",items:[{ico:"instagram",t:"S\u00edguenos",s:"S\u00edguenos en nuestra cuenta de Instagram."},{ico:"equipo",t:"Etiqueta a 2 amigos",s:"Menci\u00f3nalos en el comentario."},{ico:"corazon",t:"Consigue Me Gusta",s:"Los comentarios con m\u00e1s likes ganan."}]}],
-      ["seccion",{bg:"#2167ae",colorTexto:"#ffffff",alinH:"center",eyebrow:"",titulo:"\u00a1Haz que este mes sea especial!",fuenteTitulo:"Arial",tamTitulo:"26",subtitulo:"Concurso v\u00e1lido por tiempo limitado. Revisa las bases en el sitio.",tamSub:"15",botonTexto:"Quiero participar",botonVariante:"solido",botonColor:"#ffffff",padV:"42"}],
-      ["bandaFooter",{estilo:"solido",bg:"#2167ae",textoSeguir:"S\u00edguenos"}]
+      ["features",{titulo:"\u00bfC\u00f3mo participar?",disposicion:"fila",porFila:"3",orientacion:"vertical",colorIcono:"#1C73CB",tamTitulo:"20",tamItemTitulo:"14",tamItemSub:"13",gapItems:"14",items:[{ico:"instagram",t:"S\u00edguenos",s:"S\u00edguenos en nuestra cuenta de Instagram."},{ico:"equipo",t:"Etiqueta a 2 amigos",s:"Menci\u00f3nalos en el comentario."},{ico:"corazon",t:"Consigue Me Gusta",s:"Los comentarios con m\u00e1s likes ganan."}]}],
+      ["seccion",{bg:"#1C73CB",colorTexto:"#ffffff",alinH:"center",eyebrow:"",titulo:"\u00a1Haz que este mes sea especial!",fuenteTitulo:"Arial",tamTitulo:"26",subtitulo:"Concurso v\u00e1lido por tiempo limitado. Revisa las bases en el sitio.",tamSub:"15",botonTexto:"Quiero participar",botonVariante:"solido",botonColor:"#ffffff",padV:"42"}],
+      ["bandaFooter",{estilo:"solido",bg:"#1C73CB",textoSeguir:"S\u00edguenos"}]
     ] },
   // LinkedIn
   "li-portada": { label:"Portada perfil 1584×396", grupo:"LinkedIn", formato:"linkedin", nombre:"LinkedIn Portada",
@@ -10561,7 +10561,7 @@ function normalizarMarca(m){
     logo: m.logo || m.logoUrl || "",          // principal (data URL o URL vieja)
     logoClaro: m.logoClaro || "",             // para fondos oscuros
     primary: m.primary || "#1c73cb",
-    secondary: m.secondary || m.bg || "#0e2748",
+    secondary: m.secondary || m.bg || "#040764",
     cta: m.cta || m.primary || "#1c73cb",
     ctaText: m.ctaText || "#ffffff",
     text: m.text || "#1a1a1a",
@@ -10670,7 +10670,7 @@ function resetMarcaForm(){
   set("marca-edit-id",""); set("marca-nombre",""); set("marca-empresa","");
   set("marca-logo-data",""); set("marca-logoClaro-data","");
   pintarLogoPrev("logo",""); pintarLogoPrev("logoClaro","");
-  set("marca-primary","#1c73cb"); set("marca-secondary","#0e2748"); set("marca-cta","#1c73cb");
+  set("marca-primary","#1c73cb"); set("marca-secondary","#040764"); set("marca-cta","#1c73cb");
   set("marca-ctaText","#ffffff"); set("marca-text","#1a1a1a"); set("marca-bg","#ffffff"); set("marca-bgpagina","#f5f5f5");
   set("marca-accent1","#d9c6b1"); set("marca-accent2","#a3bdcb");
   set("marca-fontTitulo","Inter"); set("marca-fontCuerpo","Inter");
@@ -10722,52 +10722,42 @@ function guardarMarca(){
   persistir(); resetMarcaForm(); renderMarcaSelector(); mostrarBibliotecaMarcas();
   toast(id ? "Marca actualizada" : `"${nombre}" agregada a tu biblioteca`);
 }
-// Rellena el formulario con la identidad propuesta de Zurich (punto de partida; el logo lo sube el usuario).
-function rellenarMarcaZurich(){
+// PLANTILLA DE EJEMPLO. Rellena el formulario para partir de algo armado, con
+// la paleta de Gamonal. NO trae logotipo: los campos de logo quedan vacíos y los
+// sube el usuario (decisión suya: nada de marcas de relleno).
+function rellenarMarcaEjemplo(){
   const set=(i,v)=>{ const e=document.getElementById(i); if(e) e.value=v; };
-  set("marca-nombre","Zurich"); set("marca-empresa","Zurich Chile");
-  // Paleta OFICIAL del Brandbook Zurich 2024: héroe Azul Zurich #2167AE, Azul
-  // Oscuro #23366F (fondo de banners), acentos Lima #FFF773 (círculo de oferta)
-  // y Azul Claro #91BFE3 (burbujas). Blanco de Zurich #ECEEEF de fondo de página.
-  // Tipografía: Arial (alternativa oficial cuando no está Zurich Sans).
-  set("marca-primary","#2167AE"); set("marca-secondary","#23366F"); set("marca-cta","#2167AE");
-  set("marca-ctaText","#ffffff"); set("marca-text","#23366F"); set("marca-bg","#ffffff"); set("marca-bgpagina","#ECEEEF");
-  set("marca-accent1","#FFF773"); set("marca-accent2","#91BFE3");
+  set("marca-nombre","Matías"); set("marca-empresa","Seguros Matías");
+  // Paleta Gamonal: Azul principal #040764 · Azul secundario #1C73CB ·
+  // Amarillo #FCE865 (círculo de oferta) · Azul secundario claro #378CE3
+  // (adornos) · Gris claro #F5F5F5 de fondo de página.
+  set("marca-primary","#1C73CB"); set("marca-secondary","#040764"); set("marca-cta","#1C73CB");
+  set("marca-ctaText","#ffffff"); set("marca-text","#040764"); set("marca-bg","#ffffff"); set("marca-bgpagina","#F5F5F5");
+  set("marca-accent1","#FCE865"); set("marca-accent2","#378CE3");
   set("marca-fontTitulo","Arial"); set("marca-fontCuerpo","Arial");
-  // Logos oficiales subidos a R2 (color para fondo blanco, blanco para banda sólida); solo si no hay uno ya.
-  const zColor="https://simple-block-builder.gamonal.app/api/upload?k=zurich/Logo-Zurich.png";
-  const zBlanco="https://simple-block-builder.gamonal.app/api/upload?k=zurich/Logo-Zurich-Blanco.png";
-  const yaLogo = id => { const e=document.getElementById(id); return e && e.value; };
-  if(!yaLogo("marca-logo-data")){ set("marca-logo-data",zColor); pintarLogoPrev("logo",zColor); }
-  if(!yaLogo("marca-logoClaro-data")){ set("marca-logoClaro-data",zBlanco); pintarLogoPrev("logoClaro",zBlanco); }
-  set("marca-negocio","Aseguradora en Chile con productos 100% digitales de contratación online (seguros-personas/productos-digitales).");
+  // Sin logotipo: se sube desde "El de la marca" o la biblioteca.
+  set("marca-logo-data",""); set("marca-logoClaro-data","");
+  set("marca-negocio","Aseguradora con productos digitales de contratación online.");
   set("marca-tono","Cercano, confiable y claro; transmite respaldo y tranquilidad sin tecnicismos.");
   set("marca-eslogan","Tu mejor compañía para el futuro");
-  set("marca-directrices","DIAGRAMACION (Brandbook 2024): fondo de banner Azul Oscuro #23366F o Azul Zurich #2167AE plano, sin degradados ni sombras; logo blanco arriba a la izquierda; etiqueta chica con el tipo de producto (Seguro) sobre el nombre; LA OFERTA SIEMPRE en un circulo Lima #FFF773 con el numero grande; burbujas decorativas Azul Claro #91BFE3 ancladas a los bordes (nunca flotando, nunca dos del mismo color juntas, siempre 3+ formas de escalas distintas); CTA sobrio; legal en letra chica. FOTOGRAFIA: natural estilo carrete de telefono, personas reales en un momento de compromiso, luz natural, nunca poses de banco de imagenes ni grupos posados, nada de filtros ni destellos. COPY: titulares con beneficio concreto y la oferta exacta; una idea por frase; nunca hablar de la campana misma ni rellenar con frases genericas tipo rapido-facil-online; el precio o la oferta real siempre visible cuando exista.");
-  set("marca-publico","Personas y familias en Chile que contratan seguros online.");
-  set("marca-productos","Seguro Celular Protegido, Seguro Auto Digital, Seguro Maneja tus km, Seguro Protección Urgencias, Viaja Protegido con Zurich, Seguro SOAP 2026");
+  set("marca-directrices","DIAGRAMACION: fondo de banner plano, sin degradados ni sombras; logo arriba a la izquierda; etiqueta chica con el tipo de producto sobre el nombre; LA OFERTA en un circulo de color con el numero grande; adornos anclados a los bordes (nunca flotando, nunca dos del mismo color juntas, siempre 3+ formas de escalas distintas); CTA sobrio; legal en letra chica. FOTOGRAFIA: natural estilo carrete de telefono, personas reales en un momento de compromiso, luz natural, nunca poses de banco de imagenes ni grupos posados, nada de filtros ni destellos. COPY: titulares con beneficio concreto y la oferta exacta; una idea por frase; nunca hablar de la campana misma ni rellenar con frases genericas tipo rapido-facil-online; el precio o la oferta real siempre visible cuando exista.");
+  set("marca-publico","Personas y familias que contratan seguros online.");
+  set("marca-productos","Seguro Celular Protegido, Seguro Auto Digital, Seguro Maneja tus km, Seguro Protección Urgencias, Seguro SOAP");
   set("marca-usar","respaldo, tranquilidad, cobertura, protección, confianza, 100% online, contrata online");
   set("marca-evitar","barato, gratis, regalo");
   set("marca-headerTagline","Seguros que te respaldan");
   set("marca-direccion","");
-  set("marca-copyright","© "+new Date().getFullYear()+" Zurich Chile");
+  set("marca-copyright","© "+new Date().getFullYear()+" Seguros Matías");
   set("marca-unsubTexto","Darme de baja");
-  set("marca-disclaimer","Infórmate sobre las condiciones y coberturas en zurich.cl. Producto sujeto a evaluación y condiciones de la póliza.");
-  set("marca-web","https://www.zurich.cl");
-  set("marca-facebook","https://www.facebook.com/ZurichCl");
-  set("marca-instagram","https://www.instagram.com/zurich_chile/");
-  set("marca-linkedin","https://www.linkedin.com/showcase/zurich-chile/");
-  set("marca-youtube","https://www.youtube.com/zurichseguros");
-  set("marca-spotify","https://open.spotify.com/show/6FoNs4bvFuXu740sl3leaE");
+  set("marca-disclaimer","Infórmate sobre las condiciones y coberturas en el sitio. Producto sujeto a evaluación y condiciones de la póliza.");
+  set("marca-web",""); set("marca-facebook",""); set("marca-instagram","");
+  set("marca-linkedin",""); set("marca-youtube",""); set("marca-spotify","");
   set("marca-gap","16"); set("marca-radio","0");
-  document.getElementById("marca-form-titulo").textContent="Nueva marca · Zurich (logos, colores y redes cargados)";
+  document.getElementById("marca-form-titulo").textContent="Nueva marca · ejemplo (colores y textos cargados, sin logotipo)";
   const body=document.getElementById("modal-marcas").querySelector(".modal-body"); if(body) body.scrollTop=99999;
-  toast("Plantilla Zurich cargada — header/footer de marca listos (2 estilos: sólido y blanco)");
+  toast("Plantilla de ejemplo cargada — sube el logotipo para completarla");
 }
-// Logos Zurich recreados en SVG (placeholder de marca; reemplazables subiendo el oficial).
 const svgURL = s => "data:image/svg+xml,"+encodeURIComponent(s);
-const ZURICH_LOGO_BLANCO = svgURL(`<svg xmlns='http://www.w3.org/2000/svg' width='210' height='52' viewBox='0 0 210 52'><circle cx='24' cy='26' r='22' fill='#ffffff'/><text x='24' y='27' font-family='Arial,Helvetica,sans-serif' font-weight='900' font-size='27' fill='#2167ae' text-anchor='middle' dominant-baseline='central'>Z</text><text x='55' y='26' font-family='Arial,Helvetica,sans-serif' font-weight='800' font-size='25' letter-spacing='1.5' fill='#ffffff' dominant-baseline='central'>ZURICH</text></svg>`);
-const ZURICH_LOGO_AZUL = svgURL(`<svg xmlns='http://www.w3.org/2000/svg' width='210' height='52' viewBox='0 0 210 52'><circle cx='24' cy='26' r='22' fill='#2167ae'/><text x='24' y='27' font-family='Arial,Helvetica,sans-serif' font-weight='900' font-size='27' fill='#ffffff' text-anchor='middle' dominant-baseline='central'>Z</text><text x='55' y='26' font-family='Arial,Helvetica,sans-serif' font-weight='800' font-size='25' letter-spacing='1.5' fill='#2167ae' dominant-baseline='central'>ZURICH</text></svg>`);
 function eliminarMarca(id){
   if(!confirm("¿Eliminar esta marca?")) return;
   workspace.marcas=(workspace.marcas||[]).filter(x=>x.id!==id);
@@ -10787,7 +10777,7 @@ function aplicarMarca(id){
     // Banner por zonas: aplica la identidad al diseño global.
     const C=p.composicion;
     setPath(C,"fondo.color", m.secondary);
-    // Fuente de la marca (Arial en Zurich) en las zonas de texto y CTA — si no,
+    // Fuente de la marca en las zonas de texto y CTA — si no,
     // el banner heredaría la Roboto de la app y el titular se vería estirado.
     const fontMarca = m.fontTitulo || m.fontCuerpo || "";
     if(fontMarca){ setPath(C,"zonas.texto.fuente", fontMarca); setPath(C,"zonas.cta.fuente", fontMarca); }
@@ -10808,13 +10798,13 @@ function aplicarMarca(id){
     // burbujas decorativas (no se encienden solas; solo quedan listas).
     if(m.accent1){
       if(getPath(C,"burbuja.color")==null) setPath(C,"burbuja.color", m.accent1);
-      if(getPath(C,"burbuja.colorTexto")==null) setPath(C,"burbuja.colorTexto", esColorOscuro(m.accent1) ? "#ffffff" : (esColorOscuro(m.secondary) ? m.secondary : "#0e2748"));
+      if(getPath(C,"burbuja.colorTexto")==null) setPath(C,"burbuja.colorTexto", esColorOscuro(m.accent1) ? "#ffffff" : (esColorOscuro(m.secondary) ? m.secondary : "#040764"));
       if(getPath(C,"deco.color1")==null) setPath(C,"deco.color1", m.accent1);
     }
     if(m.accent2 && getPath(C,"deco.color2")==null) setPath(C,"deco.color2", m.accent2);
     renderTablero(); renderComposicionEditor();
   } else {
-    const bandBg = m.primary || m.secondary || "#2167ae";
+    const bandBg = m.primary || m.secondary || "#1C73CB";
     const lClaro = m.logoClaro || m.logo || "";
     const lColor = m.logo || m.logoClaro || "";
     const redesM = redesDeMarca(m);
@@ -11635,12 +11625,12 @@ function _quitarOfertaDelTitular(titular, oferta){
 // tamaños salen del mismo reparto que usa "Replicar". Así lo generado y lo
 // dibujado a mano viven en el mismo modelo: se edita igual y se replica igual.
 function composicionLibreDesdeIA(data, M, masterFmt){
-  const c = libreDefault({ bg:(M && M.secondary) || "#0e2748" });
+  const c = libreDefault({ bg:(M && M.secondary) || "#040764" });
   const z = data.zonas || {};
   const fondoOscuro = M ? esColorOscuro(M.secondary) : true;
   let tinta = fondoOscuro ? "#ffffff" : ((M && M.text) || "#12173d");
   const fuente = (M && (M.fontTitulo || M.fontCuerpo)) || "";
-  c.fondo.color = (M && M.secondary) || "#0e2748";
+  c.fondo.color = (M && M.secondary) || "#040764";
 
   // FOTO: la elige la IA de la biblioteca; si no eligió, se pone una (un banner
   // de color plano se ve pobre). Los logotipos nunca sirven de fondo.
@@ -11683,8 +11673,8 @@ function composicionLibreDesdeIA(data, M, masterFmt){
   if(oferta){
     // La oferta es un cuadro de texto redondo: UN elemento, con su fondo de
     // acento. No hace falta figura + texto encima.
-    const acc = (M && M.accent1) || "#fff773";
-    add("texto", { texto:oferta, tam:Math.round(Wm*0.052), color: esColorOscuro(acc) ? "#ffffff" : "#23366F",
+    const acc = (M && M.accent1) || "#FCE865";
+    add("texto", { texto:oferta, tam:Math.round(Wm*0.052), color: esColorOscuro(acc) ? "#ffffff" : "#040764",
                    fondo:acc, radio:u(0.2), negrita:true, alinH:"center", alinV:"center",
                    w:u(0.30), h:u(0.30), padT:u(0.02), padR:u(0.02), padB:u(0.02), padL:u(0.02),
                    rol:"promo", prio:2, z:4 });
@@ -11791,7 +11781,7 @@ function insertarBannerIA(data, marca, tipoCol){
     setPath(comp,"burbuja.texto", oferta);
     if(M && M.accent1){
       setPath(comp,"burbuja.color", M.accent1);
-      setPath(comp,"burbuja.colorTexto", esColorOscuro(M.accent1) ? "#ffffff" : (esColorOscuro(M.secondary) ? M.secondary : "#23366F"));
+      setPath(comp,"burbuja.colorTexto", esColorOscuro(M.accent1) ? "#ffffff" : (esColorOscuro(M.secondary) ? M.secondary : "#040764"));
     }
   }
   // El titular NO debe repetir la oferta que ya está en la burbuja. Si la IA la

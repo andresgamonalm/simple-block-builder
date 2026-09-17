@@ -29,8 +29,8 @@ const T = (c, n, e) => { if (c) { ok++; console.log("  ok   " + n); } else { mal
     logoCarpeta: sirveComoFondo({ url: "/api/upload?k=logos/Foto-Bonita-Playa.png" }),
     fotoCarpeta: sirveComoFondo({ url: "/api/upload?k=fotos-seguros/Logo-Mundial.jpg" }),
     subida:      sirveComoFondo({ url: "/api/upload?k=subidas/familia.jpg" }),
-    legadoLogo:  sirveComoFondo({ url: "/api/upload?k=zurich/Logo-Zurich.png" }),
-    legadoFoto:  sirveComoFondo({ url: "/api/upload?k=zurich/persona-auto.jpg" })
+    legadoLogo:  sirveComoFondo({ url: "/api/upload?k=ejemplo/Logo-Matías.png" }),
+    legadoFoto:  sirveComoFondo({ url: "/api/upload?k=ejemplo/persona-auto.jpg" })
   }));
   T(r2.logoCarpeta === false, "logos/ nunca es fondo, aunque el archivo se llame Foto-Bonita");
   T(r2.fotoCarpeta === true, "fotos-seguros/ SÍ es fondo, aunque el archivo se llame Logo-Mundial");

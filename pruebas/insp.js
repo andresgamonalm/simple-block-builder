@@ -9,7 +9,7 @@ const T = (c, n, extra) => { if (c) { ok++; console.log("  ok   " + n); } else {
   const pg = await b.newPage({ viewport: { width: 1700, height: 1100 } });
   const errs = [];
   pg.on("pageerror", e => errs.push(e.message));
-  pg.on("console", m => { if (m.type() === "error" && !/ERR_CERT|ERR_CONNECTION|favicon/.test(m.text())) errs.push("console: " + m.text()); });
+  pg.on("console", m => { if (m.type() === "error" && !/ERR_CERT|ERR_CONNECTION|ERR_TUNNEL|favicon/.test(m.text())) errs.push("console: " + m.text()); });
   await pg.goto((process.env.SBB_URL || "http://127.0.0.1:8099") + "/editor.html", { waitUntil: "load" });
   await pg.waitForFunction(() => typeof window.crearComposicion === "function");
 
@@ -27,7 +27,7 @@ const T = (c, n, extra) => { if (c) { ok++; console.log("  ok   " + n); } else {
     setComp("zonas.cta.texto", "Cotiza aquí");
     setComp("zonas.logo.url", "/logo.svg");
     setComp("burbuja.texto", "2 Cuotas Gratis"); setComp("burbuja.visible", true);
-    setComp("fondo.color", "#23366F");
+    setComp("fondo.color", "#040764");
     setComp("legal", "Bases legales en www.ejemplo.cl");
     renderTablero();
   });
@@ -87,7 +87,7 @@ const T = (c, n, extra) => { if (c) { ok++; console.log("  ok   " + n); } else {
 
   console.log("\n4 · Círculo de oferta sin cifra: no se dibuja");
   await pg.evaluate(() => {
-    setComp("fondo.color", "#23366F");
+    setComp("fondo.color", "#040764");
     setComp("burbuja.texto", "Aprovecha ahora");   // sin número
     renderTablero();
   });

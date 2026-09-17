@@ -15,7 +15,7 @@ const FIXTURE = () => {
   // Modelo de 3 ZONAS: es el de las piezas ya guardadas, y esta prueba lo
   // protege. Los banners NUEVOS nacen en el lienzo libre.
   pieza().composicion = composicionDefault(pieza().tema);
-  setComp("fondo.color","#23366F");
+  setComp("fondo.color","#040764");
   setComp("zonas.logo.url","/logo.svg");
   setComp("zonas.texto.etiqueta.texto","Seguro Auto");
   setComp("zonas.texto.titular.texto","Protege tu auto");

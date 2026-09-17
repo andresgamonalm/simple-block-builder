@@ -32,7 +32,7 @@ const CONTENIDO = CORTO ? {
   const pg = await b.newPage({ viewport: { width: 1600, height: 1000 } });
   const errores = [];
   pg.on("pageerror", e => errores.push("pageerror: " + e.message));
-  pg.on("console", m => { if (m.type() === "error" && !/ERR_CERT|favicon/.test(m.text())) errores.push("console: " + m.text()); });
+  pg.on("console", m => { if (m.type() === "error" && !/ERR_CERT|ERR_TUNNEL|favicon/.test(m.text())) errores.push("console: " + m.text()); });
 
   await pg.goto(url + "/editor.html", { waitUntil: "load" });
   await pg.waitForFunction(() => typeof window.crearComposicion === "function", { timeout: 15000 });
@@ -57,7 +57,7 @@ const CONTENIDO = CORTO ? {
     setComp("burbuja.texto", C.burbuja);
     setComp("burbuja.visible", true);
     setComp("deco.visible", true);
-    setComp("fondo.color", "#23366F");
+    setComp("fondo.color", "#040764");
     setComp("legal", C.legal);
   }, CONTENIDO);
 

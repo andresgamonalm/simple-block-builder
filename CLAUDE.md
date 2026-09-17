@@ -33,7 +33,7 @@ Backend: funciones en **`functions/api/`** (auth por magic link + JWT, persisten
 - **Plantillas filtradas por formato** (Email→Email, Banner→Display, Post→LinkedIn/Facebook, Libre→todas).
 - **Soltar bloques en todo el lienzo** (`calcularDropIndex`); biblioteca: clic en bloque lo añade al canvas/artboard activo.
 - **Grid (Grid 2/3/4 columnas):** cada columna puede contener **cualquier bloque** (anidado). Editar con `editandoCelda` + `bloqueCtx()`; selector por columna `tiposCeldaOptions()`. **Celdas clicables en el LIENZO** (`clicCeldaGrid`/`attachCeldasDeGrid`): clic en columna vacía → popover `abrirPickerCelda` (catálogo de bloques) que la llena y abre su editor; clic en columna con contenido → la edita. `renderGridCeldasCampo` sincroniza nº de celdas-editables con el selector "Columnas" (antes el lienzo mostraba 3 columnas pero el form decía "Sin columnas todavía" y el clic en la celda no hacía nada → bug "no le puedes poner nada dentro", ya arreglado). Los listeners de celda se reenganchan en `renderBloqueSeleccionado` tras cada edición. La clase `.cell-interactiva` es solo del editor (no sale en el export).
-- **Marcas (BIBLIOTECA, kits de identidad)** — `workspace.marcas[]` (**biblioteca de N marcas**). Modal en 2 vistas: **biblioteca** (`#marca-biblioteca`: listado de tarjetas con logo+swatches y Aplicar/Editar/Eliminar, encabezado "Tus marcas" + botón **＋ Nueva marca**) y **formulario** (`#marca-form`, oculto por defecto). Navegación: `mostrarBibliotecaMarcas()` / `mostrarFormMarca()` / `nuevaMarcaForm()` / `cerrarMarcaForm()` (botón "Volver"). `guardarMarca` vuelve a la biblioteca; cada `guardarMarca` sin `marca-edit-id` crea una nueva (no reemplaza). Modelo: `{ id, nombre, empresa, logo, logoClaro, primary, secondary, cta, ctaText, text, bg, bgPagina, accent1, accent2, fontTitulo, fontCuerpo, negocio, tono, eslogan, publico, productos, usar, evitar, headerTagline, direccion, copyright, unsubTexto, disclaimer }`. **Acento 1/2** = colores extra de paleta (aparecen como swatches en banners vía `coloresMarcaPreset`). Campos de **email** (headerTagline, direccion, copyright, unsubTexto, disclaimer) → al aplicar marca a un email se crean header+footer (no duplica). Campos de **IA** (negocio, tono, publico, productos, usar, evitar, disclaimer) van al prompt. **Plantilla lista**: `rellenarMarcaZurich()` (azul #2167AE, Montserrat/Inter). Botón "Plantilla Zurich" en el form. (jul-2026: se eliminó por completo la otra plantilla de marca previa y todo su material, por orden del usuario; no reintroducir.) `normalizarMarca()` migra marcas viejas (`font`→fontTitulo/Cuerpo, `logoUrl`→logo, `bg`→secondary). **Logos subidos como archivo** (`subirLogoMarca`: reduce a ≤512px y guarda **data URL PNG** incrustado, NO R2; sincroniza con el workspace). `logoClaro` = versión para fondos oscuros; `logoDeMarca(m,fondoOscuro)` + `esColorOscuro(hex)` eligen el logo correcto. `aplicarMarca` aplica identidad a documentos (bloques) **y a composiciones por zonas** (fondo=secundario, CTA colores, logo claro si fondo oscuro, eslogan→titular). La **Voz de marca** (negocio/tono/eslogan) + paleta extendida se mandan a la IA (`generarConIA` y modo textos); `ia.js` las usa en el prompt.
+- **Marcas (BIBLIOTECA, kits de identidad)** — `workspace.marcas[]` (**biblioteca de N marcas**). Modal en 2 vistas: **biblioteca** (`#marca-biblioteca`: listado de tarjetas con logo+swatches y Aplicar/Editar/Eliminar, encabezado "Tus marcas" + botón **＋ Nueva marca**) y **formulario** (`#marca-form`, oculto por defecto). Navegación: `mostrarBibliotecaMarcas()` / `mostrarFormMarca()` / `nuevaMarcaForm()` / `cerrarMarcaForm()` (botón "Volver"). `guardarMarca` vuelve a la biblioteca; cada `guardarMarca` sin `marca-edit-id` crea una nueva (no reemplaza). Modelo: `{ id, nombre, empresa, logo, logoClaro, primary, secondary, cta, ctaText, text, bg, bgPagina, accent1, accent2, fontTitulo, fontCuerpo, negocio, tono, eslogan, publico, productos, usar, evitar, headerTagline, direccion, copyright, unsubTexto, disclaimer }`. **Acento 1/2** = colores extra de paleta (aparecen como swatches en banners vía `coloresMarcaPreset`). Campos de **email** (headerTagline, direccion, copyright, unsubTexto, disclaimer) → al aplicar marca a un email se crean header+footer (no duplica). Campos de **IA** (negocio, tono, publico, productos, usar, evitar, disclaimer) van al prompt. **Plantilla lista**: `rellenarMarcaEjemplo()` (azul #2167AE, Montserrat/Inter). Botón "Plantilla Matías" en el form. (jul-2026: se eliminó por completo la otra plantilla de marca previa y todo su material, por orden del usuario; no reintroducir.) `normalizarMarca()` migra marcas viejas (`font`→fontTitulo/Cuerpo, `logoUrl`→logo, `bg`→secondary). **Logos subidos como archivo** (`subirLogoMarca`: reduce a ≤512px y guarda **data URL PNG** incrustado, NO R2; sincroniza con el workspace). `logoClaro` = versión para fondos oscuros; `logoDeMarca(m,fondoOscuro)` + `esColorOscuro(hex)` eligen el logo correcto. `aplicarMarca` aplica identidad a documentos (bloques) **y a composiciones por zonas** (fondo=secundario, CTA colores, logo claro si fondo oscuro, eslogan→titular). La **Voz de marca** (negocio/tono/eslogan) + paleta extendida se mandan a la IA (`generarConIA` y modo textos); `ia.js` las usa en el prompt.
 - **Biblioteca de imágenes** (`workspace.imagenes`): **subida de archivos a R2** (`subirImagenes`/`soltarImagenes` → `POST /api/upload`) **o** pegar URL. Modal desde dashboard "Biblioteca de imágenes" y botón en barra. Campo `imgurl` con "Elegir de la biblioteca" en bloques Imagen/Hero (`elegirImagenPara`) y en banners (`elegirImagenPath`).
   - **R2 (`functions/api/upload.js`):** `POST /api/upload` (body binario + `X-Filename`, o multipart) guarda en el bucket vía binding **`IMAGENES`** y devuelve `{ url:/api/upload?k=<key> }` (mismo dominio, NO requiere bucket público). `GET /api/upload?k=` sirve los bytes (cache inmutable). Máx 8 MB, tipos imagen. **Setup en Cloudflare:** suscribir R2 (gratis), crear bucket (`simple-builder-block-img`), y **Pages → Settings → Bindings → R2** con variable `IMAGENES` apuntando al bucket. La imagen subida queda con `enR2:true`.
 - **Papelera (soft-delete de proyectos)** — `workspace.papelera[]`. `eliminarProyecto` ya NO destruye: llama `moverAPapelera(id)` (mueve el proyecto a `papelera` con sello `borradoTs`). `borrarTodosProyectos()` envía todos de una (botón **"Borrar todo"** en el header de proyectos, oculto si no hay proyectos). Modal **Papelera** (`abrirPapelera`/`renderPapelera`, `#modal-papelera`) con **Restaurar** (`restaurarProyecto`, borra `borradoTs` y devuelve a `proyectos`), **Eliminar definitivo** (`eliminarDefinitivo`, confirm) y **Vaciar papelera** (`vaciarPapelera`). Entrada en nav **Sistema → Papelera** con badge contador (`#nav-pap-badge`). Sincroniza con D1 como parte del workspace (last-write-wins); `normalizarWorkspace` añade `papelera:[]` por defecto.
@@ -93,7 +93,7 @@ Idea (de su mockup): una creatividad de tamaño fijo es una **composición de 3 
 
 ## Sesión jun-2026: Marcas, Header/Footer de email, IA pro (ESTADO ACTUAL — no rehacer)
 **Decisiones UNIVERSALES (respetar siempre):**
-- **NADA redondeado por defecto.** El radio es 100% manual del usuario. Marcas con `radio:"0"` (Zurich, en plantillas y D1); radios por defecto de bloques en `0` (imagen, imgtext, cta, kpi, statGrid/ring, product, article); header/footer de marca con `radioBloque:"0"` (no heredan el radio global); se quitó el `border-radius` fijo del CSS de `.sbb-img-text .col-img img` y el `border-radius` del `.canvas-frame`. (El usuario lo pidió ~10 veces: NO mandar bordes curvos por default.)
+- **NADA redondeado por defecto.** El radio es 100% manual del usuario. Marcas con `radio:"0"` (Matías, en plantillas y D1); radios por defecto de bloques en `0` (imagen, imgtext, cta, kpi, statGrid/ring, product, article); header/footer de marca con `radioBloque:"0"` (no heredan el radio global); se quitó el `border-radius` fijo del CSS de `.sbb-img-text .col-img img` y el `border-radius` del `.canvas-frame`. (El usuario lo pidió ~10 veces: NO mandar bordes curvos por default.)
 - **Fondo de color POR bloque:** `styleDefaults.bgBloque` + campo `colorOpt` ("Fondo del bloque", con "Sin fondo/Quitar"). `wrap()` aplica fondo+padding+radio en el mismo div externo.
 - **Todos los números se escriben**, no solo slider: el campo `range` renderiza slider + input `number` (`.rnum`) sincronizados.
 - **Márgenes 4 lados** en TODAS las formas: bloques (padTop/Bottom/Left/Right en `styleFields`) y banners/composición (`comp.margen={t,r,b,l}` → padding del `.cmp-zonas`, escalado por tamaño, editable global y por tamaño).
@@ -104,7 +104,7 @@ Idea (de su mockup): una creatividad de tamaño fijo es una **composición de 3 
   - **Panel Diseño (tema):** **Color CTA** (`tema.ctaColor`; el bloque `cta` usa `d.colorFondo || ctaColor || primary`) y **Margen del lienzo 4 lados** (`tema.margen={t,r,b,l}` → `paddingPaginaCSS()` aplica padding a `.sbb-page` en editor y export; `cambiarMargen()`).
   - Nota de scope: los specs de bloques que pasó el usuario eran para **/email-ia** y **/gdn-ia (banner)**; **/free (libre)** usa TODOS los bloques. Como los cambios son estructurales, libre también los hereda (no hay forks por sección). La curación de QUÉ bloques aparecen en cada sección (email-ia: Grid, Hero, Texto, Imagen, CTA, KPI, Audio, Formulario, Redes, Ícono) es trabajo aparte (fase de secciones/rutas).
 
-**Marcas (header/footer de email):** son **bloques** `bandaHeader`/`bandaFooter` (+ variantes `bandaHeaderBlanco`/`bandaFooterBlanco`), full-bleed. Estilo por marca: campo `bandaEstilo` ('solido'|'blanco') → lo usan `aplicarMarca` y la IA. Footer: logo enlaza a `web` de la marca; redes de `redesDeMarca()` (FB/IG/LinkedIn/YouTube/Spotify, sin web). Marca con `gap`, `radio`, `bandaEstilo`, redes (web/facebook/instagram/linkedin/youtube/spotify). **"Zurich" SIN tilde.** Logos Zurich en **R2** (`/api/upload?k=zurich/Logo-Zurich.png` y `…-Blanco.png`); productos digitales reales cargados. El selector "Aplicar" SOLO aparece dentro del editor (en dashboard la modal es biblioteca). En el editor de colección hay selector de marca + botón "Logo de la marca".
+**Marcas (header/footer de email):** son **bloques** `bandaHeader`/`bandaFooter` (+ variantes `bandaHeaderBlanco`/`bandaFooterBlanco`), full-bleed. Estilo por marca: campo `bandaEstilo` ('solido'|'blanco') → lo usan `aplicarMarca` y la IA. Footer: logo enlaza a `web` de la marca; redes de `redesDeMarca()` (FB/IG/LinkedIn/YouTube/Spotify, sin web). Marca con `gap`, `radio`, `bandaEstilo`, redes (web/facebook/instagram/linkedin/youtube/spotify). **"Matías" SIN tilde.** Logos Matías en **R2** (`/api/upload?k=matias/Logo-Matías.png` y `…-Blanco.png`); productos digitales reales cargados. El selector "Aplicar" SOLO aparece dentro del editor (en dashboard la modal es biblioteca). En el editor de colección hay selector de marca + botón "Logo de la marca".
 
 **IA (`functions/api/ia.js`):** modelo por defecto **`gemini-2.5-flash`** (jul-2026: se subió desde flash-lite por calidad de copy; overridable con `GEMINI_MODEL`, p.ej. `gemini-2.5-pro`) con **`thinkingConfig.thinkingBudget:0`** (clave: el thinking se comía los tokens). `extraerJSON()` tolerante (fences/prosa/balanceo). `leerReferencias()`: lee **solo las URLs exactas** que pega el usuario (máx 2), **en paralelo**, extrayendo título+meta+OG+titulares/párrafos (sin nav/footer); el prompt le pide **RAZONAR** sobre ese contenido. Multimodal **light**: en banners la IA "ve" hasta **3 miniaturas (224px)**; excluye **logos/íconos** (`esLogoOIcono`); en email descarta imágenes **<300px**. Candidatas de imagen = `workspace.imagenes` **+ bucket R2** (no solo la lib local); si la IA no pone foto, se **inserta** una; campo **"Fotos a usar"** para elegir de la biblioteca (la IA usa solo esas). `voorMarca()` + `reglasBrief()` + `enfoqueDe(tipo)`.
 - **Form IA:** Marca · ¿Qué producto? · **Tipo de email** (comercial/corporativo/informativo/newsletter; comercial=vende, resto blando) · ¿Qué necesitas? · Acción (CTA) · Gancho/oferta · **Destino del CTA** (link, se pega a los CTA) · **URL referencia 1/2** (opcionales) · **Indicaciones generales** (opcional) · **Fotos a usar**.
@@ -280,8 +280,8 @@ modelo **campaña-primero**: la unidad de trabajo es LA CAMPAÑA, no el formato.
 - Verificado con Playwright: veri-campana.js 17/17 + veri-ads.js 30/30 (mocks de
   concepto/email/banner/ads en el server de prueba).
 
-## Estilo "campaña digital" Zurich en el compositor — jul-2026 (ESTADO ACTUAL — no rehacer)
-El usuario pegó capturas de los anuncios display REALES de Zurich Chile (Ads Transparency;
+## Estilo "campaña digital" Matías en el compositor — jul-2026 (ESTADO ACTUAL — no rehacer)
+El usuario pegó capturas de los anuncios display REALES de Matías (Ads Transparency;
 el sandbox no puede abrir ese sitio — bloqueo de red hacia google.com). Análisis del sistema
 gráfico: fondo plano navy (o foto con velo) · logo arriba-izq (blanco en oscuro) · etiqueta
 chica "Seguro" sobre el nombre del producto · LA OFERTA EN UN CÍRCULO sólido de color con el
@@ -307,10 +307,10 @@ cualquier marca):
 - **IA banner** (`generarBanner`): el JSON suma `zonas.etiqueta` (producto, 1-3 palabras) y
   `burbuja` (el GANCHO exacto abreviado; se fuerza "" si el brief no trae gancho — no se
   inventan ofertas). `insertarBannerIA` los aplica con los acentos de la marca.
-- **Marca Zurich**: plantilla y D1 actualizadas a la paleta de campaña: secondary=#1d2e7a
+- **Marca Matías**: plantilla y D1 actualizadas a la paleta de campaña: secondary=#1d2e7a
   (navy fondo banner), accent1=#d9e05f (lima oferta), accent2=#72ccfd (celeste burbujas);
   primary #2167ae y CTA #e71313 se mantienen. (D1 via MCP con bump de _ts.)
-- Verificado con Playwright: veri-zurich.js 14/14 + regresión campana 17/17 + ads 32/32.
+- Verificado con Playwright: veri-matias.js 14/14 + regresión campana 17/17 + ads 32/32.
 
 ## Login por USUARIO + CONTRASEÑA y permisos por servicio — jul-2026 (ESTADO ACTUAL — no rehacer)
 Pedido del usuario: sin magic link ni correos; usuarios editables "casi en GitHub"; su acceso
@@ -343,26 +343,26 @@ todos** (con identificador del dueño en la card).
   línea lista para usuarios.js). Página Permisos = lista de usuarios.js con rol y servicios.
 - **Credenciales iniciales**: andres (admin, hash) y equipo (limitado email+banner, workspace
   ws-equipo, hash). Las temporales se avisaron por chat; cambiar = generador o campo `clave`.
-- Verificado con Playwright: veri-login.js 21/21 + regresiones campana 17/17, ads 32/32, zurich 14/14.
+- Verificado con Playwright: veri-login.js 21/21 + regresiones campana 17/17, ads 32/32, matias 14/14.
 
-## Aprendizaje Zurich (carpeta Drive) — jul-2026 (ESTADO ACTUAL — no rehacer)
-El usuario compartió su carpeta Drive (Brandbook 2024, logos digitales 2022, campañas reales
-de display/search/email, ~50 fotos corporativas). **Marco teórico completo en `ZURICH_ESTILO.md`**
+## Aprendizaje Matías (carpeta Drive) — jul-2026 (ESTADO ACTUAL — no rehacer)
+El usuario compartió su carpeta Drive (manual de marca, logos digitales 2022, campañas reales
+de display/search/email, ~50 fotos corporativas). **Marco teórico completo en `PALETA-GUARDADA.md`**
 (paleta oficial con nombres+HEX, tipografía ARIAL como alternativa oficial —decisión del usuario—,
 lenguaje de formas, fotografía "carrete de teléfono", anatomía del banner, y el diagnóstico de por
 qué sus piezas actuales están mal planteadas para digital). Persistencia del aprendizaje:
 - **Campo `directrices` en la MARCA** (form + normalizarMarca + generarConIA) → `voorMarca()` (ia.js)
   lo inyecta en TODOS los prompts. Es el mecanismo genérico de "manual aprendido" por marca.
-- **Marca Zurich en D1** actualizada: paleta oficial (primary #2167ae, secondary #23366f fondo
+- **Marca Matías en D1** actualizada: paleta oficial (primary #2167ae, secondary #23366f fondo
   banners, accent1 #fff773 Lima oferta, accent2 #91bfe3, bgPagina #eceeef, text #23366f, CTA
   #2167ae — el rojo e71313 NO es del manual 2024), Arial/Arial, eslogan real "Tu mejor compañía
-  para el futuro", directrices completas. Plantilla `rellenarMarcaZurich` igual.
+  para el futuro", directrices completas. Plantilla `rellenarMarcaEjemplo` igual.
 - **Anti-reglas de Search** (de sus anuncios malos reales, OCR): prohibido meta-copy ("esta
   campaña fue creada para convertir"), keyword stuffing, relleno "rápido-fácil-online",
   productos sin relación en la descripción → REGLAS DURAS en generarAds (universales).
 - **Recursos SUBIDOS por Claude vía D1** (el sandbox no llega a Drive/producción por red,
   pero el MCP de Drive sí entrega bytes → se procesaron localmente): **logos oficiales 2022**
-  (Horz_Blue → marca.logo, Horz_ZurichWhite → marca.logoClaro) incrustados como **data URL
+  (Horz_Blue → marca.logo, Horz_MatíasWhite → marca.logoClaro) incrustados como **data URL
   PNG paleta 360px (~4KB c/u — no dependen de red)**; **50 Fotos-Propias** en
   `workspace.imagenes` con URLs `https://lh3.googleusercontent.com/d/<id>=w1600` (`drive:true`).
   ⚠️ Las fotos por URL de Drive REQUIEREN que la carpeta esté compartida "cualquiera con el
@@ -391,7 +391,7 @@ Levantar server local sirviendo el repo + mocks `/api/*`; abrir `/editor.html`; 
 UI: Home réplica del mockup del usuario (hero Char-B con su FOTO, 4 tarjetas Crear con íconos SÓLIDOS oficiales — Email azul, **Display AMARILLO**, **Search GRIS**, Libre magenta —, "Mis últimos trabajos" = TABLA); mismos íconos en Proyectos; header y páginas comparten contenedor 1440 (`.cnav-in`); tipografía del chrome estandarizada 13/14/15/16 (sin .5); favicon nuevo; asistente = modal conversacional (cara de Char-B, chips 46px radio 9, mismo ancho por categoría); saludo "Hola, {nombre}" (campo `nombre` en usuarios.js: Andrés/Lorena/Char-B(=cristian, fan de Charmander, clave elverdaderochar, limiteIA 10)).
 DISPLAY (caballito de batalla, TODO verificado con Playwright): escala proporcional SIN tope (`escF=ancho/300`, franjas alto/110; título 26→104 en 1200×1200, logo 48→192, igual en export); lienzo muestra el banner COMPLETO (tamaño real si cabe; si no, reduce lo justo con rótulo "vista al N%", mide `wrap.clientWidth`); píldoras de tamaños arriba (activa navy, M amarilla=máster, punto azul=ajustado); edición inline compensa escala (clones escalados + grips mueven el clon); prearmado nace navy #0e2748 con textos visibles (nunca blanco/blanco); RECETAS de variedad por campaña (rotación pura por nº piezas: alineación/burbuja tr-tl-br/deco/velo/prop) + variantes por formato (burbuja OFF en franjas y ≤250, cr en verticales, br en 1200×1200); guardado explícito ("Todo guardado · HH:MM").
 NOMBRES/PATHS: todo trabajo directo pide nombre vía **diálogo propio de Char-B** (`pedirNombreTrabajo`, cancelar aborta; crearDesde es async); URL con slug `/gdn-ia/mi-campana` (slugDe); F5/Enter reabre ESA pieza (deep-link manda sobre sbb-ultima); `_redirects` con wildcards `/seccion/*`; accesos del Home CREAN (`crearTrabajoHome`), deep-links restauran.
-OTROS: bucket R2 = **zurich-chile** (binding IMAGENES en wrangler.toml); botón "Vaciar biblioteca guardada"; plantillas email = estilo Zurich real (3); ia.js lee también la landing (ctaUrl) + regla dura de ortografía; proyectos fantasma movidos a Papelera (quedan 3 reales); tope IA por usuario en D1 (`ia_uso`).
+OTROS: bucket R2 = **bucket-de-imagenes** (binding IMAGENES en wrangler.toml); botón "Vaciar biblioteca guardada"; plantillas email = estilo Matías real (3); ia.js lee también la landing (ctaUrl) + regla dura de ortografía; proyectos fantasma movidos a Papelera (quedan 3 reales); tope IA por usuario en D1 (`ia_uso`).
 ## Sesión 23-jul (tarde): EDITOR DE EMAIL "3 ZONAS" (ESTADO ACTUAL — no rehacer)
 Implementación del mockup aprobado por el usuario (síntesis A + Stitch + B; los mockups viven en el scratchpad de la sesión, la espec es el propio código). **Solo formato email** (`esModoEmail3()`: email && !esComposicion); libre/display/ads intactos. Clase `email3` en `#layout`, activada por `actualizarUISet` y `cambiarFormato`.
 - **Layout**: rail `#ed-rail` (Bloques·Media·Plantillas·Historial·Char-B; Media abre la biblioteca modal) + biblioteca izquierda (con **buscador** `filtrarBiblioteca`) + lienzo + **panel DERECHO** `#panel-der` con pestañas **Contenido/Estilos/Visualización** (`setP3`; partición en `renderForm`: campos propios→Contenido, `styleFields`→Estilos, `visualCamposHTML`→Visualización). `#pane-editar` y `#pane-diseno` se REPARENTAN a `#pd-cuerpo` en email3 y vuelven al panel izquierdo al salir (`actualizarModoEmail3`). Paneles ocultables (`colPanel`, clases `sin-izq/sin-der` + flechas `.exp-lat`). Sin bloque seleccionado el panel derecho muestra el Diseño general (`actualizarPanelDer`, link `pdVolverGeneral`).
@@ -403,13 +403,13 @@ Implementación del mockup aprobado por el usuario (síntesis A + Stitch + B; lo
 - **Divisor** campo `anchoLinea` (% centrado) · **espaciador estirable** (grip `.esp-grip` editor-only en `attachEspGrip`, no sale en export) · **salud del correo** (`renderSaludEmail`: URLs absolutas, asunto/preheader, alt de fotos, CTAs múltiples, peso KB) · **historial de sesión con hora** (`_undoTs` paralelo a `_undo`, panel `pane-historial`, `restaurarVersion` no destructivo) · **scrollbars finas** globales (estándar + webkit).
 - Verificado: **veri-email3.js 31/31** (arnés en scratchpad: server + mocks + diálogo #pnt-inp) + recorrido completo sin errores. Pendientes conscientes: escala tipográfica global H1/H2/H3 en Diseño (el bloque ya es semántico), historial persistente entre sesiones, panel Media embebido (hoy abre la biblioteca modal).
 
-**ETAPA 3 (siguiente sesión) — PRIORIDAD MÁXIMA, deadline comprometido 18:00 Chile.** El usuario pegará la lista de "áreas de mejora" de la directora de Zurich; armar plan ordenado, confirmarlo con él, y ejecutar punto a punto con Playwright antes de cada push. **LOS 4 FRENTES CRÍTICOS (palabras del usuario: "nuestro mayor problema ahora"):**
+**ETAPA 3 (siguiente sesión) — PRIORIDAD MÁXIMA, deadline comprometido 18:00 Chile.** El usuario pegará la lista de "áreas de mejora" de la directora de Matías; armar plan ordenado, confirmarlo con él, y ejecutar punto a punto con Playwright antes de cada push. **LOS 4 FRENTES CRÍTICOS (palabras del usuario: "nuestro mayor problema ahora"):**
 1. **NAVEGACIÓN** del aplicativo (flujos entre home/proyectos/editor, dónde estoy, cómo vuelvo).
 2. **INTERFAZ + USO + DISEÑO DEL EDITOR** (el editor de banners/bloques: claridad del panel, orden de los controles, que se entienda sin explicación — revisar con ojos de la directora, no de programador).
 3. **IA EXTERNA (Gemini, functions/api/ia.js): CALIDAD REAL del output.** Generó un banner CON FALTA DE ORTOGRAFÍA pese a la regla dura agregada en reglasBrief (23-jul) → la regla en el prompt NO basta: evaluar corrección server-side post-generación (pasada de revisión ortográfica sobre titular/cuerpo/cta/etiqueta antes de devolver, o segunda llamada de proofread), y en general subir la calidad de copy/estructura de email/banner/ads.
 4. Pruebas y pruebas: cada ajuste se verifica E2E (patrón Playwright del scratchpad: server local + mocks /api/* + diálogo #pnt-inp del nombre).
 
-## Sesión 13-15 ago 2026: calidad gráfica, estilo Zurich y pestañas de campaña (ESTADO ACTUAL — no rehacer)
+## Sesión 13-15 ago 2026: calidad gráfica, estilo Matías y pestañas de campaña (ESTADO ACTUAL — no rehacer)
 Detonante: el usuario presentó la app y su jefa encontró **MEDIOCRE** los entregables. Diagnóstico
 medido (no supuesto): el techo de calidad estaba en el **motor de composición**, no en el modelo de IA
 (los emails mejoraron sin tocar la IA). Todo lo de abajo ya está en `main`.
@@ -420,14 +420,14 @@ producción y borrador NO comparten datos. Puntos de retorno: rama congelada `re
 (commit 2f72775) y fila D1 `backup-20260813:hola@andresgamonal.com`. Ver `BORRADOR.md`.
 
 - **LAYOUTS DE MARCA (`LAYOUTS_MARCA` en editor.html, antes de `renderComposicion`).** Cuatro diagramaciones
-  reales extraídas de las 10 piezas Zurich del usuario, NO todas con círculo (lo pidió explícitamente):
+  reales extraídas de las 10 piezas Matías del usuario, NO todas con círculo (lo pidió explícitamente):
   `z-circulo` (cifra que manda), `z-corte` (foto con corte circular), `z-bloque` (sobrio, sin curvas),
   `z-tipo` (tipográfica, sin foto). `esLayoutMarca(l)` desvía `renderComposicion` a `renderLayoutMarca`;
   sin layout se usa el camino de 3 zonas de siempre (intacto). `detalleDe(W,H)` suprime elementos por área
   (franjas y tamaños chicos no cargan todo). Regla del usuario, literal: **"Usa los colores del manual de
   marca siempre. Pero usa las figuras y disposiciones de esas gráficas que están fuera de los lineamientos."**
   El círculo se sale del borde a propósito (`sale`) y compensa con padding para que el texto no se corte;
-  la columna de texto se calcula contra el diámetro real (no un 52% fijo). Mockup: `mockups/sistema-zurich.html`.
+  la columna de texto se calcula contra el diámetro real (no un 52% fijo). Mockup: `mockups/sistema-matias.html`.
 - **Selector de estilo en Char-B**: `iaEstilo` ('marca' | 'libre', segmento `#ia-estilo-seg`, por defecto
   'marca') viaja como `estilo` a `/api/ia`; el servidor elige layout coherente con el brief y lo valida.
   En el editor, el panel de Diseño trae el mismo selector (5 opciones: Libre + los 4 de marca).
@@ -446,10 +446,10 @@ producción y borrador NO comparten datos. Puntos de retorno: rama congelada `re
   `historia`/`anuncio`) con bandas `seccion` full-bleed; la IA solo entrega copy estructurado.
 - **`encargoDelUsuario(brief)`**: el brief del usuario va PRIMERO en el prompt y marcado como órdenes que
   ganan por sobre las reglas de estilo (antes era el 0,6% del prompt y la IA lo ignoraba).
-- Verificado con Playwright antes de pasar a main: layouts 4×4 formatos sin fallos · zurich-e2e 8/8 ·
+- Verificado con Playwright antes de pasar a main: layouts 4×4 formatos sin fallos · matias-e2e 8/8 ·
   campaña-pestañas 6/6 · edición in situ 4/4 (clase `lienzo-edit`) · email, alineación y regresiones · 0 pageerrors.
 
-**Pendientes de esta línea:** analizar `mockups/Varios-Estilos/` (9 piezas, nunca se abrieron — Zurich tenía
+**Pendientes de esta línea:** analizar `mockups/Varios-Estilos/` (9 piezas, nunca se abrieron — Matías tenía
 prioridad); que la IA VEA bien las fotos (hoy 3 de 50 en banner, 0 en email); escala tipográfica por formato;
 Ctrl+Z no cubre `adsData`; el Atrás del navegador no cambia la vista del dashboard.
 
@@ -777,7 +777,7 @@ porque afirmaba la regla del §01 que el modelo del usuario sustituyó. Batería
 VERDE y recorrido SIN HALLAZGOS.
 
 ## 10-sep-2026: LAS MAQUETAS DEL USUARIO — proporciones de franja y lateral + frase legal obligatoria
-El usuario entregó dos maquetas ("los colores no son los de Zurich, esto no es un entregable; lo
+El usuario entregó dos maquetas ("los colores no son los de Matías, esto no es un entregable; lo
 importante son los porcentajes y las proporciones") para arreglar los banners **horizontales** y
 **laterales**, que salían con la publicidad mal armada. Y una regla de formulario: *"deberían pedir
 siempre la frase legal; si no te la ponen, que uno ponga «no», para que quede registro"*.
