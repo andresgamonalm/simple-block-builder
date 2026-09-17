@@ -113,12 +113,12 @@ export function buildLogoutCookie() {
 }
 
 // ── Auth por USUARIO + CONTRASEÑA (archivo usuarios.json del repo) ──────
-// Los usuarios viven en usuarios.js (raíz del repo): usuario, rol
+// Los usuarios viven en functions/usuarios.js (fuera de lo publicado): usuario, rol
 // ('admin'|'limitado'), permisos (['*'] o ['email','banner','ads','libre']),
 // workspace (clave de su espacio en D1) y la contraseña como "clave" simple
 // o como sal+hash (sha256 de "sal:contraseña" — nunca legible). Editar el
 // archivo en GitHub = alta/baja/cambio de contraseña (auto-deploy en 1-2 min).
-import USUARIOS_FILE from '../../usuarios.js';
+import USUARIOS_FILE from '../usuarios.js';
 
 export function listaUsuarios() {
   return (USUARIOS_FILE && Array.isArray(USUARIOS_FILE.usuarios)) ? USUARIOS_FILE.usuarios : [];
