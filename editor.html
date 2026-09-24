@@ -593,6 +593,12 @@ button,input,select,textarea{font-family:inherit;}
 .adsc-resumen{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:16px;margin-bottom:18px;}
 .adsc-gcard:hover{border-color:#1c73cb;}
 .adsc-vac{padding:70px 20px;text-align:center;color:#5b6178;}
+.adsc-pill-actual{border-style:dashed;color:#1c73cb;display:inline-flex;align-items:center;gap:6px;}
+.ads-drop{display:flex;align-items:center;gap:12px;border:1.5px dashed #cfd6e4;border-radius:10px;padding:18px 16px;cursor:pointer;color:#5b6178;font-size:13px;line-height:1.5;background:#fafbfd;}
+.ads-drop:hover,.ads-drop.on{border-color:#1c73cb;background:#eef4fb;color:#12173d;}
+.ads-drop svg{color:#1c73cb;flex:none;}
+.ads-ta{width:100%;box-sizing:border-box;border:1px solid #e4e8f0;border-radius:8px;padding:9px 11px;font:inherit;font-size:13px;color:#12173d;resize:vertical;}
+.ads-ta:focus{outline:none;border-color:#1c73cb;box-shadow:0 0 0 1px #1c73cb;}
 .adsc-btn{display:inline-flex;align-items:center;gap:8px;height:40px;padding:0 18px;border:none;border-radius:8px;background:var(--navy,#040764);color:#fff;font-family:var(--f);font-size:13px;font-weight:600;cursor:pointer;transition:background .14s;}
 .adsc-btn:hover{background:var(--primary-d,#03055c);}
 /* Panel izquierdo de la campaña Search */
@@ -11329,7 +11335,7 @@ async function generarConIA(){
     .map(s => (s||"").trim()).filter(s => /^https?:\/\//.test(s)).slice(0,2);
   const marca = (workspace.marcas||[]).find(m => m.id === document.getElementById("ia-marca").value) || null;
   const M = marca ? normalizarMarca(marca) : null;
-  const marcaAPI = M ? { nombre:M.nombre, empresa:M.empresa, primary:M.primary, secondary:M.secondary, cta:M.cta, ctaText:M.ctaText, text:M.text, bg:M.bg, accent1:M.accent1, accent2:M.accent2, fontTitulo:M.fontTitulo, fontCuerpo:M.fontCuerpo, logoUrl:M.logo, negocio:M.negocio, tono:M.tono, eslogan:M.eslogan, publico:M.publico, productos:M.productos, usar:M.usar, evitar:M.evitar, directrices:M.directrices, disclaimer:M.disclaimer } : null;
+  const marcaAPI = marcaParaIA(M);
   const btn = document.getElementById("ia-btn"); const est = document.getElementById("ia-estado");
   const esCampana = sel.length > 1;
   // El texto del paso 3 se adapta al producto: una campaña de Search NO es una
@@ -11431,7 +11437,10 @@ async function generarConIA(){
         // banner con otro máster, así que viaja como banner.
         producto: esGrafica ? "banner" : producto,
         plataforma: producto,
-        brief: { que, accion, gancho, refs, ctaUrl, tipo, notas, legal },
+        // Search: si la pieza abierta trae un diagnóstico de la campaña actual,
+        // viaja como APORTE (el encargo de este formulario sigue siendo el objetivo).
+        brief: Object.assign({ que, accion, gancho, refs, ctaUrl, tipo, notas, legal },
+          producto==="ads" ? { aprendizaje: aprendizajeDeAds(pieza() && pieza().formato==="ads" ? pieza().adsData : null) } : {}),
         estilo: iaEstilo,
         formato: producto==="email" ? "email" : producto==="ads" ? "ads" : masterDe,
         marca: marcaAPI,
@@ -11458,7 +11467,7 @@ async function generarConIA(){
     if(data.acortado) avisosIA.push({ tipo:"acortado",
       texto:"Algún texto no cabía en el espacio del banner y se reescribió más corto. Revisa que siga diciendo lo que querías." });
     if(esGrafica) insertarBannerIA(data, marca, producto==="facebook" ? "facebook" : "display-desktop");
-    else if(producto==="ads") insertarAdsIA(data, marca);
+    else if(producto==="ads") insertarAdsIA(data, marca, { que, accion, gancho, refs, ctaUrl, tipo, notas, legal });
     else insertarPiezaIA(data, "email", marca);
     const pz=pieza();
     if(pz && producto==="email" && Array.isArray(pz.canvas)){
@@ -11832,13 +11841,28 @@ function insertarBannerIA(data, marca, tipoCol){
 // la modifica y el CSV sale de ella (siempre en sincronía).
 const kwVisible = k => k.tipo === "frase" ? `"${k.t}"` : `[${k.t}]`;
 const _deslug = s => { s = String(s||"").trim(); return (!/\s/.test(s) && /-/.test(s)) ? s.replace(/-+/g," ") : s; };
-function insertarAdsIA(data, marca){
+function insertarAdsIA(data, marca, brief){
   asegurarProyectoIA();
+  // Si la pieza abierta es una Search con diagnóstico, el diagnóstico viaja con
+  // la campaña nueva (sigue siendo su aprendizaje). Si además está VACÍA (se
+  // analizó la campaña actual antes de generar), se llena esa misma pieza.
+  const act = pieza();
+  const previa = (act && act.formato==="ads" && act.adsData) ? act.adsData : null;
+  const reusar = previa && !(previa.grupos||[]).length && proyecto.piezas.includes(act);
+  const adsData = { nombre:_deslug(data.nombre||""), urlFinal:data.urlFinal||"", grupos:data.grupos||[], negativas:data.negativas||[], sitelinks:data.sitelinks||[],
+      // Lo que investigó la IA (landing + competencia) y por qué excluyó cada negativa.
+      analisis:data.analisis||null, negativasMotivos:data.negativasMotivos||{},
+      // El OBJETIVO de la campaña queda guardado: el diagnóstico y el rearmado lo respetan.
+      brief: brief || (previa && previa.brief) || null, marcaId: marca && marca.id || (previa && previa.marcaId) || null,
+      actual: previa && previa.actual ? JSON.parse(JSON.stringify(previa.actual)) : undefined };
+  if(reusar){
+    act.adsData = adsData; if(data.nombre) act.nombre = _deslug(String(data.nombre));
+    adsVista = "res"; document.getElementById("galeria").classList.remove("show");
+    activarPieza(act.id); persistir(); return;
+  }
   const p = { id:uid(), nombre:_deslug(String(data.nombre||"Campaña Search")), campana:"General", formato:"ads", canvas:[],
     tema: { font:"Roboto", primary:"#1c73cb", text:"#12173d", bg:"#ffffff", bgPagina:"", ancho:"", radio:"0", gap:"0" },
-    adsData: { nombre:_deslug(data.nombre||""), urlFinal:data.urlFinal||"", grupos:data.grupos||[], negativas:data.negativas||[], sitelinks:data.sitelinks||[],
-      // Lo que investigó la IA (landing + competencia) y por qué excluyó cada negativa.
-      analisis:data.analisis||null, negativasMotivos:data.negativasMotivos||{} } };
+    adsData };
   proyecto.piezas.push(p); proyecto.activa = p.id;
   adsVista = "res";
   document.getElementById("galeria").classList.remove("show");
@@ -11887,6 +11911,8 @@ function renderPanelAds(){
       <div class="adsp-sec">Campaña de Google Search</div>
       <p class="adsp-p">Aquí no se arma con bloques: Char-B genera los grupos por intención de búsqueda, las keywords (solo exacta y de frase, nada de amplia), las negativas y los anuncios. Después editas todo en la consola haciendo clic sobre los textos.</p>
       <button class="adsc-btn" style="width:100%;justify-content:center;" onclick="abrirIA()">${svgIcon("estrella",{size:"14px"})} Generar con Char-B</button>
+      <div class="adsp-sec" style="margin-top:14px;">Tu campaña actual · opcional</div>
+      <button class="adsp-item ${adsVista==="actual"?"on":""}" onclick="adsAbrirActual()"><span>${d && d.actual && d.actual.diagnostico ? "Ver diagnóstico" : "Traer capturas o informes"}</span></button>
     </div>`;
     return;
   }
@@ -11905,6 +11931,8 @@ function renderPanelAds(){
     <div class="adsp-sec">Grupos de anuncios</div>
     <button class="adsp-item ${adsVista==="res"?"on":""}" onclick="adsIrVista('res')"><span>Vista general</span></button>
     ${G.map((g,i)=>`<button class="adsp-item ${String(i)===String(adsVista)?"on":""}" onclick="adsIrVista('${i}')"><span>${esc(_deslug(g.nombre))}</span><span class="n">${(g.keywords||[]).length} kw</span></button>`).join("")}
+    <div class="adsp-sec">Tu campaña actual · opcional</div>
+    <button class="adsp-item ${adsVista==="actual"?"on":""}" onclick="adsAbrirActual()"><span>${d.actual && d.actual.diagnostico ? "Ver diagnóstico" : "Traer capturas o informes"}</span>${d.actual && d.actual.diagnostico ? `<span class="n">${(d.actual.diagnostico.noHacer||[]).length} lecciones</span>` : ""}</button>
     <div class="adsp-sec">Acciones</div>
     <button class="adsp-btn ia" onclick="abrirIA()">${svgIcon("estrella",{size:"13px"})} Regenerar con Char-B</button>
     <button class="adsp-btn" onclick="abrirExportar()">${svgIcon("exportar",{size:"13px"})} Exportar CSV para Google Ads</button>
@@ -11916,11 +11944,19 @@ function renderAdsCampana(){
   ajustarFrameParaSet(false);
   const p = pieza(); const d = p && p.adsData;
   renderPanelAds();
+  if(adsVista==="actual"){
+    const dd = asegurarAdsData(p);
+    c.innerHTML = `<div class="adsc"><div class="adsc-pills">
+        ${(dd.grupos||[]).length ? `<button class="adsc-pill" onclick="adsIrVista('res')">← Volver a la campaña</button>` : `<button class="adsc-pill" onclick="adsIrVista('res')">← Volver</button>`}
+        <button class="adsc-pill on">Tu campaña actual</button></div>${adsVistaActual(p, dd)}</div>`;
+    return;
+  }
   if(!d || !(d.grupos||[]).length){
     c.innerHTML = `<div class="adsc"><div class="adsc-vac"><span style="color:#1c73cb;">${svgIcon("buscar",{size:"40px"})}</span>
       <h2 style="margin:14px 0 6px;font-size:17px;color:#040764;font-weight:600;">Tu campaña de Google Search parte aquí</h2>
       <p style="margin:0 0 18px;font-size:13px;line-height:1.6;">Char-B arma los grupos por intención de búsqueda, las keywords<br>(solo exacta y frase, nada de amplia), las negativas y los anuncios.</p>
-      <button class="adsc-btn" onclick="abrirIA()">${svgIcon("estrella",{size:"14px"})} Generar campaña con Char-B</button></div></div>`;
+      <button class="adsc-btn" onclick="abrirIA()">${svgIcon("estrella",{size:"14px"})} Generar campaña con Char-B</button>
+      <div style="margin-top:14px;"><button class="adsc-copy" onclick="adsAbrirActual()">${svgIcon("barchart",{size:"13px"})} ¿Ya tienes una campaña corriendo? Tráela primero (opcional)</button></div></div></div>`;
     return;
   }
   const G = d.grupos;
@@ -11946,6 +11982,7 @@ function renderAdsCampana(){
   const pills = `<div class="adsc-pills">
       <button class="adsc-pill ${adsVista==="res"?"on":""}" onclick="adsIrVista('res')">Vista general</button>
       ${G.map((g,i)=>`<button class="adsc-pill ${String(i)===String(adsVista)?"on":""}" onclick="adsIrVista('${i}')">${esc(_deslug(g.nombre).slice(0,28))} <span class="n">· ${(g.keywords||[]).length} kw</span></button>`).join("")}
+      <button class="adsc-pill adsc-pill-actual" onclick="adsAbrirActual()" title="Opcional: trae lo que ya corre en Google Ads">${svgIcon("barchart",{size:"12px"})} Tu campaña actual${d.actual && d.actual.diagnostico ? ' <span class="n">· analizada</span>' : ''}</button>
     </div>`;
   c.innerHTML = `<div class="adsc">${head}${pills}${adsVista==="res" ? adsVistaResumen(d) : adsVistaGrupo(d, parseInt(adsVista,10))}</div>`;
   // En vista de grupo, el anuncio de ejemplo rota como en Google.
@@ -12077,6 +12114,327 @@ function adsVistaGrupo(d, gi){
       </div>
     </div>`;
 }
+// ══════════════════════════════════════════════════════════════════════
+// TU CAMPAÑA ACTUAL (opcional) — sep-2026
+// Complemento de la gestión: el usuario trae lo que YA corre en Google Ads
+// (capturas, informes exportados, su queja), Char-B lo diagnostica y deja
+// registrado lo que no hay que repetir. Ese aprendizaje viaja a la generación
+// como APORTE; el objetivo de la campaña (adsData.brief) sigue mandando.
+// Los adjuntos viven solo en memoria (pesan); lo que se guarda es el resultado.
+// ══════════════════════════════════════════════════════════════════════
+let _adsAdj = [];              // [{tipo:'img'|'tabla', nombre, data|texto, mime}]
+let _adsActualEditando = false;
+function marcaParaIA(M){
+  return M ? { nombre:M.nombre, empresa:M.empresa, primary:M.primary, secondary:M.secondary, cta:M.cta, ctaText:M.ctaText, text:M.text, bg:M.bg, accent1:M.accent1, accent2:M.accent2, fontTitulo:M.fontTitulo, fontCuerpo:M.fontCuerpo, logoUrl:M.logo, negocio:M.negocio, tono:M.tono, eslogan:M.eslogan, publico:M.publico, productos:M.productos, usar:M.usar, evitar:M.evitar, directrices:M.directrices, disclaimer:M.disclaimer } : null;
+}
+function marcaDeAds(d){
+  const m = d && d.marcaId ? (workspace.marcas||[]).find(x => x.id === d.marcaId) : null;
+  return m ? marcaParaIA(normalizarMarca(m)) : null;
+}
+// El objetivo de la campaña: el encargo guardado al generarla (o lo mínimo).
+function objetivoDeAds(p, d){
+  const b = (d && d.brief) || {};
+  return { que: b.que || (d && d.nombre) || (p && p.nombre) || "", accion: b.accion || "", gancho: b.gancho || "",
+    ctaUrl: b.ctaUrl || (d && d.urlFinal) || "", refs: b.refs || [], notas: b.notas || "", tipo: b.tipo || "comercial", legal: b.legal || "no" };
+}
+// Lo que la generación recibe del diagnóstico (liviano: sin adjuntos).
+function aprendizajeDeAds(d){
+  const dg = d && d.actual && d.actual.diagnostico; if(!dg) return null;
+  return { resumen: dg.resumen, noHacer: dg.noHacer||[], problemas: (dg.problemas||[]).slice(0,6),
+    convierten: dg.convierten||[], pausar: dg.pausar||[], negativas: dg.negativas||[] };
+}
+function asegurarAdsData(p){
+  if(!p.adsData) p.adsData = { nombre:p.nombre||"", urlFinal:"", grupos:[], negativas:[], sitelinks:[] };
+  return p.adsData;
+}
+function adsAbrirActual(){ adsVista = "actual"; renderAdsCampana(); }
+
+// ── Lectura de archivos ────────────────────────────────────────────────
+// Google Ads exporta CSV en UTF-8 o en UTF-16 (Ads Editor), y Excel.
+function decodificarTexto(buf){
+  const b = new Uint8Array(buf);
+  if(b[0]===0xFF && b[1]===0xFE) return new TextDecoder("utf-16le").decode(b);
+  if(b[0]===0xFE && b[1]===0xFF) return new TextDecoder("utf-16be").decode(b);
+  let ceros = 0; for(let i=1;i<Math.min(b.length,400);i+=2) if(b[i]===0) ceros++;
+  if(ceros > 60) return new TextDecoder("utf-16le").decode(b);
+  return new TextDecoder("utf-8").decode(b);
+}
+// Excel (.xlsx) → texto separado por tabuladores (primera hoja). Sin librerías:
+// se recorre el ZIP y se descomprime con DecompressionStream del navegador.
+async function leerXLSXComoTSV(buf){
+  const u = new Uint8Array(buf), dv = new DataView(buf);
+  let eocd = -1; for(let i=u.length-22;i>=Math.max(0,u.length-70000);i--){ if(dv.getUint32(i,true)===0x06054b50){ eocd=i; break; } }
+  if(eocd<0) throw new Error("no es un xlsx");
+  const n = dv.getUint16(eocd+10,true); let off = dv.getUint32(eocd+16,true);
+  const archivos = {};
+  for(let k=0;k<n;k++){
+    const met = dv.getUint16(off+10,true), csize = dv.getUint32(off+20,true);
+    const ln = dv.getUint16(off+28,true), le = dv.getUint16(off+30,true), lc = dv.getUint16(off+32,true), loc = dv.getUint32(off+42,true);
+    const nombre = new TextDecoder().decode(u.subarray(off+46, off+46+ln));
+    archivos[nombre] = { met, csize, loc };
+    off += 46+ln+le+lc;
+  }
+  const leer = async (nombre) => {
+    const a = archivos[nombre]; if(!a) return "";
+    const ini = a.loc + 30 + dv.getUint16(a.loc+26,true) + dv.getUint16(a.loc+28,true);
+    const datos = u.subarray(ini, ini + a.csize);
+    if(a.met === 0) return new TextDecoder().decode(datos);
+    const ds = new Blob([datos]).stream().pipeThrough(new DecompressionStream("deflate-raw"));
+    return await new Response(ds).text();
+  };
+  const xml = t => new DOMParser().parseFromString(t, "application/xml");
+  const compartidas = [];
+  const ss = await leer("xl/sharedStrings.xml");
+  if(ss) xml(ss).querySelectorAll("si").forEach(si => compartidas.push(Array.from(si.getElementsByTagName("t")).map(t=>t.textContent).join("")));
+  const hoja = Object.keys(archivos).filter(k => /^xl\/worksheets\/sheet\d+\.xml$/.test(k)).sort()[0];
+  if(!hoja) throw new Error("xlsx sin hojas");
+  const doc = xml(await leer(hoja));
+  const colN = r => { let c = 0; for(const ch of String(r).replace(/\d+/g,"")) c = c*26 + (ch.charCodeAt(0)-64); return c-1; };
+  const filas = [];
+  doc.querySelectorAll("row").forEach(row => {
+    const f = [];
+    row.querySelectorAll("c").forEach(c => {
+      const t = c.getAttribute("t"); const v = c.getElementsByTagName("v")[0];
+      let val = t==="s" ? (compartidas[+((v&&v.textContent)||0)]||"") : t==="inlineStr" ? Array.from(c.getElementsByTagName("t")).map(x=>x.textContent).join("") : (v ? v.textContent : "");
+      f[colN(c.getAttribute("r")||"A")] = String(val).replace(/[\t\r\n]+/g," ");
+    });
+    filas.push(Array.from(f, x => x==null ? "" : x).join("\t"));
+  });
+  return filas.join("\n");
+}
+// Capturas: se achican a ≤1600 px en JPEG (una captura de 4K pesa varios MB).
+function reducirImagenArchivo(file, max){
+  return new Promise((res, rej) => {
+    const img = new Image(); const url = URL.createObjectURL(file);
+    img.onload = () => {
+      const k = Math.min(1, (max||1600) / Math.max(img.naturalWidth, img.naturalHeight));
+      const c = document.createElement("canvas"); c.width = Math.round(img.naturalWidth*k); c.height = Math.round(img.naturalHeight*k);
+      const cx = c.getContext("2d"); cx.fillStyle = "#fff"; cx.fillRect(0,0,c.width,c.height); cx.drawImage(img,0,0,c.width,c.height);
+      URL.revokeObjectURL(url); res(c.toDataURL("image/jpeg", 0.86));
+    };
+    img.onerror = () => { URL.revokeObjectURL(url); rej(new Error("imagen ilegible")); };
+    img.src = url;
+  });
+}
+async function adsAdjuntarArchivos(files){
+  const lista = Array.from(files || []);
+  for(const f of lista){
+    if(_adsAdj.length >= 10){ toast("Máximo 10 archivos por análisis"); break; }
+    try{
+      if(/^image\//.test(f.type)){
+        if(_adsAdj.filter(a=>a.tipo==="img").length >= 6){ toast("Máximo 6 capturas"); continue; }
+        _adsAdj.push({ tipo:"img", nombre: f.name || "captura.png", data: await reducirImagenArchivo(f, 1600), mime:"image/jpeg" });
+      } else if(/\.xlsx$/i.test(f.name)){
+        _adsAdj.push({ tipo:"tabla", nombre: f.name, texto: (await leerXLSXComoTSV(await f.arrayBuffer())).slice(0, 400000) });
+      } else if(/\.(csv|tsv|txt)$/i.test(f.name) || /text|csv/.test(f.type)){
+        _adsAdj.push({ tipo:"tabla", nombre: f.name, texto: decodificarTexto(await f.arrayBuffer()).slice(0, 400000) });
+      } else toast("«"+f.name+"» no se puede leer: sube capturas (PNG/JPG), CSV o Excel");
+    }catch(e){ toast("No se pudo leer «"+f.name+"»"); }
+  }
+  renderAdsCampana();
+}
+function adsQuitarAdj(i){ _adsAdj.splice(i,1); renderAdsCampana(); }
+// Ctrl+V de una captura mientras está abierta la vista "Tu campaña actual".
+document.addEventListener("paste", ev => {
+  const p = (typeof pieza === "function") ? pieza() : null;
+  if(!p || p.formato !== "ads" || adsVista !== "actual") return;
+  const archivos = Array.from((ev.clipboardData && ev.clipboardData.files) || []).filter(f => /^image\//.test(f.type));
+  if(!archivos.length) return;   // el texto pegado sigue su camino normal
+  ev.preventDefault();
+  adsAdjuntarArchivos(archivos);
+});
+
+// ── La vista ───────────────────────────────────────────────────────────
+function adsVistaActual(p, d){
+  const dg = d.actual && d.actual.diagnostico;
+  if(!dg || _adsActualEditando) return adsActualFormulario(p, d);
+  const m = dg.metricas;
+  const imp = { alto:"#b318a3", medio:"#c77700", bajo:"#5b6178" };
+  const neg = dg.negativas||[];
+  const pendientes = neg.filter(n => !n.aplicada).length;
+  const chip = (b, t) => `<span class="adsc-stat"><b>${b}</b> ${t}</span>`;
+  return `
+    <div class="adsc-intent">
+      <div class="adsc-eyebrow">Tu campaña actual · diagnóstico de Char-B · ${esc(fechaHora(d.actual.fecha))}</div>
+      <div class="gnm">${esc(dg.resumen || "Diagnóstico listo")}</div>
+      <div class="t">Objetivo que se respetó: ${esc(objetivoDeAds(p, d).que)}</div>
+      ${m ? `<div class="adsc-chips" style="margin-top:10px;">${chip(fmtCLP(m.costo),"de costo")}${chip(m.clics,"clics")}${chip(fmtCLP(m.cpc),"CPC promedio")}${chip(m.conv,"conversiones")}${m.cpa?chip(fmtCLP(m.cpa),"por conversión"):""}${dg.gastoSinConversion?chip(fmtCLP(dg.gastoSinConversion),"gastado sin convertir"):""}</div>` : ""}
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px;">
+        <button class="adsc-btn" onclick="adsRegenerarConAprendizaje()">${svgIcon("estrella",{size:"13px"})} ${(d.grupos||[]).length ? "Rearmar la campaña con este aprendizaje" : "Armar la campaña con este aprendizaje"}</button>
+        <button class="adsc-copy" style="height:40px;" onclick="descargarCambiosAds()">${svgIcon("descargar",{size:"13px"})} Cambios para Ads Editor (XLSX)</button>
+        <button class="adsc-copy" style="height:40px;" onclick="_adsActualEditando=true;renderAdsCampana()">Nuevo análisis</button>
+        ${d._previa ? `<button class="adsc-copy" style="height:40px;" onclick="adsVolverVersionPrevia()">Volver a la versión anterior</button>` : ""}
+      </div>
+    </div>
+    <div class="adsc-grid">
+      <div>
+        <div class="adsc-card">
+          <h3>Qué está mal · por impacto</h3>
+          ${(dg.problemas||[]).map(pr=>`<div class="adsc-item" style="display:block;">
+            <div style="display:flex;gap:8px;align-items:baseline;"><span style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:${imp[pr.impacto]||imp.medio};">${esc(pr.impacto)}</span><b style="font-weight:600;color:#040764;">${esc(pr.titulo)}</b>${pr.ahorro?`<span class="adsc-cnt" style="margin-left:auto;">${esc(pr.ahorro)}</span>`:""}</div>
+            ${pr.evidencia?`<div style="color:#5b6178;margin-top:3px;">${esc(pr.evidencia)}</div>`:""}</div>`).join("") || `<div style="font-size:13px;color:#5b6178;">Sin problemas detectados.</div>`}
+        </div>
+        <div class="adsc-card" style="margin-top:18px;">
+          <h3>Lo que NO hay que repetir <span class="lim">Char-B lo usa al armar la campaña</span></h3>
+          ${(dg.noHacer||[]).map(t=>`<div class="adsc-item"><span style="color:#b318a3;">✕</span><span class="tx">${esc(t)}</span></div>`).join("") || `<div style="font-size:13px;color:#5b6178;">—</div>`}
+        </div>
+        ${(dg.ajustes||[]).length ? `<div class="adsc-card" style="margin-top:18px;">
+          <h3>Ajustes de configuración <span class="lim">se cambian en Google Ads</span></h3>
+          ${dg.ajustes.map(a=>`<div class="adsc-item" style="display:block;"><b style="font-weight:600;color:#040764;">${esc(a.ajuste)}</b> → ${esc(a.recomendacion)}${a.motivo?`<div style="color:#5b6178;margin-top:2px;">${esc(a.motivo)}</div>`:""}</div>`).join("")}
+        </div>` : ""}
+      </div>
+      <div>
+        <div class="adsc-card">
+          <h3>Negativas nuevas · ${neg.length} ${pendientes?`<button class="adsc-copy" onclick="adsAplicarNegativas()">Agregar ${pendientes} a esta campaña</button>`:""}</h3>
+          ${neg.map((n,i)=>`<div class="adsc-item">
+            <span class="adsc-neg" style="flex:none;">${esc(n.t)}</span>
+            <span class="tx" style="color:#5b6178;">${esc(n.motivo||"")}${n.nivel && !/campa/i.test(n.nivel)?` · grupo «${esc(n.nivel)}»`:""}</span>
+            ${n.gasto?`<span class="adsc-cnt" title="Lo que estas búsquedas gastaron sin convertir">${fmtCLP(n.gasto)}</span>`:""}
+            ${n.aplicada?`<span class="adsc-cnt" style="background:#e4f6f6;color:#149a9a;">agregada</span>`:`<button class="adsc-copy" style="flex:none;" onclick="adsAplicarNegativas(${i})">+</button>`}
+          </div>`).join("") || `<div style="font-size:13px;color:#5b6178;">Sin negativas nuevas.</div>`}
+        </div>
+        ${(dg.pausar||[]).length ? `<div class="adsc-card" style="margin-top:18px;"><h3>Keywords para pausar · ${dg.pausar.length}</h3>
+          ${dg.pausar.map(k=>`<div class="adsc-item"><span class="tx"><b style="font-weight:600;">${esc(k.keyword)}</b>${k.grupo?` · ${esc(k.grupo)}`:""}<div style="color:#5b6178;">${esc(k.motivo||"")}</div></span></div>`).join("")}</div>` : ""}
+        ${(dg.concordancia||[]).length ? `<div class="adsc-card" style="margin-top:18px;"><h3>Cambiar concordancia · ${dg.concordancia.length}</h3>
+          ${dg.concordancia.map(k=>`<div class="adsc-item"><span class="tx"><b style="font-weight:600;">${esc(k.keyword)}</b> · ${esc(k.de)} → <b style="font-weight:600;color:#1c73cb;">${esc(k.a)}</b><div style="color:#5b6178;">${esc(k.motivo||"")}</div></span></div>`).join("")}</div>` : ""}
+        ${(dg.anuncios||[]).length ? `<div class="adsc-card" style="margin-top:18px;"><h3>Anuncios</h3>
+          ${dg.anuncios.map(a=>`<div class="adsc-item" style="display:block;"><b style="font-weight:600;color:#040764;">${esc(a.problema)}</b><div style="color:#5b6178;margin-top:2px;">${esc(a.recomendacion)}</div></div>`).join("")}</div>` : ""}
+      </div>
+    </div>
+    <p class="adsc-nota">Fuentes del análisis: ${esc((d.actual.fuentes||[]).join(" · ") || "tu descripción")}. Las cifras salen de tus informes, calculadas por la app; Char-B interpreta y propone. Mi Publicidad no entra a tu cuenta de Google Ads: los cambios se aplican importando el XLSX en Google Ads Editor.</p>`;
+}
+function adsActualFormulario(p, d){
+  const ob = objetivoDeAds(p, d);
+  const n = d.actual && d.actual.notas || "";
+  return `
+    <div class="adsc-intent">
+      <div class="adsc-eyebrow">Opcional · complemento de tu gestión</div>
+      <div class="gnm">Trae tu campaña actual y Char-B te dice qué no repetir</div>
+      <div class="r">Pega capturas de Google Ads (Ctrl+V), sube los informes que exportas (CSV o Excel: <b>términos de búsqueda</b> y <b>keywords</b> son los que más sirven) y cuéntale qué te parece mal. Char-B diagnostica, propone negativas y cambios, y guarda las lecciones para armar la campaña sin repetir los errores.</div>
+    </div>
+    <div class="adsc-grid">
+      <div class="adsc-card">
+        <h3>1 · Lo que ya corre</h3>
+        <label id="ads-drop" class="ads-drop" ondragover="event.preventDefault();this.classList.add('on')" ondragleave="this.classList.remove('on')" ondrop="event.preventDefault();this.classList.remove('on');adsAdjuntarArchivos(event.dataTransfer.files)">
+          <input type="file" id="ads-file" multiple accept="image/*,.csv,.tsv,.txt,.xlsx" style="display:none" onchange="adsAdjuntarArchivos(this.files);this.value=''">
+          ${svgIcon("subir",{size:"22px"})}
+          <span><b>Arrastra aquí</b> capturas o informes, <b>pega</b> una captura con Ctrl+V, o haz clic para elegir</span>
+        </label>
+        ${_adsAdj.length ? `<div style="margin-top:10px;">${_adsAdj.map((a,i)=>`<div class="adsc-item">${svgIcon(a.tipo==="img"?"imagen":"documento",{size:"14px"})}<span class="tx">${esc(a.nombre)} <span style="color:#5b6178;">· ${a.tipo==="img"?"captura":((a.texto.match(/\n/g)||[]).length+1)+" líneas"}</span></span><button class="adsc-copy" style="flex:none;" title="Quitar" onclick="adsQuitarAdj(${i})">✕</button></div>`).join("")}</div>` : ""}
+      </div>
+      <div class="adsc-card">
+        <h3>2 · Qué te parece mal</h3>
+        <textarea id="ads-actual-notas" class="ads-ta" rows="4" placeholder="Ej.: pago $2.000 por clic a la landing y casi no convierte; aparecemos en búsquedas de SOAP.">${esc(n)}</textarea>
+        <h3 style="margin-top:14px;">3 · El objetivo de la campaña <span class="lim">manda sobre todo</span></h3>
+        <textarea id="ads-actual-objetivo" class="ads-ta" rows="2" placeholder="Qué vendes y a quién">${esc(ob.que)}</textarea>
+        <div style="display:flex;gap:8px;margin-top:12px;flex-wrap:wrap;">
+          <button class="adsc-btn" id="ads-analizar" onclick="adsAnalizarActual()">${svgIcon("barchart",{size:"14px"})} Analizar con Char-B</button>
+          ${d.actual && d.actual.diagnostico ? `<button class="adsc-copy" style="height:40px;" onclick="_adsActualEditando=false;renderAdsCampana()">Ver el diagnóstico anterior</button>` : ""}
+        </div>
+        <div id="ads-actual-estado" style="font-size:13px;color:#5b6178;margin-top:10px;"></div>
+      </div>
+    </div>`;
+}
+const fmtCLP = n => (n==null || n==="") ? "—" : "$" + Math.round(+n).toLocaleString("es-CL");
+
+// ── Acciones ───────────────────────────────────────────────────────────
+async function adsAnalizarActual(){
+  const p = pieza(); if(!p || p.formato!=="ads") return;
+  const d = asegurarAdsData(p);
+  const notas = (document.getElementById("ads-actual-notas")||{}).value || "";
+  const objetivo = ((document.getElementById("ads-actual-objetivo")||{}).value || "").trim();
+  if(!_adsAdj.length && !notas.trim()){ toast("Pega una captura, sube un informe o cuéntame qué está mal"); return; }
+  if(!objetivo){ toast("Escribe el objetivo de la campaña: es lo que manda"); return; }
+  d.brief = Object.assign(objetivoDeAds(p, d), { que: objetivo });
+  const est = document.getElementById("ads-actual-estado"); const btn = document.getElementById("ads-analizar");
+  if(btn) btn.disabled = true;
+  if(est) est.textContent = "Char-B está leyendo tu campaña y cruzando las cifras… (puede tomar un minuto)";
+  try{
+    const r = await fetch("/api/ia", { method:"POST", credentials:"include", headers:{ "Content-Type":"application/json" },
+      body: JSON.stringify({ modo:"diagnostico", brief: d.brief, marca: marcaDeAds(d),
+        actual: { notas, tablas: _adsAdj.filter(a=>a.tipo==="tabla").map(a=>({ nombre:a.nombre, texto:a.texto })),
+                  imagenes: _adsAdj.filter(a=>a.tipo==="img").map(a=>({ nombre:a.nombre, mime:a.mime, data:a.data })) } }) });
+    const data = await r.json().catch(()=>null);
+    if(!r.ok || !data || !data.ok){ if(est) est.textContent = (data && data.error) || ("Error " + r.status); return; }
+    d.actual = { fecha: Date.now(), notas, fuentes: _adsAdj.map(a=>a.nombre).concat(notas.trim()?["tu descripción"]:[]), diagnostico: data.diagnostico };
+    _adsAdj = []; _adsActualEditando = false;
+    persistir(); renderAdsCampana();
+    if(Array.isArray(data.avisos) && data.avisos.length) mostrarAvisosIA(data.avisos);
+    toast("Diagnóstico listo");
+  }catch(e){ if(est) est.textContent = "Sin conexión con Char-B"; }
+  finally{ const b = document.getElementById("ads-analizar"); if(b) b.disabled = false; }
+}
+// Negativas del diagnóstico → la campaña de la app (de campaña o del grupo que nombra).
+function adsAplicarNegativas(i){
+  const p = pieza(); const d = p && p.adsData; const dg = d && d.actual && d.actual.diagnostico; if(!dg) return;
+  const lista = (i==null ? dg.negativas : [dg.negativas[i]]).filter(n => n && !n.aplicada);
+  d.negativas = d.negativas || []; d.negativasMotivos = d.negativasMotivos || {};
+  let n0 = 0;
+  lista.forEach(n => {
+    const g = n.nivel && !/campa/i.test(n.nivel) ? (d.grupos||[]).find(x => String(x.nombre).toLowerCase() === String(n.nivel).toLowerCase()) : null;
+    const dest = g ? (g.negativas = g.negativas || []) : d.negativas;
+    if(!dest.includes(n.t)){ dest.push(n.t); n0++; }
+    if(n.motivo) d.negativasMotivos[n.t] = "Dato de tu campaña actual: " + n.motivo;
+    n.aplicada = true;
+  });
+  persistir(); renderAdsCampana();
+  toast(n0 ? n0 + " negativas agregadas a la campaña" : "Ya estaban en la campaña");
+}
+// Rearma la campaña con el objetivo guardado + el aprendizaje. La versión
+// anterior queda en d._previa (Ctrl+Z no cubre adsData).
+async function adsRegenerarConAprendizaje(){
+  const p = pieza(); const d = p && p.adsData; if(!d || !d.actual) return;
+  const ob = objetivoDeAds(p, d);
+  if(!ob.que){ toast("Falta el objetivo de la campaña"); _adsActualEditando = true; renderAdsCampana(); return; }
+  const btns = document.querySelectorAll(".adsc button"); btns.forEach(b => b.disabled = true);
+  toast("Char-B está armando la campaña con el aprendizaje… (1 a 2 minutos)", 8000);
+  try{
+    const r = await fetch("/api/ia", { method:"POST", credentials:"include", headers:{ "Content-Type":"application/json" },
+      body: JSON.stringify({ producto:"ads", plataforma:"ads", formato:"ads", brief: Object.assign({}, ob, { aprendizaje: aprendizajeDeAds(d) }), marca: marcaDeAds(d) }) });
+    const data = await r.json().catch(()=>null);
+    if(!r.ok || !data || !data.ok){ toast((data && data.error) || "Char-B no pudo armar la campaña", 6000); return; }
+    if((d.grupos||[]).length) d._previa = { grupos:d.grupos, negativas:d.negativas, sitelinks:d.sitelinks, negativasMotivos:d.negativasMotivos, analisis:d.analisis, nombre:d.nombre };
+    Object.assign(d, { nombre:_deslug(data.nombre||d.nombre), grupos:data.grupos||[], negativas:data.negativas||[], sitelinks:data.sitelinks||[],
+      analisis:data.analisis||null, negativasMotivos:data.negativasMotivos||{} });
+    if(data.urlFinal) d.urlFinal = data.urlFinal;
+    (d.actual.diagnostico.negativas||[]).forEach(n => { if(d.negativas.includes(n.t)) n.aplicada = true; });
+    adsVista = "res"; persistir(); renderAdsCampana();
+    if(Array.isArray(data.avisos) && data.avisos.length) mostrarAvisosIA(data.avisos);
+    toast("Campaña lista, armada con tu objetivo y lo aprendido de la actual");
+  }catch(e){ toast("Sin conexión con Char-B"); }
+  finally{ document.querySelectorAll(".adsc button").forEach(b => b.disabled = false); }
+}
+function adsVolverVersionPrevia(){
+  const p = pieza(); const d = p && p.adsData; if(!d || !d._previa) return;
+  if(!confirm("¿Volver a la versión de la campaña anterior al último rearmado?")) return;
+  Object.assign(d, d._previa); delete d._previa;
+  persistir(); adsVista = "res"; renderAdsCampana(); toast("Volviste a la versión anterior");
+}
+// Los cambios del diagnóstico en una planilla para Google Ads Editor.
+function descargarCambiosAds(){
+  const p = pieza(); const d = p && p.adsData; const dg = d && d.actual && d.actual.diagnostico;
+  if(!dg){ toast("Primero analiza tu campaña actual"); return; }
+  const camp = (dg.campanas||[])[0] || d.nombre || p.nombre || "Campaña";
+  const negs = [["Campaign","Ad Group","Keyword","Criterion Type"]];
+  (dg.negativas||[]).forEach(n => negs.push([camp, n.nivel && !/campa/i.test(n.nivel) ? n.nivel : "", n.t, "Negative Phrase"]));
+  const pausa = [["Campaign","Ad Group","Keyword","Status"]];
+  (dg.pausar||[]).forEach(k => pausa.push([camp, k.grupo||"", k.keyword, "Paused"]));
+  const conc = [["Keyword","Concordancia actual","Cambiar a","Motivo"]];
+  (dg.concordancia||[]).forEach(k => conc.push([k.keyword, k.de, k.a, k.motivo||""]));
+  const diag = [["Tipo","Qué","Detalle","Impacto / ahorro"]];
+  (dg.problemas||[]).forEach(x => diag.push(["Problema", x.titulo, x.evidencia||"", [x.impacto, x.ahorro].filter(Boolean).join(" · ")]));
+  (dg.ajustes||[]).forEach(x => diag.push(["Ajuste", x.ajuste, x.recomendacion + (x.motivo ? " — " + x.motivo : ""), ""]));
+  (dg.anuncios||[]).forEach(x => diag.push(["Anuncio", x.problema, x.recomendacion, ""]));
+  (dg.noHacer||[]).forEach(x => diag.push(["No repetir", x, "", ""]));
+  (dg.negativas||[]).forEach(n => diag.push(["Negativa", n.t, n.motivo||"", n.gasto ? fmtCLP(n.gasto) + " sin convertir" : ""]));
+  const hojas = [{ nombre:"Negativas", filas:negs }];
+  if(pausa.length > 1) hojas.push({ nombre:"Pausar", filas:pausa });
+  if(conc.length > 1) hojas.push({ nombre:"Concordancia", filas:conc });
+  hojas.push({ nombre:"Diagnostico", filas:diag });
+  descargarXLSX(slugify(camp)+"-cambios-google-ads.xlsx", hojas);
+  toast("Cambios descargados · " + hojas.length + " hojas");
+}
+
 // Edición inline: cada texto editable guarda directo en p.adsData por ruta.
 function adsEditar(el){
   const p = pieza(); if(!p || !p.adsData || !el.dataset.p) return;

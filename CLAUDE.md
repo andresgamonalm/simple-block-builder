@@ -909,3 +909,35 @@ Respuesta suma `analisis`, `negativasMotivos` y `avisos`; el cliente los guarda 
 XLSX y los CSV no cambiaron: `negativas` sigue siendo lista de strings). "Más keywords" usa `adsData.analisis`.
 Tarda ~1-2 min (el mensaje del asistente lo dice). Prueba: `pruebas/ads-ia.js` 32/32 (Gemini simulado).
 **Pendiente:** validar con la API real en producción (el sandbox no tiene GEMINI_API_KEY).
+
+## 24-sep-2026 (parte 2): "TU CAMPAÑA ACTUAL" en el editor de Search (ESTADO ACTUAL — no rehacer)
+Pedido del usuario: *"poder pegarle un print o pasarle información de mis campañas actuales, decirle qué
+me parece mal y que pueda accionar… pago $2.000 CLP el click"*. Precisó: **dentro del editor**,
+**opcional**, como complemento de su gestión; la IA lo recibe como **aporte** y trabaja desde ahí **sin
+olvidar el objetivo de la campaña**. Sin mockup (autorizado).
+- **Entrada** (`adsVista="actual"`: píldora punteada `.adsc-pill-actual`, entrada en `#pane-ads` y botón en el
+  estado vacío): capturas (archivo, arrastre o **Ctrl+V**, achicadas a ≤1600 px JPEG por
+  `reducirImagenArchivo`), informes **CSV/TSV** (UTF-8 o **UTF-16** de Ads Editor, `decodificarTexto`) y
+  **Excel** (`leerXLSXComoTSV`, lee el ZIP con `DecompressionStream`, sin librerías), queja libre y el
+  **objetivo** (precargado de `adsData.brief`, que ahora se guarda al generar). Adjuntos solo en memoria
+  (`_adsAdj`); se guarda el resultado (`adsData.actual = {fecha, notas, fuentes, diagnostico}`).
+- **Servidor** (`modo:'diagnostico'`, permiso `ads`): `analizarTabla`/`analizarTablas` **calculan las cifras**
+  (reconoce columnas es/en en `COLS_ADS`, salta líneas de título y la fila Total, `numeroAds` entiende
+  "$2.000", "1.234,5", "2,000.50") → totales, CPC, CPA, gasto sin conversión, lo que convierte, amplias,
+  QS<5, CPC altos. Gemini (multimodal: capturas como `inline_data`) recibe **objetivo primero**, queja,
+  cifras y extracto, y devuelve problemas/negativas/pausar/concordancia/ajustes/anuncios/`noHacer`.
+  **Validación:** se descarta toda negativa que bloquee algo que CONVIERTE o el producto del objetivo;
+  cada negativa trae su `gasto` real; las métricas salen del cálculo, no de la IA; lección de "no amplia"
+  automática si los datos la muestran.
+- **Accionar:** "Agregar N a esta campaña" (negativas de campaña o de su grupo, con motivo en
+  `negativasMotivos`) · **XLSX de cambios para Ads Editor** (`descargarCambiosAds`: Negativas · Pausar ·
+  Concordancia · Diagnóstico, con el nombre real de la campaña del informe) · **Rearmar con este
+  aprendizaje** (`adsRegenerarConAprendizaje`: objetivo guardado + `brief.aprendizaje`; la versión anterior
+  queda en `adsData._previa` con botón "Volver a la versión anterior", porque Ctrl+Z no cubre adsData).
+- **La generación usa el aprendizaje** (`aprendizajeTexto` en `generarAds`, DESPUÉS del encargo, rotulado
+  como aporte): no vuelve a proponer keywords pausadas, suma negativas confirmadas por datos (con origen
+  "Dato de tu campaña actual"), usa lo que convierte. El asistente (Char-B) también lo manda si la pieza
+  abierta es una Search con diagnóstico; `insertarAdsIA` reusa la pieza vacía o hereda `actual` a la nueva.
+- Mi Publicidad **no entra** a la cuenta de Google Ads (no hay API conectada): se aplica importando el XLSX.
+- Pruebas: `diagnostico.js` 37/37 (servidor) y `campana-actual.js` 37/37 (navegador), con **datos
+  inventados** en `pruebas/datos/`. Batería completa en verde.

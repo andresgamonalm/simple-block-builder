@@ -102,7 +102,7 @@ async function generar({ request, env }) {
   const necesita = body.producto === 'ads' ? 'ads'
                  : body.producto === 'banner' ? 'banner'
                  : (body.modo === 'textos' || body.modo === 'imagen') ? 'banner'
-                 : body.modo === 'mas-keywords' ? 'ads'
+                 : (body.modo === 'mas-keywords' || body.modo === 'diagnostico') ? 'ads'
                  : body.modo === 'concepto' ? null   // lo valida el orquestador pieza a pieza
                  : 'email';
   if (necesita && !tienePermiso(sesion, necesita)) {
@@ -225,6 +225,10 @@ async function generar({ request, env }) {
     if (!nuevas.length) return json({ ok: false, error: 'La IA no encontró keywords nuevas para esta intención.' }, 500);
     return json({ ok: true, keywords: nuevas });
   }
+
+  // Modo "diagnostico": revisa una campaña de Search que YA corre (capturas,
+  // informes exportados de Google Ads y la queja del usuario).
+  if (body.modo === 'diagnostico') return diagnosticarCampana({ env, brief, marca: body.marca || null, actual: body.actual });
 
   if (!brief.que || !String(brief.que).trim()) {
     return json({ ok: false, error: 'Dime qué necesitas (el brief está vacío).' }, 400);
@@ -1261,6 +1265,238 @@ async function criticarAnuncios(env, grupos, ficha, marca) {
   return Array.isArray(r.parsed && r.parsed.grupos) ? r.parsed.grupos : null;
 }
 
+// ══════════════════════════════════════════════════════════════════════════
+// TU CAMPAÑA ACTUAL — diagnóstico de una campaña que YA corre (sep-2026)
+//
+// El usuario pega capturas, sube los informes que exporta de Google Ads y dice
+// qué le parece mal. Las CIFRAS no se las pedimos a la IA: se calculan aquí,
+// leyendo los informes (analizarTablas). La IA interpreta, prioriza y propone;
+// el servidor valida lo que propone contra esos números.
+// ══════════════════════════════════════════════════════════════════════════
+
+// Nombres de columna de Google Ads, en español y en inglés (sin tildes).
+const COLS_ADS = {
+  termino: ['search term', 'termino de busqueda', 'terminos de busqueda', 'consulta de busqueda'],
+  keyword: ['keyword', 'palabra clave', 'palabras clave', 'search keyword'],
+  concordancia: ['match type', 'tipo de concordancia', 'concordancia', 'search keyword match type', 'criterion type'],
+  campana: ['campaign', 'campana'],
+  grupo: ['ad group', 'grupo de anuncios'],
+  clics: ['clicks', 'clics'],
+  impr: ['impr.', 'impressions', 'impresiones', 'impr'],
+  costo: ['cost', 'costo', 'coste'],
+  conv: ['conversions', 'conversiones', 'conv.', 'conv'],
+  cpc: ['avg. cpc', 'cpc prom.', 'cpc promedio', 'cpc medio', 'cpc'],
+  calidad: ['quality score', 'nivel de calidad'],
+  estado: ['status', 'estado']
+};
+// "$2.000" · "1.234,5" · "2,000.50" · "12%" → número. En CLP el punto es de miles.
+function numeroAds(v) {
+  let t = String(v == null ? '' : v).replace(/[^\d.,\-]/g, '');
+  if (!t || t === '-' || t === '--') return 0;
+  const p = t.lastIndexOf('.'), c = t.lastIndexOf(',');
+  if (p >= 0 && c >= 0) t = p > c ? t.replace(/,/g, '') : t.replace(/\./g, '').replace(',', '.');
+  else if (c >= 0) t = /,\d{3}$/.test(t) && !/,\d{3},\d{1,2}$/.test(t) ? t.replace(/,/g, '') : t.replace(/,(?=\d{3}(\D|$))/g, '').replace(',', '.');
+  else if (p >= 0 && /^\-?\d{1,3}(\.\d{3})+$/.test(t)) t = t.replace(/\./g, '');
+  const n = parseFloat(t);
+  return isFinite(n) ? n : 0;
+}
+function separarFila(linea, sep) {
+  const out = []; let cur = '', q = false;
+  for (let i = 0; i < linea.length; i++) {
+    const ch = linea[i];
+    if (ch === '"') { if (q && linea[i + 1] === '"') { cur += '"'; i++; } else q = !q; }
+    else if (ch === sep && !q) { out.push(cur); cur = ''; }
+    else cur += ch;
+  }
+  out.push(cur);
+  return out.map(x => x.trim());
+}
+// Lee UN informe (texto CSV/TSV, con o sin líneas de título arriba) y calcula
+// sus totales y hallazgos. Devuelve null si no parece un informe de Google Ads.
+function analizarTabla(nombre, texto) {
+  const lineas = String(texto || '').replace(/^﻿/, '').split(/\r?\n/).filter(l => l.trim());
+  if (lineas.length < 2) return null;
+  let sep = '\t';
+  const muestra = lineas.slice(0, 8).join('\n');
+  if (!muestra.includes('\t')) sep = (muestra.split(';').length > muestra.split(',').length) ? ';' : ',';
+  // La fila de cabecera es la primera que nombra columnas conocidas.
+  let hi = -1, idx = {};
+  for (let i = 0; i < Math.min(lineas.length, 12); i++) {
+    const cab = separarFila(lineas[i], sep).map(sinTildes);
+    const m = {};
+    for (const [k, alias] of Object.entries(COLS_ADS)) { const j = cab.findIndex(h => alias.includes(h)); if (j >= 0) m[k] = j; }
+    if ((m.termino != null || m.keyword != null) && (m.costo != null || m.clics != null)) { hi = i; idx = m; break; }
+  }
+  if (hi < 0) return null;
+  const filas = lineas.slice(hi + 1).map(l => separarFila(l, sep))
+    .filter(f => !/^total/i.test(sinTildes(f[0] || '')) && f.some(x => x));
+  const col = (f, k) => idx[k] != null ? f[idx[k]] : '';
+  const tipo = idx.termino != null ? 'terminos' : 'keywords';
+  const items = filas.map(f => ({
+    t: String(col(f, tipo === 'terminos' ? 'termino' : 'keyword') || '').toLowerCase().replace(/^[\[\"+]+|[\]\"]+$/g, '').trim(),
+    concordancia: sinTildes(col(f, 'concordancia')), campana: col(f, 'campana'), grupo: col(f, 'grupo'),
+    clics: numeroAds(col(f, 'clics')), impr: numeroAds(col(f, 'impr')), costo: numeroAds(col(f, 'costo')),
+    conv: numeroAds(col(f, 'conv')), calidad: idx.calidad != null ? numeroAds(col(f, 'calidad')) : null
+  })).filter(x => x.t && !/^total/.test(sinTildes(x.t)));
+  if (!items.length) return null;
+  const suma = k => items.reduce((a, x) => a + x[k], 0);
+  const tot = { costo: Math.round(suma('costo')), clics: Math.round(suma('clics')), impr: Math.round(suma('impr')), conv: +suma('conv').toFixed(1) };
+  tot.cpc = tot.clics ? Math.round(tot.costo / tot.clics) : null;
+  tot.ctr = tot.impr ? +(tot.clics / tot.impr * 100).toFixed(2) : null;
+  tot.cpa = tot.conv ? Math.round(tot.costo / tot.conv) : null;
+  const porCosto = (a, b) => b.costo - a.costo;
+  const sinConv = items.filter(x => x.costo > 0 && !x.conv).sort(porCosto);
+  const r = {
+    nombre: String(nombre || 'informe').slice(0, 80), tipo, filas: items.length, totales: tot,
+    gastoSinConversion: Math.round(sinConv.reduce((a, x) => a + x.costo, 0)),
+    sinConversion: sinConv.slice(0, 40).map(x => ({ t: x.t, costo: Math.round(x.costo), clics: x.clics, campana: x.campana, grupo: x.grupo })),
+    convierten: items.filter(x => x.conv > 0).sort((a, b) => b.conv - a.conv).slice(0, 25)
+      .map(x => ({ t: x.t, conv: x.conv, costo: Math.round(x.costo), cpa: Math.round(x.costo / x.conv) })),
+    campanas: [...new Set(items.map(x => x.campana).filter(Boolean))].slice(0, 10)
+  };
+  if (tipo === 'keywords') {
+    r.amplias = items.filter(x => /broad|amplia/.test(x.concordancia)).sort(porCosto).slice(0, 30)
+      .map(x => ({ t: x.t, costo: Math.round(x.costo), conv: x.conv, grupo: x.grupo, campana: x.campana }));
+    r.calidadBaja = items.filter(x => x.calidad != null && x.calidad > 0 && x.calidad < 5).sort(porCosto).slice(0, 30)
+      .map(x => ({ t: x.t, calidad: x.calidad, costo: Math.round(x.costo), cpc: x.clics ? Math.round(x.costo / x.clics) : null, grupo: x.grupo, campana: x.campana }));
+    r.cpcAltos = items.filter(x => x.clics >= 3).map(x => ({ t: x.t, cpc: Math.round(x.costo / x.clics), costo: Math.round(x.costo), conv: x.conv, grupo: x.grupo, campana: x.campana }))
+      .sort((a, b) => b.cpc - a.cpc).slice(0, 15);
+  }
+  return r;
+}
+function analizarTablas(tablas) {
+  return (Array.isArray(tablas) ? tablas : []).slice(0, 6)
+    .map(t => analizarTabla(t && t.nombre, String((t && t.texto) || '').slice(0, 400000))).filter(Boolean);
+}
+const clp = n => (n == null ? '—' : '$' + Math.round(n).toLocaleString('es-CL'));
+function hechosTexto(hs) {
+  return hs.map(h => {
+    const t = h.totales;
+    const l = [`▸ ${h.nombre} (${h.tipo === 'terminos' ? 'términos de búsqueda' : 'keywords'}, ${h.filas} filas): costo ${clp(t.costo)} · ${t.clics} clics · CPC prom. ${clp(t.cpc)} · CTR ${t.ctr == null ? '—' : t.ctr + '%'} · ${t.conv} conversiones · CPA ${clp(t.cpa)}.`,
+      `  Gasto SIN ninguna conversión: ${clp(h.gastoSinConversion)} (${t.costo ? Math.round(h.gastoSinConversion / t.costo * 100) : 0}% del costo).`];
+    if (h.sinConversion.length) l.push('  Lo que más gasta sin convertir: ' + h.sinConversion.slice(0, 25).map(x => `"${x.t}" ${clp(x.costo)}/${x.clics} clics`).join(' · '));
+    if (h.convierten.length) l.push('  Lo que SÍ convierte (no bloquear): ' + h.convierten.slice(0, 15).map(x => `"${x.t}" ${x.conv} conv. CPA ${clp(x.cpa)}`).join(' · '));
+    if (h.amplias && h.amplias.length) l.push('  En concordancia AMPLIA: ' + h.amplias.slice(0, 15).map(x => `"${x.t}" ${clp(x.costo)}`).join(' · '));
+    if (h.calidadBaja && h.calidadBaja.length) l.push('  Nivel de calidad bajo 5: ' + h.calidadBaja.slice(0, 15).map(x => `"${x.t}" QS ${x.calidad}, CPC ${clp(x.cpc)}`).join(' · '));
+    if (h.cpcAltos && h.cpcAltos.length) l.push('  CPC más altos: ' + h.cpcAltos.slice(0, 10).map(x => `"${x.t}" ${clp(x.cpc)}`).join(' · '));
+    return l.join('\n');
+  }).join('\n');
+}
+
+async function diagnosticarCampana({ env, brief, marca, actual }) {
+  actual = actual || {};
+  const hechos = analizarTablas(actual.tablas);
+  const imgs = (Array.isArray(actual.imagenes) ? actual.imagenes : []).slice(0, 6)
+    .map(im => ({ mime: /^image\/(png|jpe?g|webp)$/.test(im && im.mime) ? im.mime : 'image/jpeg', data: String((im && im.data) || '').replace(/^data:[^,]+,/, '') }))
+    .filter(im => im.data.length > 100 && im.data.length < 6000000);
+  const notas = String(actual.notas || '').trim().slice(0, 3000);
+  if (!hechos.length && !imgs.length && !notas) return json({ ok: false, error: 'Pega una captura, sube un informe de Google Ads o cuéntame qué está mal.' }, 400);
+  const tablasSinLeer = (Array.isArray(actual.tablas) ? actual.tablas.length : 0) - hechos.length;
+  // Extracto crudo de los informes (para lo que las columnas conocidas no cubren).
+  const crudo = (Array.isArray(actual.tablas) ? actual.tablas : []).slice(0, 6)
+    .map(t => `• ${String(t.nombre || '').slice(0, 80)}\n${String(t.texto || '').split(/\r?\n/).slice(0, 60).join('\n').slice(0, 5000)}`).join('\n\n');
+
+  const prompt = [
+    'Eres auditor senior de Google Ads (Search) en Chile, de los que cobran por encontrar la plata que se está botando. Revisas una campaña que YA está corriendo.',
+    '',
+    '════ EL OBJETIVO DE LA CAMPAÑA (manda sobre todo: cada recomendación debe acercar a esto, nunca alejarse) ════',
+    `QUÉ SE VENDE / QUÉ SE BUSCA: ${brief.que || '(no indicado: dedúcelo de los datos)'}`,
+    brief.accion ? `ACCIÓN que se busca: ${brief.accion}` : '',
+    brief.ctaUrl ? `LANDING: ${brief.ctaUrl}` : '',
+    brief.notas ? `INDICACIONES: ${brief.notas}` : '',
+    '══════════════════════════════════════════════════',
+    notas ? `\nLO QUE AL USUARIO LE PARECE MAL (su queja, en sus palabras):\n» ${notas}` : '',
+    hechos.length ? '\nCIFRAS CALCULADAS DE SUS INFORMES (son exactas: úsalas como evidencia, no las cambies):\n' + hechosTexto(hechos) : '',
+    crudo ? '\nEXTRACTO DE LOS INFORMES:\n' + crudo : '',
+    imgs.length ? `\nADEMÁS hay ${imgs.length} captura(s) de pantalla de su cuenta: léelas (columnas, cifras, configuración visible). Si una cifra de la captura choca con las calculadas, mandan las calculadas.` : '',
+    '',
+    'QUÉ REVISAR (en este orden de impacto): términos de búsqueda que gastan sin convertir · concordancia amplia · CPC altos y su causa (nivel de calidad, competencia, estrategia de puja sin tope) · nivel de calidad (relevancia del anuncio, CTR esperado, experiencia en la landing) · configuración (red de búsqueda asociada, expansión a Display, ubicación "presencia o interés", horarios, dispositivos) · anuncios genéricos · coherencia keyword → anuncio → landing.',
+    '',
+    'Devuelve SOLO este JSON:',
+    '{',
+    '  "resumen": "el diagnóstico en 2 frases, directo",',
+    '  "problemas": [ { "titulo": "…", "evidencia": "el dato concreto que lo prueba", "impacto": "alto" | "medio" | "bajo", "ahorro": "cuánto se deja de botar, SOLO si sale de las cifras (ej. \'$84.000 al mes\'), si no \'\'" } ],',
+    '  "negativas": [ { "t": "término negativo", "motivo": "por qué, ligado al objetivo", "nivel": "campaña" | "<nombre del grupo>" } ],',
+    '  "pausar": [ { "keyword": "…", "grupo": "…", "motivo": "…" } ],',
+    '  "concordancia": [ { "keyword": "…", "de": "amplia", "a": "frase" | "exacta", "motivo": "…" } ],',
+    '  "ajustes": [ { "ajuste": "…", "recomendacion": "qué cambiar exactamente", "motivo": "…" } ],',
+    '  "anuncios": [ { "problema": "…", "recomendacion": "…" } ],',
+    '  "noHacer": [ "LECCIONES para la próxima versión de la campaña: lo que NO hay que repetir, concreto (ej. \'no usar amplia en seguro auto: 62% del gasto fue en búsquedas de SOAP\')" ]',
+    '}',
+    'REGLAS:',
+    '- Ordena "problemas" por impacto. Cada uno con EVIDENCIA concreta de los datos o las capturas; si no hay datos, dilo como hipótesis a verificar.',
+    '- NO inventes cifras: los montos y porcentajes salen de las CIFRAS CALCULADAS o de lo que se lee en las capturas.',
+    '- Negativas: saca las de los términos que gastan sin convertir y NO calzan con el objetivo. JAMÁS propongas como negativa algo que esté en "lo que SÍ convierte" ni el producto del objetivo. Minúsculas, 1 a 4 palabras.',
+    '- "noHacer": 4 a 8 lecciones accionables; son el aporte que usará la IA que rearme la campaña.',
+    '- Español de Chile, directo, sin relleno.'
+  ].filter(Boolean).join('\n');
+
+  const partes = [{ text: prompt }].concat(imgs.map(im => ({ inline_data: { mime_type: im.mime, data: im.data } })));
+  const { parsed, error } = await llamarGemini(env, partes, 6144, 0.4, { cadena: cadenaCopy(env), pensar: -1, timeout: 90000 });
+  if (error) return json({ ok: false, error }, 500);
+  const d = parsed || {};
+  const clean = s => String(s == null ? '' : s).replace(/\s+/g, ' ').trim();
+  const kw = s => clean(s).toLowerCase().replace(/^[\[\"'+-]+|[\]\"']+$/g, '').trim();
+
+  // Validación contra los números: una negativa que bloquearía un término que
+  // CONVIERTE o el producto del objetivo se descarta (con aviso).
+  const convierten = hechos.flatMap(h => h.convierten.map(x => ' ' + x.t + ' '));
+  const objetivo = ' ' + sinTildes(brief.que || '') + ' ';
+  const bloqueaBueno = n => { const k = ' ' + sinTildes(n) + ' '; return convierten.some(t => sinTildes(t).includes(k)) || (n.length >= 4 && objetivo.includes(k)); };
+  const gastoDe = n => hechos.reduce((a, h) => a + h.sinConversion.filter(x => (' ' + x.t + ' ').includes(' ' + n + ' ')).reduce((b, x) => b + x.costo, 0), 0);
+  const avisos = [];
+  const vistos = new Set();
+  const descartadas = [];
+  const negativas = (Array.isArray(d.negativas) ? d.negativas : []).map(x => ({
+    t: kw(x && typeof x === 'object' ? x.t : x), motivo: clean(x && x.motivo).slice(0, 220), nivel: clean(x && x.nivel).slice(0, 60) || 'campaña'
+  })).filter(x => {
+    if (!x.t || x.t.split(' ').length > 5 || vistos.has(x.t)) return false;
+    vistos.add(x.t);
+    if (bloqueaBueno(x.t)) { descartadas.push(x.t); return false; }
+    return true;
+  }).slice(0, 60).map(x => ({ ...x, gasto: gastoDe(x.t) || null }));
+  if (descartadas.length) avisos.push({ tipo: 'info', texto: `Se descartaron ${descartadas.length} negativas propuestas porque bloquearían búsquedas que SÍ convierten o el producto de tu objetivo (${descartadas.slice(0, 4).join(', ')}).` });
+  if (tablasSinLeer > 0) avisos.push({ tipo: 'info', texto: `${tablasSinLeer} archivo(s) no parecían un informe de Google Ads (no se encontraron columnas de término/keyword y costo/clics). Se leyeron como texto.` });
+
+  const lista = (arr, map, n) => (Array.isArray(arr) ? arr : []).map(map).filter(Boolean).slice(0, n);
+  const totalGeneral = hechos.find(h => h.tipo === 'keywords') || hechos[0] || null;
+  const diagnostico = {
+    resumen: clean(d.resumen).slice(0, 500),
+    metricas: totalGeneral ? totalGeneral.totales : null,
+    gastoSinConversion: hechos.length ? Math.max(...hechos.map(h => h.gastoSinConversion)) : null,
+    problemas: lista(d.problemas, x => x && x.titulo ? { titulo: clean(x.titulo).slice(0, 140), evidencia: clean(x.evidencia).slice(0, 400), impacto: ['alto', 'medio', 'bajo'].includes(x.impacto) ? x.impacto : 'medio', ahorro: clean(x.ahorro).slice(0, 80) } : null, 10),
+    negativas,
+    pausar: lista(d.pausar, x => x && x.keyword ? { keyword: kw(x.keyword), grupo: clean(x.grupo).slice(0, 80), motivo: clean(x.motivo).slice(0, 220) } : null, 40),
+    concordancia: lista(d.concordancia, x => x && x.keyword ? { keyword: kw(x.keyword), de: clean(x.de).slice(0, 20) || 'amplia', a: x.a === 'exacta' ? 'exacta' : 'frase', motivo: clean(x.motivo).slice(0, 220) } : null, 40),
+    ajustes: lista(d.ajustes, x => x && x.ajuste ? { ajuste: clean(x.ajuste).slice(0, 120), recomendacion: clean(x.recomendacion).slice(0, 300), motivo: clean(x.motivo).slice(0, 220) } : null, 12),
+    anuncios: lista(d.anuncios, x => x && x.problema ? { problema: clean(x.problema).slice(0, 200), recomendacion: clean(x.recomendacion).slice(0, 300) } : null, 8),
+    noHacer: lista(d.noHacer, x => clean(x).slice(0, 260) || null, 10),
+    convierten: hechos.flatMap(h => h.convierten.map(x => x.t)).slice(0, 25),
+    campanas: [...new Set(hechos.flatMap(h => h.campanas))].slice(0, 10)
+  };
+  // La lección más barata de todas, si los datos la muestran, no depende de la IA.
+  if (hechos.some(h => h.amplias && h.amplias.length) && !diagnostico.noHacer.some(t => /amplia/i.test(t)))
+    diagnostico.noHacer.push('No usar concordancia amplia: en tus datos hay keywords amplias gastando (la campaña nueva usa solo exacta y frase).');
+  return json({ ok: true, diagnostico, hechos, avisos });
+}
+
+// Lo que la generación de Search recibe de un diagnóstico: un APORTE. El
+// objetivo sigue siendo el encargo; esto dice qué no repetir.
+function aprendizajeTexto(a) {
+  if (!a || typeof a !== 'object') return '';
+  const l = (t, arr) => (Array.isArray(arr) && arr.length) ? `${t}:\n${arr.slice(0, 25).map(x => '  - ' + x).join('\n')}` : '';
+  const neg = (Array.isArray(a.negativas) ? a.negativas : []).map(n => typeof n === 'object' ? `${n.t}${n.motivo ? ' (' + n.motivo + ')' : ''}` : String(n));
+  const txt = [
+    a.resumen ? `DIAGNÓSTICO DE LA CAMPAÑA QUE YA CORRE: ${a.resumen}` : '',
+    l('LO QUE NO HAY QUE REPETIR', a.noHacer),
+    l('Problemas detectados', (a.problemas || []).map(p => typeof p === 'object' ? `${p.titulo}${p.evidencia ? ' — ' + p.evidencia : ''}` : String(p))),
+    l('Búsquedas que SÍ convierten (úsalas como keywords o como base de sus variantes)', a.convierten),
+    l('Keywords que se pausaron por gastar sin resultado (NO las vuelvas a proponer)', (a.pausar || []).map(x => typeof x === 'object' ? x.keyword : x)),
+    l('Negativas confirmadas con datos reales (inclúyelas)', neg)
+  ].filter(Boolean).join('\n');
+  return txt ? '════ APRENDIZAJE DE LA CAMPAÑA ACTUAL (un APORTE: el ENCARGO de arriba sigue siendo el objetivo; esto dice qué evitar y qué sí funciona) ════\n' + txt + '\n══════════════════════════════════════════════════' : '';
+}
+
 async function generarAds({ env, brief, marca, refsTxt, promos, enlaces, avisos, ficha, fuentes }) {
   avisos = Array.isArray(avisos) ? avisos : [];
   const fTxt = fichaTexto(ficha);
@@ -1270,6 +1506,7 @@ async function generarAds({ env, brief, marca, refsTxt, promos, enlaces, avisos,
     encargoDelUsuario(brief),
     '',
     fTxt ? '════ INVESTIGACIÓN PREVIA (landing leída + competencia en Google) — TU MATERIA PRIMA ════\n' + fTxt + '\n══════════════════════════════════════════════════' : '',
+    aprendizajeTexto(brief.aprendizaje),
     '',
     'Devuelve EXCLUSIVAMENTE este JSON (sin texto extra):',
     '{',
@@ -1376,6 +1613,19 @@ async function generarAds({ env, brief, marca, refsTxt, promos, enlaces, avisos,
 
   if (!grupos.length) return json({ ok: false, error: 'La IA no produjo grupos de anuncios válidos. Reformula el brief (di qué vendes y a quién).' }, 500);
 
+  // APRENDIZAJE (si viene de "Tu campaña actual"): lo que se pausó por gastar sin
+  // resultado no vuelve como keyword, y las negativas confirmadas con datos entran.
+  const apr = (brief.aprendizaje && typeof brief.aprendizaje === 'object') ? brief.aprendizaje : null;
+  if (apr) {
+    const pausadas = new Set((Array.isArray(apr.pausar) ? apr.pausar : []).map(x => kwLimpia(typeof x === 'object' ? x.keyword : x)).filter(Boolean));
+    let quitadas = 0;
+    for (const g of grupos) { const n0 = g.keywords.length; g.keywords = g.keywords.filter(k => !pausadas.has(k.t)); quitadas += n0 - g.keywords.length; }
+    if (quitadas) avisos.push({ tipo: 'info', texto: `Se quitaron ${quitadas} keywords que en tu campaña actual gastaban sin resultado.` });
+    parsed.negativas = (Array.isArray(parsed.negativas) ? parsed.negativas : []).concat(
+      (Array.isArray(apr.negativas) ? apr.negativas : []).filter(n => !n || typeof n !== 'object' || !n.nivel || /campa/i.test(n.nivel))
+        .map(n => typeof n === 'object' ? { t: n.t, motivo: n.motivo ? 'Dato de tu campaña actual: ' + n.motivo : 'Dato de tu campaña actual' } : n));
+  }
+
   // ── Etapa 3, en PARALELO: relleno de keywords de los grupos flacos + crítico ──
   const MIN_KW = 20;
   const flacos = grupos.filter(g => g.keywords.length < MIN_KW);
@@ -1458,7 +1708,7 @@ async function generarAds({ env, brief, marca, refsTxt, promos, enlaces, avisos,
 
   // Negativas de campaña + motivos. Una negativa que está contenida en una
   // keyword propia bloquearía esa keyword: se saca.
-  let negCampana = negs(parsed.negativas, 30);
+  let negCampana = negs(parsed.negativas, apr ? 60 : 30);
   const todasKw = grupos.flatMap(g => g.keywords.map(k => ' ' + k.t + ' '));
   const bloquea = n => todasKw.some(k => k.includes(' ' + n + ' '));
   const conflictos = negCampana.filter(bloquea).concat(grupos.flatMap(g => g.negativas.filter(n => g.keywords.some(k => (' ' + k.t + ' ').includes(' ' + n + ' ')))));
@@ -1522,4 +1772,4 @@ async function generarAds({ env, brief, marca, refsTxt, promos, enlaces, avisos,
 }
 
 // Exportados SOLO para pruebas locales (Cloudflare Pages los ignora).
-export { corregirOrtografia, extraerJSON, generarEmail, generarBanner, generarAds, investigarAds, detectarPromos, extraerEnlaces, extraerTextoPagina };
+export { corregirOrtografia, extraerJSON, generarEmail, generarBanner, generarAds, investigarAds, analizarTabla, numeroAds, diagnosticarCampana, detectarPromos, extraerEnlaces, extraerTextoPagina };
