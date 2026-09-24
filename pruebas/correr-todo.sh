@@ -33,13 +33,14 @@ done
 if [ "$listo" != "1" ]; then echo "El servidor de pruebas no arrancó. Mira /tmp/sbb-srv.log"; exit 1; fi
 
 # ── Qué se corre (orden: primero lo que no necesita navegador) ───────────
-TODAS=(audita-estatica login acceso ia-json geom medir insp panel arrastre libre proporciones escribir alcance iaq asis xls fb tablet migra cierres regres recorrido)
+TODAS=(audita-estatica login acceso ia-json ads-ia geom medir insp panel arrastre libre proporciones escribir alcance iaq asis xls fb tablet migra cierres regres recorrido)
 descripcion() {
   case "$1" in
     audita-estatica) echo "controles muertos, íconos y rutas (sin navegador)";;
     login)     echo "entrar con el usuario Y con el correo (sin navegador)";;
     acceso)    echo "la pantalla de acceso: diagramación, foco, aviso y entrar";;
     ia-json)   echo "la respuesta de Gemini se interpreta aunque venga razonando";;
+    ads-ia)    echo "Search: investiga la landing y la competencia, critica y filtra (sin navegador)";;
     geom)      echo "geometría cerrada contra el spec, los 11 formatos";;
     medir)     echo "los 11 banners medidos sobre el render real";;
     insp)      echo "inspector: las 6 comprobaciones y sus avisos";;

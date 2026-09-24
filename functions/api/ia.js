@@ -209,7 +209,11 @@ async function generar({ request, env }) {
       '- Usa el VOCABULARIO REAL de la landing cuando exista el extracto.',
       existentes.length ? 'KEYWORDS QUE YA EXISTEN (no las repitas):\n' + existentes.join(' · ') : '',
       refsK.texto ? '\nEXTRACTO DE LA LANDING:\n' + refsK.texto.slice(0, 2000) : '',
-      brief.que ? `\nCONTEXTO de la campaña: ${brief.que}` : ''
+      brief.que ? `\nCONTEXTO de la campaña: ${brief.que}` : '',
+      // Lo que investigó la generación original (si la pieza lo trae guardado).
+      (body.analisis && Array.isArray(body.analisis.busquedas) && body.analisis.busquedas.length) ? '\nBÚSQUEDAS REALES investigadas: ' + aLista(body.analisis.busquedas, 25, 80).join(' · ') : '',
+      (body.analisis && Array.isArray(body.analisis.vocabulario) && body.analisis.vocabulario.length) ? 'VOCABULARIO DEL SITIO: ' + aLista(body.analisis.vocabulario, 25, 60).join(' · ') : '',
+      (body.analisis && Array.isArray(body.analisis.noOfrece) && body.analisis.noOfrece.length) ? 'NO uses nada de esto (el producto no lo es/no lo incluye): ' + aLista(body.analisis.noOfrece, 20).join(' · ') : ''
     ].filter(Boolean).join('\n');
     const { parsed, error } = await llamarGemini(env, prompt, 1536);
     if (error) return json({ ok: false, error }, 500);
@@ -267,12 +271,29 @@ async function generar({ request, env }) {
   const producto = (body.producto === 'banner') ? 'banner' : (body.producto === 'ads') ? 'ads' : 'email';
   const marca = body.marca || null;
   const imagenes = Array.isArray(body.imagenes) ? body.imagenes.slice(0, 40) : [];
+
+  // SEARCH: dos lecturas EN PARALELO. (1) El lector propio baja la landing con
+  // mucho más texto que para un banner (una campaña de Search vive del
+  // vocabulario del sitio). (2) Gemini lee la URL por su cuenta —sirve también
+  // con sitios armados en JavaScript— y busca en Google a la competencia.
+  if (producto === 'ads') {
+    const urlsAds = [brief.ctaUrl].concat(Array.isArray(brief.refs) ? brief.refs : []);
+    const [refsA, inv] = await Promise.all([
+      leerReferencias(urlsAds, { porPagina: 6000, total: 12000 }),
+      investigarAds(env, brief, marca)
+    ]);
+    const avisosA = avisosDeReferencias(refsA, brief)
+      // Si Gemini sí leyó la URL que el lector propio no pudo, no hay nada que avisar.
+      .filter(a => !(a.tipo === 'url-no-leida' && inv.urlsLeidas.some(u => a.texto.includes(u.split('?')[0]))));
+    if (!inv.ficha) avisosA.push({ tipo: 'info', texto: 'No se pudo completar el análisis de la landing y la competencia en Google (' + (inv.error || 'sin respuesta') + '). La campaña se armó solo con el texto de la página: revísala con más cuidado.' });
+    return generarAds({ env, brief, marca, refsTxt: refsA.texto, promos: refsA.promos, enlaces: refsA.enlaces, avisos: avisosA, ficha: inv.ficha, fuentes: inv.fuentes });
+  }
+
   // Lee también el SITIO DE DESTINO del anuncio (ctaUrl), no solo las URLs de referencia.
   const refs = await leerReferencias([brief.ctaUrl].concat(Array.isArray(brief.refs) ? brief.refs : []));
   const refsTxt = refs.texto, promos = refs.promos, enlaces = refs.enlaces;
   const avisos = avisosDeReferencias(refs, brief);
 
-  if (producto === 'ads') return generarAds({ env, brief, marca, refsTxt, promos, enlaces, avisos });
   if (producto === 'banner') return generarBanner({ env, brief, marca, imagenes, refsTxt, promos, estilo: body.estilo === 'marca' ? 'marca' : '', limites: body.limites || null, avisos });
   return generarEmail({ env, brief, marca, imagenes, refsTxt, promos, catalogo: Array.isArray(body.catalogo) ? body.catalogo : [] });
 }
@@ -450,7 +471,8 @@ function detectarPromos(texto) {
 // internas (eso era lento); si quieres una interior, pégala como otra URL.
 // Devuelve { texto, promos, enlaces }: el extracto para el prompt, las
 // promociones REALES detectadas y los enlaces internos (candidatos a sitelinks).
-async function leerReferencias(refs) {
+async function leerReferencias(refs, opts) {
+  const porPagina = (opts && opts.porPagina) || 1800, total = (opts && opts.total) || 2500;
   // Dedup + hasta 3 URLs (la landing de destino + referencias).
   const vistos = new Set();
   const urls = (Array.isArray(refs) ? refs : []).filter(u => {
@@ -470,13 +492,13 @@ async function leerReferencias(refs) {
       } catch { clearTimeout(t); return null; }
     };
     let html = await bajar(UA_NAVEGADOR);
-    let extracto = html ? extraerTextoPagina(html, 1800) : '';
+    let extracto = html ? extraerTextoPagina(html, porPagina) : '';
     // Landing renderizada por JS (casi sin texto) → reintenta como Googlebot:
     // muchos sitios sirven una versión pre-renderizada a los bots.
     if (!extracto || extracto.length < 250) {
       const html2 = await bajar({ ...UA_NAVEGADOR, 'User-Agent': 'Mozilla/5.0 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)' });
       if (html2) {
-        const ex2 = extraerTextoPagina(html2, 1800);
+        const ex2 = extraerTextoPagina(html2, porPagina);
         if (ex2.length > extracto.length) { html = html2; extracto = ex2; }
       }
     }
@@ -490,7 +512,7 @@ async function leerReferencias(refs) {
   };
   const partes = await Promise.all(urls.map((u, i) => leerUna(u, i === 0)));
   return {
-    texto: partes.map(p => p.trozo).join('\n\n').slice(0, 2500),   // era 9000: ahogaba el encargo del usuario
+    texto: partes.map(p => p.trozo).join('\n\n').slice(0, total),   // era 9000: ahogaba el encargo del usuario
     promos: partes.flatMap(p => p.promos).slice(0, 4),
     enlaces: partes.flatMap(p => p.enlaces).slice(0, 12),
     // Si una URL no se pudo leer HAY QUE DECIRLO: nunca generar en silencio como
@@ -603,18 +625,22 @@ async function intentarGemini(env, promptOrParts, maxTokens, temp, o, model) {
   const pensar = (typeof o.pensar === 'number') ? o.pensar : 0;
   const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${encodeURIComponent(env.GEMINI_API_KEY)}`;
   const partesEntrada = Array.isArray(promptOrParts) ? promptOrParts : [{ text: promptOrParts }];
-  const genCfg = { responseMimeType: 'application/json', temperature: (typeof temp === 'number' ? temp : 0.7), maxOutputTokens: maxTokens || 4096 };
+  const genCfg = { temperature: (typeof temp === 'number' ? temp : 0.7), maxOutputTokens: maxTokens || 4096 };
+  // Con HERRAMIENTAS (leer URLs, buscar en Google) Gemini no acepta el modo
+  // JSON estricto: se pide el JSON en el texto y lo rescata extraerJSON.
+  if (!o.tools) genCfg.responseMimeType = 'application/json';
+  const conTools = (b) => (o.tools ? { ...b, tools: o.tools } : b);
 
   // Pensar cuesta tokens de salida: si no se amplía el tope, el modelo gasta el
   // presupuesto razonando y devuelve vacío (el bug que llevó a apagarlo del todo).
   // Cuerpo sin NINGUN thinkingConfig: para el reintento cuando el modelo
   // rechaza el parametro (no es lo mismo que pedir presupuesto 0).
-  const cuerpoSinThinking = () => JSON.stringify({ contents: [{ role: 'user', parts: partesEntrada }], generationConfig: { ...genCfg } });
+  const cuerpoSinThinking = () => JSON.stringify(conTools({ contents: [{ role: 'user', parts: partesEntrada }], generationConfig: { ...genCfg } }));
   const cuerpoCon = (conThinking) => {
     const g = { ...genCfg };
     if (conThinking) { g.thinkingConfig = { thinkingBudget: pensar }; if (pensar !== 0) g.maxOutputTokens = (maxTokens || 4096) * 3; }
     else g.thinkingConfig = { thinkingBudget: 0 };
-    return JSON.stringify({ contents: [{ role: 'user', parts: partesEntrada }], generationConfig: g });
+    return JSON.stringify(conTools({ contents: [{ role: 'user', parts: partesEntrada }], generationConfig: g }));
   };
 
   const pedir = async (cuerpo, ms) => {
@@ -640,6 +666,9 @@ async function intentarGemini(env, promptOrParts, maxTokens, temp, o, model) {
     const t = await res.text().catch(() => '');
     // 404 = ese modelo no existe para esta cuenta → probar el siguiente.
     if (res.status === 404) return { modeloAusente: true, error: `El modelo ${model} no está disponible para esta cuenta.` };
+    // Con herramientas, un 400 suele ser "este modelo no admite url_context /
+    // google_search": se prueba el siguiente de la cadena en vez de rendirse.
+    if (o.tools && res.status === 400) return { modeloAusente: true, error: `El modelo ${model} no acepta las herramientas pedidas. ${t.slice(0, 200)}` };
     return { error: `Gemini (${model}) respondió ${res.status}. ${t.slice(0, 400)}` };
   }
   let data; try { data = await res.json(); } catch { return { error: 'Respuesta de Gemini no es JSON.' }; }
@@ -662,6 +691,13 @@ async function intentarGemini(env, promptOrParts, maxTokens, temp, o, model) {
     return { error: 'Gemini no devolvió contenido (' + motivo + ').' };
   }
   const parsed = extraerJSON(texto);
+  // Qué leyó de verdad con las herramientas: URLs recuperadas y fuentes de Google.
+  const cand = (data && data.candidates && data.candidates[0]) || {};
+  const urlsLeidas = ((cand.urlContextMetadata || cand.url_context_metadata || {}).urlMetadata || [])
+    .filter(m => /SUCCESS/i.test(String(m.urlRetrievalStatus || m.url_retrieval_status || '')))
+    .map(m => m.retrievedUrl || m.retrieved_url).filter(Boolean);
+  const fuentes = ((cand.groundingMetadata || {}).groundingChunks || [])
+    .map(c => c && c.web && (c.web.title || c.web.uri)).filter(Boolean).slice(0, 12);
   if (parsed === undefined) {
     const fin = (data && data.candidates && data.candidates[0] && data.candidates[0].finishReason) || '';
     // Si se quedo sin tokens, el JSON viene cortado: hay que decirlo asi, no
@@ -669,7 +705,7 @@ async function intentarGemini(env, promptOrParts, maxTokens, temp, o, model) {
     if (fin === 'MAX_TOKENS') return { error: `Gemini (${model}) se quedo sin espacio de respuesta y el JSON llego cortado. Reintenta; si se repite, sube el tope.` };
     return { error: 'No se pudo interpretar la respuesta de la IA como JSON. Inicio: ' + String(texto).slice(0, 160) };
   }
-  return { parsed };
+  return { parsed, urlsLeidas, fuentes, texto };
 }
 
 // ── Corrección ortográfica RAE (segunda pasada, server-side) ──────────────
@@ -1083,11 +1119,157 @@ function esOscuro(hex) {
 //   - Entrega negativas (por grupo y de campaña) para no pagar clics basura.
 //   - Anuncios RSA con límites REALES de Google: titulares ≤30, descripciones ≤90,
 //     rutas ≤15. El servidor VALIDA y recorta: nada sale fuera de límite.
-async function generarAds({ env, brief, marca, refsTxt, promos, enlaces }) {
+// ══════════════════════════════════════════════════════════════════════════
+// GOOGLE SEARCH — pipeline en etapas (sep-2026)
+//
+// Antes era UNA llamada: la IA leía 2.500 caracteres de la landing, no sabía
+// nada de la competencia y escribía los anuncios que escribiría cualquiera.
+// Ahora:
+//   1. INVESTIGAR  (investigarAds): Gemini lee la landing por su cuenta y busca
+//      en Google a la competencia. Sale una FICHA: beneficios con cifras reales,
+//      pruebas, objeciones, cómo busca la gente, lo que el producto NO es (base
+//      de las negativas) y los mensajes que todos repiten (lo que NO sirve).
+//   2. ESTRUCTURAR (generarAds): grupos por intención, keywords, anuncios y
+//      negativas CON MOTIVO, escritos desde la ficha.
+//   3. CRITICAR   (criticarAnuncios): un editor reescribe lo genérico.
+//   4. FILTROS DUROS del servidor: frases trilladas fuera, cifras que no están
+//      en ninguna fuente fuera, negativas que bloquearían keywords propias fuera.
+//   5. Ortografía.
+// ══════════════════════════════════════════════════════════════════════════
+
+const aLista = (v, n, largo) => (Array.isArray(v) ? v : []).map(x => String(x == null ? '' : x).replace(/\s+/g, ' ').trim()).filter(Boolean).slice(0, n).map(x => x.slice(0, largo || 200));
+
+async function investigarAds(env, brief, marca) {
+  const url = /^https?:\/\//i.test(brief.ctaUrl || '') ? String(brief.ctaUrl).trim() : '';
+  const refs = (Array.isArray(brief.refs) ? brief.refs : []).filter(u => /^https?:\/\//i.test(u || '') && u !== url).slice(0, 2);
+  const nombreMarca = marca ? (marca.nombre || marca.empresa || '') : '';
   const prompt = [
-    `Eres un especialista senior en Google Ads (Search) de ${marca ? (marca.nombre || marca.empresa) : 'la marca'}. Estructuras campañas como un profesional: por INTENCIÓN de búsqueda, con concordancias controladas y negativas. Detestas la concordancia amplia porque quema presupuesto.`,
+    'Eres analista senior de marketing de búsqueda (Google Ads) en Chile. Investiga ANTES de que se escriba una campaña de Search. Todavía no escribes anuncios.',
     '',
     encargoDelUsuario(brief),
+    nombreMarca ? `MARCA: ${nombreMarca}${marca.negocio ? ' — ' + marca.negocio : ''}` : '',
+    '',
+    'TAREAS:',
+    url ? `1. LEE la landing ${url}${refs.length ? ' y también ' + refs.join(' , ') : ''}. Extrae SOLO lo que la página dice de verdad: producto, beneficios, cifras, coberturas, precios, plazos, condiciones, pruebas (años, clientes, premios, respaldo).`
+        : '1. No hay landing: usa el encargo y lo que encuentres en Google sobre la marca.',
+    '2. BUSCA en Google (resultados de Chile) cómo busca la gente este producto y quiénes compiten por esas búsquedas. Identifica 3 a 6 competidores y qué promete cada uno en sus anuncios y páginas.',
+    '3. Detecta los MENSAJES GENÉRICOS que repiten todos (no sirven para diferenciar) y los ÁNGULOS DIFERENCIALES que esta marca tiene con respaldo en su landing y la competencia no usa.',
+    '4. Piensa en las búsquedas que NO queremos pagar: lo que el producto NO es o no incluye, significados confundibles, productos parecidos que no se venden aquí.',
+    '',
+    'Devuelve SOLO este JSON (sin texto antes ni después):',
+    '{',
+    '  "leyoLanding": true,',
+    '  "producto": "qué se vende exactamente (nombre tal como lo usa el sitio)",',
+    '  "categoria": "categoría de búsqueda",',
+    '  "propuestaValor": "la promesa central de la landing en 1 frase",',
+    '  "beneficios": ["beneficios CONCRETOS, con la cifra tal como aparece si la hay"],',
+    '  "pruebas": ["datos verificables: años, clientes, calificaciones, respaldos, coberturas con monto"],',
+    '  "ofertas": ["promociones vigentes TEXTUALES"],',
+    '  "condiciones": ["requisitos o restricciones importantes"],',
+    '  "publico": "a quién le habla",',
+    '  "objeciones": ["dudas o miedos del cliente antes de contratar/comprar"],',
+    '  "vocabulario": ["términos exactos que usa el sitio"],',
+    '  "busquedas": ["12 a 20 consultas reales que escribe la gente en Chile para encontrar esto"],',
+    '  "noOfrece": ["lo que el producto NO es o NO incluye, y con qué se confunde"],',
+    '  "competidores": [{"nombre": "...", "promesa": "qué prometen"}],',
+    '  "mensajesGenericos": ["frases/promesas que usan todos en la categoría"],',
+    '  "angulosDiferenciales": ["ángulos propios de la marca, respaldados por su landing"]',
+    '}',
+    'REGLAS: nada inventado. Si un dato no está en la landing ni en Google, no lo pongas. Las cifras van TEXTUALES. Si no pudiste leer la landing, "leyoLanding": false.'
+  ].filter(Boolean).join('\n');
+
+  const intentos = url ? [[{ url_context: {} }, { google_search: {} }], [{ google_search: {} }]] : [[{ google_search: {} }]];
+  let ultimoError = '';
+  for (const tools of intentos) {
+    const r = await llamarGemini(env, prompt, 4096, 0.3, { cadena: cadenaCopy(env), tools, pensar: -1, timeout: 60000 });
+    if (r.error || !r.parsed || typeof r.parsed !== 'object') { ultimoError = r.error || 'respuesta vacía'; continue; }
+    const f = r.parsed;
+    const ficha = {
+      leyoLanding: f.leyoLanding !== false && (!url || (r.urlsLeidas || []).length > 0 || tools.length === 1),
+      producto: String(f.producto || '').slice(0, 160),
+      categoria: String(f.categoria || '').slice(0, 120),
+      propuestaValor: String(f.propuestaValor || '').slice(0, 300),
+      beneficios: aLista(f.beneficios, 12), pruebas: aLista(f.pruebas, 10), ofertas: aLista(f.ofertas, 6),
+      condiciones: aLista(f.condiciones, 8), publico: String(f.publico || '').slice(0, 200),
+      objeciones: aLista(f.objeciones, 8), vocabulario: aLista(f.vocabulario, 25, 60),
+      busquedas: aLista(f.busquedas, 25, 80), noOfrece: aLista(f.noOfrece, 20),
+      competidores: (Array.isArray(f.competidores) ? f.competidores : []).slice(0, 6)
+        .map(c => ({ nombre: String((c && c.nombre) || '').slice(0, 60), promesa: String((c && c.promesa) || '').slice(0, 200) })).filter(c => c.nombre),
+      mensajesGenericos: aLista(f.mensajesGenericos, 12), angulosDiferenciales: aLista(f.angulosDiferenciales, 8)
+    };
+    if (!ficha.producto && !ficha.beneficios.length) { ultimoError = 'la ficha llegó vacía'; continue; }
+    return { ficha, urlsLeidas: r.urlsLeidas || [], fuentes: r.fuentes || [] };
+  }
+  return { ficha: null, urlsLeidas: [], fuentes: [], error: ultimoError };
+}
+
+function fichaTexto(f) {
+  if (!f) return '';
+  const l = (t, a) => a && a.length ? `${t}:\n${a.map(x => '  - ' + x).join('\n')}` : '';
+  return [
+    f.producto && `PRODUCTO: ${f.producto}${f.categoria ? ' (categoría: ' + f.categoria + ')' : ''}`,
+    f.propuestaValor && `PROPUESTA DE VALOR: ${f.propuestaValor}`,
+    f.publico && `PÚBLICO: ${f.publico}`,
+    l('BENEFICIOS CONCRETOS (materia prima de titulares y descripciones)', f.beneficios),
+    l('PRUEBAS / DATOS VERIFICABLES', f.pruebas),
+    l('OFERTAS VIGENTES (textuales)', f.ofertas),
+    l('CONDICIONES', f.condiciones),
+    l('OBJECIONES DEL CLIENTE (respóndelas en los anuncios)', f.objeciones),
+    l('VOCABULARIO REAL DEL SITIO', f.vocabulario),
+    l('CÓMO BUSCA LA GENTE (base de las keywords)', f.busquedas),
+    l('LO QUE NO ES / NO INCLUYE (base de las negativas)', f.noOfrece),
+    f.competidores && f.competidores.length ? 'COMPETIDORES EN GOOGLE:\n' + f.competidores.map(c => `  - ${c.nombre}: ${c.promesa}`).join('\n') : '',
+    l('MENSAJES GENÉRICOS QUE USAN TODOS (PROHIBIDO construir anuncios sobre esto)', f.mensajesGenericos),
+    l('ÁNGULOS DIFERENCIALES DE ESTA MARCA (úsalos)', f.angulosDiferenciales)
+  ].filter(Boolean).join('\n');
+}
+
+// Frases trilladas que no diferencian a nadie. Se comparan sin tildes.
+const CLICHES_ADS = [
+  'los mejores precios', 'mejor precio del mercado', 'precios competitivos', 'calidad garantizada',
+  'rapido y facil', 'facil y rapido', 'rapido, facil', 'rapido facil y seguro', 'la mejor opcion',
+  'no esperes mas', 'haz clic aqui', 'click aqui', 'somos lideres', 'soluciones integrales',
+  'excelente servicio', 'servicio de calidad', 'amplia experiencia', 'la mejor calidad',
+  'todo lo que necesitas', 'tu mejor aliado', 'confia en nosotros', 'esta campana', 'este anuncio'
+];
+const sinTildes = s => String(s || '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '');
+const esCliche = s => { const t = sinTildes(s); return CLICHES_ADS.some(c => t.includes(c)); };
+// Cifras de un texto, normalizadas ("$9.990" y "9990" son la misma).
+const cifrasDe = s => (String(s || '').match(/\d+(?:[.,]\d+)*/g) || []).map(n => n.replace(/[.,]/g, '')).filter(n => n.length);
+
+async function criticarAnuncios(env, grupos, ficha, marca) {
+  const entrada = grupos.map((g, i) => ({ i, grupo: g.nombre, intencion: g.intencion, titularesFijos: g.titularesFijos, titulares: g.titularesRotan, descripciones: g.descripciones }));
+  const prompt = [
+    `Eres director creativo de performance y revisas anuncios RSA de Google Search${marca ? ' de ' + (marca.nombre || marca.empresa) : ''} antes de publicarlos. Tu trabajo es MATAR LO GENÉRICO.`,
+    '',
+    'PRUEBA DEL COMPETIDOR: si cambias la marca por un competidor y el texto sigue siendo verdad, es genérico → REESCRÍBELO con un dato concreto de la ficha (beneficio con cifra, prueba, oferta, objeción respondida, ángulo diferencial).',
+    'También reescribe: frases trilladas ("rápido y fácil", "los mejores precios", "calidad garantizada", "atención personalizada"...), titulares que dicen lo mismo con otras palabras, descripciones sin un dato concreto, y todo lo que hable del anuncio en vez de al cliente.',
+    'Lo que ya es específico y bueno, DÉJALO IGUAL.',
+    'LÍMITES DUROS: titulares ≤30 caracteres (con espacios), descripciones ≤90. Titulares sin punto final. Español de Chile correcto.',
+    'PROHIBIDO inventar cifras, precios, plazos o premios que no estén en la ficha.',
+    'Mantén la MISMA cantidad de textos en cada lista y el orden de los titularesFijos (1 marca/producto, 2 keyword, 3 beneficio u oferta, 4 llamada a la acción).',
+    '',
+    'FICHA DEL PRODUCTO Y LA COMPETENCIA:',
+    fichaTexto(ficha) || '(sin ficha)',
+    '',
+    'ANUNCIOS A REVISAR:',
+    JSON.stringify(entrada),
+    '',
+    'Devuelve SOLO: { "grupos": [ { "i": 0, "titularesFijos": [...], "titulares": [...], "descripciones": [...] } ] }'
+  ].join('\n');
+  const r = await llamarGemini(env, prompt, 6144, 0.6, { cadena: cadenaCopy(env), pensar: -1, timeout: 70000 });
+  return Array.isArray(r.parsed && r.parsed.grupos) ? r.parsed.grupos : null;
+}
+
+async function generarAds({ env, brief, marca, refsTxt, promos, enlaces, avisos, ficha, fuentes }) {
+  avisos = Array.isArray(avisos) ? avisos : [];
+  const fTxt = fichaTexto(ficha);
+  const prompt = [
+    `Eres un especialista senior en Google Ads (Search) de ${marca ? (marca.nombre || marca.empresa) : 'la marca'}, con 10 años gestionando cuentas en Chile. Estructuras por INTENCIÓN de búsqueda, con concordancias controladas y negativas razonadas. Detestas la concordancia amplia y los anuncios intercambiables con los de la competencia.`,
+    '',
+    encargoDelUsuario(brief),
+    '',
+    fTxt ? '════ INVESTIGACIÓN PREVIA (landing leída + competencia en Google) — TU MATERIA PRIMA ════\n' + fTxt + '\n══════════════════════════════════════════════════' : '',
     '',
     'Devuelve EXCLUSIVAMENTE este JSON (sin texto extra):',
     '{',
@@ -1097,46 +1279,55 @@ async function generarAds({ env, brief, marca, refsTxt, promos, enlaces }) {
     '      "nombre": "nombre del grupo de anuncios",',
     '      "intencion": "qué busca la persona que escribe estas keywords (1 frase)",',
     '      "razonamiento": "por qué agrupaste así y qué esperas de este grupo (1-2 frases)",',
+    '      "angulo": "el ángulo diferencial que usan los anuncios de este grupo frente a la competencia",',
     '      "keywords": [ { "t": "keyword en minúsculas", "tipo": "exacta" | "frase" } ],',
-    '      "negativas": [ "términos a excluir en este grupo" ],',
+    '      "negativas": [ { "t": "término", "motivo": "por qué se excluye en este grupo" } ],',
     '      "titularesFijos": [ "4 titulares ANCLADOS, ≤30 caracteres cada uno" ],',
     '      "titulares": [ "11 titulares que ROTAN, ≤30 caracteres cada uno" ],',
-    '      "descripciones": [ "≤90 caracteres cada una" ],',
+    '      "descripciones": [ "4 descripciones, ≤90 caracteres cada una" ],',
     '      "path1": "ruta-1", "path2": "ruta-2"',
     '    }',
     '  ],',
-    '  "negativas": [ "negativas de TODA la campaña (gratis, empleo, curso, segunda mano, etc. según el caso)" ],',
+    '  "negativas": [ { "t": "término negativo de campaña", "motivo": "por qué NO queremos pagar esa búsqueda en ESTE negocio" } ],',
     '  "sitelinks": [ { "texto": "≤25 caracteres", "desc1": "≤35 caracteres", "desc2": "≤35 caracteres", "url": "ruta REAL de la landing (ej. /cotizar)" } ]',
     '}',
     '',
-    'REGLAS DURAS (violarlas invalida la respuesta):',
-    '- "nombre" de la campaña y de cada grupo: LEGIBLES para humanos, con espacios y tildes (ej. "Cotizar seguro auto"), NUNCA-en-formato-slug-con-guiones.',
-    '- 2 a 4 grupos de anuncios. Cada grupo = UNA sola intención de búsqueda (no mezcles "cotizar" con "qué es").',
-    '- Por grupo: 20 a 25 keywords. MENOS DE 20 NO SIRVE. "tipo" SOLO puede ser "exacta" o "frase". La concordancia AMPLIA está PROHIBIDA.',
-    '- MEZCLA OBLIGATORIA de concordancias dentro de cada grupo: "exacta" para las búsquedas precisas y cortas (2-3 palabras, la intención exacta del grupo); "frase" para las variantes largas y de cola (4-5 palabras). Un grupo con todas exactas, o todas de frase, está MAL. Mínimo 30% de cada tipo.',
-    '- CUBRE las variantes reales de cómo busca la gente dentro de esa MISMA intención: singular/plural, sinónimos, orden distinto, con "online"/"precio"/"chile" cuando aplique. Cantidad con criterio: variantes que alguien escribiría de verdad, no relleno.',
-    '- Keywords en minúsculas, sin corchetes ni comillas (el tipo va en "tipo"), 2 a 5 palabras, como la gente busca de verdad (media/larga cola). Nada de keywords de 1 palabra genérica.',
-    '- RAZONA las negativas: qué búsquedas parecidas NO queremos pagar (informativas si el grupo es transaccional, "gratis", "empleo", competidores si aplica...). Mínimo 5 negativas de campaña.',
-    '- TITULARES: son 15 en total, en DOS listas separadas, todos de MÁXIMO 30 CARACTERES (cuenta espacios), únicos, SIN punto final y sin exclamaciones dobles.',
-    '  · "titularesFijos": exactamente 4. Son los que SIEMPRE se muestran (van anclados en Google). Deben funcionar juntos y en este orden: 1) la marca o el producto, 2) la keyword principal del grupo, 3) el beneficio o la oferta concreta, 4) la llamada a la acción.',
-    '  · "titulares": exactamente 11. Son los que ROTAN. Cada uno un ángulo distinto (cobertura, precio, plazo, confianza, facilidad, respaldo...). NO repitas los 4 fijos ni los parafrasees.',
-    '- 4 descripciones ÚNICAS de MÁXIMO 90 CARACTERES.',
-    '- El anuncio le habla AL CLIENTE, jamás habla del anuncio o de la campaña ("esta campaña fue creada para...", "si buscas X, este anuncio..." = PROHIBIDO). No repitas la misma keyword más de 2 veces entre titular y descripción.',
-    '- Cada descripción dice UNA cosa CONCRETA (una cobertura, un precio, un plazo, un beneficio real). Nada de relleno tipo "rápido, fácil y online" como frase completa, ni listas de productos sin relación con el grupo.',
-    '- "path1"/"path2": máximo 15 caracteres, minúsculas, sin espacios (usa guiones), relacionados con el grupo.',
-    '- "sitelinks": 4 a 6, de la MISMA landing. USA los enlaces internos reales listados abajo cuando existan (no inventes rutas); texto ≤25 caracteres, cada descripción ≤35.',
-    (promos && promos.length) ? `- La landing muestra estas PROMOCIONES vigentes: ${promos.join(' · ')}. Inclúyelas TAL CUAL en 2-3 titulares y al menos 1 descripción del grupo más transaccional (sin cambiar cifras).` : '',
-    '- Las keywords y los anuncios deben usar el VOCABULARIO REAL de la landing (los nombres de producto y términos que ella usa, no sinónimos genéricos).',
-    '- Español de Chile. Respeta el tono y las palabras de la marca; NO inventes ofertas, precios ni fechas.',
+    'ESTRUCTURA Y KEYWORDS:',
+    '- "nombre" de la campaña y de cada grupo: LEGIBLES, con espacios y tildes (ej. "Cotizar seguro auto"), nunca en formato slug.',
+    '- 2 a 4 grupos. Cada grupo = UNA intención (ej.: contratar/cotizar ya · comparar/precio · necesidad o problema · marca). No mezcles "cotizar" con "qué es".',
+    '- Por grupo: 20 a 25 keywords, tomadas de CÓMO BUSCA LA GENTE y del VOCABULARIO REAL de la investigación. Nada que esté en "lo que NO es".',
+    '- "tipo" SOLO "exacta" o "frase" (amplia PROHIBIDA). Exacta = búsquedas cortas y precisas (2-3 palabras); frase = variantes largas (4-5 palabras). Mínimo 30% de cada tipo por grupo.',
+    '- Minúsculas, sin corchetes ni comillas, 2 a 5 palabras, como escribe la gente de verdad (con y sin tildes, singular/plural, "precio", "cotizar", "online", "chile" solo cuando alguien lo escribiría).',
+    '',
+    'ANUNCIOS (aquí se gana o se pierde):',
+    '- PRUEBA DEL COMPETIDOR: si cambias la marca por un competidor y el titular sigue siendo verdad, es genérico y NO sirve. Cada anuncio se construye sobre beneficios con cifra, pruebas, ofertas, objeciones y ángulos diferenciales de la INVESTIGACIÓN.',
+    '- PROHIBIDO construir sobre los "mensajes genéricos que usan todos" y las frases trilladas: "los mejores precios", "calidad garantizada", "rápido y fácil", "atención personalizada", "la mejor opción", "no esperes más", "somos líderes", "amplia experiencia".',
+    '- 15 titulares, TODOS ≤30 caracteres (con espacios), únicos, sin punto final:',
+    '  · "titularesFijos" (exactamente 4, en este orden, van anclados): 1) marca o producto, 2) la keyword principal del grupo casi literal, 3) el beneficio u oferta más fuerte, 4) llamada a la acción específica (no "Haz clic aquí").',
+    '  · "titulares" (exactamente 11, rotan): 2 con variantes de la keyword del grupo · 3 beneficios concretos con dato · 2 pruebas/confianza con dato real · 1 que responda la objeción principal · 2 del ángulo diferencial · 1 oferta o CTA alternativa. Ninguno repite ni parafrasea a otro.',
+    '- 4 descripciones ≤90 caracteres, cada una con un ángulo distinto: (1) beneficio principal + dato + CTA, (2) respuesta a una objeción, (3) prueba/confianza, (4) diferencial frente a la competencia u oferta. Una sola idea por descripción, con un dato concreto. Termina con punto.',
+    '- El anuncio le habla AL CLIENTE, jamás habla del anuncio o de la campaña. No repitas la misma keyword más de 2 veces en un anuncio.',
+    '- CIFRAS: SOLO las que aparecen en la investigación, la landing o el encargo, TEXTUALES. Una cifra inventada invalida el anuncio.',
+    '- "path1"/"path2": ≤15 caracteres, minúsculas, con guiones, relacionados con el grupo.',
+    '- "sitelinks": 4 a 6 de la MISMA landing; usa los enlaces internos reales listados abajo (no inventes rutas). Texto ≤25, descripciones ≤35.',
+    (promos && promos.length) ? `- Promociones detectadas en la landing: ${promos.join(' · ')}. Úsalas TAL CUAL en 2-3 titulares y 1 descripción del grupo más transaccional.` : '',
+    '',
+    'NEGATIVAS (razonadas para ESTE negocio, no una lista de plantilla):',
+    '- De campaña: 15 a 30, cada una con su "motivo". Sácalas de: lo que el producto NO es/no incluye, significados confundibles del término principal, productos vecinos que no se venden, búsquedas de empleo/postulación, de formación, de trámites que hace otra entidad, y búsquedas informativas si la campaña es de conversión.',
+    '- PROHIBIDO poner negativas "por costumbre": cada motivo debe explicar por qué esa búsqueda llega a ESTE negocio y no convierte. Si el motivo serviría para cualquier empresa, piénsalo otra vez.',
+    '- Una negativa NUNCA puede bloquear una keyword propia (si una keyword contiene la palabra, esa negativa está mal).',
+    '- Las marcas de la competencia NO van como negativas salvo que el encargo lo pida.',
+    '- Por grupo: 3 a 10 negativas que eviten que el grupo capture la intención de OTRO grupo o búsquedas que no calzan con su intención.',
     '',
     'VOZ DE MARCA:',
     voorMarca(marca),
-    refsTxt ? '\nCONTENIDO DE LAS URLS DE REFERENCIA — ANALÍZALO y RAZONA: identifica la propuesta de valor, los productos y el vocabulario real del sitio, y úsalo para que las keywords y anuncios calcen con lo que la landing de verdad ofrece (NO copies literal, NO inventes datos):\n' + refsTxt : '',
+    refsTxt ? '\nTEXTO DE LA LANDING (evidencia original; usa su vocabulario y datos, no copies frases largas):\n' + refsTxt : '',
     (enlaces && enlaces.length) ? '\nENLACES INTERNOS REALES de la landing (candidatos a sitelinks, "texto → ruta"):\n' + enlaces.map(e => `- ${e.texto} → ${e.ruta}`).join('\n') : '',
     '',
     'BRIEF:',
     reglasBrief(brief, promos, 'ads'),
-    brief.ctaUrl ? `URL FINAL de los anuncios (landing): ${brief.ctaUrl}` : ''
+    brief.ctaUrl ? `URL FINAL de los anuncios (landing): ${brief.ctaUrl}` : '',
+    '- Español de Chile. Respeta el tono y las palabras de la marca.'
   ].filter(Boolean).join('\n');
 
   const { parsed, error } = await llamarGemini(env, prompt, 8192, 0.8, { cadena: cadenaCopy(env), pensar: -1 });
@@ -1144,71 +1335,67 @@ async function generarAds({ env, brief, marca, refsTxt, promos, enlaces }) {
 
   // ── Validación dura del lado del servidor ──────────────────────────────
   const clean = s => String(s == null ? '' : s).replace(/\s+/g, ' ').trim();
-  // Si la IA devolvió un nombre-en-slug (sin espacios, con guiones), se hace legible.
   const legible = s => { s = clean(s); return (!/\s/.test(s) && /-/.test(s)) ? s.replace(/-+/g, ' ') : s; };
   const dedup = arr => { const seen = new Set(); return arr.filter(x => { const k = x.toLowerCase(); if (!k || seen.has(k)) return false; seen.add(k); return true; }); };
-  const kwLimpia = s => clean(s).toLowerCase().replace(/^[\[\"'+]+|[\]\"']+$/g, '').trim();
-  const path = s => clean(s).toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9-]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 15);
+  const kwLimpia = s => clean(s).toLowerCase().replace(/^[\[\"'+-]+|[\]\"']+$/g, '').trim();
+  const path = s => clean(s).toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^a-z0-9-]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 15);
+  // Negativas: aceptan string u objeto {t, motivo}. Se guardan los motivos aparte
+  // (la consola, el XLSX y los CSV siguen leyendo una lista de strings).
+  const motivos = {};
+  const negs = (arr, n) => dedup((Array.isArray(arr) ? arr : []).map(x => {
+    const t = kwLimpia(x && typeof x === 'object' ? x.t : x);
+    const m = x && typeof x === 'object' ? clean(x.motivo).slice(0, 200) : '';
+    if (t && m && !motivos[t]) motivos[t] = m;
+    return t;
+  }).filter(Boolean)).slice(0, n);
 
   const gruposIn = Array.isArray(parsed && parsed.grupos) ? parsed.grupos.slice(0, 5) : [];
+  const limpiaTit = arr => dedup((Array.isArray(arr) ? arr : []).map(t => sinPuntoFinal(clean(t)).slice(0, 30)).filter(Boolean));
   const grupos = gruposIn.map(g => {
-    const kws = (Array.isArray(g.keywords) ? g.keywords : []).map(k => ({
-      t: kwLimpia(k && k.t),
-      tipo: (k && k.tipo === 'frase') ? 'frase' : 'exacta'   // amplia jamás: cualquier otra cosa cae a exacta
-    })).filter(k => k.t);
     const seenK = new Set();
-    let keywords = kws.filter(k => { const key = k.t; if (seenK.has(key)) return false; seenK.add(key); return true; }).slice(0, 25);
-    // MEZCLA de concordancias. La IA tiende a devolver todo de un tipo. La regla
-    // del oficio: búsquedas cortas y precisas → exacta; cola larga → frase. Si un
-    // tipo queda bajo el 30%, se reasigna por longitud (criterio, no azar).
-    const MIN_MIX = 0.3;
-    const nFrase = keywords.filter(k => k.tipo === 'frase').length;
-    if (keywords.length >= 6 && (nFrase / keywords.length < MIN_MIX || nFrase / keywords.length > 1 - MIN_MIX)) {
-      const porLargo = keywords.slice().sort((a, b) => b.t.split(/\s+/).length - a.t.split(/\s+/).length || b.t.length - a.t.length);
-      const cuantasFrase = Math.round(keywords.length * 0.4);
-      const enFrase = new Set(porLargo.slice(0, cuantasFrase).map(k => k.t));
-      keywords = keywords.map(k => ({ t: k.t, tipo: enFrase.has(k.t) ? 'frase' : 'exacta' }));
-    }
-    // TITULARES: 4 anclados + 11 que rotan (15 = tope de Google para un RSA).
-    const limpiaTit = arr => dedup((Array.isArray(arr) ? arr : []).map(t => sinPuntoFinal(clean(t)).slice(0, 30)).filter(Boolean));
+    let keywords = (Array.isArray(g.keywords) ? g.keywords : []).map(k => ({
+      t: kwLimpia(k && (typeof k === 'object' ? k.t : k)),
+      tipo: (k && k.tipo === 'frase') ? 'frase' : 'exacta'   // amplia jamás
+    })).filter(k => k.t && !seenK.has(k.t) && (seenK.add(k.t), true)).slice(0, 25);
     let fijos = limpiaTit(g.titularesFijos).slice(0, 4);
     let rotan = limpiaTit(g.titulares).filter(t => !fijos.some(f => f.toLowerCase() === t.toLowerCase()));
-    // Si la IA ignoró la separación y mandó todo junto, se parte: los 4 primeros anclan.
     if (!fijos.length && rotan.length) { fijos = rotan.slice(0, 4); rotan = rotan.slice(4); }
     rotan = rotan.slice(0, 11);
-    const titulares = fijos.concat(rotan);          // compat: la consola y el CSV siguen leyendo "titulares"
     const descripciones = dedup((Array.isArray(g.descripciones) ? g.descripciones : []).map(d => clean(d).slice(0, 90)).filter(Boolean)).slice(0, 4);
+    const angulo = clean(g.angulo).slice(0, 200);
     return {
       nombre: legible(g.nombre).slice(0, 60) || 'Grupo',
       intencion: clean(g.intencion).slice(0, 200),
       razonamiento: clean(g.razonamiento).slice(0, 300),
-      keywords, titulares, titularesFijos: fijos, titularesRotan: rotan, descripciones,
-      negativas: dedup((Array.isArray(g.negativas) ? g.negativas : []).map(kwLimpia).filter(Boolean)).slice(0, 15),
+      angulo,
+      keywords, titulares: fijos.concat(rotan), titularesFijos: fijos, titularesRotan: rotan, descripciones,
+      negativas: negs(g.negativas, 15),
       path1: path(g.path1), path2: path(g.path2)
     };
   }).filter(g => g.keywords.length && g.titulares.length);
 
   if (!grupos.length) return json({ ok: false, error: 'La IA no produjo grupos de anuncios válidos. Reformula el brief (di qué vendes y a quién).' }, 500);
 
-  // RELLENO de keywords: la IA suele quedarse corta aunque el prompt pida 20.
-  // Los grupos flacos se completan con UNA llamada extra (todos a la vez),
-  // manteniendo la intención de cada grupo y sin repetir lo que ya tienen.
+  // ── Etapa 3, en PARALELO: relleno de keywords de los grupos flacos + crítico ──
   const MIN_KW = 20;
   const flacos = grupos.filter(g => g.keywords.length < MIN_KW);
-  if (flacos.length) {
-    const pedido = [
-      'Eres especialista senior en Google Ads (Search). Completa las keywords de estos grupos.',
-      'Devuelve EXCLUSIVAMENTE: { "grupos": [ { "nombre": "<el mismo nombre>", "keywords": [ { "t": "...", "tipo": "exacta" | "frase" } ] } ] }',
-      `- De cada grupo faltan keywords hasta llegar a ${MIN_KW}. Entrega SOLO las NUEVAS.`,
-      '- Misma intención del grupo. PROHIBIDO repetir o variar trivialmente las que ya tiene.',
-      '- Solo "exacta" o "frase" (amplia prohibida). Minúsculas, 2 a 5 palabras, como busca la gente: singular/plural, sinónimos, "online"/"precio"/"chile" cuando aplique.',
-      '- Cortas y precisas → exacta. Largas y de cola → frase.',
-      refsTxt ? '\nVOCABULARIO REAL de la landing (úsalo):\n' + refsTxt.slice(0, 1500) : '',
-      '\nGRUPOS:',
-      ...flacos.map(g => `- "${g.nombre}" · intención: ${g.intencion || '(la del nombre)'} · faltan ${MIN_KW - g.keywords.length} · ya tiene: ${g.keywords.map(k => k.t).join(', ')}`)
-    ].filter(Boolean).join('\n');
-    const extra = await llamarGemini(env, pedido, 4096, 0.8, { cadena: cadenaRapida(env) });
-    const lote = Array.isArray(extra.parsed && extra.parsed.grupos) ? extra.parsed.grupos : [];
+  const relleno = flacos.length ? llamarGemini(env, [
+    'Eres especialista senior en Google Ads (Search). Completa las keywords de estos grupos.',
+    'Devuelve EXCLUSIVAMENTE: { "grupos": [ { "nombre": "<el mismo nombre>", "keywords": [ { "t": "...", "tipo": "exacta" | "frase" } ] } ] }',
+    `- De cada grupo faltan keywords hasta llegar a ${MIN_KW}. Entrega SOLO las NUEVAS.`,
+    '- Misma intención del grupo. PROHIBIDO repetir o variar trivialmente las que ya tiene.',
+    '- Solo "exacta" o "frase" (amplia prohibida). Minúsculas, 2 a 5 palabras, como busca la gente en Chile.',
+    ficha && ficha.busquedas.length ? '\nBÚSQUEDAS REALES investigadas:\n' + ficha.busquedas.join(' · ') : '',
+    ficha && ficha.noOfrece.length ? '\nNO uses nada de esto (el producto no lo es/no lo incluye):\n' + ficha.noOfrece.join(' · ') : '',
+    refsTxt ? '\nVOCABULARIO REAL de la landing:\n' + refsTxt.slice(0, 2500) : '',
+    '\nGRUPOS:',
+    ...flacos.map(g => `- "${g.nombre}" · intención: ${g.intencion || '(la del nombre)'} · faltan ${MIN_KW - g.keywords.length} · ya tiene: ${g.keywords.map(k => k.t).join(', ')}`)
+  ].filter(Boolean).join('\n'), 4096, 0.8, { cadena: cadenaRapida(env) }) : Promise.resolve(null);
+  const critica = criticarAnuncios(env, grupos, ficha, marca).catch(() => null);
+  const [extra, revisados] = await Promise.all([relleno, critica]);
+
+  if (extra && extra.parsed && Array.isArray(extra.parsed.grupos)) {
+    const lote = extra.parsed.grupos;
     for (const g of flacos) {
       const src = lote.find(x => clean(x && x.nombre).toLowerCase() === g.nombre.toLowerCase()) || lote[flacos.indexOf(g)];
       if (!src) continue;
@@ -1222,20 +1409,72 @@ async function generarAds({ env, brief, marca, refsTxt, promos, enlaces }) {
     }
   }
 
-  // Sitelinks validados con los límites reales de Google Ads: texto ≤25,
-  // descripciones ≤35. Se prefieren rutas reales de la landing.
-  const sitelinks = (Array.isArray(parsed.sitelinks) ? parsed.sitelinks : []).map(s => ({
-    texto: clean(s && s.texto).slice(0, 25),
-    desc1: clean(s && s.desc1).slice(0, 35),
-    desc2: clean(s && s.desc2).slice(0, 35),
-    url: clean(s && s.url).slice(0, 200)
-  })).filter(s => s.texto).slice(0, 6);
+  // El crítico solo reemplaza un texto si su versión respeta los límites.
+  let reescritos = 0;
+  if (revisados) {
+    for (const rv of revisados) {
+      const g = grupos[Number(rv && rv.i)];
+      if (!g) continue;
+      const aplicar = (orig, nuevos, max, esTit) => orig.map((o, i) => {
+        let n = Array.isArray(nuevos) ? clean(nuevos[i]) : '';
+        if (esTit) n = sinPuntoFinal(n);
+        if (!n || n.length > max || n === o) return o;
+        reescritos++; return n;
+      });
+      g.titularesFijos = aplicar(g.titularesFijos, rv.titularesFijos, 30, true);
+      g.titularesRotan = aplicar(g.titularesRotan, rv.titulares, 30, true);
+      g.descripciones = aplicar(g.descripciones, rv.descripciones, 90, false);
+    }
+  }
 
-  // Segunda pasada: corrector RAE sobre los textos VISIBLES (nombres, intención,
-  // titulares, descripciones y sitelinks). Las keywords NO se corrigen: la gente
-  // busca sin tildes y así deben quedar. Tras corregir se re-recortan los límites.
+  // ── Etapa 4: filtros duros ──────────────────────────────────────────────
+  // Cifras permitidas = las que aparecen en alguna fuente (encargo, landing, ficha, marca).
+  const fuentesTxt = [brief.que, brief.gancho, brief.notas, brief.accion, refsTxt, JSON.stringify(ficha || {}), (promos || []).join(' '),
+    marca ? [marca.nombre, marca.empresa, marca.negocio, marca.productos, marca.eslogan, marca.directrices].join(' ') : ''].join(' ');
+  const permitidas = new Set(cifrasDe(fuentesTxt));
+  const inventada = s => cifrasDe(s).some(n => !permitidas.has(n));
+  let descartados = 0;
+  const mantener = (arr, minimo, malo) => {
+    const out = arr.slice();
+    for (let i = out.length - 1; i >= 0 && out.length > minimo; i--) if (malo(out[i])) { out.splice(i, 1); descartados++; }
+    return out;
+  };
+  for (const g of grupos) {
+    const malo = t => esCliche(t) || inventada(t);
+    g.titularesRotan = mantener(dedup(g.titularesRotan), 5, malo);
+    // Un titular fijo malo se reemplaza por el primer rotativo bueno.
+    g.titularesFijos = g.titularesFijos.map(f => {
+      if (!malo(f)) return f;
+      const k = g.titularesRotan.findIndex(t => !malo(t));
+      if (k < 0) return f;
+      descartados++;
+      return g.titularesRotan.splice(k, 1)[0];
+    });
+    g.titularesRotan = g.titularesRotan.filter(t => !g.titularesFijos.some(f => f.toLowerCase() === t.toLowerCase()));
+    g.descripciones = mantener(dedup(g.descripciones), 2, malo);
+    g.titulares = g.titularesFijos.concat(g.titularesRotan);
+  }
+  if (descartados) avisos.push({ tipo: 'info', texto: `Se descartaron ${descartados} textos de anuncio con frases trilladas o cifras que no aparecen en la landing ni en tu encargo.` });
+
+  // Negativas de campaña + motivos. Una negativa que está contenida en una
+  // keyword propia bloquearía esa keyword: se saca.
+  let negCampana = negs(parsed.negativas, 30);
+  const todasKw = grupos.flatMap(g => g.keywords.map(k => ' ' + k.t + ' '));
+  const bloquea = n => todasKw.some(k => k.includes(' ' + n + ' '));
+  const conflictos = negCampana.filter(bloquea).concat(grupos.flatMap(g => g.negativas.filter(n => g.keywords.some(k => (' ' + k.t + ' ').includes(' ' + n + ' ')))));
+  negCampana = negCampana.filter(n => !bloquea(n));
+  for (const g of grupos) g.negativas = g.negativas.filter(n => !g.keywords.some(k => (' ' + k.t + ' ').includes(' ' + n + ' ')));
+  if (conflictos.length) avisos.push({ tipo: 'info', texto: `Se quitaron ${conflictos.length} negativas que habrían bloqueado keywords de la propia campaña (${conflictos.slice(0, 4).join(', ')}).` });
+
+  const sitelinks = (Array.isArray(parsed.sitelinks) ? parsed.sitelinks : []).map(s => ({
+    texto: clean(s && s.texto).slice(0, 25), desc1: clean(s && s.desc1).slice(0, 35),
+    desc2: clean(s && s.desc2).slice(0, 35), url: clean(s && s.url).slice(0, 200)
+  })).filter(s => s.texto && !esCliche(s.texto)).slice(0, 6);
+
+  // ── Etapa 5: corrector RAE sobre los textos VISIBLES. Las keywords NO se
+  // corrigen: la gente busca sin tildes y así deben quedar.
   const planos = [legible(parsed.nombre || brief.que).slice(0, 80)];
-  for (const g of grupos) { planos.push(g.nombre, g.intencion, g.razonamiento); planos.push(...g.titulares, ...g.descripciones); }
+  for (const g of grupos) { planos.push(g.nombre, g.intencion, g.razonamiento, g.angulo); planos.push(...g.titularesFijos, ...g.titularesRotan, ...g.descripciones); }
   for (const s of sitelinks) planos.push(s.texto, s.desc1, s.desc2);
   const rev = await corregirOrtografia(env, planos);
   let k = 0;
@@ -1244,8 +1483,14 @@ async function generarAds({ env, brief, marca, refsTxt, promos, enlaces }) {
     g.nombre = String(rev.textos[k++]).slice(0, 60) || g.nombre;
     g.intencion = String(rev.textos[k++]).slice(0, 200);
     g.razonamiento = String(rev.textos[k++]).slice(0, 300);
-    g.titulares = g.titulares.map(() => sinPuntoFinal(rev.textos[k++]).slice(0, 30)).filter(Boolean);
+    g.angulo = String(rev.textos[k++]).slice(0, 200);
+    const tit = t => sinPuntoFinal(t).slice(0, 30);
+    g.titularesFijos = g.titularesFijos.map(() => tit(rev.textos[k++])).filter(Boolean);
+    g.titularesRotan = g.titularesRotan.map(() => tit(rev.textos[k++])).filter(Boolean);
+    g.titulares = g.titularesFijos.concat(g.titularesRotan);
     g.descripciones = g.descripciones.map(() => String(rev.textos[k++]).slice(0, 90)).filter(Boolean);
+    // El ángulo se ve en la consola junto al razonamiento del grupo.
+    if (g.angulo && !g.razonamiento.includes(g.angulo)) g.razonamiento = (g.razonamiento + ' Ángulo: ' + g.angulo).trim().slice(0, 420);
   }
   for (const s of sitelinks) {
     s.texto = (String(rev.textos[k++]).slice(0, 25)) || s.texto;
@@ -1253,16 +1498,28 @@ async function generarAds({ env, brief, marca, refsTxt, promos, enlaces }) {
     s.desc2 = String(rev.textos[k++]).slice(0, 35);
   }
 
+  const negMotivos = {};
+  for (const n of negCampana.concat(grupos.flatMap(g => g.negativas))) if (motivos[n]) negMotivos[n] = motivos[n];
+
   return json({
     ok: true,
     nombre: nombreR,
     urlFinal: clean(brief.ctaUrl || ''),
     grupos,
-    negativas: dedup((Array.isArray(parsed.negativas) ? parsed.negativas : []).map(kwLimpia).filter(Boolean)).slice(0, 25),
+    negativas: negCampana,
+    negativasMotivos: negMotivos,
     sitelinks,
+    analisis: ficha ? {
+      producto: ficha.producto, propuestaValor: ficha.propuestaValor,
+      competidores: ficha.competidores, mensajesGenericos: ficha.mensajesGenericos,
+      angulosDiferenciales: ficha.angulosDiferenciales, objeciones: ficha.objeciones,
+      busquedas: ficha.busquedas, vocabulario: ficha.vocabulario, noOfrece: ficha.noOfrece,
+      leyoLanding: ficha.leyoLanding, fuentes: (fuentes || []).slice(0, 10), reescritos
+    } : null,
+    avisos,
     ortografia: rev.revisado ? 'revisada' : 'sin-revisar'
   });
 }
 
 // Exportados SOLO para pruebas locales (Cloudflare Pages los ignora).
-export { corregirOrtografia, extraerJSON, generarEmail, generarBanner, generarAds, detectarPromos, extraerEnlaces, extraerTextoPagina };
+export { corregirOrtografia, extraerJSON, generarEmail, generarBanner, generarAds, investigarAds, detectarPromos, extraerEnlaces, extraerTextoPagina };

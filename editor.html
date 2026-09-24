@@ -11423,7 +11423,7 @@ async function generarConIA(){
         imagenes = lista.filter((it,i) => !dims[i] || Math.min(dims[i].w, dims[i].h) >= 300).concat(imagenes.slice(20));
       }
     }
-    est.textContent = `Generando ${producto==="facebook"?"el anuncio de Facebook":producto==="banner"?"los banners":producto==="ads"?"la campaña de Search":"el email"}…`;
+    est.textContent = `Generando ${producto==="facebook"?"el anuncio de Facebook":producto==="banner"?"los banners":producto==="ads"?"la campaña de Search (lee la landing y revisa a la competencia en Google; toma 1 a 2 minutos)":"el email"}…`;
     const r = await fetch("/api/ia", {
       method:"POST", credentials:"include", headers:{ "Content-Type":"application/json" },
       body: JSON.stringify({
@@ -11836,7 +11836,9 @@ function insertarAdsIA(data, marca){
   asegurarProyectoIA();
   const p = { id:uid(), nombre:_deslug(String(data.nombre||"Campaña Search")), campana:"General", formato:"ads", canvas:[],
     tema: { font:"Roboto", primary:"#1c73cb", text:"#12173d", bg:"#ffffff", bgPagina:"", ancho:"", radio:"0", gap:"0" },
-    adsData: { nombre:_deslug(data.nombre||""), urlFinal:data.urlFinal||"", grupos:data.grupos||[], negativas:data.negativas||[], sitelinks:data.sitelinks||[] } };
+    adsData: { nombre:_deslug(data.nombre||""), urlFinal:data.urlFinal||"", grupos:data.grupos||[], negativas:data.negativas||[], sitelinks:data.sitelinks||[],
+      // Lo que investigó la IA (landing + competencia) y por qué excluyó cada negativa.
+      analisis:data.analisis||null, negativasMotivos:data.negativasMotivos||{} } };
   proyecto.piezas.push(p); proyecto.activa = p.id;
   adsVista = "res";
   document.getElementById("galeria").classList.remove("show");
@@ -12006,7 +12008,7 @@ async function adsPedirMasKeywords(gi){
   if(btn){ btn.disabled = true; btn.textContent = "Char-B está buscando…"; }
   try{
     const r = await fetch("/api/ia", { method:"POST", credentials:"include", headers:{ "Content-Type":"application/json" },
-      body: JSON.stringify({ modo:"mas-keywords", grupo:{ nombre:g.nombre, intencion:g.intencion, keywords:g.keywords||[] }, brief:{ que:d.nombre||p.nombre||"", ctaUrl:d.urlFinal||"" } }) });
+      body: JSON.stringify({ modo:"mas-keywords", grupo:{ nombre:g.nombre, intencion:g.intencion, keywords:g.keywords||[] }, brief:{ que:d.nombre||p.nombre||"", ctaUrl:d.urlFinal||"" }, analisis:d.analisis||null }) });
     const data = await r.json().catch(()=>null);
     if(!r.ok || !data || !data.ok){ toast((data && data.error) || "Char-B no pudo ampliar el grupo"); return; }
     const vistos = new Set((g.keywords||[]).map(k=>String(k.t||"").toLowerCase()));

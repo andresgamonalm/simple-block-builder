@@ -1,5 +1,5 @@
 // ═══════════════════════════════════════════════════════════════════════
-// USUARIOS DE SIMPLE BLOCK BUILDER — edita este archivo directo en GitHub.
+// USUARIOS DE MI PUBLICIDAD — edita este archivo directo en GitHub.
 //
 // Cada usuario es un bloque { ... }. Al guardar (commit en main) el cambio
 // queda activo en 1-2 minutos (auto-deploy).

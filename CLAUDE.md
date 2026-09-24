@@ -878,3 +878,34 @@ la burbuja de oferta se cortaba por dos píxeles.
 **Verificado:** `pruebas/escribir.js` (nueva, registrada en `correr-todo.sh` y en `LEEME.md`)
 **31/31**, con tecleo real, clics reales en la barrita y arrastre real de un elemento generado por
 la IA. Batería completa en verde.
+
+## 24-sep-2026: RENOMBRE a "Mi Publicidad" + Search con INVESTIGACIÓN (ESTADO ACTUAL — no rehacer)
+**Nombre:** el aplicativo se llama **Mi Publicidad** (`mi-publicidad.gamonal.app`). Orden del usuario:
+*"SOLO NOMBRE"*: se cambiaron textos visibles, archivos de marca (`brand/mi-publicidad.svg`,
+`logo_mi_publicidad.*`, `icono_mi_publicidad.*`, `assets/login/foto_login_mi_publicidad.jpg`), `SITE_URL`,
+remitente y docs. **NO** se tocaron: proyecto de Pages y base D1 (`simple-block-builder`, no se pueden
+renombrar), prefijos internos `sbb-` (localStorage, clases del HTML exportado), ni la interfaz. El dominio
+nuevo lo agrega el usuario en Cloudflare → Pages → Custom domains.
+
+**Search (`generarAds` en ia.js) — pipeline en etapas.** Queja del usuario: *"la IA no lee la página, no
+hace buenos anuncios, todo es igual a la competencia, negativas súper genéricas"*. Causas medidas: 2.500
+caracteres de landing entre todas las URLs, una sola llamada, cero conocimiento de la competencia, y el
+aviso de "URL no leída" se perdía (generarAds no devolvía `avisos`). Ahora:
+1. **Investigar** (`investigarAds`, en paralelo con el lector propio que ahora baja 6.000/12.000 caracteres):
+   Gemini con herramientas **`url_context` + `google_search`** lee la landing por su cuenta (sirve con sitios
+   JS) y busca competidores en Google Chile → **ficha**: beneficios con cifra, pruebas, ofertas, objeciones,
+   vocabulario, búsquedas reales, `noOfrece` (base de negativas), competidores, mensajes genéricos (prohibidos)
+   y ángulos diferenciales. Con herramientas NO se usa `responseMimeType` JSON (Gemini lo rechaza); un 400
+   con herramientas salta al siguiente modelo; si todo falla, reintenta solo con Google y si no, genera igual
+   con aviso.
+2. **Estructurar** desde la ficha: "prueba del competidor", taxonomía de los 11 titulares rotativos y las 4
+   descripciones, negativas `{t, motivo}` razonadas para ESTE negocio, `angulo` por grupo.
+3. **Crítico** (`criticarAnuncios`, en paralelo con el relleno de keywords): reescribe lo genérico; solo se
+   acepta la reescritura que respeta 30/90.
+4. **Filtros duros:** `CLICHES_ADS` fuera; **cifras que no aparecen en ninguna fuente** (encargo, landing,
+   ficha, marca) fuera; negativas que bloquearían una keyword propia fuera. Todo con aviso.
+5. Ortografía (como antes).
+Respuesta suma `analisis`, `negativasMotivos` y `avisos`; el cliente los guarda en `adsData` (la consola, el
+XLSX y los CSV no cambiaron: `negativas` sigue siendo lista de strings). "Más keywords" usa `adsData.analisis`.
+Tarda ~1-2 min (el mensaje del asistente lo dice). Prueba: `pruebas/ads-ia.js` 32/32 (Gemini simulado).
+**Pendiente:** validar con la API real en producción (el sandbox no tiene GEMINI_API_KEY).

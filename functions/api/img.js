@@ -20,7 +20,7 @@ export async function onRequestGet({ request }) {
     return new Response('bad protocol', { status: 400 });
   }
   try {
-    const r = await fetch(target.toString(), { headers: { 'User-Agent': 'SimpleBlockBuilder/1.0' } });
+    const r = await fetch(target.toString(), { headers: { 'User-Agent': 'MiPublicidad/1.0' } });
     if (!r.ok) return new Response('upstream ' + r.status, { status: 502 });
     const ct = r.headers.get('content-type') || 'application/octet-stream';
     if (!/^image\//i.test(ct)) return new Response('not an image', { status: 415 });
