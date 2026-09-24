@@ -21,7 +21,7 @@ export async function onRequestPost({ request, env }) {
     ? body.destinatarios.map(s => String(s).trim().toLowerCase()).filter(Boolean).slice(0, 10)
     : [];
   const html = typeof body.html === 'string' ? body.html : '';
-  const asunto = (body.asunto || 'Prueba — Simple Block Builder').toString().slice(0, 150);
+  const asunto = (body.asunto || 'Prueba — Mi Publicidad').toString().slice(0, 150);
 
   const validos = destinatarios.filter(e => /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(e));
   if (!validos.length) return json({ ok: false, error: 'Indica al menos un correo válido.' }, 400);
@@ -29,7 +29,7 @@ export async function onRequestPost({ request, env }) {
   if (html.length > 2_000_000) return json({ ok: false, error: 'El HTML es demasiado grande.' }, 413);
   if (!env.RESEND_KEY) return json({ ok: false, error: 'Servidor sin RESEND_KEY configurado.' }, 500);
 
-  const from = env.RESEND_FROM || 'Simple Block Builder <onboarding@resend.dev>';
+  const from = env.RESEND_FROM || 'Mi Publicidad <onboarding@resend.dev>';
   const res = await fetch('https://api.resend.com/emails', {
     method: 'POST',
     headers: { Authorization: `Bearer ${env.RESEND_KEY}`, 'Content-Type': 'application/json' },

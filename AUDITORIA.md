@@ -1,4 +1,4 @@
-# Auditoría de Simple Block Builder — base para v2
+# Auditoría de Mi Publicidad — base para v2
 
 Fecha: 2026-06-10. Sobre `editor.html` (6.244 líneas, monolito: HTML + CSS + JS + 41 bloques + export + plantillas).
 

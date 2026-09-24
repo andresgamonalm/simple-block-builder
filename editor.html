@@ -3,9 +3,9 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Simple Block Builder · By Andrés Gamonal</title>
-<link rel="icon" href="/brand/simple-block-builder.svg?v=3" type="image/svg+xml">
-<link rel="alternate icon" href="/brand/icono_simple_block_builder.ico?v=3" sizes="any">
+<title>Mi Publicidad · By Andrés Gamonal</title>
+<link rel="icon" href="/brand/mi-publicidad.svg?v=3" type="image/svg+xml">
+<link rel="alternate icon" href="/brand/icono_mi_publicidad.ico?v=3" sizes="any">
 <script>
 // Auth guard: si no hay sesión, redirige al login.
 (async () => {
@@ -1970,7 +1970,7 @@ body.sbb-arrastrando{user-select:none;-webkit-user-select:none;cursor:grabbing;}
     <div class="tb-r1">
       <button class="ed-back" onclick="irAlInicio()" title="Ir al Inicio">
         <svg class="ed-logo" viewBox="0 0 40 40"><rect width="40" height="40" rx="10" fill="#040764"/><rect x="9" y="10" width="22" height="5" rx="2.5" fill="#FCE865"/><rect x="9" y="19" width="9.5" height="11" rx="2.4" fill="#1C73CB"/><rect x="21.5" y="19" width="9.5" height="11" rx="2.4" fill="#20B6B6"/></svg>
-        <span class="ed-name">Simple Block Builder</span>
+        <span class="ed-name">Mi Publicidad</span>
       </button>
       <span class="tb-sep"></span>
       <button class="ed-crumb-root" onclick="abrirGaleria()">Proyectos</button>
@@ -2144,7 +2144,7 @@ body.sbb-arrastrando{user-select:none;-webkit-user-select:none;cursor:grabbing;}
 </div></div>
 <div class="modal-bg" id="modal-import"><div class="modal">
   <div class="modal-head"><h3>Importar HTML</h3><button class="modal-close" onclick="cerrarModal('import')">×</button></div>
-  <div class="modal-body"><p>Pega aquí HTML que hayas exportado antes desde Simple Block Builder. Lo agrega como nueva pieza.</p><textarea id="import-html" placeholder="Pega aquí el HTML..."></textarea></div>
+  <div class="modal-body"><p>Pega aquí HTML que hayas exportado antes desde Mi Publicidad. Lo agrega como nueva pieza.</p><textarea id="import-html" placeholder="Pega aquí el HTML..."></textarea></div>
   <div class="modal-foot"><button onclick="cerrarModal('import')">Cancelar</button><button class="primary" onclick="ejecutarImportar()">Importar</button></div>
 </div></div>
 <div class="modal-bg" id="modal-prueba"><div class="modal">
@@ -2363,9 +2363,9 @@ body.sbb-arrastrando{user-select:none;-webkit-user-select:none;cursor:grabbing;}
 <div class="dash" id="galeria">
   <header class="cnav" id="cnav">
     <div class="cnav-in">
-    <button class="cnav-brand" onclick="dashIr('home')" title="Inicio · Simple Block Builder">
+    <button class="cnav-brand" onclick="dashIr('home')" title="Inicio · Mi Publicidad">
       <svg class="cnav-logo" viewBox="0 0 40 40"><rect width="40" height="40" rx="10" fill="#040764"/><rect x="9" y="10" width="22" height="5" rx="2.5" fill="#FCE865"/><rect x="9" y="19" width="9.5" height="11" rx="2.4" fill="#1C73CB"/><rect x="21.5" y="19" width="9.5" height="11" rx="2.4" fill="#20B6B6"/></svg>
-      <span class="cnav-name">Simple Block Builder</span>
+      <span class="cnav-name">Mi Publicidad</span>
     </button>
     <nav class="cnav-links" id="cnav-links">
       <button class="cnav-link" data-view="home" onclick="dashIr('home')">Inicio</button>
@@ -5162,7 +5162,7 @@ frameEl.addEventListener("drop", (e) => {
 // un HTML descargado) esas rutas no existen → "las fotos se caen". Esta pasada
 // las ancla al dominio real antes de entregar cualquier HTML.
 function absolutizarURLs(html){
-  const base = (typeof location !== "undefined" && /^https?:/.test(location.origin)) ? location.origin : "https://simple-block-builder.gamonal.app";
+  const base = (typeof location !== "undefined" && /^https?:/.test(location.origin)) ? location.origin : "https://mi-publicidad.gamonal.app";
   return String(html)
     .replace(/(src|href|poster|background)=(["'])\/(?!\/)/g, (m, attr, q) => `${attr}=${q}${base}/`)
     .replace(/url\((['"]?)\/(?!\/)/g, (m, q) => `url(${q}${base}/`);

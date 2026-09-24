@@ -1,4 +1,4 @@
-# Revisión integral — Simple Block Builder (jul-2026)
+# Revisión integral — Mi Publicidad (jul-2026)
 
 Revisión de principio a fin: backend (`functions/api`), capa de estado/datos del
 frontend, renders y exportadores, consistencia visual, y una batería E2E que

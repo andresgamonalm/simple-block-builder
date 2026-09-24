@@ -10,7 +10,7 @@ y cómo pasa una mejora de un lado al otro.
 | | **Producción** | **Borrador** |
 |---|---|---|
 | Rama en GitHub | `main` | `sbb-draft-mejoras` |
-| Dirección | simple-block-builder.gamonal.app | la URL de preview de Cloudflare |
+| Dirección | mi-publicidad.gamonal.app | la URL de preview de Cloudflare |
 | Quién la usa | tú y tu equipo, de verdad | solo para probar |
 | Base de datos | `simple-block-builder` | `simple-block-builder-draft` |
 | Imágenes (R2) | `bucket-de-imagenes` | `bucket-de-imagenes-borrador` |

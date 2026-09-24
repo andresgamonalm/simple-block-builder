@@ -1,4 +1,4 @@
-# Simple Block Builder — memoria del proyecto
+# Mi Publicidad — memoria del proyecto
 
 > Este archivo lo lee Claude Code al iniciar cada sesión. Mantiene el contexto para
 > NO empezar de cero. Si cambias algo importante de arquitectura o acuerdos, actualízalo.
@@ -9,7 +9,7 @@ Editor de creatividades por bloques para **email, banners (Google Display), soci
 Casi todo vive en **`editor.html`** (~4200 líneas, HTML+CSS+JS inline, 2 `<script>`).
 Backend: funciones en **`functions/api/`** (auth por magic link + JWT, persistencia, envío, IA).
 
-- Producción: **https://simple-block-builder.gamonal.app** (Cloudflare Pages, auto-deploy desde `main`, ~1–2 min).
+- Producción: **https://mi-publicidad.gamonal.app** (Cloudflare Pages, auto-deploy desde `main`, ~1–2 min). **Nombre del aplicativo: "Mi Publicidad"** (renombrado el 24-sep-2026 desde "Simple Block Builder"). El proyecto de Pages y la base D1 conservan el nombre técnico `simple-block-builder` (no se pueden renombrar). El dominio `mi-publicidad.gamonal.app` se agrega en Cloudflare → Pages → Custom domains.
 - Dueño/usuario: Andrés Gamonal (hola@andresgamonal.com). **Responder en español.**
 
 ## Acuerdos de trabajo (IMPORTANTE)
@@ -148,9 +148,9 @@ datos y contratos de API intactos** (una sola extensión aditiva en `/api/whoami
   amarillo SOLO CTA sobre navy, magenta puntual (IA, destructivo). Radio 10px del **chrome**
   (el contenido de las piezas sigue SIN radio por defecto — decisión del usuario). Sin degradados.
   Chips por tipo: EMAIL azul · DISPLAY turquesa · LIBRE magenta. Ver `DECISIONES-VISUALES.md`.
-- **Logo nuevo** (barra amarilla + 2 bloques sobre navy): `brand/logo_simple_block_builder.svg/.png`,
-  `brand/icono_simple_block_builder.ico` (16/32/48/256, PNG embebido), `…_1000x1000.png`;
-  favicon = `brand/simple-block-builder.svg` (actualizado al mark nuevo).
+- **Logo nuevo** (barra amarilla + 2 bloques sobre navy): `brand/logo_mi_publicidad.svg/.png`,
+  `brand/icono_mi_publicidad.ico` (16/32/48/256, PNG embebido), `…_1000x1000.png`;
+  favicon = `brand/mi-publicidad.svg` (actualizado al mark nuevo).
 - **Shell del dashboard** (`#galeria`): barra superior `.cnav` (logo · Inicio·Proyectos·Marcas·Imágenes
   con subrayado navy activo · buscar (enfoca la búsqueda de Proyectos) · sparkle IA magenta ·
   botón **+ Nueva** (menú Email/Banner/Libre/Proyecto) · **avatar** con menú (rol real de whoami,
@@ -186,7 +186,7 @@ datos y contratos de API intactos** (una sola extensión aditiva en `/api/whoami
   Exportar: mismo motor; el modal de documentos suma botón "Enviar prueba".
 - **Login** (`index.html`): panel formulario + área visual con **foto Envato FOTO-001 (DGQZAQM)**
   — registro y flujo en `ENVATO_ASSETS.md`; hasta que exista
-  `assets/login/foto_login_simple_block_builder.jpg` (descarga del usuario) se muestra un panel
+  `assets/login/foto_login_mi_publicidad.jpg` (descarga del usuario) se muestra un panel
   editorial navy con eslogan (nunca imagen rota). JS del magic-link intacto. Ruta `/login` añadida.
 - **Móvil** (≤820px): barra inferior de pestañas (Inicio · Proyectos · **+** amarillo · Marcas ·
   Cuenta), top bar reducida (logo + avatar), Home/Proyectos/Config adaptados; editores en desktop.

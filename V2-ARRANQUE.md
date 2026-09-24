@@ -5,7 +5,7 @@ Este documento + `AUDITORIA.md` son el puente entre el proyecto actual y el nuev
 
 ## Objetivo
 
-Reconstruir Simple Block Builder con arquitectura limpia, **sin romper el proyecto
+Reconstruir Mi Publicidad con arquitectura limpia, **sin romper el proyecto
 actual** (que sigue vivo en su repo). Tomar el aprendizaje del actual (ver `AUDITORIA.md`)
 y el **sistema de diseño** del usuario (se pega en la sesión nueva).
 
@@ -45,7 +45,7 @@ y el **sistema de diseño** del usuario (se pega en la sesión nueva).
 
 ## Primer mensaje sugerido para pegar en la sesión nueva
 
-> Vamos a reconstruir Simple Block Builder desde cero, limpio y modular. Lee
+> Vamos a reconstruir Mi Publicidad desde cero, limpio y modular. Lee
 > `AUDITORIA.md` y `V2-ARRANQUE.md` que copié al repo. Te voy a pegar mi sistema
 > de diseño. Empecemos por el esqueleto: estructura de carpetas, `index.html`
 > mínimo, el core (estado + render del lienzo) y UN primer bloque (texto) con sus

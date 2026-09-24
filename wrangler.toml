@@ -1,3 +1,6 @@
+# Aplicativo: "Mi Publicidad" (mi-publicidad.gamonal.app). El nombre técnico del
+# proyecto de Cloudflare Pages y de la base D1 sigue siendo "simple-block-builder":
+# Cloudflare no permite renombrar un proyecto de Pages y el usuario nunca lo ve.
 name = "simple-block-builder"
 compatibility_date = "2026-05-01"
 pages_build_output_dir = "."
@@ -17,9 +20,9 @@ bucket_name = "zurich-chile"
 # ACCESOS: los usuarios (nombre + contraseña + permisos) viven en usuarios.js
 # en la raíz del repo — se editan ahí y con git push quedan activos.
 [vars]
-SITE_URL          = "https://simple-block-builder.gamonal.app"
+SITE_URL          = "https://mi-publicidad.gamonal.app"
 SUPER_ADMIN_EMAIL = "hola@andresgamonal.com"
-RESEND_FROM       = "Simple Block Builder <onboarding@resend.dev>"
+RESEND_FROM       = "Mi Publicidad <onboarding@resend.dev>"
 
 # Las variables sensibles (cifradas) se configuran como Secrets en
 # Cloudflare Pages → Settings → Variables y secretos:
@@ -33,7 +36,7 @@ RESEND_FROM       = "Simple Block Builder <onboarding@resend.dev>"
 # ═══════════════════════════════════════════════════════════════════════
 # BORRADOR (preview) — datos SEPARADOS de producción
 #
-# Todo lo de arriba es PRODUCCIÓN (simple-block-builder.gamonal.app) y no
+# Todo lo de arriba es PRODUCCIÓN (mi-publicidad.gamonal.app) y no
 # se toca. Esta sección solo aplica a los deployments de PREVIEW, que es lo
 # que Cloudflare Pages genera para cualquier rama distinta de main.
 #
@@ -59,4 +62,4 @@ bucket_name = "zurich-chile-draft"
 [env.preview.vars]
 SITE_URL          = "https://sbb-draft-mejoras.simple-block-builder.pages.dev"
 SUPER_ADMIN_EMAIL = "hola@andresgamonal.com"
-RESEND_FROM       = "Simple Block Builder <onboarding@resend.dev>"
+RESEND_FROM       = "Mi Publicidad <onboarding@resend.dev>"
