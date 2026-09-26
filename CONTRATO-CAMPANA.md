@@ -448,7 +448,7 @@ LECCIÓN · CONCEPTOS DE SEGUROS (el anuncio no puede tener errores de rubro)
 4. COBERTURA ≠ ASISTENCIA. Cobertura es lo que la compañía paga (daños, robo, pérdida total, responsabilidad civil). Asistencia es un servicio (grúa, auto de reemplazo, asistencia legal).
 5. DEDUCIBLE: la parte del daño que paga el asegurado; la compañía paga lo que excede. SINIESTRO: el hecho (choque, robo). DENUNCIO: el aviso a la compañía. LIQUIDACIÓN: la evaluación del siniestro que hace el liquidador. INDEMNIZACIÓN: lo que paga la compañía.
 6. PÉRDIDA TOTAL: daño sobre el porcentaje que fija la póliza, o robo sin recuperar en el plazo que fija la póliza. RESPONSABILIDAD CIVIL: daños a terceros (daño emergente, lucro cesante, daño moral), con tope en UF.
-7. MONTOS: «UF 500» (la sigla antes del número); pesos con punto de miles: «$19.990».
+7. MONTOS: «UF 500» (la sigla antes del número); pesos con punto como separador de miles y sin decimales (nunca coma ni espacio).
 8. PRECIOS: el precio de un seguro depende de la persona y de lo asegurado. Un «desde $X» calculado para un caso puntual (un modelo y año de auto, una edad, una comuna) NO va en un anuncio: al resto le promete un precio que no va a tener. Solo va un precio que valga para todos, o una oferta con sus condiciones visibles en la web.
 9. POR PLAN: si un beneficio depende del plan (taller de marca, asistencia full, monto de responsabilidad civil), dilo con su plan o con «hasta»; nunca como si lo tuvieran todos.
 10. UN PRODUCTO POR ANUNCIO: si la página muestra varios productos de la compañía, usa solo los datos del producto que se vende.
