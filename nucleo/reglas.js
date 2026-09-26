@@ -87,6 +87,7 @@
     { codigo: 'C05', nivel: 'aviso', categoria: 'coherencia', fuente: F.rsa, que: 'Títulos casi iguales (mismas palabras en otro orden): Google pide títulos únicos y advierte que fijar textos similares baja la calidad del anuncio.' },
     { codigo: 'C07', nivel: 'aviso', categoria: 'coherencia', fuente: F.rsaTips, que: 'Ningún título del anuncio contiene las palabras de alguna keyword del grupo (Google pide al menos una keyword en los títulos).' },
     { codigo: 'C10', nivel: 'aviso', categoria: 'coherencia', fuente: F.cmf + ' · ' + F.sernac + ' · ' + F.engano, que: 'Afirmación de superioridad ("el más barato", "el mejor", "líder") sin un dato en la ficha que la respalde. En Chile la publicidad de seguros no puede inducir a error (CMF Circular 2123) y la comparativa exige base objetiva y comprobable.' },
+    { codigo: 'C11', nivel: 'aviso', categoria: 'coherencia', fuente: 'https://www.rae.es/dpd/may%C3%BAsculas · ' + F.editorial, que: 'Mayúscula inicial en cada palabra (estilo inglés). En español va solo al inicio y en nombres propios: la marca, el nombre del producto, lugares y siglas.' },
     { codigo: 'C08', nivel: 'aviso', categoria: 'coherencia', fuente: F.engano, que: 'Cifras de los anuncios que no aparecen en la ficha del producto (posible dato inventado: afirmación no confiable).' },
     // CONVERSIÓN — lección de negocio; solo en campañas con objetivo.enfoque = "conversion"
     { codigo: 'V01', nivel: 'aviso', categoria: 'conversion', fuente: LECCION + ' · ' + F.intencion, que: 'Keyword informativa ("qué es", "cómo funciona", "qué cubre", consejos…) en una campaña de conversión: atrae a quien se informa, no a quien compra.' },
@@ -151,6 +152,21 @@
     const superlativo = (x, donde) => {
       const s = LEC.contiene(x.texto, LEC.SUPERLATIVOS);
       if (s && !fuentesNorm.includes(LEC.sinTildes(s))) H('C10', x, donde, `«${x.texto}» afirma «${s}» sin un dato en la ficha que lo respalde.`);
+    };
+    // C11 · mayúsculas al estilo inglés. Se toleran los nombres propios conocidos:
+    // la marca, el nombre del producto (objetivo/ficha) y lugares frecuentes; y las siglas.
+    const propios = new Set(['chile', 'santiago'].concat(...[cx.marca, ini.objetivo && ini.objetivo.producto, ini.ficha && ini.ficha.producto]
+      .filter(Boolean).map(x => LEC.sinTildes(x).split(/[^a-z0-9ñ]+/).filter(Boolean))));
+    const mayusculas = (x, donde) => {
+      const frases = String(x.texto || '').split(/[.!?:]\s+/);
+      let malas = [];
+      for (const f of frases) {
+        const pals = f.split(/\s+/).filter(Boolean).slice(1)
+          .filter(w => /\p{L}/u.test(w) && !/\d/.test(w) && !(w.length > 1 && w === w.toUpperCase()) && !propios.has(LEC.sinTildes(w).replace(/[^a-z0-9ñ]/g, '')));
+        const may = pals.filter(w => /^\p{Lu}/u.test(w.replace(/^[^\p{L}]+/u, '')));
+        if (may.length >= 2 && may.length >= pals.length / 2) malas = malas.concat(may);
+      }
+      if (malas.length) H('C11', x, donde, `«${x.texto}»: mayúscula en ${malas.map(w => '«' + w + '»').join(', ')}. En español va solo al inicio y en nombres propios.`);
     };
     const negPorCampana = [];
     for (const c of ini.campanas) {
@@ -281,6 +297,8 @@
             });
           }
           T.concat(D).forEach(x => superlativo(x, da));
+          T.forEach((t, i) => mayusculas(t, da + ' › Título ' + (i + 1)));
+          D.forEach((d, i) => mayusculas(d, da + ' › Descripción ' + (i + 1)));
           // C08
           if (cifrasFicha) T.concat(D).forEach(x => {
             const inventadas = (x.texto.match(/\d+(?:[.,]\d+)*/g) || []).map(n => n.replace(/[.,]/g, '')).filter(n => !cifrasFicha.has(n));
@@ -383,13 +401,14 @@
         if (!esUrl(s.urlFinal)) H('G09', s, ds, 'URL final falta o no es http(s).');
         else if (dominiosAnuncio.size && ![...dominiosAnuncio].some(d => mismoSitio(dominio(s.urlFinal), d))) H('G17', s, ds, `Lleva a ${dominio(s.urlFinal)}, otro dominio que el del anuncio (${[...dominiosAnuncio].join(', ')}).`);
         [s.texto, s.linea1, s.linea2].forEach(x => { if (String(x || '').includes('!')) H('G17', s, ds, `Signo de exclamación en «${x}».`); });
-        [s.texto, s.linea1, s.linea2].forEach(t => superlativo({ id: s.id, texto: t || '' }, ds));
+        [s.texto, s.linea1, s.linea2].forEach(t => { superlativo({ id: s.id, texto: t || '' }, ds); mayusculas({ id: s.id, texto: t || '' }, ds); });
         [s.texto, s.linea1, s.linea2].forEach(x => { if (/([!?.])\1/.test(x || '')) H('G07', s, ds, `Puntuación repetida en «${x}».`); });
       });
       dupSl.forEach(x => H('G09', c, dc, `Sitelink repetido: «${x}».`));
       c.destacados.forEach(d => {
         const dd = dc + ' › Destacado «' + d.texto + '»';
         if (d.texto.length > L.destacado) H('G10', d, dd, `Tiene ${d.texto.length} caracteres (máx ${L.destacado}).`);
+        mayusculas(d, dd);
         if (textosAnuncio.has(norm(d.texto))) H('G17', d, dd, 'Repite un texto del anuncio.');
         if (textosSitelink.has(norm(d.texto))) H('G17', d, dd, 'Repite el texto de un sitelink.');
         if (d.texto.includes('!')) H('G17', d, dd, 'Signo de exclamación.');

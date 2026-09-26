@@ -17,7 +17,7 @@ console.log("\n1 · El archivo real (anonimizado): lo que encontró la auditorí
 const ini = AE.importar(fs.readFileSync(path.join(RAIZ, "pruebas/datos/ads-editor-referencia.csv"), "utf8")).iniciativa;
 const v = R.validar(ini, { hoy: HOY, marca: "Acme" });
 const c = cuenta(v);
-const esperado = { G03: 2, C01: 2, K01: 2, K02: 2, K03: 2, K05: 2, K06: 2, C04: 4, C05: 4, K09: 1, K10: 26, K11: 4, K12: 2, G17: 17, P01: 6, P02: 4, P06: 3, P08: 2 };
+const esperado = { G03: 2, C01: 2, K01: 2, K02: 2, K03: 2, K05: 2, K06: 2, C04: 4, C05: 4, K09: 1, K10: 26, K11: 4, K12: 2, G17: 17, P01: 6, P02: 4, P06: 3, P08: 2, C11: 59 };
 T(JSON.stringify(Object.keys(c).sort().map(k => k + ":" + c[k])) === JSON.stringify(Object.keys(esperado).sort().map(k => k + ":" + esperado[k])), "hallazgos por regla exactamente los esperados", JSON.stringify(c));
 T(v.errores === 4 && !v.exportable, "4 errores → no se puede exportar así");
 T(v.hallazgos.filter(h => h.codigo === "G03").every(h => /"\[\]"/.test(h.mensaje)), "G03: la fecha de inicio «[]» de las dos campañas");
@@ -44,9 +44,9 @@ function base() {
   const g = M.nuevoGrupo(M.nombreGrupo("always-on", "cotizar"));
   g.keywords.push(Object.assign(M.nuevaKeyword("cotizar seguro auto", "exacta"), { urlFinal: "https://ejemplo.cl/auto" }));
   const a = M.nuevoAnuncioRSA(M.nombreAnuncio("anual")); a.urlFinal = "https://ejemplo.cl/auto"; a.ruta1 = "seguro"; a.ruta2 = "auto";
-  ["Demo Seguros", "Seguro Auto Demo", "Cotiza con Demo", "Demo en Línea", "Contrata Demo Hoy"].forEach(t => a.titulos.push(M.nuevoTitulo(t, "1")));
-  ["Cotizar Seguro Auto", "Deducible Desde 3 UF", "Grúa 24/7 Incluida", "Elige Tu Plan", "Cobertura Total", "Asistencia en Ruta",
-   "Pago Mensual Fijo", "Atención Todo el Año", "Planes Flexibles", "Contrata en Minutos"].forEach(t => a.titulos.push(M.nuevoTitulo(t)));
+  ["Demo seguros", "Seguro auto Demo", "Cotiza con Demo", "Demo en línea", "Contrata Demo hoy"].forEach(t => a.titulos.push(M.nuevoTitulo(t, "1")));
+  ["Cotizar seguro auto", "Deducible desde 3 UF", "Grúa 24/7 incluida", "Elige tu plan", "Cobertura total", "Asistencia en ruta",
+   "Pago mensual fijo", "Atención todo el año", "Planes flexibles", "Contrata en minutos"].forEach(t => a.titulos.push(M.nuevoTitulo(t)));
   ["Cotiza en línea y elige tu plan.", "Deducible desde 3 UF y grúa 24/7."].forEach(t => a.descripciones.push(M.nuevaDescripcion(t)));
   const a2 = JSON.parse(JSON.stringify(a)); a2.id = M.uid("rsa"); a2.nombre = M.nombreAnuncio("bienal");
   a2.titulos.forEach(t => { t.id = M.uid("tit"); }); a2.descripciones.forEach(d => { d.id = M.uid("des"); });
@@ -116,6 +116,7 @@ const casos = [
   ["P09", x => { x.a.urlFinal = "http://ejemplo.cl/auto"; }],
   ["C10", x => { x.a.titulos[9].texto = "El Seguro Más Barato"; }],
   ["K13", x => { x.g.cpcMax = 25; }],
+  ["C11", x => { x.a.titulos[12].texto = "Cotiza Tu Seguro Hoy"; }],
   ["V01", x => { conv(x); x.g.keywords.push(M.nuevaKeyword("que es un seguro de auto", "frase")); }],
   ["V02", x => { conv(x); x.a.titulos.forEach(t => { if (t.rol === "respaldo") t.rol = ""; }); }],
   ["V03", x => { conv(x); x.a.descripciones[0].texto = "Conoce nuestros planes para tu auto."; }],

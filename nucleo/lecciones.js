@@ -70,10 +70,11 @@
       '5. TÍTULOS: cada uno es UN hecho y declara su PAPEL: "keyword", "tramite", "precio", "respaldo" o "cta". Entre los fijados y los que rotan tienen que estar las tres barreras (trámite, precio y respaldo) y la keyword.',
       '6. DESCRIPCIONES: cada una derriba una barrera y termina con un verbo de COMPRA (contrata, cotiza, emite, asegura, activa). Nunca verbos de LECTURA (conoce, infórmate, visita, descubre).',
       '7. DESTINO: los sitelinks llevan a pasos de compra (cotizar, contratar, medios de pago, detalle del plan), cada uno a una página distinta. El éxito es la PÓLIZA PAGADA online, no la cotización.',
+      '7b. MAYÚSCULAS: español, no inglés. Mayúscula solo al inicio del texto y en nombres propios (la marca, el nombre del producto, lugares). Nunca una mayúscula en cada palabra: "Cotiza tu seguro hoy", no "Cotiza Tu Seguro Hoy".',
       '8. REGLA DE FUENTES: no escribas ninguna cifra, precio, descuento, plazo ni garantía que no esté en las fuentes. No afirmes ser "el más barato", "el mejor" o "líder" sin un dato en las fuentes que lo respalde. (Una keyword como "seguro más barato" sí se puede usar.)',
       '9. EJEMPLO DE TONO (solo ilustra; sus datos NO son reales para esta marca):',
-      '   ❌ "Seguros para tu Automóvil" · "Conoce la importancia de tener un auto asegurado. Visita nuestro sitio."  → informa, no vende.',
-      '   ✅ "Seguro de Auto 100% Online" [tramite] · "Cotiza y Contrata en 3 Min" [tramite] · "20% Desc. Primer Año" [precio] · "Liquidamos en 48 Horas" [respaldo] ·',
+      '   ❌ "Seguros para tu automóvil" · "Conoce la importancia de tener un auto asegurado. Visita nuestro sitio."  → informa, no vende.',
+      '   ✅ "Seguro de auto 100% online" [tramite] · "Cotiza y contrata en 3 min" [tramite] · "20% dcto. primer año" [precio] · "Liquidamos en 48 horas" [respaldo] ·',
       '      "Asegura tu auto sin trámites físicos. Recibe tu póliza digital al instante."  → cada línea es un hecho y empuja a comprar.'
     ].join('\n')
   };

@@ -735,6 +735,7 @@ async function corregirOrtografia(env, textos) {
   const prompt = [
     'Eres corrector ortográfico profesional de piezas publicitarias en español de Chile (normas RAE).',
     'Corrige SOLO: tildes y acentos, mayúsculas/minúsculas, signos de apertura y cierre (¿? ¡!), puntuación y erratas evidentes (letras cambiadas o faltantes).',
+    'MAYÚSCULAS (norma RAE): solo al inicio del texto y en nombres propios (marcas, nombres de producto, lugares, siglas). Si un texto trae mayúscula inicial en cada palabra, al estilo inglés, pásalo a minúscula: "Cotiza Tu Seguro Hoy" → "Cotiza tu seguro hoy"; "Seguro Auto Digital Zurich" se mantiene si "Auto Digital" es el nombre del producto.',
     'NO cambies: el estilo, el orden de las palabras, el vocabulario, los números, los nombres de marca o producto, ni el largo. NO agregues punto final a un texto que no lo tenía. NO "mejores" la redacción.',
     'Devuelve EXCLUSIVAMENTE este JSON: { "textos": [ ... ] } con la MISMA cantidad de textos, en el MISMO orden (idénticos si ya estaban correctos).',
     'TEXTOS A REVISAR:',
@@ -1277,6 +1278,7 @@ async function criticarAnuncios(env, grupos, ficha, marca, opts) {
       ? 'Mantén la MISMA cantidad de textos en cada lista y la MISMA posición de cada uno. Los titularesFijos van fijados en la posición 1: TODOS llevan el nombre de la marca, cada uno en una variante distinta (marca + otro mensaje), y así debe quedar tras reescribir.'
       : 'Mantén la MISMA cantidad de textos en cada lista y el orden de los titularesFijos (1 marca/producto, 2 keyword, 3 beneficio u oferta, 4 llamada a la acción).',
     o.conversion ? 'CAMPAÑA DE CONVERSIÓN: cada titular tiene un PAPEL (papelesFijos/papelesRotan, misma posición). Si lo reescribes, conserva su papel. Reescribe también toda descripción que invite a leer (conoce, infórmate, visita) o que no termine en una acción de compra.' : '',
+    'Reescribe también todo texto con mayúscula en cada palabra (estilo inglés): en español va solo al inicio y en nombres propios.',
     o.conversion ? LEC.leccionParaIA('conversion') : '',
     '',
     'FICHA DEL PRODUCTO Y LA COMPETENCIA:',
@@ -1583,7 +1585,7 @@ async function armarAds({ env, brief, marca, refsTxt, promos, enlaces, avisos, f
     'ANUNCIOS (aquí se gana o se pierde):',
     '- PRUEBA DEL COMPETIDOR: si cambias la marca por un competidor y el titular sigue siendo verdad, es genérico y NO sirve. Cada anuncio se construye sobre beneficios con cifra, pruebas, ofertas, objeciones y ángulos diferenciales de la INVESTIGACIÓN.',
     '- PROHIBIDO construir sobre los "mensajes genéricos que usan todos" y las frases trilladas: "los mejores precios", "calidad garantizada", "rápido y fácil", "atención personalizada", "la mejor opción", "no esperes más", "somos líderes", "amplia experiencia".',
-    '- 15 titulares, TODOS ≤30 caracteres (con espacios), únicos, sin punto final:',
+    '- 15 titulares, TODOS ≤30 caracteres (con espacios), únicos, sin punto final, con mayúscula SOLO al inicio y en nombres propios (norma del español; nada de mayúscula en cada palabra):',
     protocolo
       ? '  · "titularesFijos" (exactamente 5, van TODOS fijados en la posición 1 y Google elige uno): TODOS llevan el NOMBRE DE LA MARCA, cada uno en una variante distinta: la marca combinada con un mensaje diferente (producto, oferta, trámite, respaldo, acción de compra). Nunca la misma frase reordenada. (el nombre del producto solo no basta), con 5 formulaciones realmente distintas (no la misma frase reordenada).'
       : '  · "titularesFijos" (exactamente 4, en este orden, van anclados): 1) marca o producto, 2) la keyword principal del grupo casi literal, 3) el beneficio u oferta más fuerte, 4) llamada a la acción específica (no "Haz clic aquí").',
