@@ -5,9 +5,12 @@
 
 ## EL NEGOCIO DEL USUARIO (26-sep-2026 — leer SIEMPRE antes de generar anuncios)
 **eCommerce de Seguros Generales B2C** (venta directa al consumidor final, 100 % online). **NO es B2B.**
-Línea ACTIVA hoy: **solo AUTO**. SOAP se vende pero NO es del apetito de la compañía: solo tiene campaña activa en
-**enero y marzo** (fuera de eso, y en las campañas de auto, SOAP es negativa). Conversión objetivo: **la venta
-directa digital** (póliza pagada), aunque medirla le ha costado al usuario.
+Línea principal hoy: auto — pero **el conocimiento NO se cierra a auto**: aplica a cualquier seguro que se encargue
+(auto, hogar, mascota, viaje…); la línea sale del encargo y de la ficha. SOAP se vende pero NO es del apetito de la
+compañía: campaña activa solo en **enero y marzo** (fuera de eso, negativa en las demás campañas). Conversión
+objetivo: **la venta directa digital** (póliza pagada), aunque medirla le ha costado al usuario.
+**Propósito (orden del usuario):** Claude aprende de anuncios de CONVERSIÓN y **traspasa** ese conocimiento a la IA
+del motor (Gemini, `functions/api/ia.js`), como lección explícita, legible y única — no como reglas sueltas.
 
 **CÓMO SE INTEGRA ESTO (regla de trabajo, el usuario lo exigió): se SUMA por capas, no reemplaza acuerdos.**
 Capa 1 · Google (reglas con fuente, §6 del contrato) → Capa 2 · protocolo de la casa (taxonomía, 5 fijados con
