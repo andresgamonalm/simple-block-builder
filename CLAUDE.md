@@ -4,26 +4,35 @@
 > NO empezar de cero. Si cambias algo importante de arquitectura o acuerdos, actualízalo.
 
 ## EL NEGOCIO DEL USUARIO (26-sep-2026 — leer SIEMPRE antes de generar anuncios)
-**eCommerce de Seguros Generales B2C** (venta directa al consumidor final, 100 % online), principalmente
-**seguro de AUTO** (también hogar, mascota, viaje). **NO es B2B.** Cuando pida anuncios "comerciales BOFU":
-- **Comprador BOFU:** ya sabe que necesita el seguro y está con la tarjeta en la mano. Busca **rapidez** (contratar
-  ya, sin trámites físicos), **transparencia** (precio claro o descuento directo) y **respaldo** (compañía conocida,
-  liquidación rápida). Cada anuncio derriba las 3 barreras: flojera del trámite · desconfianza del precio · miedo a
-  que no respondan.
-- **Keywords solo transaccionales** (prohibidas las informativas: "cómo funciona…", "qué cubre…", consejos):
-  compra directa ("contratar seguro de auto online", "comprar seguro de hogar", "cotizar seguro [marca de auto]"),
-  precio/oferta ("seguro de auto más barato", "precio seguro de moto"), inmediatez ("asegurar auto en el acto").
-- **Títulos** con "Online", "En 3 Minutos", "Contrata Hoy", "[X]% de Descuento", "100% Digital". **Descripciones**
-  con certeza del beneficio + llamado directo a la compra ("Emite tu póliza online y viaja protegido hoy mismo").
-- Ejemplo del usuario ✅: "Seguro de Auto 100% Online" · "Cotiza y Contrata en 3 Min" · "Obtén 20% Desc. Este Mes" ·
-  "Asegura tu auto hoy sin trámites físicos. Recibe tu póliza digital de inmediato…". ❌ genérico: "Seguros para tu
-  Automóvil" · "Conoce la importancia de tener un auto asegurado…".
-- **Límites (verificados):** toda cifra/oferta/plazo debe ser REAL — en Chile la promoción de un seguro es
-  **vinculante y se incorpora al contrato** (CMF Circular 2123, V.4); la web debe mostrar condiciones, exclusiones
-  y prima (V.7); estadísticas con fuente (IV.3); comparativa solo con base objetiva y comprobable (Asociación de
-  Aseguradores); Ley 19.496 art. 28 (publicidad engañosa sobre precio/condiciones). Superlativos sin respaldo ("el más
-  barato") = riesgo CMF/SERNAC y política de tergiversación de Google. La keyword "más barato" sí se puede comprar.
-- **Integración al motor de Search: PROPUESTA, pendiente del OK del usuario** (ver la conversación del 26-sep).
+**eCommerce de Seguros Generales B2C** (venta directa al consumidor final, 100 % online). **NO es B2B.**
+Línea ACTIVA hoy: **solo AUTO**. SOAP se vende pero NO es del apetito de la compañía: solo tiene campaña activa en
+**enero y marzo** (fuera de eso, y en las campañas de auto, SOAP es negativa). Conversión objetivo: **la venta
+directa digital** (póliza pagada), aunque medirla le ha costado al usuario.
+
+**CÓMO SE INTEGRA ESTO (regla de trabajo, el usuario lo exigió): se SUMA por capas, no reemplaza acuerdos.**
+Capa 1 · Google (reglas con fuente, §6 del contrato) → Capa 2 · protocolo de la casa (taxonomía, 5 fijados con
+marca/oferta + 10, UTM, https, solo exacta/frase, negativas razonadas) → Capa 3 · calidad (anti-genérico, prueba
+del competidor, cero cifras inventadas, ortografía) → **Capa 4 · negocio B2C BOFU (esto)**. Una capa superior
+precisa a la inferior solo donde se tocan, y se anota explícitamente; lo demás sigue vigente tal cual.
+
+**Capa 4 · criterio BOFU de seguros B2C (principios, no fórmulas):**
+- El comprador BOFU ya decidió asegurarse y quiere comprar ahora. Cada anuncio derriba **tres barreras**: la
+  flojera del trámite (rapidez, sin trámites físicos), la desconfianza del precio (precio claro u oferta directa)
+  y el miedo a que no respondan (respaldo, liquidación).
+- Los ATRIBUTOS concretos con que se derriba cada barrera **los saca el robot de las fuentes**: la web (landing),
+  los materiales que entregue el usuario y su relato (encargo/notas). Los ejemplos del usuario ("Online", "En 3
+  Minutos", "20% Desc.") son solo EJEMPLOS del tono; nunca se escriben si la fuente no los respalda (además, en
+  Chile una oferta publicitada es vinculante: CMF Circular 2123 V.4).
+- Keywords solo con intención transaccional (compra directa, precio/oferta, inmediatez, marca y modelo del auto);
+  las informativas ("cómo funciona", "qué cubre", consejos) no van en campañas BOFU.
+- Descripciones con certeza del beneficio y llamado directo a la compra.
+- Límites verificados: CMF Circular 2123 (promoción vinculante V.4; la web debe mostrar condiciones, exclusiones
+  y prima V.7; estadísticas con fuente IV.3); comparativa solo con base objetiva y comprobable (Asociación de
+  Aseguradores); Ley 19.496 art. 28. La keyword "más barato" se puede comprar; afirmarlo en el anuncio, no sin prueba.
+
+**Dónde la capa 4 PRECISA reglas anteriores (sin borrarlas):** el veto a "rápido y fácil" sigue; la rapidez se
+dice con el hecho concreto que traiga la fuente. "Online" deja de ser relleno solo cuando responde a la barrera
+del trámite. Integración en el motor: pendiente del OK del usuario.
 
 ## Qué es
 Editor de creatividades por bloques para **email, banners (Google Display), social
