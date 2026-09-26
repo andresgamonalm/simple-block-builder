@@ -941,3 +941,45 @@ olvidar el objetivo de la campaña**. Sin mockup (autorizado).
 - Mi Publicidad **no entra** a la cuenta de Google Ads (no hay API conectada): se aplica importando el XLSX.
 - Pruebas: `diagnostico.js` 37/37 (servidor) y `campana-actual.js` 37/37 (navegador), con **datos
   inventados** en `pruebas/datos/`. Batería completa en verde.
+
+## 26-sep-2026: NUEVA ARQUITECTURA — la CAMPAÑA es el centro (EN CURSO, leer antes de tocar nada)
+Tras la auditoría 360 (sesión 24-26 sep) el usuario aprobó rehacer la lógica: el aplicativo estaba
+organizado por TIPO DE PIEZA (email, banner, search…) y exportaba TRADUCIENDO; ahora se construye la
+CAMPAÑA con forma de Google Ads Editor y exportar es SERIALIZAR. Decisiones del usuario (literales o casi):
+- **Foco: Google Ads — Search, Display, Performance Max.** Facebook y contraseñas: prioridad mínima.
+  La biblioteca de imágenes: "solo indéxala" (catálogo con proporción/tamaño/peso, sin invertir más).
+- **Display:** el banner máster lo diseña el usuario; el resto se replica con UN clic (ya existe, se conserva).
+- **Search:** lo produce la IA, CON CONVERSACIÓN para corregir o investigar POR PARTES ("a veces la IA se
+  equivoca en detalles y hay que hacer todo de nuevo, lo que me gasta muchos tokens"). Por eso todo
+  elemento del modelo lleva `id` estable: la IA recibe/devuelve cambios sobre ids, no la campaña entera.
+- **"El entregable tiene que ser claro, especialmente para la IA"**: UNA sola definición (el esquema) de la
+  que salen exportador, instrucciones a la IA y contrato legible.
+- **Moneda: siempre CLP** (enteros). **Borrar** los proyectos/borradores existentes conservando marcas y
+  fotos (aprobado, AÚN NO EJECUTADO). No se borra la IA ni los recursos gráficos ni lo externo.
+  Respaldo previo: rama `respaldo-antes-de-poda-2026-09-26`.
+- **Contrato de salida = el CSV que el usuario sube hoy a Ads Editor** ("tiene errores pero se indexa muy
+  bien"): 1 archivo, UTF-8 BOM, comas, CRLF, 60 columnas, orden fijo de filas. El real NO se sube al repo
+  (el repo se publica como sitio); `pruebas/datos/ads-editor-referencia.csv` es su copia anonimizada ("Acme").
+
+**PASO 1 (HECHO): núcleo.**
+- `nucleo/modelo.js` (UMD, `window.MP_Modelo` / `require`): `ESQUEMA` (entidades, campos, límites, columna
+  de Ads Editor, descripción), `LIMITES`, fábricas con ids (`cmp_`, `grp_`, `kw_`, `neg_`, `rsa_`, `tit_`…),
+  `indiceDeIds`, `buscarPorId`, `esquemaParaIA()`.
+- `nucleo/ads-editor.js` (UMD, `window.MP_AdsEditor`): `importar(csv)` → iniciativa + avisos + conteo;
+  `exportar(iniciativa)` → CSV. FIEL (no corrige: eso es del motor de reglas). Lo desconocido se conserva
+  (`otrasColumnas` por elemento, `extras` por fila; campañas/grupos solo nombrados = `soloReferencia`).
+- `CONTRATO-CAMPANA.md` GENERADO (`node nucleo/generar-contrato.js`); no se edita a mano.
+- Pruebas: `nucleo.js` 28/28 (ida y vuelta byte a byte, también con el archivo real vía `MP_CSV_REAL`),
+  `nucleo-contrato.js` (documento al día). Registradas en `correr-todo.sh`.
+- Hallazgos del CSV real que el motor de reglas debe atrapar: `Start date` = `[]`; presupuesto `25` (= $25
+  CLP diarios); Maximizar clics sin tope de CPC + Search Partners; sin método de ubicación (queda
+  "presencia o interés"); 5 títulos casi iguales fijados en posición 1 y repetidos en los 4 grupos; 109
+  negativas amplias duplicadas en 2 campañas (→ lista compartida); exclusión de edad "Unknown".
+
+**Siguientes pasos (orden aprobado):** 2) motor de reglas único (Google · coherencia · criterio) ·
+3) guardado por iniciativa con versión y estados (borrador→…→publicada; nombres fijos tras publicar;
+export completo / solo cambios) · 4) Search por IA sobre el modelo con ficha de producto persistente y
+CONVERSACIÓN por partes · 5) Display y Performance Max con espacios de imagen · 6) operación (import de
+informes → diagnóstico → CSV de cambios) y aprendizaje por marca. La interfaz nueva va con MOCKUP antes.
+Pendiente de confirmar en la 1ª importación real: notación de negativas frase `"x"` / exacta `[x]` y
+negativa de grupo (`Type`=`Negative`).
