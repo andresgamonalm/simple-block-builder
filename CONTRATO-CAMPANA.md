@@ -1,4 +1,4 @@
-# Contrato de campaña · Mi Publicidad (`mp-campana/1`)
+# Contrato de campaña · My Ads (`mp-campana/1`)
 
 > **Documento generado** desde `nucleo/modelo.js` y `nucleo/ads-editor.js`. No se edita a mano:
 > `node nucleo/generar-contrato.js`. Es la referencia para personas **y para la IA**.

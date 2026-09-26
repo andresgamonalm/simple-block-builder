@@ -12,7 +12,7 @@ const LEC = require('./lecciones.js');
 
 function contrato() {
   const L = [];
-  L.push('# Contrato de campaña · Mi Publicidad (`' + M.VERSION_ESQUEMA + '`)');
+  L.push('# Contrato de campaña · My Ads (`' + M.VERSION_ESQUEMA + '`)');
   L.push('');
   L.push('> **Documento generado** desde `nucleo/modelo.js` y `nucleo/ads-editor.js`. No se edita a mano:');
   L.push('> `node nucleo/generar-contrato.js`. Es la referencia para personas **y para la IA**.');

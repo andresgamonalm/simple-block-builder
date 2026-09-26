@@ -1,4 +1,4 @@
--- Mi Publicidad — Cloudflare D1 schema (SQLite)
+-- My Ads — Cloudflare D1 schema (SQLite)
 -- Aplicar con:
 --   wrangler d1 execute simple-block-builder --remote --file=./schema/0001_initial.sql
 

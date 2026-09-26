@@ -1,5 +1,5 @@
 /* ════════════════════════════════════════════════════════════════════════
-   MI PUBLICIDAD · NÚCLEO · LECCIONES PARA LA IA
+   MY ADS · NÚCLEO · LECCIONES PARA LA IA
    ────────────────────────────────────────────────────────────────────────
    Conocimiento de negocio que Claude aprende con el usuario y TRASPASA a la
    IA del motor (Gemini, functions/api/ia.js). Una sola definición, de la que

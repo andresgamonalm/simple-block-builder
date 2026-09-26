@@ -41,7 +41,7 @@ function d1() {
   const cookie = async u => "sbb_session=" + await sh.signJWT({ u }, env.JWT_SECRET);
   const C = { andres: await cookie("andres"), lorena: await cookie("lorena") };
   const llamar = async (quien, metodo, q, body) => {
-    const request = new Request("https://mi-publicidad.gamonal.app/api/iniciativas" + (q || ""), { method: metodo,
+    const request = new Request("https://my-ads.gamonal.app/api/iniciativas" + (q || ""), { method: metodo,
       headers: Object.assign({ "content-type": "application/json" }, quien ? { cookie: C[quien] } : {}), body: body ? JSON.stringify(body) : undefined });
     const r = await (metodo === "GET" ? api.onRequestGet : api.onRequestPost)({ request, env });
     return { status: r.status, ...(await r.json()) };

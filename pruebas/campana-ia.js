@@ -83,7 +83,7 @@ function respuestaGemini(obj, extra) {
     return respuestaGemini({});
   };
   const llamar = async (quien, payload) => {
-    const req = new Request("https://mi-publicidad.gamonal.app/api/ia", { method: "POST", headers: { "Content-Type": "application/json", Cookie: C[quien] }, body: JSON.stringify(payload) });
+    const req = new Request("https://my-ads.gamonal.app/api/ia", { method: "POST", headers: { "Content-Type": "application/json", Cookie: C[quien] }, body: JSON.stringify(payload) });
     const res = await ia.onRequestPost({ request: req, env });
     return { status: res.status, ...(await res.json()) };
   };

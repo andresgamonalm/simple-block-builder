@@ -1,5 +1,5 @@
 /* ════════════════════════════════════════════════════════════════════════
-   MI PUBLICIDAD · NÚCLEO · DE LA IA AL MODELO
+   MY ADS · NÚCLEO · DE LA IA AL MODELO
    ────────────────────────────────────────────────────────────────────────
    El pipeline de Search (functions/api/ia.js: investigar → estructurar →
    crítico → filtros → ortografía) entrega grupos, keywords, anuncios y

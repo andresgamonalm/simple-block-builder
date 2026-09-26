@@ -1,5 +1,5 @@
 /* ════════════════════════════════════════════════════════════════════════
-   MI PUBLICIDAD · NÚCLEO · MOTOR DE REGLAS
+   MY ADS · NÚCLEO · MOTOR DE REGLAS
    ────────────────────────────────────────────────────────────────────────
    UN solo catálogo, usado por: la IA (antes y después de generar), la
    pantalla (mientras se edita) y la exportación (antes de entregar).

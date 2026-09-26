@@ -1,5 +1,5 @@
 /* ════════════════════════════════════════════════════════════════════════
-   MI PUBLICIDAD · NÚCLEO · CORRECCIONES POR PARTES
+   MY ADS · NÚCLEO · CORRECCIONES POR PARTES
    ────────────────────────────────────────────────────────────────────────
    La IA no reescribe la campaña entera para arreglar un detalle: recibe SOLO
    la parte en cuestión (con sus id) y devuelve OPERACIONES sobre esos id.

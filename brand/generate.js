@@ -6,7 +6,7 @@ import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
-const svgPath = join(__dirname, 'mi-publicidad.svg');
+const svgPath = join(__dirname, 'my-ads.svg');
 const svg = await readFile(svgPath);
 
 const sizes = [512, 1024];
@@ -16,14 +16,14 @@ for (const size of sizes) {
     .resize(size, size)
     .png()
     .toBuffer();
-  await writeFile(join(__dirname, `mi-publicidad-${size}.png`), png);
+  await writeFile(join(__dirname, `my-ads-${size}.png`), png);
 
   const jpg = await sharp(svg, { density: 600 })
     .resize(size, size)
     .flatten({ background: '#ffffff' })
     .jpeg({ quality: 92 })
     .toBuffer();
-  await writeFile(join(__dirname, `mi-publicidad-${size}.jpg`), jpg);
+  await writeFile(join(__dirname, `my-ads-${size}.jpg`), jpg);
 }
 
 console.log('OK — PNG y JPG generados en /brand');

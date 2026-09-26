@@ -1,5 +1,5 @@
 /* ════════════════════════════════════════════════════════════════════════
-   MI PUBLICIDAD · NÚCLEO · IMPORTADOR / EXPORTADOR DE GOOGLE ADS EDITOR
+   MY ADS · NÚCLEO · IMPORTADOR / EXPORTADOR DE GOOGLE ADS EDITOR
    ────────────────────────────────────────────────────────────────────────
    El CONTRATO es el CSV que el usuario ya sube a Ads Editor y que "se indexa
    muy bien": un solo archivo, UTF-8 con BOM, separado por comas, líneas CRLF, estas 60

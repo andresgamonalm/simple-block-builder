@@ -1,5 +1,5 @@
 /* ════════════════════════════════════════════════════════════════════════
-   MI PUBLICIDAD · NÚCLEO · VERSIONES Y ESTADOS DE UNA INICIATIVA
+   MY ADS · NÚCLEO · VERSIONES Y ESTADOS DE UNA INICIATIVA
    ────────────────────────────────────────────────────────────────────────
    La iniciativa se guarda por VERSIONES (cada guardado con cambios = una
    versión nueva y completa) y avanza por ESTADOS:

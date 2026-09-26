@@ -1,4 +1,4 @@
-# Mi Publicidad — memoria del proyecto
+# My Ads (antes Mi Publicidad) — memoria del proyecto
 
 > Este archivo lo lee Claude Code al iniciar cada sesión. Mantiene el contexto para
 > NO empezar de cero. Si cambias algo importante de arquitectura o acuerdos, actualízalo.
@@ -72,7 +72,7 @@ Editor de creatividades por bloques para **email, banners (Google Display), soci
 Casi todo vive en **`editor.html`** (~4200 líneas, HTML+CSS+JS inline, 2 `<script>`).
 Backend: funciones en **`functions/api/`** (auth por magic link + JWT, persistencia, envío, IA).
 
-- Producción: **https://mi-publicidad.gamonal.app** (Cloudflare Pages, auto-deploy desde `main`, ~1–2 min). **Nombre del aplicativo: "Mi Publicidad"** (renombrado el 24-sep-2026 desde "Simple Block Builder"). El proyecto de Pages y la base D1 conservan el nombre técnico `simple-block-builder` (no se pueden renombrar). El dominio `mi-publicidad.gamonal.app` se agrega en Cloudflare → Pages → Custom domains.
+- Producción: **https://my-ads.gamonal.app** (Cloudflare Pages, auto-deploy desde `main`, ~1–2 min). **Nombre del aplicativo: "My Ads"** (renombrado el 26-sep-2026 desde "Mi Publicidad", que a su vez venía de "Simple Block Builder"). El proyecto de Pages y la base D1 conservan el nombre técnico `simple-block-builder` (no se pueden renombrar); los prefijos internos `sbb-` y `MP_` (núcleo) tampoco se tocan. El subdominio `my-ads.gamonal.app` se agrega en Cloudflare → Pages → Custom domains (el anterior puede convivir). Archivos de marca: `brand/my-ads.svg`, `logo_my_ads.*`, `icono_my_ads.*`, `assets/login/foto_login_my_ads.jpg`.
 - Dueño/usuario: Andrés Gamonal (hola@andresgamonal.com). **Responder en español.**
 
 ## Acuerdos de trabajo (IMPORTANTE)

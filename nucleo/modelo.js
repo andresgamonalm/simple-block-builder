@@ -1,5 +1,5 @@
 /* ════════════════════════════════════════════════════════════════════════
-   MI PUBLICIDAD · NÚCLEO · MODELO DE CAMPAÑA  (esquema "mp-campana/1")
+   MY ADS · NÚCLEO · MODELO DE CAMPAÑA  (esquema "mp-campana/1")
    ────────────────────────────────────────────────────────────────────────
    Una sola definición de la campaña, espejo de Google Ads Editor. De aquí
    salen tres cosas, y por eso no puede haber otra definición en paralelo:

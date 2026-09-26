@@ -70,7 +70,7 @@ const leerUTF16 = f => new TextDecoder("utf-16le").decode(fs.readFileSync(f).sub
   const env = { GEMINI_API_KEY: "x", JWT_SECRET: "s" };
   const cookie = "sbb_session=" + await sh.signJWT({ u: admin.usuario }, "s");
   const llamar = async (body) => {
-    const res = await ia.onRequestPost({ request: new Request("https://mi-publicidad.gamonal.app/api/ia", { method: "POST", headers: { "Content-Type": "application/json", Cookie: cookie }, body: JSON.stringify(body) }), env });
+    const res = await ia.onRequestPost({ request: new Request("https://my-ads.gamonal.app/api/ia", { method: "POST", headers: { "Content-Type": "application/json", Cookie: cookie }, body: JSON.stringify(body) }), env });
     return { status: res.status, data: await res.json() };
   };
 

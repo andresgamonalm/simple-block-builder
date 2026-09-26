@@ -94,7 +94,7 @@ function respuestaGemini(obj, extra) {
   };
 
   const llamar = async (brief) => {
-    const req = new Request("https://mi-publicidad.gamonal.app/api/ia", { method: "POST", headers: { "Content-Type": "application/json", Cookie: cookie.replace("sbb_session", nombreCookie) },
+    const req = new Request("https://my-ads.gamonal.app/api/ia", { method: "POST", headers: { "Content-Type": "application/json", Cookie: cookie.replace("sbb_session", nombreCookie) },
       body: JSON.stringify({ producto: "ads", brief, marca: { nombre: "Aseguradora Demo", negocio: "seguros" } }) });
     const res = await ia.onRequestPost({ request: req, env });
     return { status: res.status, data: await res.json() };
