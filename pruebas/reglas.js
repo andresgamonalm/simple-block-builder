@@ -60,6 +60,13 @@ function base() {
   return { i, cm, g, a };
 }
 const CX = { hoy: HOY, ficha: "Deducible desde 3 UF. Grúa 24/7.", marca: "Demo" };
+// Campaña de CONVERSIÓN: objetivo con enfoque, títulos con su papel y descripciones que venden.
+const ROLES = ["keyword", "keyword", "cta", "tramite", "cta", "keyword", "precio", "respaldo", "cta", "respaldo", "respaldo", "precio", "respaldo", "precio", "tramite"];
+function conv(x) {
+  x.i.objetivo = { que: "seguro auto", enfoque: "conversion" };
+  x.cm.grupos.forEach(g => g.anuncios.forEach(a => { a.titulos.forEach((t, k) => { t.rol = ROLES[k]; }); a.descripciones[1].texto = "Deducible desde 3 UF y grúa 24/7. Cotiza hoy."; }));
+  return x;
+}
 const limpio = R.validar(base().i, CX);
 T(limpio.hallazgos.every(h => h.codigo === "C04") && limpio.errores === 0 && limpio.avisos === 0, "una campaña armada con tu protocolo: cero errores y cero avisos (solo la sugerencia C04: Google fija 2-3, tu protocolo 5)", JSON.stringify(limpio.hallazgos.map(h => h.codigo + " " + h.mensaje)));
 
@@ -106,7 +113,12 @@ const casos = [
   ["P06", x => { x.cm.sitelinks[0].urlFinal = "https://ejemplo.cl/auto"; }],
   ["P07", x => { x.cm.destacados.pop(); }],
   ["P08", x => { x.cm.sufijoUrlFinal = "utm_source=google&utm_medium=cpc&utm_campaign=Otra"; }],
-  ["P09", x => { x.a.urlFinal = "http://ejemplo.cl/auto"; }]
+  ["P09", x => { x.a.urlFinal = "http://ejemplo.cl/auto"; }],
+  ["C10", x => { x.a.titulos[9].texto = "El Seguro Más Barato"; }],
+  ["V01", x => { conv(x); x.g.keywords.push(M.nuevaKeyword("que es un seguro de auto", "frase")); }],
+  ["V02", x => { conv(x); x.a.titulos.forEach(t => { if (t.rol === "respaldo") t.rol = ""; }); }],
+  ["V03", x => { conv(x); x.a.descripciones[0].texto = "Conoce nuestros planes para tu auto."; }],
+  ["V04", x => { conv(x); x.a.descripciones[0].texto = "Tu auto protegido todo el año."; }]
 ];
 for (const [cod, romper] of casos) {
   const x = base(); romper(x);
@@ -121,6 +133,16 @@ T(sim(x => x.g.keywords.push(M.nuevaKeyword("seguro [auto]", "frase"))).includes
 T(!sim(x => x.g.keywords.push(M.nuevaKeyword("seguro {auto}", "frase"))).includes("G05"), "las llaves { } no están en la lista de Google para keywords → no se marcan");
 T(!sim(x => x.cm.negativas.push(M.nuevaNegativa("gratis*", "amplia"))).includes("G11") && sim(x => x.cm.negativas.push(M.nuevaNegativa("{gratis}", "amplia"))).includes("G11"), "negativa: el * vale, las { } no → G11");
 T(R.REGLAS.every(r => r.fuente), "cada regla declara su respaldo (documento de Google, protocolo o criterio propio)");
+
+console.log("\n2c · Lección de conversión");
+const vc = R.validar(conv(base()).i, CX);
+T(!vc.hallazgos.some(h => /^V|C10/.test(h.codigo)), "una campaña de conversión bien hecha (papeles, barreras, verbos de compra): cero hallazgos V ni C10", JSON.stringify(vc.hallazgos.filter(h => /^V|C10/.test(h.codigo)).map(h => h.codigo + " " + h.mensaje)));
+T(!R.validar(base().i, CX).hallazgos.some(h => /^V/.test(h.codigo)), "sin enfoque de conversión las reglas V no se aplican (se SUMAN, no cambian lo anterior)");
+const sup = base(); sup.a.titulos[9].texto = "El Seguro Más Barato";
+T(!R.validar(sup.i, Object.assign({}, CX, { ficha: CX.ficha + " Somos el seguro más barato según estudio X 2026." })).hallazgos.some(h => h.codigo === "C10"), "C10: si la ficha respalda la afirmación («más barato»), no se marca");
+const infKw = conv(base()); infKw.g.keywords.push(M.nuevaKeyword("seguro auto mas barato", "frase"));
+T(!R.validar(infKw.i, CX).hallazgos.some(h => h.codigo === "V01" || h.codigo === "C10"), "«seguro auto más barato» como KEYWORD es válida (solo el anuncio no puede afirmarlo)");
+T(R.REGLAS.filter(r => r.categoria === "conversion").every(r => /lección de conversión/.test(r.fuente)), "las reglas V citan la lección como fuente");
 
 console.log("\n3 · Cuándo una negativa bloquea (según SU concordancia)");
 const kw = { texto: "comprar seguro de auto" };

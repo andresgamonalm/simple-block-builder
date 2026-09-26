@@ -58,8 +58,10 @@
       (g.negativas || []).forEach(n => grp.negativas.push(M.nuevaNegativa(n, 'frase', motivos[n] || '')));
       const a = M.nuevoAnuncioRSA(M.nombreAnuncio(pocasPalabras(g.angulo || g.nombre, 4)));
       a.urlFinal = url; a.ruta1 = g.path1 || ''; a.ruta2 = g.path2 || '';
-      (g.titularesFijos || []).forEach(t => a.titulos.push(M.nuevoTitulo(t, '1')));
-      (g.titularesRotan || []).forEach(t => a.titulos.push(M.nuevoTitulo(t, '')));
+      // Papel de cada título (enfoque de conversión): viene de la IA en datos.rolesTitulos.
+      const rol = t => (datos.rolesTitulos && datos.rolesTitulos[t]) || '';
+      (g.titularesFijos || []).forEach(t => a.titulos.push(M.nuevoTitulo(t, '1', rol(t))));
+      (g.titularesRotan || []).forEach(t => a.titulos.push(M.nuevoTitulo(t, '', rol(t))));
       (g.descripciones || []).forEach(d => a.descripciones.push(M.nuevaDescripcion(d, '')));
       grp.anuncios.push(a);
       c.grupos.push(grp);

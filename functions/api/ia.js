@@ -15,6 +15,7 @@ import MOD from '../../nucleo/modelo.js';
 import REG from '../../nucleo/reglas.js';
 import OPS from '../../nucleo/operaciones.js';
 import CIA from '../../nucleo/campana-ia.js';
+import LEC from '../../nucleo/lecciones.js';
 
 export const onRequestOptions = () => corsPreflight();
 
@@ -1168,6 +1169,7 @@ async function investigarAds(env, brief, marca) {
     '2. BUSCA en Google (resultados de Chile) cómo busca la gente este producto y quiénes compiten por esas búsquedas. Identifica 3 a 6 competidores y qué promete cada uno en sus anuncios y páginas.',
     '3. Detecta los MENSAJES GENÉRICOS que repiten todos (no sirven para diferenciar) y los ÁNGULOS DIFERENCIALES que esta marca tiene con respaldo en su landing y la competencia no usa.',
     '4. Piensa en las búsquedas que NO queremos pagar: lo que el producto NO es o no incluye, significados confundibles, productos parecidos que no se venden aquí.',
+    brief.enfoque === 'conversion' ? '5. CAMPAÑA DE CONVERSIÓN (venta directa online): ordena la EVIDENCIA que encuentres en la web, los materiales y el relato del usuario según las tres barreras del comprador — TRÁMITE (qué tan digital, cuánto tarda, qué no hay que hacer), PRECIO (precio visible, oferta, forma de pago) y RESPALDO (quién responde, cómo liquida, asistencia, pruebas con fuente) — y detecta los MOMENTOS DE NECESIDAD que obligan a comprar ya. Solo hechos con respaldo; si una barrera no tiene evidencia, deja su lista vacía.' : '',
     '',
     'Devuelve SOLO este JSON (sin texto antes ni después):',
     '{',
@@ -1186,7 +1188,9 @@ async function investigarAds(env, brief, marca) {
     '  "noOfrece": ["lo que el producto NO es o NO incluye, y con qué se confunde"],',
     '  "competidores": [{"nombre": "...", "promesa": "qué prometen"}],',
     '  "mensajesGenericos": ["frases/promesas que usan todos en la categoría"],',
-    '  "angulosDiferenciales": ["ángulos propios de la marca, respaldados por su landing"]',
+    '  "angulosDiferenciales": ["ángulos propios de la marca, respaldados por su landing"],',
+    '  "evidencia": { "tramite": ["hechos"], "precio": ["hechos"], "respaldo": ["hechos"] },',
+    '  "momentos": ["situaciones que obligan a comprar ya (ej. auto recién comprado)"]',
     '}',
     'REGLAS: nada inventado. Si un dato no está en la landing ni en Google, no lo pongas. Las cifras van TEXTUALES. Si no pudiste leer la landing, "leyoLanding": false.'
   ].filter(Boolean).join('\n');
@@ -1208,7 +1212,9 @@ async function investigarAds(env, brief, marca) {
       busquedas: aLista(f.busquedas, 25, 80), noOfrece: aLista(f.noOfrece, 20),
       competidores: (Array.isArray(f.competidores) ? f.competidores : []).slice(0, 6)
         .map(c => ({ nombre: String((c && c.nombre) || '').slice(0, 60), promesa: String((c && c.promesa) || '').slice(0, 200) })).filter(c => c.nombre),
-      mensajesGenericos: aLista(f.mensajesGenericos, 12), angulosDiferenciales: aLista(f.angulosDiferenciales, 8)
+      mensajesGenericos: aLista(f.mensajesGenericos, 12), angulosDiferenciales: aLista(f.angulosDiferenciales, 8),
+      evidencia: { tramite: aLista(f.evidencia && f.evidencia.tramite, 8), precio: aLista(f.evidencia && f.evidencia.precio, 8), respaldo: aLista(f.evidencia && f.evidencia.respaldo, 8) },
+      momentos: aLista(f.momentos, 8)
     };
     if (!ficha.producto && !ficha.beneficios.length) { ultimoError = 'la ficha llegó vacía'; continue; }
     return { ficha, urlsLeidas: r.urlsLeidas || [], fuentes: r.fuentes || [] };
@@ -1233,7 +1239,11 @@ function fichaTexto(f) {
     l('LO QUE NO ES / NO INCLUYE (base de las negativas)', f.noOfrece),
     f.competidores && f.competidores.length ? 'COMPETIDORES EN GOOGLE:\n' + f.competidores.map(c => `  - ${c.nombre}: ${c.promesa}`).join('\n') : '',
     l('MENSAJES GENÉRICOS QUE USAN TODOS (PROHIBIDO construir anuncios sobre esto)', f.mensajesGenericos),
-    l('ÁNGULOS DIFERENCIALES DE ESTA MARCA (úsalos)', f.angulosDiferenciales)
+    l('ÁNGULOS DIFERENCIALES DE ESTA MARCA (úsalos)', f.angulosDiferenciales),
+    f.evidencia ? l('EVIDENCIA · barrera del TRÁMITE', f.evidencia.tramite) : '',
+    f.evidencia ? l('EVIDENCIA · barrera del PRECIO', f.evidencia.precio) : '',
+    f.evidencia ? l('EVIDENCIA · barrera del RESPALDO', f.evidencia.respaldo) : '',
+    l('MOMENTOS DE NECESIDAD', f.momentos)
   ].filter(Boolean).join('\n');
 }
 
@@ -1250,8 +1260,11 @@ const esCliche = s => { const t = sinTildes(s); return CLICHES_ADS.some(c => t.i
 // Cifras de un texto, normalizadas ("$9.990" y "9990" son la misma).
 const cifrasDe = s => (String(s || '').match(/\d+(?:[.,]\d+)*/g) || []).map(n => n.replace(/[.,]/g, '')).filter(n => n.length);
 
-async function criticarAnuncios(env, grupos, ficha, marca) {
-  const entrada = grupos.map((g, i) => ({ i, grupo: g.nombre, intencion: g.intencion, titularesFijos: g.titularesFijos, titulares: g.titularesRotan, descripciones: g.descripciones }));
+async function criticarAnuncios(env, grupos, ficha, marca, opts) {
+  const o = opts || {};
+  const papel = t => (o.rolDe && o.rolDe[String(t).toLowerCase()]) || '';
+  const entrada = grupos.map((g, i) => ({ i, grupo: g.nombre, intencion: g.intencion, titularesFijos: g.titularesFijos, titulares: g.titularesRotan, descripciones: g.descripciones,
+    ...(o.conversion ? { papelesFijos: g.titularesFijos.map(papel), papelesRotan: g.titularesRotan.map(papel) } : {}) }));
   const prompt = [
     `Eres director creativo de performance y revisas anuncios RSA de Google Search${marca ? ' de ' + (marca.nombre || marca.empresa) : ''} antes de publicarlos. Tu trabajo es MATAR LO GENÉRICO.`,
     '',
@@ -1260,7 +1273,11 @@ async function criticarAnuncios(env, grupos, ficha, marca) {
     'Lo que ya es específico y bueno, DÉJALO IGUAL.',
     'LÍMITES DUROS: titulares ≤30 caracteres (con espacios), descripciones ≤90. Titulares sin punto final. Español de Chile correcto.',
     'PROHIBIDO inventar cifras, precios, plazos o premios que no estén en la ficha.',
-    'Mantén la MISMA cantidad de textos en cada lista y el orden de los titularesFijos (1 marca/producto, 2 keyword, 3 beneficio u oferta, 4 llamada a la acción).',
+    o.protocolo
+      ? 'Mantén la MISMA cantidad de textos en cada lista y la MISMA posición de cada uno. Los titularesFijos van fijados en la posición 1: cada uno lleva el nombre de la marca o la oferta/precio.'
+      : 'Mantén la MISMA cantidad de textos en cada lista y el orden de los titularesFijos (1 marca/producto, 2 keyword, 3 beneficio u oferta, 4 llamada a la acción).',
+    o.conversion ? 'CAMPAÑA DE CONVERSIÓN: cada titular tiene un PAPEL (papelesFijos/papelesRotan, misma posición). Si lo reescribes, conserva su papel. Reescribe también toda descripción que invite a leer (conoce, infórmate, visita) o que no termine en una acción de compra.' : '',
+    o.conversion ? LEC.leccionParaIA('conversion') : '',
     '',
     'FICHA DEL PRODUCTO Y LA COMPETENCIA:',
     fichaTexto(ficha) || '(sin ficha)',
@@ -1516,6 +1533,11 @@ async function generarAds(args) {
 async function armarAds({ env, brief, marca, refsTxt, promos, enlaces, avisos, ficha, fuentes, protocolo }) {
   avisos = Array.isArray(avisos) ? avisos : [];
   const NFIJ = protocolo ? 5 : 4, NROT = protocolo ? 10 : 11;
+  // Enfoque de CONVERSIÓN: la IA recibe la lección (nucleo/lecciones.js) y
+  // declara el PAPEL de cada título (keyword, tramite, precio, respaldo, cta).
+  const conversion = brief.enfoque === 'conversion';
+  const rolDe = {};   // texto (minúsculas) → papel; se hereda cuando un texto se reescribe
+  const llevarRol = (viejo, nuevo) => { const r = rolDe[String(viejo).toLowerCase()]; if (r && nuevo) rolDe[String(nuevo).toLowerCase()] = r; };
   const fTxt = fichaTexto(ficha);
   const prompt = [
     `Eres un especialista senior en Google Ads (Search) de ${marca ? (marca.nombre || marca.empresa) : 'la marca'}, con 10 años gestionando cuentas en Chile. Estructuras por INTENCIÓN de búsqueda, con concordancias controladas y negativas razonadas. Detestas la concordancia amplia y los anuncios intercambiables con los de la competencia.`,
@@ -1523,6 +1545,7 @@ async function armarAds({ env, brief, marca, refsTxt, promos, enlaces, avisos, f
     encargoDelUsuario(brief),
     '',
     fTxt ? '════ INVESTIGACIÓN PREVIA (landing leída + competencia en Google) — TU MATERIA PRIMA ════\n' + fTxt + '\n══════════════════════════════════════════════════' : '',
+    conversion ? '\n' + LEC.leccionParaIA('conversion') : '',
     aprendizajeTexto(brief.aprendizaje),
     '',
     'Devuelve EXCLUSIVAMENTE este JSON (sin texto extra):',
@@ -1536,8 +1559,8 @@ async function armarAds({ env, brief, marca, refsTxt, promos, enlaces, avisos, f
     '      "angulo": "el ángulo diferencial que usan los anuncios de este grupo frente a la competencia",',
     '      "keywords": [ { "t": "keyword en minúsculas", "tipo": "exacta" | "frase" } ],',
     '      "negativas": [ { "t": "término", "motivo": "por qué se excluye en este grupo" } ],',
-    `      "titularesFijos": [ "${NFIJ} titulares ANCLADOS, ≤30 caracteres cada uno" ],`,
-    `      "titulares": [ "${NROT} titulares que ROTAN, ≤30 caracteres cada uno" ],`,
+    conversion ? `      "titularesFijos": [ { "t": "titular ANCLADO ≤30 caracteres", "rol": "keyword|tramite|precio|respaldo|cta" } ] (exactamente ${NFIJ}),` : `      "titularesFijos": [ "${NFIJ} titulares ANCLADOS, ≤30 caracteres cada uno" ],`,
+    conversion ? `      "titulares": [ { "t": "titular que ROTA ≤30 caracteres", "rol": "keyword|tramite|precio|respaldo|cta" } ] (exactamente ${NROT}),` : `      "titulares": [ "${NROT} titulares que ROTAN, ≤30 caracteres cada uno" ],`,
     '      "descripciones": [ "4 descripciones, ≤90 caracteres cada una" ],',
     '      "path1": "ruta-1", "path2": "ruta-2"',
     '    }',
@@ -1549,7 +1572,10 @@ async function armarAds({ env, brief, marca, refsTxt, promos, enlaces, avisos, f
     '',
     'ESTRUCTURA Y KEYWORDS:',
     '- "nombre" de la campaña y de cada grupo: LEGIBLES, con espacios y tildes (ej. "Cotizar seguro auto"), nunca en formato slug.',
-    '- 2 a 4 grupos. Cada grupo = UNA intención (ej.: contratar/cotizar ya · comparar/precio · necesidad o problema · marca). No mezcles "cotizar" con "qué es".',
+    conversion
+      ? '- 2 a 4 grupos. Cada grupo = UNA intención de COMPRA (comprar/contratar · precio u oferta · inmediatez · detalle del objeto · momento de necesidad; la marca propia va en otra campaña). Nada informativo.'
+      : '- 2 a 4 grupos. Cada grupo = UNA intención (ej.: contratar/cotizar ya · comparar/precio · necesidad o problema · marca). No mezcles "cotizar" con "qué es".',
+    conversion ? '- PAPEL de cada titular ("rol"): entre fijos y rotativos tienen que estar la keyword y las TRES barreras (tramite, precio, respaldo). Si una barrera no tiene evidencia en las fuentes, no la inventes: cúbrela con lo que sí haya.' : '',
     '- Por grupo: 20 a 25 keywords, tomadas de CÓMO BUSCA LA GENTE y del VOCABULARIO REAL de la investigación. Nada que esté en "lo que NO es".',
     '- "tipo" SOLO "exacta" o "frase" (amplia PROHIBIDA). Exacta = búsquedas cortas y precisas (2-3 palabras); frase = variantes largas (4-5 palabras). Mínimo 30% de cada tipo por grupo.',
     '- Minúsculas, sin corchetes ni comillas, 2 a 5 palabras, como escribe la gente de verdad (con y sin tildes, singular/plural, "precio", "cotizar", "online", "chile" solo cuando alguien lo escribiría).',
@@ -1610,7 +1636,14 @@ async function armarAds({ env, brief, marca, refsTxt, promos, enlaces, avisos, f
   }).filter(Boolean)).slice(0, n);
 
   const gruposIn = Array.isArray(parsed && parsed.grupos) ? parsed.grupos.slice(0, 5) : [];
-  const limpiaTit = arr => dedup((Array.isArray(arr) ? arr : []).map(t => sinPuntoFinal(clean(t)).slice(0, 30)).filter(Boolean));
+  // Un titular puede venir como texto o como { t, rol } (enfoque de conversión).
+  const ROLES_OK = Object.keys(LEC.ROLES_TITULO);
+  const limpiaTit = arr => dedup((Array.isArray(arr) ? arr : []).map(x => {
+    const t = sinPuntoFinal(clean(x && typeof x === 'object' ? x.t : x)).slice(0, 30);
+    const rol = x && typeof x === 'object' ? String(x.rol || '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '') : '';
+    if (t && ROLES_OK.includes(rol)) rolDe[t.toLowerCase()] = rol;
+    return t;
+  }).filter(Boolean));
   const grupos = gruposIn.map(g => {
     const seenK = new Set();
     let keywords = (Array.isArray(g.keywords) ? g.keywords : []).map(k => ({
@@ -1664,7 +1697,7 @@ async function armarAds({ env, brief, marca, refsTxt, promos, enlaces, avisos, f
     '\nGRUPOS:',
     ...flacos.map(g => `- "${g.nombre}" · intención: ${g.intencion || '(la del nombre)'} · faltan ${MIN_KW - g.keywords.length} · ya tiene: ${g.keywords.map(k => k.t).join(', ')}`)
   ].filter(Boolean).join('\n'), 4096, 0.8, { cadena: cadenaRapida(env) }) : Promise.resolve(null);
-  const critica = criticarAnuncios(env, grupos, ficha, marca).catch(() => null);
+  const critica = criticarAnuncios(env, grupos, ficha, marca, { protocolo, conversion, rolDe }).catch(() => null);
   const [extra, revisados] = await Promise.all([relleno, critica]);
 
   if (extra && extra.parsed && Array.isArray(extra.parsed.grupos)) {
@@ -1692,6 +1725,7 @@ async function armarAds({ env, brief, marca, refsTxt, promos, enlaces, avisos, f
         let n = Array.isArray(nuevos) ? clean(nuevos[i]) : '';
         if (esTit) n = sinPuntoFinal(n);
         if (!n || n.length > max || n === o) return o;
+        llevarRol(o, n);
         reescritos++; return n;
       });
       g.titularesFijos = aplicar(g.titularesFijos, rv.titularesFijos, 30, true);
@@ -1762,8 +1796,9 @@ async function armarAds({ env, brief, marca, refsTxt, promos, enlaces, avisos, f
     g.razonamiento = String(rev.textos[k++]).slice(0, 300);
     g.angulo = String(rev.textos[k++]).slice(0, 200);
     const tit = t => sinPuntoFinal(t).slice(0, 30);
-    g.titularesFijos = g.titularesFijos.map(() => tit(rev.textos[k++])).filter(Boolean);
-    g.titularesRotan = g.titularesRotan.map(() => tit(rev.textos[k++])).filter(Boolean);
+    const corregir = v => { const n = tit(rev.textos[k++]); llevarRol(v, n); return n; };
+    g.titularesFijos = g.titularesFijos.map(corregir).filter(Boolean);
+    g.titularesRotan = g.titularesRotan.map(corregir).filter(Boolean);
     g.titulares = g.titularesFijos.concat(g.titularesRotan);
     g.descripciones = g.descripciones.map(() => String(rev.textos[k++]).slice(0, 90)).filter(Boolean);
     // El ángulo se ve en la consola junto al razonamiento del grupo.
@@ -1788,6 +1823,8 @@ async function armarAds({ env, brief, marca, refsTxt, promos, enlaces, avisos, f
     negativasMotivos: negMotivos,
     sitelinks,
     destacados,
+    rolesTitulos: conversion ? Object.fromEntries(grupos.flatMap(g => g.titularesFijos.concat(g.titularesRotan)).map(t => [t, rolDe[t.toLowerCase()] || '']).filter(x => x[1])) : null,
+    enfoque: conversion ? 'conversion' : '',
     analisis: ficha ? {
       producto: ficha.producto, propuestaValor: ficha.propuestaValor,
       competidores: ficha.competidores, mensajesGenericos: ficha.mensajesGenericos,
@@ -1815,6 +1852,10 @@ const resumenValidacion = (v, soloIds) => ({
 });
 
 async function modoCampana({ env, brief, marca, ficha, opciones }) {
+  // Enfoque: por defecto CONVERSIÓN (el negocio es venta directa online); se puede
+  // pedir otro explícitamente con opciones.enfoque = ''.
+  const enfoque = opciones.enfoque === undefined ? 'conversion' : String(opciones.enfoque || '');
+  brief = Object.assign({}, brief, { enfoque });
   const urlsAds = [brief.ctaUrl].concat(Array.isArray(brief.refs) ? brief.refs : []);
   let fuentes = [], avisos = [];
   // Con ficha guardada no se vuelve a investigar (es lo caro): solo se relee la landing.
@@ -1829,7 +1870,7 @@ async function modoCampana({ env, brief, marca, ficha, opciones }) {
   if (!d.ok) return json(d, d.status || 500);
   const fichaG = inv.ficha ? Object.assign({}, inv.ficha, { fuentes: fuentes.slice(0, 10) }) : null;
   const objetivo = { que: brief.que || '', accion: brief.accion || '', gancho: brief.gancho || '', ctaUrl: brief.ctaUrl || '', notas: brief.notas || '',
-    producto: opciones.producto || '', tipo: opciones.tipo || '' };
+    producto: opciones.producto || '', tipo: opciones.tipo || '', enfoque };
   const ini = CIA.iniciativaDesdeIA(d, { objetivo, ficha: fichaG, presupuestoDiario: Number(opciones.presupuestoDiario) || null, puja: opciones.puja, fecha: hoyCL() });
   if (opciones.nombre) ini.nombre = String(opciones.nombre).slice(0, 120);
   const v = REG.validar(ini, { hoy: hoyCL(), marca: marca ? (marca.nombre || marca.empresa) : '' });
@@ -1882,6 +1923,7 @@ async function modoCorregir({ env, body }) {
     obj.ctaUrl ? 'Landing: ' + obj.ctaUrl : '', obj.notas ? 'Indicaciones: ' + obj.notas : '',
     ini.ficha ? '\n════ FICHA DEL PRODUCTO (investigación guardada: úsala, no inventes datos) ════\n' + fichaTexto(ini.ficha) : '',
     marca ? '\nVOZ DE MARCA:\n' + voorMarca(marca) : '',
+    obj.enfoque === 'conversion' ? '\n' + LEC.leccionParaIA('conversion') + '\nSi agregas o cambias un título, pon también su "rol" (keyword, tramite, precio, respaldo o cta).' : '',
     '\n' + OPS.operacionesParaIA(),
     '\n' + REG.reglasParaIA(),
     '\nREGLAS DE LA CORRECCIÓN: cifras SOLO de la ficha o el objetivo · títulos ≤30 sin punto final · descripciones ≤90 · keywords solo exacta o frase · una negativa nunca bloquea una keyword propia · no renombres campañas ni grupos salvo que te lo pidan.',

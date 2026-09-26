@@ -35,7 +35,17 @@ precisa a la inferior solo donde se tocan, y se anota explícitamente; lo demás
 
 **Dónde la capa 4 PRECISA reglas anteriores (sin borrarlas):** el veto a "rápido y fácil" sigue; la rapidez se
 dice con el hecho concreto que traiga la fuente. "Online" deja de ser relleno solo cuando responde a la barrera
-del trámite. Integración en el motor: pendiente del OK del usuario.
+del trámite.
+
+**TRASPASO A LA IA (HECHO, 26-sep, OK del usuario):** `nucleo/lecciones.js` = la lección de conversión, fuente única
+(texto para Gemini + listas para el motor de reglas + §9 del contrato). `objetivo.enfoque = 'conversion'` (por defecto
+en `modo:'campana'`; `opciones.enfoque:''` la apaga) → la investigación ordena la evidencia por barrera
+(`ficha.evidencia{tramite,precio,respaldo}` + `ficha.momentos`), el generador y el crítico reciben la lección y cada
+título vuelve con su **papel** (`titulo.rol`: keyword/tramite/precio/respaldo/cta; nota interna, no se exporta ni cuenta
+como cambio), y `corregir` también la lee. A la IA le llega la regla de fuentes, NO la ley (decisión del usuario).
+Reglas sumadas: **V01** keyword informativa · **V02** anuncio sin las 3 barreras · **V03** descripción con verbo de
+lectura · **V04** sin verbo de compra (solo con enfoque conversión) · **C10** superlativo sin respaldo en la ficha
+(siempre; cita CMF/SERNAC). También: el crítico ya no pide el orden viejo de 4 fijados en modo protocolo.
 
 ## Qué es
 Editor de creatividades por bloques para **email, banners (Google Display), social

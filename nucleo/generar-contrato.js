@@ -8,6 +8,7 @@ const AE = require('./ads-editor.js');
 const R = require('./reglas.js');
 const V = require('./versiones.js');
 const O = require('./operaciones.js');
+const LEC = require('./lecciones.js');
 
 function contrato() {
   const L = [];
@@ -153,7 +154,27 @@ function contrato() {
   L.push(O.operacionesParaIA());
   L.push('```');
   L.push('');
-  L.push('## 9. Pendiente de confirmar en la primera importación real');
+  L.push('## 9. Lecciones que Claude le traspasa a la IA');
+  L.push('Conocimiento de negocio aprendido con el usuario. Se **suma** por capas (Google → protocolo → calidad → negocio): no reemplaza');
+  L.push('reglas anteriores; si precisa alguna, lo dice. A la IA le llega la regla de trabajo, no la ley: el respaldo legal está en las');
+  L.push('reglas (§6), donde lo lee quien decide. Fuente única: `nucleo/lecciones.js`.');
+  for (const l of Object.values(LEC.LECCIONES)) {
+    L.push('');
+    L.push('### ' + l.titulo + ' (`' + l.id + '`, versión ' + l.version + ')');
+    L.push('**Aplica a:** ' + l.aplica);
+    L.push('');
+    L.push('**Precisa (sin borrar) reglas anteriores:**');
+    l.precisa.forEach(x => L.push('- ' + x));
+    L.push('');
+    L.push('**Papel de cada título** (no se exporta): ' + Object.entries(LEC.ROLES_TITULO).map(([k, v]) => '`' + k + '` = ' + v).join(' · ') + '.');
+    L.push('');
+    L.push('**Texto exacto que recibe la IA** (investigación, generador, crítico y conversación):');
+    L.push('```');
+    L.push(l.texto);
+    L.push('```');
+  }
+  L.push('');
+  L.push('## 10. Pendiente de confirmar en la primera importación real');
   L.push('El archivo de referencia del usuario solo trae negativas amplias de campaña. Estas notaciones siguen la');
   L.push('convención de Ads Editor, pero todavía no se han visto importadas:');
   L.push('- Negativa de **frase** escrita como `"texto"` y de **exacta** como `[texto]` en la columna `Keyword`.');

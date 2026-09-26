@@ -73,6 +73,7 @@ Lo que pidió el usuario. No se exporta: orienta a la IA.
 | `notas` | texto |  |  | — | Indicaciones generales del usuario. |
 | `producto` | texto |  |  | — | Nombre del producto para la taxonomía (auto digital). |
 | `tipo` | texto |  |  | — | Tipo de campaña para la taxonomía (always-on, promociones). |
+| `enfoque` | texto |  |  | — | Enfoque de la campaña. "conversion" = venta directa online (BOFU): la IA aplica la lección de conversión (nucleo/lecciones.js) y el motor de reglas sus reglas V. Valores: `conversion`, ``. |
 
 ### Ficha del producto (`ficha`)
 Investigación de la landing y de la competencia en Google. No se exporta: es la materia prima de keywords, anuncios y negativas, y la base para detectar cifras inventadas.
@@ -189,7 +190,7 @@ Una intención de búsqueda: sus keywords, sus negativas y su(s) anuncio(s).
 | `sufijoUrlFinal` | texto |  |  | `Final URL suffix` | UTM del anuncio: las de la campaña + utm_content=<nombre del anuncio>. Reemplaza al sufijo de la campaña para este anuncio. |
 | `ruta1` | texto |  | 15 | `Path 1` | Minúsculas y guiones. |
 | `ruta2` | texto |  | 15 | `Path 2` |  |
-| `titulos` | lista de {id, texto, posicion} | sí | 30 | `Headline 1…15 + Headline N position` | Entre 3 y 15 títulos de hasta 30 caracteres, sin punto final. "posicion" = "1", "2" o "3" si el título va fijado; vacío si rota. PROTOCOLO: 15 títulos = 5 fijados en la posición 1 (con la marca o la oferta/precio) + 10 que rotan. |
+| `titulos` | lista de {id, texto, posicion} | sí | 30 | `Headline 1…15 + Headline N position` | Entre 3 y 15 títulos de hasta 30 caracteres, sin punto final. "posicion" = "1", "2" o "3" si el título va fijado; vacío si rota. PROTOCOLO: 15 títulos = 5 fijados en la posición 1 (con la marca o la oferta/precio) + 10 que rotan. "rol" (no se exporta) = papel del título: keyword, tramite, precio, respaldo o cta. |
 | `descripciones` | lista de {id, texto, posicion} | sí | 90 | `Description 1…4` | Entre 2 y 4 descripciones de hasta 90 caracteres. |
 | `comentario` | texto |  |  | `Comment` |  |
 
@@ -300,7 +301,12 @@ Las aplica `nucleo/reglas.js` en la IA (antes y después de generar), en la pant
 | C04 | sugerencia | coherencia | Más de 3 títulos fijados en una misma posición: Google recomienda fijar 2 o 3 por posición; fijar más le quita combinaciones y puede bajar la calidad del anuncio. | [google-ads/answer/7684791](https://support.google.com/google-ads/answer/7684791) |
 | C05 | aviso | coherencia | Títulos casi iguales (mismas palabras en otro orden): Google pide títulos únicos y advierte que fijar textos similares baja la calidad del anuncio. | [google-ads/answer/7684791](https://support.google.com/google-ads/answer/7684791) |
 | C07 | aviso | coherencia | Ningún título del anuncio contiene las palabras de alguna keyword del grupo (Google pide al menos una keyword en los títulos). | [google-ads/answer/9438230](https://support.google.com/google-ads/answer/9438230) |
+| C10 | aviso | coherencia | Afirmación de superioridad ("el más barato", "el mejor", "líder") sin un dato en la ficha que la respalde. En Chile la publicidad de seguros no puede inducir a error (CMF Circular 2123) y la comparativa exige base objetiva y comprobable. | [https://www.cmfchile.cl/institucional/mercados/ver_archivo.php?archivo=%2Fweb%2Fcompendio%2Fcir%2Fcir_2123_2013.pdf](https://www.cmfchile.cl/institucional/mercados/ver_archivo.php?archivo=%2Fweb%2Fcompendio%2Fcir%2Fcir_2123_2013.pdf) · [https://www.sernac.cl/portal/609/w3-propertyvalue-58760.html](https://www.sernac.cl/portal/609/w3-propertyvalue-58760.html) · [adspolicy/answer/6020955](https://support.google.com/adspolicy/answer/6020955) |
 | C08 | aviso | coherencia | Cifras de los anuncios que no aparecen en la ficha del producto (posible dato inventado: afirmación no confiable). | [adspolicy/answer/6020955](https://support.google.com/adspolicy/answer/6020955) |
+| V01 | aviso | conversion | Keyword informativa ("qué es", "cómo funciona", "qué cubre", consejos…) en una campaña de conversión: atrae a quien se informa, no a quien compra. | lección de conversión (nucleo/lecciones.js) · [https://searchengineland.com/ppc-keyword-strategy-search-intent-funnel-stages-448157](https://searchengineland.com/ppc-keyword-strategy-search-intent-funnel-stages-448157) |
+| V02 | aviso | conversion | El anuncio no derriba las tres barreras: entre sus títulos falta alguno con papel "tramite", "precio" o "respaldo" (o los títulos no declaran su papel). | lección de conversión (nucleo/lecciones.js) |
+| V03 | aviso | conversion | Descripción con verbo de lectura (conoce, infórmate, visita, descubre): invita a leer, no a comprar. | lección de conversión (nucleo/lecciones.js) |
+| V04 | sugerencia | conversion | Descripción sin verbo de compra (contrata, cotiza, emite, asegura, activa). | lección de conversión (nucleo/lecciones.js) |
 | K01 | aviso | criterio | Presupuesto diario menor a $1.000 CLP: probablemente un error de unidades. | criterio propio (sin documento de Google que lo respalde o lo contradiga); caso real: $25 CLP diarios |
 | K02 | sugerencia | criterio | Maximizar clics sin tope de CPC: Google puja lo necesario para gastar el presupuesto; el tope ayuda a controlar el costo si el CPC sale más alto de lo deseado (a costa de algunos clics). | [google-ads/answer/6268626](https://support.google.com/google-ads/answer/6268626) |
 | K03 | sugerencia | criterio | Red de búsqueda asociada o de Display en una campaña Search: mide su rendimiento por separado antes de dejarla encendida. | criterio propio (sin documento de Google que lo respalde o lo contradiga) |
@@ -365,12 +371,53 @@ Campos editables:
   sitelink: texto(≤25), linea1(≤35), linea2(≤35), urlFinal, comentario
   destacado: texto(≤25), comentario
   fragmento: encabezado[Servicios|Marcas|Cursos|Programas de grado|Destinos|Hoteles destacados|Cobertura de seguro|Modelos|Barrios|Catálogo de servicios|Programas|Estilos|Tipos], valores(≤25), idioma, estado, comentario
-  titulo: texto(≤30), posicion[1|2|3]
+  titulo: texto(≤30), posicion[1|2|3], rol[keyword|tramite|precio|respaldo|cta]
   descripcion: texto(≤90), posicion[1|2]
 Los id NUNCA se inventan: usa los que ves. Un título o descripción se cambia con su propio id (campo "texto").
 ```
 
-## 9. Pendiente de confirmar en la primera importación real
+## 9. Lecciones que Claude le traspasa a la IA
+Conocimiento de negocio aprendido con el usuario. Se **suma** por capas (Google → protocolo → calidad → negocio): no reemplaza
+reglas anteriores; si precisa alguna, lo dice. A la IA le llega la regla de trabajo, no la ley: el respaldo legal está en las
+reglas (§6), donde lo lee quien decide. Fuente única: `nucleo/lecciones.js`.
+
+### Anuncios de conversión (BOFU) · eCommerce de seguros B2C (`conversion`, versión 2026-09-26)
+**Aplica a:** Campañas cuyo objetivo es la venta directa online (objetivo.enfoque = "conversion"). Sirve para cualquier seguro: auto, hogar, mascota, viaje…
+
+**Precisa (sin borrar) reglas anteriores:**
+- Calidad (capa 3): el veto a "rápido y fácil" sigue; la rapidez se dice con el HECHO concreto que traiga la fuente.
+- Calidad (capa 3): "online" / "100% digital" deja de ser relleno solo cuando responde a la barrera del trámite (1 o 2 títulos, no todos).
+
+**Papel de cada título** (no se exporta): `keyword` = repite la búsqueda (la keyword del grupo, casi literal) · `tramite` = barrera del TRÁMITE: qué tan digital, cuánto tarda, qué no hay que hacer · `precio` = barrera del PRECIO: precio visible, oferta vigente, forma de pago · `respaldo` = barrera del RESPALDO: quién responde, cómo liquida, asistencia, prueba con fuente · `cta` = acción de compra concreta.
+
+**Texto exacto que recibe la IA** (investigación, generador, crítico y conversación):
+```
+LECCIÓN · ANUNCIOS DE CONVERSIÓN (BOFU) PARA UN eCOMMERCE DE SEGUROS B2C
+1. A QUIÉN LE HABLAS: a alguien que YA decidió asegurar algo (su auto, su casa, su mascota, su viaje) y quiere terminar AHORA. No lo convences de que necesita un seguro: lo convences de comprarlo AQUÍ y en ESTE momento.
+2. LAS TRES BARRERAS. Cada anuncio las derriba las tres, con HECHOS sacados de las fuentes (la web, los materiales y el relato del usuario):
+   · TRÁMITE: qué tan digital es, cuánto tarda, qué NO hay que hacer (papeles, inspección, sucursal), cómo llega la póliza.
+   · PRECIO: precio visible, oferta vigente, forma de pago.
+   · RESPALDO: quién responde, cómo liquida los siniestros, qué asistencia da, qué prueba hay (años, clientes, calificaciones con su fuente).
+   Si una barrera no tiene evidencia en las fuentes, NO la inventes: déjala sin cubrir y avísalo.
+3. KEYWORDS: solo intención de compra, armadas con patrones (no con listas de un producto):
+   · verbo de compra + seguro + objeto (contratar, comprar, cotizar, asegurar);
+   · seguro + objeto + precio u oferta (precio, valor, barato, descuento, promoción);
+   · seguro + objeto + inmediatez (online, hoy, ahora, en el acto, urgente);
+   · seguro + detalle del objeto (marca y modelo del auto, raza de la mascota, destino del viaje, tipo de vivienda);
+   · MOMENTO DE NECESIDAD: la situación que obliga a comprar ya (auto recién comprado, necesito circular, viajo mañana, mascota nueva).
+   Fuera: las informativas ("qué es", "cómo funciona", "qué cubre", consejos, significado, pdf) y todo lo que el producto no es o está fuera de temporada según el encargo.
+4. GRUPOS por intención de compra: comprar/contratar · precio u oferta · inmediatez · detalle del objeto · momento de necesidad. La marca propia va en su propia campaña.
+5. TÍTULOS: cada uno es UN hecho y declara su PAPEL: "keyword", "tramite", "precio", "respaldo" o "cta". Entre los fijados y los que rotan tienen que estar las tres barreras (trámite, precio y respaldo) y la keyword.
+6. DESCRIPCIONES: cada una derriba una barrera y termina con un verbo de COMPRA (contrata, cotiza, emite, asegura, activa). Nunca verbos de LECTURA (conoce, infórmate, visita, descubre).
+7. DESTINO: los sitelinks llevan a pasos de compra (cotizar, contratar, medios de pago, detalle del plan), cada uno a una página distinta. El éxito es la PÓLIZA PAGADA online, no la cotización.
+8. REGLA DE FUENTES: no escribas ninguna cifra, precio, descuento, plazo ni garantía que no esté en las fuentes. No afirmes ser "el más barato", "el mejor" o "líder" sin un dato en las fuentes que lo respalde. (Una keyword como "seguro más barato" sí se puede usar.)
+9. EJEMPLO DE TONO (solo ilustra; sus datos NO son reales para esta marca):
+   ❌ "Seguros para tu Automóvil" · "Conoce la importancia de tener un auto asegurado. Visita nuestro sitio."  → informa, no vende.
+   ✅ "Seguro de Auto 100% Online" [tramite] · "Cotiza y Contrata en 3 Min" [tramite] · "20% Desc. Primer Año" [precio] · "Liquidamos en 48 Horas" [respaldo] ·
+      "Asegura tu auto sin trámites físicos. Recibe tu póliza digital al instante."  → cada línea es un hecho y empuja a comprar.
+```
+
+## 10. Pendiente de confirmar en la primera importación real
 El archivo de referencia del usuario solo trae negativas amplias de campaña. Estas notaciones siguen la
 convención de Ads Editor, pero todavía no se han visto importadas:
 - Negativa de **frase** escrita como `"texto"` y de **exacta** como `[texto]` en la columna `Keyword`.

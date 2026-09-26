@@ -16,8 +16,8 @@ function prepararModulos() {
   const cp = (src, dst, fix) => { let s = fs.readFileSync(path.join(RAIZ, src), "utf8"); if (fix) s = fix(s); fs.writeFileSync(path.join(dir, dst), s); };
   cp("functions/usuarios.js", "functions/usuarios.mjs");
   cp("functions/api/_shared.js", "functions/api/_shared.mjs", s => s.replace("'../usuarios.js'", "'../usuarios.mjs'"));
-  cp("functions/api/iniciativas.js", "functions/api/iniciativas.mjs", s => s.replace("'./_shared.js'", "'./_shared.mjs'").replace(/nucleo\/(\w+)\.js/g, "nucleo/$1.cjs"));
-  ["modelo", "reglas", "versiones"].forEach(n => cp("nucleo/" + n + ".js", "nucleo/" + n + ".cjs", s => s.replace("'./modelo.js'", "'./modelo.cjs'")));
+  // El núcleo se importa directo desde el repo (es CommonJS/UMD): no hay que copiarlo.
+  cp("functions/api/iniciativas.js", "functions/api/iniciativas.mjs", s => s.replace("'./_shared.js'", "'./_shared.mjs'").replace(/'\.\.\/\.\.\/nucleo\//g, "'" + path.join(RAIZ, "nucleo") + "/"));
   return dir;
 }
 // D1 sobre SQLite, con la misma forma que la de Cloudflare.

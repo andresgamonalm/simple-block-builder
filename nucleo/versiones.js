@@ -44,7 +44,8 @@
      un anuncio CAMBIÓ de contenido aunque la IA haya regenerado sus títulos). */
   function canonico(x, sinIds) {
     if (Array.isArray(x)) return '[' + x.map(v => canonico(v, sinIds)).join(',') + ']';
-    if (x && typeof x === 'object') return '{' + Object.keys(x).sort().filter(k => !(sinIds && k === 'id') && x[k] !== undefined)
+    // sinIds también ignora «rol» (papel del título): es una nota interna, no viaja a Ads Editor.
+    if (x && typeof x === 'object') return '{' + Object.keys(x).sort().filter(k => !(sinIds && (k === 'id' || k === 'rol')) && x[k] !== undefined)
       .map(k => JSON.stringify(k) + ':' + canonico(x[k], sinIds)).join(',') + '}';
     return JSON.stringify(x === undefined ? null : x);
   }

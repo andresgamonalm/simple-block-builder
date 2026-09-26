@@ -24,9 +24,9 @@
                      deben llevarla (o una oferta/precio).
    ════════════════════════════════════════════════════════════════════════ */
 (function (raiz, fabrica) {
-  if (typeof module === 'object' && module.exports) module.exports = fabrica(require('./modelo.js'));
-  else raiz.MP_Reglas = fabrica(raiz.MP_Modelo);
-})(typeof self !== 'undefined' ? self : this, function (M) {
+  if (typeof module === 'object' && module.exports) module.exports = fabrica(require('./modelo.js'), require('./lecciones.js'));
+  else raiz.MP_Reglas = fabrica(raiz.MP_Modelo, raiz.MP_Lecciones);
+})(typeof self !== 'undefined' ? self : this, function (M, LEC) {
   'use strict';
   const L = M.LIMITES;
 
@@ -42,8 +42,12 @@
     destacados: G + 'adspolicy/answer/6084196', fragmentos: G + 'google-ads/answer/6280012', precios: G + 'adspolicy/answer/7048464',
     destino: G + 'adspolicy/answer/6368661', engano: G + 'adspolicy/answer/6020955', maxClics: G + 'google-ads/answer/6268626',
     ubicacion: G + 'google-ads/answer/1722038', ubicaciones: G + 'google-ads/answer/1722043', demografia: G + 'google-ads/answer/2580383',
-    rsaTips: G + 'google-ads/answer/9438230'
+    rsaTips: G + 'google-ads/answer/9438230',
+    cmf: 'https://www.cmfchile.cl/institucional/mercados/ver_archivo.php?archivo=%2Fweb%2Fcompendio%2Fcir%2Fcir_2123_2013.pdf',
+    sernac: 'https://www.sernac.cl/portal/609/w3-propertyvalue-58760.html',
+    intencion: 'https://searchengineland.com/ppc-keyword-strategy-search-intent-funnel-stages-448157'
   };
+  const LECCION = 'lección de conversión (nucleo/lecciones.js)';
   const PROTO = 'protocolo de la casa (lámina "Reglas y requisitos ADS")';
   const PROPIO = 'criterio propio (sin documento de Google que lo respalde o lo contradiga)';
   const REGLAS = [
@@ -82,7 +86,13 @@
     { codigo: 'C04', nivel: 'sugerencia', categoria: 'coherencia', fuente: F.rsa, que: 'Más de 3 títulos fijados en una misma posición: Google recomienda fijar 2 o 3 por posición; fijar más le quita combinaciones y puede bajar la calidad del anuncio.' },
     { codigo: 'C05', nivel: 'aviso', categoria: 'coherencia', fuente: F.rsa, que: 'Títulos casi iguales (mismas palabras en otro orden): Google pide títulos únicos y advierte que fijar textos similares baja la calidad del anuncio.' },
     { codigo: 'C07', nivel: 'aviso', categoria: 'coherencia', fuente: F.rsaTips, que: 'Ningún título del anuncio contiene las palabras de alguna keyword del grupo (Google pide al menos una keyword en los títulos).' },
+    { codigo: 'C10', nivel: 'aviso', categoria: 'coherencia', fuente: F.cmf + ' · ' + F.sernac + ' · ' + F.engano, que: 'Afirmación de superioridad ("el más barato", "el mejor", "líder") sin un dato en la ficha que la respalde. En Chile la publicidad de seguros no puede inducir a error (CMF Circular 2123) y la comparativa exige base objetiva y comprobable.' },
     { codigo: 'C08', nivel: 'aviso', categoria: 'coherencia', fuente: F.engano, que: 'Cifras de los anuncios que no aparecen en la ficha del producto (posible dato inventado: afirmación no confiable).' },
+    // CONVERSIÓN — lección de negocio; solo en campañas con objetivo.enfoque = "conversion"
+    { codigo: 'V01', nivel: 'aviso', categoria: 'conversion', fuente: LECCION + ' · ' + F.intencion, que: 'Keyword informativa ("qué es", "cómo funciona", "qué cubre", consejos…) en una campaña de conversión: atrae a quien se informa, no a quien compra.' },
+    { codigo: 'V02', nivel: 'aviso', categoria: 'conversion', fuente: LECCION, que: 'El anuncio no derriba las tres barreras: entre sus títulos falta alguno con papel "tramite", "precio" o "respaldo" (o los títulos no declaran su papel).' },
+    { codigo: 'V03', nivel: 'aviso', categoria: 'conversion', fuente: LECCION, que: 'Descripción con verbo de lectura (conoce, infórmate, visita, descubre): invita a leer, no a comprar.' },
+    { codigo: 'V04', nivel: 'sugerencia', categoria: 'conversion', fuente: LECCION, que: 'Descripción sin verbo de compra (contrata, cotiza, emite, asegura, activa).' },
     // CRITERIO — válido, pero probablemente un error o una mala práctica
     { codigo: 'K01', nivel: 'aviso', categoria: 'criterio', fuente: PROPIO + '; caso real: $25 CLP diarios', que: 'Presupuesto diario menor a $1.000 CLP: probablemente un error de unidades.' },
     { codigo: 'K02', nivel: 'sugerencia', categoria: 'criterio', fuente: F.maxClics, que: 'Maximizar clics sin tope de CPC: Google puja lo necesario para gastar el presupuesto; el tope ayuda a controlar el costo si el CPC sale más alto de lo deseado (a costa de algunos clics).' },
@@ -135,6 +145,12 @@
     const fichaTxt = cx.ficha || (ini.ficha ? JSON.stringify(ini.ficha) + ' ' + JSON.stringify(ini.objetivo || {}) : null);
     const cifrasFicha = fichaTxt ? new Set((String(fichaTxt).match(/\d+(?:[.,]\d+)*/g) || []).map(n => n.replace(/[.,]/g, ''))) : null;
 
+    const conversion = !!(ini.objetivo && ini.objetivo.enfoque === 'conversion');
+    const fuentesNorm = LEC.sinTildes(fichaTxt || '');
+    const superlativo = (x, donde) => {
+      const s = LEC.contiene(x.texto, LEC.SUPERLATIVOS);
+      if (s && !fuentesNorm.includes(LEC.sinTildes(s))) H('C10', x, donde, `«${x.texto}» afirma «${s}» sin un dato en la ficha que lo respalde.`);
+    };
     const negPorCampana = [];
     for (const c of ini.campanas) {
       if (c.soloReferencia) continue;
@@ -180,6 +196,7 @@
         const vistas = {};
         for (const k of g.keywords) {
           const dk = dg + ' › Keyword «' + k.texto + '»';
+          if (conversion) { const inf = LEC.contiene(k.texto, LEC.INFORMATIVAS); if (inf) H('V01', k, dk, `Es informativa («${inf}»): en una campaña de conversión va como negativa o en otra campaña.`); }
           if (!String(k.texto).trim()) H('G05', k, dk, 'Keyword vacía.');
           if (k.texto.length > L.keywordCaracteres) H('G05', k, dk, `Tiene ${k.texto.length} caracteres (máx ${L.keywordCaracteres}).`);
           if (palabras(k.texto).length > L.keywordPalabras) H('G05', k, dk, `Tiene más de ${L.keywordPalabras} palabras.`);
@@ -248,6 +265,19 @@
           const dA = dominio(a.urlFinal);
           const dK = [...new Set(g.keywords.map(k => dominio(k.urlFinal)).filter(Boolean))];
           if (dA && dK.some(d => !mismoSitio(d, dA))) H('G15', a, da, `El anuncio va a ${dA} y alguna keyword a ${dK.filter(d => !mismoSitio(d, dA)).join(', ')}.`);
+          // Conversión (V02-V04) y superlativos (C10)
+          if (conversion) {
+            const roles = new Set(T.map(t => t.rol).filter(Boolean));
+            if (!roles.size) H('V02', a, da, 'Ningún título declara su papel (keyword, tramite, precio, respaldo, cta).');
+            else { const faltan = LEC.BARRERAS.filter(b => !roles.has(b)); if (faltan.length) H('V02', a, da, `Falta la barrera: ${faltan.join(', ')}.`); }
+            D.forEach((d, i) => {
+              const dd = da + ' › Descripción ' + (i + 1);
+              const lee = LEC.contiene(d.texto, LEC.VERBOS_LECTURA);
+              if (lee) H('V03', d, dd, `«${d.texto}» invita a leer («${lee.trim()}»), no a comprar.`);
+              else if (!LEC.contiene(d.texto, LEC.VERBOS_COMPRA)) H('V04', d, dd, `«${d.texto}» no termina en una acción de compra.`);
+            });
+          }
+          T.concat(D).forEach(x => superlativo(x, da));
           // C08
           if (cifrasFicha) T.concat(D).forEach(x => {
             const inventadas = (x.texto.match(/\d+(?:[.,]\d+)*/g) || []).map(n => n.replace(/[.,]/g, '')).filter(n => !cifrasFicha.has(n));
@@ -350,6 +380,7 @@
         if (!esUrl(s.urlFinal)) H('G09', s, ds, 'URL final falta o no es http(s).');
         else if (dominiosAnuncio.size && ![...dominiosAnuncio].some(d => mismoSitio(dominio(s.urlFinal), d))) H('G17', s, ds, `Lleva a ${dominio(s.urlFinal)}, otro dominio que el del anuncio (${[...dominiosAnuncio].join(', ')}).`);
         [s.texto, s.linea1, s.linea2].forEach(x => { if (String(x || '').includes('!')) H('G17', s, ds, `Signo de exclamación en «${x}».`); });
+        [s.texto, s.linea1, s.linea2].forEach(t => superlativo({ id: s.id, texto: t || '' }, ds));
         [s.texto, s.linea1, s.linea2].forEach(x => { if (/([!?.])\1/.test(x || '')) H('G07', s, ds, `Puntuación repetida en «${x}».`); });
       });
       dupSl.forEach(x => H('G09', c, dc, `Sitelink repetido: «${x}».`));

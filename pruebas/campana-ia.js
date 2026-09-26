@@ -31,9 +31,11 @@ const GENERADO = {
   grupos: [
     { nombre: "Cotizar seguro auto", intencion: "Quiere cotizar ya", razonamiento: "Transaccional", angulo: "Auto de reemplazo 15 días",
       keywords: kws("cotizar seguro automotriz", 22), negativas: [{ t: "empleo", motivo: "Buscan trabajo" }],
-      titularesFijos: ["Seguro Automotriz Acme", "Acme Seguro de Auto", "2 cuotas gratis en Acme", "Acme: deducible desde 3 UF", "Seguro Full con 2 cuotas gratis"],
-      titulares: ["Cotiza seguro automotriz", "Seguro automotriz online", "Cotizar seguro auto", "Deducible desde 3 UF", "Auto de reemplazo 15 días", "Grúa en todo Chile",
-                  "Más de 40 años en Chile", "Sin sorpresas al chocar", "Tu auto nunca se detiene", "Cotiza en 3 minutos"],
+      titularesFijos: [{ t: "Seguro Automotriz Acme", rol: "keyword" }, { t: "Acme Seguro de Auto", rol: "keyword" }, { t: "2 cuotas gratis en Acme", rol: "precio" },
+                       { t: "Acme: deducible desde 3 UF", rol: "precio" }, { t: "Seguro Full con 2 cuotas gratis", rol: "precio" }],
+      titulares: [{ t: "Cotiza seguro automotriz", rol: "keyword" }, { t: "Seguro automotriz online", rol: "tramite" }, { t: "Cotizar seguro auto", rol: "cta" },
+                  { t: "Deducible desde 3 UF", rol: "precio" }, { t: "Auto de reemplazo 15 días", rol: "respaldo" }, { t: "Grúa en todo Chile", rol: "respaldo" },
+                  { t: "Más de 40 años en Chile", rol: "respaldo" }, { t: "Sin sorpresas al chocar", rol: "respaldo" }, { t: "Tu auto nunca se detiene", rol: "respaldo" }, { t: "Cotiza en 3 minutos", rol: "tramite" }],
       descripciones: ["Deducible desde 3 UF y auto de reemplazo por 15 días. Cotiza hoy.", "Si chocas, no te quedas a pie: auto de reemplazo.",
                       "Más de 40 años protegiendo conductores en Chile.", "Grúa en todo Chile y 2 cuotas gratis."],
       path1: "seguro-auto", path2: "cotizar" },
@@ -93,7 +95,7 @@ function respuestaGemini(obj, extra) {
   T(r.status === 200 && r.ok, "responde", r.status + " " + (r.error || ""));
   const ini = r.iniciativa, c = ini.campanas[0];
   const gen = pedidos.find(p => p.prompt.includes("especialista senior en Google Ads (Search) de"));
-  T(gen.prompt.includes('"titularesFijos": [ "5 titulares') && gen.prompt.includes("fijados en la posición 1"), "pide 5 títulos fijados en la posición 1 + 10 que rotan (protocolo)");
+  T(gen.prompt.includes("(exactamente 5)") && gen.prompt.includes("(exactamente 10)") && gen.prompt.includes("fijados en la posición 1"), "pide 5 títulos fijados en la posición 1 + 10 que rotan (protocolo)");
   T(c.nombre === "chl-producto-seguro-automotriz-always-on" && c.grupos.map(g => g.nombre).join(",") === "ao-cotizar-seguro-auto,ao-precio-seguro-auto", "nombres con la taxonomía: campaña y grupos", c.nombre + " · " + c.grupos.map(g => g.nombre));
   const a = c.grupos[0].anuncios[0];
   T(a.titulos.filter(t => t.posicion === "1").length === 5 && a.titulos.filter(t => !t.posicion).length === 10 && a.nombre === "ads-auto-de-reemplazo-15", "anuncio: 5 fijados en la posición 1 + 10 que rotan, nombre ads-…", a.nombre);
@@ -107,9 +109,27 @@ function respuestaGemini(obj, extra) {
   const csv = AE.exportar(ini);
   T(AE.exportar(AE.importar(csv).iniciativa) === csv && csv.includes("chl-producto-seguro-automotriz-always-on,Search,"), "se exporta al CSV de Ads Editor y vuelve idéntico");
 
+  console.log("\n1b · La lección de conversión llega a la IA (enfoque por defecto)");
+  const inv0 = pedidos.find(p => p.prompt.includes("Investiga ANTES"));
+  T(ini.objetivo.enfoque === "conversion" && inv0.prompt.includes("TRÁMITE") && inv0.prompt.includes('"evidencia"') && inv0.prompt.includes("MOMENTOS DE NECESIDAD"), "la investigación ordena la evidencia por barrera y busca momentos de necesidad");
+  T(gen.prompt.includes("ANUNCIOS DE CONVERSIÓN (BOFU)") && gen.prompt.includes("LAS TRES BARRERAS") && gen.prompt.includes('"rol": "keyword|tramite|precio|respaldo|cta"'), "el generador recibe la lección y devuelve el papel de cada título");
+  T(!gen.prompt.includes("oferta vinculante") && !gen.prompt.includes("Circular"), "a la IA le llega la regla de fuentes, no la ley (sin «vinculante» ni circulares)");
+  T(gen.prompt.includes("comprar/contratar · precio u oferta · inmediatez") && !gen.prompt.includes("necesidad o problema"), "grupos por intención de COMPRA (ya no «necesidad o problema»)");
+  const crit = pedidos.find(p => p.prompt.includes("MATAR LO GENÉRICO"));
+  T(crit.prompt.includes("papelesFijos") && crit.prompt.includes("conserva su papel") && !crit.prompt.includes("1 marca/producto, 2 keyword"), "el crítico conserva el papel de cada título y respeta el protocolo de 5 fijados");
+  const a0 = c.grupos[0].anuncios[0], a1 = c.grupos[1].anuncios[0];
+  T(a0.titulos[2].rol === "precio" && a0.titulos[9].rol === "respaldo" && a0.titulos.every(t => t.rol), "cada título guarda su papel en el modelo", a0.titulos.map(t => t.rol).join(","));
+  const v02 = r.validacion.hallazgos.filter(h => h.codigo === "V02");
+  T(v02.length === 1 && v02[0].id === a1.id, "el motor marca el anuncio cuyos títulos no declaran papel (y no el que cubre las 3 barreras)", JSON.stringify(v02));
+  const sinRoles = JSON.parse(JSON.stringify(ini)); sinRoles.campanas.forEach(cc => cc.grupos.forEach(gg => gg.anuncios.forEach(aa => aa.titulos.forEach(t => { t.rol = ""; }))));
+  T(AE.exportar(sinRoles) === csv, "el papel es una nota interna: el CSV de Ads Editor es idéntico con o sin papeles");
+
   console.log("\n2 · Con ficha guardada no se vuelve a investigar");
   const n0 = pedidos.filter(p => p.prompt.includes("Investiga ANTES")).length;
-  r = await llamar("andres", { modo: "campana", brief, marca, ficha: ini.ficha, opciones: { producto: "seguro automotriz", tipo: "promociones" } });
+  const pAntes = pedidos.length;
+  r = await llamar("andres", { modo: "campana", brief, marca, ficha: ini.ficha, opciones: { producto: "seguro automotriz", tipo: "promociones", enfoque: "" } });
+  const gen2 = pedidos.slice(pAntes).find(p => p.prompt.includes("especialista senior en Google Ads (Search) de"));
+  T(r.ok && !gen2.prompt.includes("LAS TRES BARRERAS") && r.iniciativa.objetivo.enfoque === "", "con enfoque vacío no se aplica la lección (se suma, no se impone)");
   T(r.ok && pedidos.filter(p => p.prompt.includes("Investiga ANTES")).length === n0 && r.iniciativa.campanas[0].nombre.endsWith("-promociones") && r.iniciativa.campanas[0].grupos[0].nombre.startsWith("promo-"),
     "reutiliza la ficha (0 investigaciones nuevas) · tipo promociones → grupos promo-…");
 
@@ -126,6 +146,7 @@ function respuestaGemini(obj, extra) {
   const pc = pedidos.slice(p0).filter(p => p.prompt.includes("Corriges una campaña YA ARMADA"));
   T(r.ok && r.parcial && pc.length === 2, "hace la corrección y UNA ronda de reparación (el primer intento traía un título de más de 30)", r.error);
   T(pc[0].prompt.includes("2 cuotas gratis") && pc[0].prompt.includes("FICHA DEL PRODUCTO") && pc[0].prompt.includes("[" + g1.id + "]"), "la IA recibe el objetivo, la ficha guardada y el índice con ids");
+  T(pc[0].prompt.includes("LAS TRES BARRERAS") && pc[0].prompt.includes('su "rol"'), "y en una campaña de conversión, también la lección (con el papel de los títulos)");
   const kwOtroGrupo = g1.keywords[3].texto;
   T(!pc[0].prompt.includes(kwOtroGrupo) && !pc[0].prompt.includes(g0.keywords[5].texto), "pero NO la campaña entera: solo las partes pedidas (ni las keywords del grupo ni las del otro)");
   const a2 = r.iniciativa.campanas[0].grupos[0].anuncios[0];

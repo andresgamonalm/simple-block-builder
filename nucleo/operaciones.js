@@ -51,7 +51,8 @@
       CAMPOS[e.entidad][c.campo] = c;
     }
   }
-  CAMPOS.titulo = { texto: { tipo: 'texto', obligatorio: true, limite: L.titulo }, posicion: { tipo: 'texto', valores: ['', '1', '2', '3'] } };
+  CAMPOS.titulo = { texto: { tipo: 'texto', obligatorio: true, limite: L.titulo }, posicion: { tipo: 'texto', valores: ['', '1', '2', '3'] },
+    rol: { tipo: 'texto', valores: ['', 'keyword', 'tramite', 'precio', 'respaldo', 'cta'] } };
   CAMPOS.descripcion = { texto: { tipo: 'texto', obligatorio: true, limite: L.descripcion }, posicion: { tipo: 'texto', valores: ['', '1', '2'] } };
 
   /* Valida y normaliza UN valor contra la definición del campo. → { ok, valor } | { ok:false, motivo } */
@@ -102,7 +103,7 @@
   const FABRICA = {
     campanas: e => M.nuevaCampana(e.nombre), grupos: e => M.nuevoGrupo(e.nombre),
     keywords: e => M.nuevaKeyword(e.texto, e.concordancia), negativas: e => M.nuevaNegativa(e.texto, e.concordancia, e.comentario),
-    anuncios: e => M.nuevoAnuncioRSA(e.nombre), titulos: e => M.nuevoTitulo(e.texto, e.posicion), descripciones: e => M.nuevaDescripcion(e.texto, e.posicion),
+    anuncios: e => M.nuevoAnuncioRSA(e.nombre), titulos: e => M.nuevoTitulo(e.texto, e.posicion, e.rol), descripciones: e => M.nuevaDescripcion(e.texto, e.posicion),
     sitelinks: () => ({ id: M.uid('sl'), texto: '', linea1: '', linea2: '', urlFinal: '', comentario: '' }),
     destacados: () => ({ id: M.uid('co'), texto: '', comentario: '' }),
     fragmentos: () => ({ id: M.uid('sn'), encabezado: '', valores: [], idioma: 'es', estado: 'Enabled', comentario: '' }),

@@ -87,7 +87,8 @@
         { campo: 'ctaUrl', tipo: 'url', descripcion: 'La landing: URL final de los anuncios.' },
         { campo: 'notas', tipo: 'texto', descripcion: 'Indicaciones generales del usuario.' },
         { campo: 'producto', tipo: 'texto', descripcion: 'Nombre del producto para la taxonomía (auto digital).' },
-        { campo: 'tipo', tipo: 'texto', descripcion: 'Tipo de campaña para la taxonomía (always-on, promociones).' }
+        { campo: 'tipo', tipo: 'texto', descripcion: 'Tipo de campaña para la taxonomía (always-on, promociones).' },
+        { campo: 'enfoque', tipo: 'texto', valores: ['conversion', ''], descripcion: 'Enfoque de la campaña. "conversion" = venta directa online (BOFU): la IA aplica la lección de conversión (nucleo/lecciones.js) y el motor de reglas sus reglas V.' }
       ] },
     { entidad: 'ficha', titulo: 'Ficha del producto', descripcion: 'Investigación de la landing y de la competencia en Google. No se exporta: es la materia prima de keywords, anuncios y negativas, y la base para detectar cifras inventadas.',
       campos: [
@@ -174,7 +175,7 @@
         { campo: 'sufijoUrlFinal', tipo: 'texto', columna: 'Final URL suffix', descripcion: 'UTM del anuncio: las de la campaña + utm_content=<nombre del anuncio>. Reemplaza al sufijo de la campaña para este anuncio.' },
         { campo: 'ruta1', tipo: 'texto', columna: 'Path 1', limite: LIMITES.ruta, descripcion: 'Minúsculas y guiones.' },
         { campo: 'ruta2', tipo: 'texto', columna: 'Path 2', limite: LIMITES.ruta },
-        { campo: 'titulos', tipo: 'lista de {id, texto, posicion}', obligatorio: true, columna: 'Headline 1…15 + Headline N position', limite: LIMITES.titulo, descripcion: `Entre ${LIMITES.titulosMin} y ${LIMITES.titulosMax} títulos de hasta ${LIMITES.titulo} caracteres, sin punto final. "posicion" = "1", "2" o "3" si el título va fijado; vacío si rota. PROTOCOLO: 15 títulos = 5 fijados en la posición 1 (con la marca o la oferta/precio) + 10 que rotan.` },
+        { campo: 'titulos', tipo: 'lista de {id, texto, posicion}', obligatorio: true, columna: 'Headline 1…15 + Headline N position', limite: LIMITES.titulo, descripcion: `Entre ${LIMITES.titulosMin} y ${LIMITES.titulosMax} títulos de hasta ${LIMITES.titulo} caracteres, sin punto final. "posicion" = "1", "2" o "3" si el título va fijado; vacío si rota. PROTOCOLO: 15 títulos = 5 fijados en la posición 1 (con la marca o la oferta/precio) + 10 que rotan. "rol" (no se exporta) = papel del título: keyword, tramite, precio, respaldo o cta.` },
         { campo: 'descripciones', tipo: 'lista de {id, texto, posicion}', obligatorio: true, columna: 'Description 1…4', limite: LIMITES.descripcion, descripcion: `Entre ${LIMITES.descripcionesMin} y ${LIMITES.descripcionesMax} descripciones de hasta ${LIMITES.descripcion} caracteres.` },
         { campo: 'comentario', tipo: 'texto', columna: 'Comment' }
       ] },
@@ -271,7 +272,7 @@
   const nuevaKeyword = (texto, concordancia) => ({ id: uid('kw'), texto: texto || '', concordancia: concordancia || 'exacta', estado: 'Enabled', urlFinal: '', comentario: '' });
   const nuevaNegativa = (texto, concordancia, comentario) => ({ id: uid('neg'), texto: texto || '', concordancia: concordancia || 'amplia', comentario: comentario || '' });
   const nuevoAnuncioRSA = (nombre) => ({ id: uid('rsa'), tipo: 'rsa', nombre: nombre || '', estado: 'Enabled', urlFinal: '', sufijoUrlFinal: '', ruta1: '', ruta2: '', titulos: [], descripciones: [], comentario: '' });
-  const nuevoTitulo = (texto, posicion) => ({ id: uid('tit'), texto: texto || '', posicion: posicion || '' });
+  const nuevoTitulo = (texto, posicion, rol) => ({ id: uid('tit'), texto: texto || '', posicion: posicion || '', rol: rol || '' });
   const nuevaDescripcion = (texto, posicion) => ({ id: uid('des'), texto: texto || '', posicion: posicion || '' });
 
   /* ── Índice de IDs: id → ruta legible ("campanas[0].grupos[2]") ─────────
