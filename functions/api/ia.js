@@ -1167,6 +1167,7 @@ async function investigarAds(env, brief, marca) {
     'TAREAS:',
     url ? `1. LEE la landing ${url}${refs.length ? ' y también ' + refs.join(' , ') : ''}. Extrae SOLO lo que la página dice de verdad: producto, beneficios, cifras, coberturas, precios, plazos, condiciones, pruebas (años, clientes, premios, respaldo).`
         : '1. No hay landing: usa el encargo y lo que encuentres en Google sobre la marca.',
+    url ? '1b. Si la landing es de UN producto, lee también la página del RAMO en el mismo sitio (la de la categoría, p. ej. la de seguros de auto): suele traer asistencias, garantías, cuotas de la promoción y respaldo que la página del producto no muestra. Anota de qué página sale cada dato y usa solo lo del producto encargado.' : '',
     '2. BUSCA en Google (resultados de Chile) cómo busca la gente este producto y quiénes compiten por esas búsquedas. Identifica 3 a 6 competidores y qué promete cada uno en sus anuncios y páginas.',
     '3. Detecta los MENSAJES GENÉRICOS que repiten todos (no sirven para diferenciar) y los ÁNGULOS DIFERENCIALES que esta marca tiene con respaldo en su landing y la competencia no usa.',
     '4. Piensa en las búsquedas que NO queremos pagar: lo que el producto NO es o no incluye, significados confundibles, productos parecidos que no se venden aquí.',
