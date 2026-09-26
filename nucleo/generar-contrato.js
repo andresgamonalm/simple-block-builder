@@ -5,6 +5,7 @@
 const fs = require('fs'), path = require('path');
 const M = require('./modelo.js');
 const AE = require('./ads-editor.js');
+const R = require('./reglas.js');
 
 function contrato() {
   const L = [];
@@ -79,11 +80,22 @@ function contrato() {
    ['Keyword', Lm.keywordCaracteres + ' caracteres · ' + Lm.keywordPalabras + ' palabras']
   ].forEach(([a, b]) => L.push('| ' + a + ' | ' + b + ' |'));
   L.push('');
-  L.push('## 5. Pendiente de confirmar en la primera importación real');
+  L.push('## 5. Reglas que toda campaña debe cumplir');
+  L.push('Las aplica `nucleo/reglas.js` en la IA (antes y después de generar), en la pantalla y antes de exportar.');
+  L.push('**error** = bloquea la exportación · **aviso** = hay que revisarlo · **sugerencia** = mejora opcional.');
+  L.push('');
+  L.push('| Código | Nivel | Tipo | Qué revisa |');
+  L.push('|---|---|---|---|');
+  R.REGLAS.forEach(r => L.push('| ' + r.codigo + ' | ' + r.nivel + ' | ' + r.categoria + ' | ' + r.que.replace(/\|/g, '\\|') + ' |'));
+  L.push('');
+  L.push('Cada hallazgo apunta al `id` del elemento: una corrección puede tocar solo esa parte.');
+  L.push('');
+  L.push('## 6. Pendiente de confirmar en la primera importación real');
   L.push('El archivo de referencia del usuario solo trae negativas amplias de campaña. Estas notaciones siguen la');
   L.push('convención de Ads Editor, pero todavía no se han visto importadas:');
   L.push('- Negativa de **frase** escrita como `"texto"` y de **exacta** como `[texto]` en la columna `Keyword`.');
   L.push('- Negativa **de grupo**: `Type` = `Negative` con `Ad Group` lleno.');
+  L.push('- El **método de ubicación** ("presencia") no tiene columna en el contrato de 60: hoy se fija en Ads Editor (regla K05).');
   L.push('- **Display y Performance Max** aún no forman parte del contrato.');
   L.push('');
   return L.join('\n');

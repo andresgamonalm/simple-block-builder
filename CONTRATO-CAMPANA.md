@@ -181,9 +181,50 @@ Una intención de búsqueda: sus keywords, sus negativas y su(s) anuncio(s).
 | Fragmento estructurado | valores de 25 caracteres · entre 3 y 10 |
 | Keyword | 80 caracteres · 10 palabras |
 
-## 5. Pendiente de confirmar en la primera importación real
+## 5. Reglas que toda campaña debe cumplir
+Las aplica `nucleo/reglas.js` en la IA (antes y después de generar), en la pantalla y antes de exportar.
+**error** = bloquea la exportación · **aviso** = hay que revisarlo · **sugerencia** = mejora opcional.
+
+| Código | Nivel | Tipo | Qué revisa |
+|---|---|---|---|
+| G01 | error | google | La campaña tiene nombre, tipo, redes, idioma, puja y estado válidos. |
+| G02 | error | google | El presupuesto diario es un entero positivo en CLP. |
+| G03 | error | google | Las fechas son AAAA-MM-DD o van vacías; el término no es anterior al inicio ni a hoy. |
+| G04 | error | google | Cada grupo tiene nombre único en su campaña, al menos una keyword y al menos un anuncio. |
+| G05 | error | google | Keyword: máx 80 caracteres y 10 palabras, sin símbolos prohibidos (! @ % , * ( ) = { } ; ~ ` < > ? \ \| ^), sin repetirse en el grupo. |
+| G06 | error | google | Anuncio: 3-15 títulos de máx 30, 2-4 descripciones de máx 90, rutas de máx 15, URL final http(s). Sin textos repetidos. |
+| G07 | error | google | Títulos sin signo de exclamación; sin puntuación repetida ("!!", "??", "..") en ningún texto. |
+| G08 | error | google | Posición fijada: títulos solo 1, 2 o 3; descripciones solo 1 o 2. |
+| G09 | error | google | Sitelink: texto máx 25, líneas máx 35 (las dos o ninguna), URL http(s), sin textos repetidos. |
+| G10 | error | google | Destacado máx 25, sin repetir. Fragmento: 3-10 valores de máx 25. |
+| G11 | error | google | Negativa con texto, máx 10 palabras. |
+| G12 | aviso | google | Mayúsculas excesivas: palabras enteras en mayúscula que no son siglas. |
+| C01 | error | coherencia | Ninguna negativa (de campaña o del grupo) bloquea una keyword propia, según su concordancia. |
+| C02 | aviso | coherencia | La misma keyword con la misma concordancia en dos grupos de la campaña (compiten entre sí). |
+| C03 | aviso | coherencia | Una promoción con "hasta el DD/MM" debe calzar con la fecha de término de la campaña. |
+| C04 | aviso | coherencia | Más de 3 títulos fijados en la misma posición: esa posición deja de rotar y baja la eficacia del anuncio. |
+| C05 | aviso | coherencia | Títulos casi iguales (mismas palabras en otro orden). |
+| C06 | aviso | coherencia | Los mismos títulos fijados repetidos en 3 o más grupos: el anuncio no habla de la intención de cada grupo. |
+| C07 | aviso | coherencia | Ningún título del anuncio contiene las palabras de alguna keyword del grupo (relevancia baja). |
+| C08 | aviso | coherencia | Cifras de los anuncios que no aparecen en la ficha del producto (posible dato inventado). |
+| C09 | aviso | coherencia | Keywords y anuncios del mismo grupo apuntan a dominios distintos. |
+| K01 | aviso | criterio | Presupuesto diario menor a $1.000 CLP: probablemente un error de unidades. |
+| K02 | aviso | criterio | Maximizar clics sin tope de CPC: Google puede pagar lo que quiera por clic. |
+| K03 | aviso | criterio | Red de búsqueda asociada o de Display en una campaña Search: tráfico de menor calidad. |
+| K04 | aviso | criterio | Campaña sin ubicaciones: se muestra en todo el mundo. |
+| K05 | aviso | criterio | Método de ubicación no definido en el archivo: Google usa "presencia o interés" (también personas que no están en la zona). Dejar en "presencia" en Ads Editor. |
+| K06 | aviso | criterio | Edad "Desconocida" excluida: suele ser una parte grande del tráfico. |
+| K07 | aviso | criterio | Keywords en concordancia amplia (esta app trabaja solo exacta y frase). |
+| K08 | sugerencia | criterio | Campaña que se importará activa: conviene importarla pausada y activarla tras revisar en Ads Editor. |
+| K09 | sugerencia | criterio | Muchas negativas idénticas en varias campañas: mejor una lista compartida. |
+| K10 | sugerencia | criterio | La misma keyword en exacta y en frase en el mismo grupo: la de frase ya cubre la exacta. |
+
+Cada hallazgo apunta al `id` del elemento: una corrección puede tocar solo esa parte.
+
+## 6. Pendiente de confirmar en la primera importación real
 El archivo de referencia del usuario solo trae negativas amplias de campaña. Estas notaciones siguen la
 convención de Ads Editor, pero todavía no se han visto importadas:
 - Negativa de **frase** escrita como `"texto"` y de **exacta** como `[texto]` en la columna `Keyword`.
 - Negativa **de grupo**: `Type` = `Negative` con `Ad Group` lleno.
+- El **método de ubicación** ("presencia") no tiene columna en el contrato de 60: hoy se fija en Ads Editor (regla K05).
 - **Display y Performance Max** aún no forman parte del contrato.

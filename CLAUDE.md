@@ -976,7 +976,17 @@ CAMPAÑA con forma de Google Ads Editor y exportar es SERIALIZAR. Decisiones del
   "presencia o interés"); 5 títulos casi iguales fijados en posición 1 y repetidos en los 4 grupos; 109
   negativas amplias duplicadas en 2 campañas (→ lista compartida); exclusión de edad "Unknown".
 
-**Siguientes pasos (orden aprobado):** 2) motor de reglas único (Google · coherencia · criterio) ·
+**PASO 2 (HECHO): motor de reglas.** `nucleo/reglas.js` (UMD, `window.MP_Reglas`): catálogo `REGLAS` de 31
+reglas — G01-G12 Google, C01-C09 coherencia, K01-K10 criterio; niveles error (bloquea exportar) / aviso /
+sugerencia. `validar(ini, {hoy, ficha})` → `{hallazgos[{codigo,nivel,categoria,id,ruta,donde,mensaje,detalle}],
+errores, avisos, sugerencias, exportable}`; cada hallazgo apunta al `id` (base de la corrección por partes).
+`reglasParaIA()` = el catálogo en texto; `bloquea(neg, kw)` = semántica real de negativas (amplia: todas sus
+palabras en cualquier orden; frase: secuencia; exacta: idéntica). Las reglas van en CONTRATO-CAMPANA.md §5.
+Sobre el CSV real: 4 errores (fecha `[]` ×2 y la negativa amplia «comprar auto» que BLOQUEA «comprar seguro de
+auto» exacta y frase — no detectado en la revisión a mano), 19 avisos, 27 sugerencias. `pruebas/reglas.js` 46/46.
+K05: el método de ubicación no tiene columna en el contrato de 60; hoy se fija en Ads Editor.
+
+**Siguientes pasos (orden aprobado):**
 3) guardado por iniciativa con versión y estados (borrador→…→publicada; nombres fijos tras publicar;
 export completo / solo cambios) · 4) Search por IA sobre el modelo con ficha de producto persistente y
 CONVERSACIÓN por partes · 5) Display y Performance Max con espacios de imagen · 6) operación (import de
