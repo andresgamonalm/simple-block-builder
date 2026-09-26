@@ -110,7 +110,7 @@
         { campo: 'comentario', tipo: 'texto', columna: 'Comment' }
       ] },
     { entidad: 'edad', titulo: 'Edad excluida', campos: [
-        { campo: 'edad', tipo: 'texto', obligatorio: true, columna: 'Age', valores: ['18-24', '25-34', '35-44', '45-54', '55-64', '65+', 'Unknown'] },
+        { campo: 'edad', tipo: 'texto', obligatorio: true, columna: 'Age', valores: ['18-24', '25-34', '35-44', '45-54', '55-64', '65 or more', 'Unknown'] },
         { campo: 'comentario', tipo: 'texto', columna: 'Comment' }
       ] },
     { entidad: 'grupo', titulo: 'Grupo de anuncios', descripcion: 'Una intención de búsqueda: sus keywords, sus negativas y su(s) anuncio(s).',

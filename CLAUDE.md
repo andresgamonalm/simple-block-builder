@@ -986,6 +986,19 @@ Sobre el CSV real: 4 errores (fecha `[]` ×2 y la negativa amplia «comprar auto
 auto» exacta y frase — no detectado en la revisión a mano), 19 avisos, 27 sugerencias. `pruebas/reglas.js` 46/46.
 K05: el método de ubicación no tiene columna en el contrato de 60; hoy se fija en Ads Editor.
 
+**REVISIÓN CONTRA GOOGLE (26-sep, orden del usuario: "haz todo lo que esté justificado por Google").** Cada regla
+lleva ahora `fuente` (URL de Google, "protocolo de la casa" o "criterio propio") y el contrato la muestra. 43 reglas.
+Cambios: G05 símbolos = lista oficial (suma `[ ]` y `*`; quita `{ }`) · G11 símbolos de negativas (el `*` vale, `{ }` no)
+· G07 = solo puntuación repetida (error) · **G16** (aviso) exclamación en título (la política vigente ya no lo nombra)
+· **G15** (error, ex-C09) discordancia de destino keyword↔anuncio · **G17** (aviso) sitelink/destacado que la política
+desaprueba (otro dominio, exclamación, empieza con símbolo, repite texto del anuncio o de otro recurso) — no bloquea,
+solo ese recurso deja de mostrarse · C04 → sugerencia si hay >3 fijados en una posición (Google: 2-3; **el protocolo
+usa 5: manda el protocolo, la diferencia queda como sugerencia**) · K02, K03, K05 → sugerencia (K05: Google RECOMIENDA
+"presencia o interés" en Search) · K07 → **P10** (la amplia es decisión de la casa; Google la recomienda) · **quitadas**
+C02 (Google: keywords duplicadas no compiten ni afectan el costo) y K08 (sin respaldo) · nuevas K11 (≥2 RSA por grupo)
+y K12 (≥4 valores por fragmento) · edad `65+` → `65 or more` (valor de Ads Editor). CSV real: siguen 4 errores (los
+mismos), 40 avisos, 43 sugerencias. `pruebas/reglas.js` 76/76.
+
 **PROTOCOLO DE LA CASA (26-sep, lámina "Reglas y requisitos ADS" del usuario) — HECHO.**
 - `M.PROTOCOLO`: 5 títulos fijados en posición 1 (con marca u oferta/precio) + 10 que rotan · ≥4 sitelinks, cada
   uno a una página DISTINTA de la URL principal · ≥4 destacados · UTM `utm_source=gads`, `utm_medium=clics|conversion`

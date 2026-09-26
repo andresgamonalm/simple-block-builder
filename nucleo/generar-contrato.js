@@ -109,9 +109,14 @@ function contrato() {
   L.push('Las aplica `nucleo/reglas.js` en la IA (antes y después de generar), en la pantalla y antes de exportar.');
   L.push('**error** = bloquea la exportación · **aviso** = hay que revisarlo · **sugerencia** = mejora opcional.');
   L.push('');
-  L.push('| Código | Nivel | Tipo | Qué revisa |');
-  L.push('|---|---|---|---|');
-  R.REGLAS.forEach(r => L.push('| ' + r.codigo + ' | ' + r.nivel + ' | ' + r.categoria + ' | ' + r.que.replace(/\|/g, '\\|') + ' |'));
+  L.push('| Código | Nivel | Tipo | Qué revisa | Respaldo |');
+  L.push('|---|---|---|---|---|');
+  const enlace = f => f.split(' · ').map(x => /^https?:/.test(x) ? '[' + x.replace(/^https:\/\/support\.google\.com\//, '') + '](' + x + ')' : x.replace(/https:\/\/\S+/g, u => '[' + u.replace(/^https:\/\/support\.google\.com\//, '') + '](' + u + ')')).join(' · ');
+  R.REGLAS.forEach(r => L.push('| ' + r.codigo + ' | ' + r.nivel + ' | ' + r.categoria + ' | ' + r.que.replace(/\|/g, '\\|') + ' | ' + enlace(r.fuente).replace(/\|/g, '\\|') + ' |'));
+  L.push('');
+  L.push('Revisadas una a una contra la documentación de Google el 26-sep-2026. Donde Google y el protocolo de la casa no');
+  L.push('coinciden (fijados en la posición 1: Google recomienda 2 o 3, el protocolo usa 5; concordancia amplia: Google la');
+  L.push('recomienda, la casa no la usa) manda el protocolo y la diferencia queda a la vista como sugerencia.');
   L.push('');
   L.push('Cada hallazgo apunta al `id` del elemento: una corrección puede tocar solo esa parte.');
   L.push('');

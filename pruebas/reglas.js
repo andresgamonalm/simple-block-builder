@@ -17,7 +17,7 @@ console.log("\n1 · El archivo real (anonimizado): lo que encontró la auditorí
 const ini = AE.importar(fs.readFileSync(path.join(RAIZ, "pruebas/datos/ads-editor-referencia.csv"), "utf8")).iniciativa;
 const v = R.validar(ini, { hoy: HOY, marca: "Acme" });
 const c = cuenta(v);
-const esperado = { G03: 2, C01: 2, K01: 2, K02: 2, K03: 2, K05: 2, K06: 2, C05: 4, K09: 1, K10: 26, P01: 6, P02: 4, P06: 3, P08: 2 };
+const esperado = { G03: 2, C01: 2, K01: 2, K02: 2, K03: 2, K05: 2, K06: 2, C04: 4, C05: 4, K09: 1, K10: 26, K11: 4, K12: 2, G17: 17, P01: 6, P02: 4, P06: 3, P08: 2 };
 T(JSON.stringify(Object.keys(c).sort().map(k => k + ":" + c[k])) === JSON.stringify(Object.keys(esperado).sort().map(k => k + ":" + esperado[k])), "hallazgos por regla exactamente los esperados", JSON.stringify(c));
 T(v.errores === 4 && !v.exportable, "4 errores → no se puede exportar así");
 T(v.hallazgos.filter(h => h.codigo === "G03").every(h => /"\[\]"/.test(h.mensaje)), "G03: la fecha de inicio «[]» de las dos campañas");
@@ -27,7 +27,9 @@ T(c01.every(h => M.buscarPorId(ini, h.id).obj.texto === "comprar auto" && M.busc
 T(v.hallazgos.filter(h => h.codigo === "K01").every(h => h.mensaje.includes("$25")), "K01: presupuesto de $25 CLP diarios");
 T(["G05", "G06", "G07", "G09", "G10"].every(k => !c[k]), "ningún texto fuera de los límites de Google (como en la revisión a mano)");
 T(v.hallazgos.every(h => h.id && typeof h.ruta === "string" && M.buscarPorId(ini, h.id)), "cada hallazgo apunta a un elemento real (id + ruta)");
-T(!c.C04 && !c.P03 && !c.P04, "tu protocolo de 5 títulos fijados en la posición 1 (con la marca) + 10 que rotan ya NO se marca como error");
+T(!c.P03 && !c.P04 && v.hallazgos.filter(h => h.codigo === "C04").every(h => h.nivel === "sugerencia"), "tu protocolo de 5 fijados en la posición 1 se cumple; Google recomienda 2 o 3 → solo SUGERENCIA (C04), no bloquea");
+T(v.hallazgos.filter(h => h.codigo === "G17").every(h => h.nivel === "aviso") && v.hallazgos.some(h => h.codigo === "G17" && /sitecorecloud/.test(h.mensaje)) && v.hallazgos.some(h => h.codigo === "G17" && /Repite un texto del anuncio/.test(h.mensaje)),
+  "G17 (aviso): sitelinks a otro dominio y destacados que repiten un título — la política los desaprueba, pero no tumba la campaña");
 T(v.hallazgos.filter(h => h.codigo === "P06").map(h => h.donde.split("«").pop().replace("»", "")).join("|") === "Cotiza Auto Digital|Cotiza con 3 Cuotas|3 Cuotas Gratis",
   "P06: los 3 sitelinks que llevan a la misma URL que el anuncio");
 T(v.hallazgos.filter(h => h.codigo === "P08").length === 2 && v.hallazgos.filter(h => h.codigo === "P02").every(h => /ads-/.test(h.mensaje)), "P08: sin UTM · P02: anuncios sin nombre ads-…");
@@ -46,18 +48,20 @@ function base() {
   ["Cotizar Seguro Auto", "Deducible Desde 3 UF", "Grúa 24/7 Incluida", "Elige Tu Plan", "Cobertura Total", "Asistencia en Ruta",
    "Pago Mensual Fijo", "Atención Todo el Año", "Planes Flexibles", "Contrata en Minutos"].forEach(t => a.titulos.push(M.nuevoTitulo(t)));
   ["Cotiza en línea y elige tu plan.", "Deducible desde 3 UF y grúa 24/7."].forEach(t => a.descripciones.push(M.nuevaDescripcion(t)));
-  g.anuncios.push(a); cm.grupos.push(g);
+  const a2 = JSON.parse(JSON.stringify(a)); a2.id = M.uid("rsa"); a2.nombre = M.nombreAnuncio("bienal");
+  a2.titulos.forEach(t => { t.id = M.uid("tit"); }); a2.descripciones.forEach(d => { d.id = M.uid("des"); });
+  g.anuncios.push(a, a2); cm.grupos.push(g);
   [["Cotizar", "/cotizar"], ["Planes", "/planes"], ["Coberturas", "/coberturas"], ["Contacto", "/contacto"]].forEach(([t, u]) =>
     cm.sitelinks.push({ id: M.uid("sl"), texto: t, linea1: "En minutos", linea2: "Cien por ciento online", urlFinal: "https://ejemplo.cl" + u }));
   ["Grúa 24/7", "Cotiza Online", "Tres Planes", "Pago Mensual"].forEach(t => cm.destacados.push({ id: M.uid("co"), texto: t }));
-  cm.fragmentos.push({ id: M.uid("sn"), encabezado: "Tipos", valores: ["Básico", "Estándar", "Premium"], idioma: "es", estado: "Enabled" });
+  cm.fragmentos.push({ id: M.uid("sn"), encabezado: "Tipos", valores: ["Básico", "Estándar", "Premium", "Full"], idioma: "es", estado: "Enabled" });
   i.campanas.push(cm);
   M.aplicarUTM(i);
   return { i, cm, g, a };
 }
 const CX = { hoy: HOY, ficha: "Deducible desde 3 UF. Grúa 24/7.", marca: "Demo" };
 const limpio = R.validar(base().i, CX);
-T(limpio.hallazgos.length === 0, "una campaña armada con tu protocolo: cero hallazgos (sin falsos positivos)", JSON.stringify(limpio.hallazgos.map(h => h.codigo + " " + h.mensaje)));
+T(limpio.hallazgos.every(h => h.codigo === "C04") && limpio.errores === 0 && limpio.avisos === 0, "una campaña armada con tu protocolo: cero errores y cero avisos (solo la sugerencia C04: Google fija 2-3, tu protocolo 5)", JSON.stringify(limpio.hallazgos.map(h => h.codigo + " " + h.mensaje)));
 
 const casos = [
   ["G01", x => { x.cm.puja = "Gastar mucho"; }],
@@ -66,28 +70,30 @@ const casos = [
   ["G04", x => { x.g.anuncios = []; }],
   ["G05", x => { x.g.keywords.push(M.nuevaKeyword("seguro auto!", "exacta")); }],
   ["G06", x => { x.a.titulos.push(M.nuevoTitulo("Un título que se pasa de los treinta")); }],
-  ["G07", x => { x.a.titulos.push(M.nuevoTitulo("Cotiza Ya!")); }],
+  ["G07", x => { x.a.descripciones[0].texto = "Cotiza en línea.."; }],
   ["G08", x => { x.a.titulos[0].posicion = "4"; }],
   ["G09", x => { x.cm.sitelinks[0].linea2 = ""; }],
   ["G10", x => { x.cm.destacados.push({ id: "co_x", texto: "Un texto destacado demasiado largo" }); }],
   ["G11", x => { x.cm.negativas.push(M.nuevaNegativa("", "amplia")); }],
   ["G12", x => { x.a.descripciones[0].texto = "COTIZA AHORA MISMO tu seguro."; }],
   ["C01", x => { x.cm.negativas.push(M.nuevaNegativa("auto cotizar", "amplia")); }],
-  ["C02", x => { const g2 = M.nuevoGrupo("ao-otro"); g2.keywords.push(M.nuevaKeyword("cotizar seguro auto", "exacta")); g2.anuncios.push(x.a); x.cm.grupos.push(g2); }],
   ["C03", x => { x.a.titulos.push(M.nuevoTitulo("Promo Hasta el 15/10")); }],
   ["C04", x => { x.a.titulos[5].posicion = "1"; }],
   ["C05", x => { x.a.titulos.push(M.nuevoTitulo("Seguro Auto Cotizar")); }],
   ["C07", x => { x.a.titulos.forEach((t, k) => { t.texto = "Titular Numero " + "ABCDEFGHIJKLMNO"[k]; }); }],
   ["C08", x => { x.a.titulos.push(M.nuevoTitulo("90% de Descuento")); }],
-  ["C09", x => { x.g.keywords[0].urlFinal = "https://otro.cl/x"; }],
+  ["G15", x => { x.g.keywords[0].urlFinal = "https://otro.cl/x"; }],
+  ["G16", x => { x.a.titulos[6].texto = "Grúa 24/7 Incluida!"; }],
+  ["G17", x => { x.cm.destacados.push({ id: "co_y", texto: "Cobertura Total" }); }],
+  ["P10", x => { x.g.keywords.push(M.nuevaKeyword("seguro", "amplia")); }],
+  ["K11", x => { x.g.anuncios.pop(); }],
+  ["K12", x => { x.cm.fragmentos[0].valores.pop(); }],
   ["K01", x => { x.cm.presupuestoDiario = 25; }],
   ["K02", x => { x.cm.puja = "Maximize clicks"; }],
   ["K03", x => { x.cm.redes = ["Google Search", "Search Partners"]; }],
   ["K04", x => { x.cm.ubicaciones = []; }],
   ["K05", x => { delete x.cm.otrasColumnas; }],
   ["K06", x => { x.cm.edadesExcluidas.push({ id: "eda_x", edad: "Unknown" }); }],
-  ["K07", x => { x.g.keywords.push(M.nuevaKeyword("seguro", "amplia")); }],
-  ["K08", x => { x.cm.estado = "Enabled"; }],
   ["K09", x => { const c2 = JSON.parse(JSON.stringify(x.cm)); c2.id = "cmp_2"; c2.nombre = "chl-producto-demo-promociones"; for (let k = 0; k < 20; k++) { const n = M.nuevaNegativa("palabra" + k, "amplia"); x.cm.negativas.push(n); c2.negativas.push(JSON.parse(JSON.stringify(n))); } x.i.campanas.push(c2); }],
   ["K10", x => { x.g.keywords.push(M.nuevaKeyword("cotizar seguro auto", "frase")); }],
   ["G13", x => { x.cm.fragmentos[0].encabezado = "Beneficios"; }],
@@ -108,6 +114,13 @@ for (const [cod, romper] of casos) {
   T(r.hallazgos.some(h => h.codigo === cod), `${cod} · ${R.REGLAS.find(q => q.codigo === cod).que.slice(0, 80)}`, JSON.stringify(r.hallazgos.map(h => h.codigo)));
 }
 T(casos.length === R.REGLAS.length, "todas las reglas del catálogo tienen su caso de prueba", casos.length + " de " + R.REGLAS.length);
+
+console.log("\n2b · Símbolos según Google");
+const sim = f => { const x = base(); f(x); return R.validar(x.i, CX).hallazgos.map(h => h.codigo); };
+T(sim(x => x.g.keywords.push(M.nuevaKeyword("seguro [auto]", "frase"))).includes("G05") && sim(x => x.g.keywords.push(M.nuevaKeyword("seguro*auto", "frase"))).includes("G05"), "keyword con [ ] o con * → G05");
+T(!sim(x => x.g.keywords.push(M.nuevaKeyword("seguro {auto}", "frase"))).includes("G05"), "las llaves { } no están en la lista de Google para keywords → no se marcan");
+T(!sim(x => x.cm.negativas.push(M.nuevaNegativa("gratis*", "amplia"))).includes("G11") && sim(x => x.cm.negativas.push(M.nuevaNegativa("{gratis}", "amplia"))).includes("G11"), "negativa: el * vale, las { } no → G11");
+T(R.REGLAS.every(r => r.fuente), "cada regla declara su respaldo (documento de Google, protocolo o criterio propio)");
 
 console.log("\n3 · Cuándo una negativa bloquea (según SU concordancia)");
 const kw = { texto: "comprar seguro de auto" };

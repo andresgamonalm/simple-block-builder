@@ -101,7 +101,7 @@ Una campaña de Google Ads. Por ahora: Search.
 
 | Campo | Tipo | Oblig. | Límite | Columna Ads Editor | Qué es |
 |---|---|---|---|---|---|
-| `edad` | texto | sí |  | `Age` | Valores: `18-24`, `25-34`, `35-44`, `45-54`, `55-64`, `65+`, `Unknown`. |
+| `edad` | texto | sí |  | `Age` | Valores: `18-24`, `25-34`, `35-44`, `45-54`, `55-64`, `65 or more`, `Unknown`. |
 | `comentario` | texto |  |  | `Comment` |  |
 
 ### Grupo de anuncios (`grupo`)
@@ -225,49 +225,55 @@ Lámina "Reglas y requisitos ADS". Todo nombre va en **minúsculas, sin tildes, 
 Las aplica `nucleo/reglas.js` en la IA (antes y después de generar), en la pantalla y antes de exportar.
 **error** = bloquea la exportación · **aviso** = hay que revisarlo · **sugerencia** = mejora opcional.
 
-| Código | Nivel | Tipo | Qué revisa |
-|---|---|---|---|
-| G01 | error | google | La campaña tiene nombre, tipo, redes, idioma, puja y estado válidos. |
-| G02 | error | google | El presupuesto diario es un entero positivo en CLP. |
-| G03 | error | google | Las fechas son AAAA-MM-DD o van vacías; el término no es anterior al inicio ni a hoy. |
-| G04 | error | google | Cada grupo tiene nombre único en su campaña, al menos una keyword y al menos un anuncio. |
-| G05 | error | google | Keyword: máx 80 caracteres y 10 palabras, sin símbolos prohibidos (! @ % , * ( ) = { } ; ~ ` < > ? \ \| ^), sin repetirse en el grupo. |
-| G06 | error | google | Anuncio: 3-15 títulos de máx 30, 2-4 descripciones de máx 90, rutas de máx 15, URL final http(s). Sin textos repetidos. |
-| G07 | error | google | Títulos sin signo de exclamación; sin puntuación repetida ("!!", "??", "..") en ningún texto. |
-| G08 | error | google | Posición fijada: títulos solo 1, 2 o 3; descripciones solo 1 o 2. |
-| G09 | error | google | Sitelink: texto máx 25, líneas máx 35 (las dos o ninguna), URL http(s), sin textos repetidos. |
-| G10 | error | google | Destacado máx 25, sin repetir. Fragmento: 3-10 valores de máx 25. |
-| G11 | error | google | Negativa con texto, máx 10 palabras. |
-| G12 | aviso | google | Mayúsculas excesivas: palabras enteras en mayúscula que no son siglas. |
-| G13 | aviso | google | El encabezado del fragmento estructurado es uno de los predefinidos de Google. |
-| G14 | error | google | Extensión de precio: 3-8 ítems, encabezado y descripción de máx 25, precio entero en CLP, URL propia. |
-| P01 | aviso | protocolo | Nombres de campaña, grupo y anuncio en minúsculas, sin tildes ni símbolos, con guion medio. (Renombrar una campaña ya publicada crea un duplicado en Ads Editor.) |
-| P02 | aviso | protocolo | Estructura de nombres: campaña chl-producto-<producto>-<tipo>; grupo <abreviatura del tipo>-<naturaleza>; anuncio ads-<característica>. |
-| P03 | aviso | protocolo | Títulos: 5 fijados en la posición 1 y 10 que rotan. |
-| P04 | aviso | protocolo | Los títulos fijados en la posición 1 llevan la marca o la oferta/precio. |
-| P05 | aviso | protocolo | Al menos 4 sitelinks por campaña. |
-| P06 | aviso | protocolo | Cada sitelink lleva a una página DISTINTA de la URL de destino principal. |
-| P07 | sugerencia | protocolo | Al menos 4 textos destacados por campaña. |
-| P08 | aviso | protocolo | UTM presentes y correctas: utm_source=gads, utm_medium=clics o conversion según la puja, utm_campaign = nombre de la campaña; todo en minúsculas y con guion medio. |
-| P09 | error | protocolo | Toda URL final (anuncios, keywords, sitelinks, precios) usa https://. |
-| C01 | error | coherencia | Ninguna negativa (de campaña o del grupo) bloquea una keyword propia, según su concordancia. |
-| C02 | aviso | coherencia | La misma keyword con la misma concordancia en dos grupos de la campaña (compiten entre sí). |
-| C03 | aviso | coherencia | Una promoción con "hasta el DD/MM" debe calzar con la fecha de término de la campaña. |
-| C04 | aviso | coherencia | Más de 5 títulos fijados en una misma posición: el protocolo usa 5 en la posición 1; más que eso resta combinaciones. |
-| C05 | aviso | coherencia | Títulos casi iguales (mismas palabras en otro orden). |
-| C07 | aviso | coherencia | Ningún título del anuncio contiene las palabras de alguna keyword del grupo (relevancia baja). |
-| C08 | aviso | coherencia | Cifras de los anuncios que no aparecen en la ficha del producto (posible dato inventado). |
-| C09 | aviso | coherencia | Keywords y anuncios del mismo grupo apuntan a dominios distintos. |
-| K01 | aviso | criterio | Presupuesto diario menor a $1.000 CLP: probablemente un error de unidades. |
-| K02 | aviso | criterio | Maximizar clics sin tope de CPC: Google puede pagar lo que quiera por clic. |
-| K03 | aviso | criterio | Red de búsqueda asociada o de Display en una campaña Search: tráfico de menor calidad. |
-| K04 | aviso | criterio | Campaña sin ubicaciones: se muestra en todo el mundo. |
-| K05 | aviso | criterio | Método de ubicación no definido en el archivo: Google usa "presencia o interés" (también personas que no están en la zona). Dejar en "presencia" en Ads Editor. |
-| K06 | aviso | criterio | Edad "Desconocida" excluida: suele ser una parte grande del tráfico. |
-| K07 | aviso | criterio | Keywords en concordancia amplia (esta app trabaja solo exacta y frase). |
-| K08 | sugerencia | criterio | Campaña que se importará activa: conviene importarla pausada y activarla tras revisar en Ads Editor. |
-| K09 | sugerencia | criterio | Muchas negativas idénticas en varias campañas: mejor una lista compartida. |
-| K10 | sugerencia | criterio | La misma keyword en exacta y en frase en el mismo grupo: la de frase ya cubre la exacta. |
+| Código | Nivel | Tipo | Qué revisa | Respaldo |
+|---|---|---|---|---|
+| G01 | error | google | La campaña tiene nombre, tipo, redes, idioma, puja y estado válidos. | [google-ads/editor/answer/57747](https://support.google.com/google-ads/editor/answer/57747) |
+| G02 | error | google | El presupuesto diario es un entero positivo en CLP. | [google-ads/editor/answer/57747](https://support.google.com/google-ads/editor/answer/57747) |
+| G03 | error | google | Las fechas son AAAA-MM-DD o van vacías; el término no es anterior al inicio ni a hoy. | [google-ads/editor/answer/57747](https://support.google.com/google-ads/editor/answer/57747) |
+| G04 | error | google | Cada grupo tiene nombre único en su campaña, al menos una keyword y al menos un anuncio. | [google-ads/editor/answer/57747](https://support.google.com/google-ads/editor/answer/57747) |
+| G05 | error | google | Keyword: máx 80 caracteres y 10 palabras, sin símbolos inválidos (@ \ ^ , = ! ` < > [ ] ( ) % \| ? ; ~ y el asterisco *, que solo vale en negativas), sin repetirse en el grupo. | [google-ads/answer/2453981](https://support.google.com/google-ads/answer/2453981) |
+| G06 | error | google | Anuncio: 3-15 títulos de máx 30, 2-4 descripciones de máx 90, rutas de máx 15, URL final http(s). Sin textos repetidos. | [google-ads/answer/7684791](https://support.google.com/google-ads/answer/7684791) |
+| G07 | error | google | Sin puntuación repetida ("!!", "??", "..") en títulos, descripciones, sitelinks ni destacados. | [adspolicy/answer/14847994](https://support.google.com/adspolicy/answer/14847994) |
+| G08 | error | google | Posición fijada: títulos solo 1, 2 o 3; descripciones solo 1 o 2. | [google-ads/answer/7684791](https://support.google.com/google-ads/answer/7684791) |
+| G09 | error | google | Sitelink: texto máx 25, líneas máx 35 (las dos o ninguna), URL http(s), sin textos repetidos (aunque vayan a páginas distintas). | [adspolicy/answer/1054210](https://support.google.com/adspolicy/answer/1054210) |
+| G10 | error | google | Destacado máx 25, sin repetir otro destacado. Fragmento: 3-10 valores de máx 25. | [adspolicy/answer/6084196](https://support.google.com/adspolicy/answer/6084196) · [google-ads/answer/6280012](https://support.google.com/google-ads/answer/6280012) |
+| G11 | error | google | Negativa con texto, máx 10 palabras, sin símbolos inválidos (, ! @ % ^ ( ) = { } ; ~ ` < > ? \ \|). | [google-ads/answer/2453972](https://support.google.com/google-ads/answer/2453972) |
+| G12 | aviso | google | Mayúsculas excesivas: palabras enteras en mayúscula que no son siglas. | [adspolicy/answer/6021546](https://support.google.com/adspolicy/answer/6021546) |
+| G13 | aviso | google | El encabezado del fragmento estructurado es uno de los predefinidos de Google. | [google-ads/answer/6280012](https://support.google.com/google-ads/answer/6280012) |
+| G14 | error | google | Extensión de precio: 3-8 ítems, encabezado y descripción de máx 25, precio entero en CLP, URL propia. | [adspolicy/answer/7048464](https://support.google.com/adspolicy/answer/7048464) |
+| G15 | error | google | Discordancia de destino: las URL finales de las keywords van al mismo dominio que el anuncio del grupo. | [adspolicy/answer/6368661](https://support.google.com/adspolicy/answer/6368661) |
+| G16 | aviso | google | Signo de exclamación en un título: Google lo desaprobaba ("exclamation mark in the ad's headline"); la política vigente ya no lo nombra, pero sigue siendo riesgo de rechazo. | [adspolicy/answer/14847994](https://support.google.com/adspolicy/answer/14847994) |
+| G17 | aviso | google | Sitelink o destacado que la política de Google desaprueba: signo de exclamación, empieza con un símbolo, repite un texto del anuncio o de otro recurso, o lleva a un dominio distinto al del anuncio. Solo ese recurso deja de mostrarse. | [adspolicy/answer/1054210](https://support.google.com/adspolicy/answer/1054210) · [adspolicy/answer/6084196](https://support.google.com/adspolicy/answer/6084196) |
+| P01 | aviso | protocolo | Nombres de campaña, grupo y anuncio en minúsculas, sin tildes ni símbolos, con guion medio. (Renombrar una campaña ya publicada crea un duplicado en Ads Editor.) | protocolo de la casa (lámina "Reglas y requisitos ADS") |
+| P02 | aviso | protocolo | Estructura de nombres: campaña chl-producto-<producto>-<tipo>; grupo <abreviatura del tipo>-<naturaleza>; anuncio ads-<característica>. | protocolo de la casa (lámina "Reglas y requisitos ADS") |
+| P03 | aviso | protocolo | Títulos: 5 fijados en la posición 1 y 10 que rotan. | protocolo de la casa (lámina "Reglas y requisitos ADS") |
+| P04 | aviso | protocolo | Los títulos fijados en la posición 1 llevan la marca o la oferta/precio. | protocolo de la casa (lámina "Reglas y requisitos ADS") |
+| P05 | aviso | protocolo | Al menos 4 sitelinks por campaña. | protocolo de la casa (lámina "Reglas y requisitos ADS") |
+| P06 | aviso | protocolo | Cada sitelink lleva a una página DISTINTA de la URL de destino principal. | protocolo de la casa (lámina "Reglas y requisitos ADS") |
+| P07 | sugerencia | protocolo | Al menos 4 textos destacados por campaña. | protocolo de la casa (lámina "Reglas y requisitos ADS") |
+| P08 | aviso | protocolo | UTM presentes y correctas: utm_source=gads, utm_medium=clics o conversion según la puja, utm_campaign = nombre de la campaña; todo en minúsculas y con guion medio. | protocolo de la casa (lámina "Reglas y requisitos ADS") |
+| P09 | error | protocolo | Toda URL final (anuncios, keywords, sitelinks, precios) usa https://. | protocolo de la casa (lámina "Reglas y requisitos ADS") |
+| P10 | aviso | protocolo | Keywords solo en concordancia exacta o de frase (la amplia no se usa por decisión de la casa). | protocolo de la casa (lámina "Reglas y requisitos ADS") · Google, en cambio, recomienda la amplia: [google-ads/answer/7478529](https://support.google.com/google-ads/answer/7478529) |
+| C01 | error | coherencia | Ninguna negativa (de campaña o del grupo) bloquea una keyword propia, según su concordancia. | [google-ads/answer/2453972](https://support.google.com/google-ads/answer/2453972) |
+| C03 | aviso | coherencia | Una promoción con "hasta el DD/MM" debe calzar con la fecha de término de la campaña (ofrecer algo que ya no está disponible es tergiversación). | [adspolicy/answer/6020955](https://support.google.com/adspolicy/answer/6020955) |
+| C04 | sugerencia | coherencia | Más de 3 títulos fijados en una misma posición: Google recomienda fijar 2 o 3 por posición; fijar más le quita combinaciones y puede bajar la calidad del anuncio. | [google-ads/answer/7684791](https://support.google.com/google-ads/answer/7684791) |
+| C05 | aviso | coherencia | Títulos casi iguales (mismas palabras en otro orden): Google pide títulos únicos y advierte que fijar textos similares baja la calidad del anuncio. | [google-ads/answer/7684791](https://support.google.com/google-ads/answer/7684791) |
+| C07 | aviso | coherencia | Ningún título del anuncio contiene las palabras de alguna keyword del grupo (Google pide al menos una keyword en los títulos). | [google-ads/answer/9438230](https://support.google.com/google-ads/answer/9438230) |
+| C08 | aviso | coherencia | Cifras de los anuncios que no aparecen en la ficha del producto (posible dato inventado: afirmación no confiable). | [adspolicy/answer/6020955](https://support.google.com/adspolicy/answer/6020955) |
+| K01 | aviso | criterio | Presupuesto diario menor a $1.000 CLP: probablemente un error de unidades. | criterio propio (sin documento de Google que lo respalde o lo contradiga); caso real: $25 CLP diarios |
+| K02 | sugerencia | criterio | Maximizar clics sin tope de CPC: Google puja lo necesario para gastar el presupuesto; el tope ayuda a controlar el costo si el CPC sale más alto de lo deseado (a costa de algunos clics). | [google-ads/answer/6268626](https://support.google.com/google-ads/answer/6268626) |
+| K03 | sugerencia | criterio | Red de búsqueda asociada o de Display en una campaña Search: mide su rendimiento por separado antes de dejarla encendida. | criterio propio (sin documento de Google que lo respalde o lo contradiga) |
+| K04 | aviso | criterio | Campaña sin ubicaciones: se mostraría en todos los países. | [google-ads/answer/1722043](https://support.google.com/google-ads/answer/1722043) |
+| K05 | sugerencia | criterio | Método de ubicación no fijado en el archivo: queda "presencia o interés", que es lo que Google recomienda en Search. Cámbialo a "presencia" en Ads Editor solo si no quieres gente que está fuera de la zona. | [google-ads/answer/1722038](https://support.google.com/google-ads/answer/1722038) |
+| K06 | aviso | criterio | Edad "Desconocida" excluida: Google advierte que puede dejar fuera a una cantidad importante de personas. | [google-ads/answer/2580383](https://support.google.com/google-ads/answer/2580383) |
+| K09 | sugerencia | criterio | Muchas negativas idénticas en varias campañas: mejor una lista compartida (hasta 5.000 por lista y 20 listas por cuenta). | [google-ads/answer/2453983](https://support.google.com/google-ads/answer/2453983) |
+| K10 | sugerencia | criterio | La misma keyword en exacta y en frase en el mismo grupo: la de frase ya cubre las búsquedas de la exacta. | [google-ads/answer/7478529](https://support.google.com/google-ads/answer/7478529) |
+| K11 | sugerencia | criterio | Grupo con un solo anuncio: Google recomienda al menos 2 anuncios adaptables por grupo (en promedio +6,6 % de conversiones al pasar de 1 a 2). | [google-ads/answer/7684791](https://support.google.com/google-ads/answer/7684791) |
+| K12 | sugerencia | criterio | Fragmento estructurado con menos de 4 valores: Google recomienda al menos 4 por encabezado. | [google-ads/answer/6280012](https://support.google.com/google-ads/answer/6280012) |
+
+Revisadas una a una contra la documentación de Google el 26-sep-2026. Donde Google y el protocolo de la casa no
+coinciden (fijados en la posición 1: Google recomienda 2 o 3, el protocolo usa 5; concordancia amplia: Google la
+recomienda, la casa no la usa) manda el protocolo y la diferencia queda a la vista como sugerencia.
 
 Cada hallazgo apunta al `id` del elemento: una corrección puede tocar solo esa parte.
 

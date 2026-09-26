@@ -30,52 +30,69 @@
   const L = M.LIMITES;
 
   /* ── Catálogo (lo que se documenta y se le explica a la IA) ─────────── */
+  /* fuente = documento de Google que respalda la regla (o "criterio propio" /
+     "protocolo" cuando no viene de Google). Revisado contra la documentación
+     vigente el 26-sep-2026. */
+  const G = 'https://support.google.com/';
+  const F = {
+    csv: G + 'google-ads/editor/answer/57747', rsa: G + 'google-ads/answer/7684791', kwSimbolos: G + 'google-ads/answer/2453981',
+    negativas: G + 'google-ads/answer/2453972', listasNeg: G + 'google-ads/answer/2453983', concordancias: G + 'google-ads/answer/7478529',
+    puntuacion: G + 'adspolicy/answer/14847994', editorial: G + 'adspolicy/answer/6021546', sitelinks: G + 'adspolicy/answer/1054210',
+    destacados: G + 'adspolicy/answer/6084196', fragmentos: G + 'google-ads/answer/6280012', precios: G + 'adspolicy/answer/7048464',
+    destino: G + 'adspolicy/answer/6368661', engano: G + 'adspolicy/answer/6020955', maxClics: G + 'google-ads/answer/6268626',
+    ubicacion: G + 'google-ads/answer/1722038', ubicaciones: G + 'google-ads/answer/1722043', demografia: G + 'google-ads/answer/2580383',
+    rsaTips: G + 'google-ads/answer/9438230'
+  };
+  const PROTO = 'protocolo de la casa (lámina "Reglas y requisitos ADS")';
+  const PROPIO = 'criterio propio (sin documento de Google que lo respalde o lo contradiga)';
   const REGLAS = [
-    // GOOGLE
-    { codigo: 'G01', nivel: 'error', categoria: 'google', que: 'La campaña tiene nombre, tipo, redes, idioma, puja y estado válidos.' },
-    { codigo: 'G02', nivel: 'error', categoria: 'google', que: 'El presupuesto diario es un entero positivo en CLP.' },
-    { codigo: 'G03', nivel: 'error', categoria: 'google', que: 'Las fechas son AAAA-MM-DD o van vacías; el término no es anterior al inicio ni a hoy.' },
-    { codigo: 'G04', nivel: 'error', categoria: 'google', que: 'Cada grupo tiene nombre único en su campaña, al menos una keyword y al menos un anuncio.' },
-    { codigo: 'G05', nivel: 'error', categoria: 'google', que: `Keyword: máx ${L.keywordCaracteres} caracteres y ${L.keywordPalabras} palabras, sin símbolos prohibidos (! @ % , * ( ) = { } ; ~ \` < > ? \\ | ^), sin repetirse en el grupo.` },
-    { codigo: 'G06', nivel: 'error', categoria: 'google', que: `Anuncio: ${L.titulosMin}-${L.titulosMax} títulos de máx ${L.titulo}, ${L.descripcionesMin}-${L.descripcionesMax} descripciones de máx ${L.descripcion}, rutas de máx ${L.ruta}, URL final http(s). Sin textos repetidos.` },
-    { codigo: 'G07', nivel: 'error', categoria: 'google', que: 'Títulos sin signo de exclamación; sin puntuación repetida ("!!", "??", "..") en ningún texto.' },
-    { codigo: 'G08', nivel: 'error', categoria: 'google', que: 'Posición fijada: títulos solo 1, 2 o 3; descripciones solo 1 o 2.' },
-    { codigo: 'G09', nivel: 'error', categoria: 'google', que: `Sitelink: texto máx ${L.sitelinkTexto}, líneas máx ${L.sitelinkLinea} (las dos o ninguna), URL http(s), sin textos repetidos.` },
-    { codigo: 'G10', nivel: 'error', categoria: 'google', que: `Destacado máx ${L.destacado}, sin repetir. Fragmento: ${L.fragmentoValoresMin}-${L.fragmentoValoresMax} valores de máx ${L.fragmentoValor}.` },
-    { codigo: 'G11', nivel: 'error', categoria: 'google', que: 'Negativa con texto, máx 10 palabras.' },
-    { codigo: 'G12', nivel: 'aviso', categoria: 'google', que: 'Mayúsculas excesivas: palabras enteras en mayúscula que no son siglas.' },
-    { codigo: 'G13', nivel: 'aviso', categoria: 'google', que: 'El encabezado del fragmento estructurado es uno de los predefinidos de Google.' },
-    { codigo: 'G14', nivel: 'error', categoria: 'google', que: `Extensión de precio: ${L.precioItemsMin}-${L.precioItemsMax} ítems, encabezado y descripción de máx ${L.precioTexto}, precio entero en CLP, URL propia.` },
+    // GOOGLE — lo que Google o Ads Editor rechazan
+    { codigo: 'G01', nivel: 'error', categoria: 'google', fuente: F.csv, que: 'La campaña tiene nombre, tipo, redes, idioma, puja y estado válidos.' },
+    { codigo: 'G02', nivel: 'error', categoria: 'google', fuente: F.csv, que: 'El presupuesto diario es un entero positivo en CLP.' },
+    { codigo: 'G03', nivel: 'error', categoria: 'google', fuente: F.csv, que: 'Las fechas son AAAA-MM-DD o van vacías; el término no es anterior al inicio ni a hoy.' },
+    { codigo: 'G04', nivel: 'error', categoria: 'google', fuente: F.csv, que: 'Cada grupo tiene nombre único en su campaña, al menos una keyword y al menos un anuncio.' },
+    { codigo: 'G05', nivel: 'error', categoria: 'google', fuente: F.kwSimbolos, que: `Keyword: máx ${L.keywordCaracteres} caracteres y ${L.keywordPalabras} palabras, sin símbolos inválidos (@ \\ ^ , = ! \` < > [ ] ( ) % | ? ; ~ y el asterisco *, que solo vale en negativas), sin repetirse en el grupo.` },
+    { codigo: 'G06', nivel: 'error', categoria: 'google', fuente: F.rsa, que: `Anuncio: ${L.titulosMin}-${L.titulosMax} títulos de máx ${L.titulo}, ${L.descripcionesMin}-${L.descripcionesMax} descripciones de máx ${L.descripcion}, rutas de máx ${L.ruta}, URL final http(s). Sin textos repetidos.` },
+    { codigo: 'G07', nivel: 'error', categoria: 'google', fuente: F.puntuacion, que: 'Sin puntuación repetida ("!!", "??", "..") en títulos, descripciones, sitelinks ni destacados.' },
+    { codigo: 'G08', nivel: 'error', categoria: 'google', fuente: F.rsa, que: 'Posición fijada: títulos solo 1, 2 o 3; descripciones solo 1 o 2.' },
+    { codigo: 'G09', nivel: 'error', categoria: 'google', fuente: F.sitelinks, que: `Sitelink: texto máx ${L.sitelinkTexto}, líneas máx ${L.sitelinkLinea} (las dos o ninguna), URL http(s), sin textos repetidos (aunque vayan a páginas distintas).` },
+    { codigo: 'G10', nivel: 'error', categoria: 'google', fuente: F.destacados + ' · ' + F.fragmentos, que: `Destacado máx ${L.destacado}, sin repetir otro destacado. Fragmento: ${L.fragmentoValoresMin}-${L.fragmentoValoresMax} valores de máx ${L.fragmentoValor}.` },
+    { codigo: 'G11', nivel: 'error', categoria: 'google', fuente: F.negativas, que: 'Negativa con texto, máx 10 palabras, sin símbolos inválidos (, ! @ % ^ ( ) = { } ; ~ ` < > ? \\ |).' },
+    { codigo: 'G12', nivel: 'aviso', categoria: 'google', fuente: F.editorial, que: 'Mayúsculas excesivas: palabras enteras en mayúscula que no son siglas.' },
+    { codigo: 'G13', nivel: 'aviso', categoria: 'google', fuente: F.fragmentos, que: 'El encabezado del fragmento estructurado es uno de los predefinidos de Google.' },
+    { codigo: 'G14', nivel: 'error', categoria: 'google', fuente: F.precios, que: `Extensión de precio: ${L.precioItemsMin}-${L.precioItemsMax} ítems, encabezado y descripción de máx ${L.precioTexto}, precio entero en CLP, URL propia.` },
+    { codigo: 'G15', nivel: 'error', categoria: 'google', fuente: F.destino, que: 'Discordancia de destino: las URL finales de las keywords van al mismo dominio que el anuncio del grupo.' },
+    { codigo: 'G16', nivel: 'aviso', categoria: 'google', fuente: F.puntuacion, que: 'Signo de exclamación en un título: Google lo desaprobaba ("exclamation mark in the ad\'s headline"); la política vigente ya no lo nombra, pero sigue siendo riesgo de rechazo.' },
+    { codigo: 'G17', nivel: 'aviso', categoria: 'google', fuente: F.sitelinks + ' · ' + F.destacados, que: 'Sitelink o destacado que la política de Google desaprueba: signo de exclamación, empieza con un símbolo, repite un texto del anuncio o de otro recurso, o lleva a un dominio distinto al del anuncio. Solo ese recurso deja de mostrarse.' },
     // PROTOCOLO DE LA CASA
-    { codigo: 'P01', nivel: 'aviso', categoria: 'protocolo', que: 'Nombres de campaña, grupo y anuncio en minúsculas, sin tildes ni símbolos, con guion medio. (Renombrar una campaña ya publicada crea un duplicado en Ads Editor.)' },
-    { codigo: 'P02', nivel: 'aviso', categoria: 'protocolo', que: 'Estructura de nombres: campaña chl-producto-<producto>-<tipo>; grupo <abreviatura del tipo>-<naturaleza>; anuncio ads-<característica>.' },
-    { codigo: 'P03', nivel: 'aviso', categoria: 'protocolo', que: `Títulos: ${M.PROTOCOLO.fijadosPosicion1} fijados en la posición 1 y ${M.PROTOCOLO.titulosRotativos} que rotan.` },
-    { codigo: 'P04', nivel: 'aviso', categoria: 'protocolo', que: 'Los títulos fijados en la posición 1 llevan la marca o la oferta/precio.' },
-    { codigo: 'P05', nivel: 'aviso', categoria: 'protocolo', que: `Al menos ${M.PROTOCOLO.sitelinksMin} sitelinks por campaña.` },
-    { codigo: 'P06', nivel: 'aviso', categoria: 'protocolo', que: 'Cada sitelink lleva a una página DISTINTA de la URL de destino principal.' },
-    { codigo: 'P07', nivel: 'sugerencia', categoria: 'protocolo', que: `Al menos ${M.PROTOCOLO.destacadosMin} textos destacados por campaña.` },
-    { codigo: 'P08', nivel: 'aviso', categoria: 'protocolo', que: `UTM presentes y correctas: utm_source=${M.PROTOCOLO.utmSource}, utm_medium=clics o conversion según la puja, utm_campaign = nombre de la campaña; todo en minúsculas y con guion medio.` },
-    { codigo: 'P09', nivel: 'error', categoria: 'protocolo', que: 'Toda URL final (anuncios, keywords, sitelinks, precios) usa https://.' },
-    // COHERENCIA
-    { codigo: 'C01', nivel: 'error', categoria: 'coherencia', que: 'Ninguna negativa (de campaña o del grupo) bloquea una keyword propia, según su concordancia.' },
-    { codigo: 'C02', nivel: 'aviso', categoria: 'coherencia', que: 'La misma keyword con la misma concordancia en dos grupos de la campaña (compiten entre sí).' },
-    { codigo: 'C03', nivel: 'aviso', categoria: 'coherencia', que: 'Una promoción con "hasta el DD/MM" debe calzar con la fecha de término de la campaña.' },
-    { codigo: 'C04', nivel: 'aviso', categoria: 'coherencia', que: `Más de ${M.PROTOCOLO.fijadosPosicion1} títulos fijados en una misma posición: el protocolo usa ${M.PROTOCOLO.fijadosPosicion1} en la posición 1; más que eso resta combinaciones.` },
-    { codigo: 'C05', nivel: 'aviso', categoria: 'coherencia', que: 'Títulos casi iguales (mismas palabras en otro orden).' },
-    { codigo: 'C07', nivel: 'aviso', categoria: 'coherencia', que: 'Ningún título del anuncio contiene las palabras de alguna keyword del grupo (relevancia baja).' },
-    { codigo: 'C08', nivel: 'aviso', categoria: 'coherencia', que: 'Cifras de los anuncios que no aparecen en la ficha del producto (posible dato inventado).' },
-    { codigo: 'C09', nivel: 'aviso', categoria: 'coherencia', que: 'Keywords y anuncios del mismo grupo apuntan a dominios distintos.' },
-    // CRITERIO
-    { codigo: 'K01', nivel: 'aviso', categoria: 'criterio', que: 'Presupuesto diario menor a $1.000 CLP: probablemente un error de unidades.' },
-    { codigo: 'K02', nivel: 'aviso', categoria: 'criterio', que: 'Maximizar clics sin tope de CPC: Google puede pagar lo que quiera por clic.' },
-    { codigo: 'K03', nivel: 'aviso', categoria: 'criterio', que: 'Red de búsqueda asociada o de Display en una campaña Search: tráfico de menor calidad.' },
-    { codigo: 'K04', nivel: 'aviso', categoria: 'criterio', que: 'Campaña sin ubicaciones: se muestra en todo el mundo.' },
-    { codigo: 'K05', nivel: 'aviso', categoria: 'criterio', que: 'Método de ubicación no definido en el archivo: Google usa "presencia o interés" (también personas que no están en la zona). Dejar en "presencia" en Ads Editor.' },
-    { codigo: 'K06', nivel: 'aviso', categoria: 'criterio', que: 'Edad "Desconocida" excluida: suele ser una parte grande del tráfico.' },
-    { codigo: 'K07', nivel: 'aviso', categoria: 'criterio', que: 'Keywords en concordancia amplia (esta app trabaja solo exacta y frase).' },
-    { codigo: 'K08', nivel: 'sugerencia', categoria: 'criterio', que: 'Campaña que se importará activa: conviene importarla pausada y activarla tras revisar en Ads Editor.' },
-    { codigo: 'K09', nivel: 'sugerencia', categoria: 'criterio', que: 'Muchas negativas idénticas en varias campañas: mejor una lista compartida.' },
-    { codigo: 'K10', nivel: 'sugerencia', categoria: 'criterio', que: 'La misma keyword en exacta y en frase en el mismo grupo: la de frase ya cubre la exacta.' }
+    { codigo: 'P01', nivel: 'aviso', categoria: 'protocolo', fuente: PROTO, que: 'Nombres de campaña, grupo y anuncio en minúsculas, sin tildes ni símbolos, con guion medio. (Renombrar una campaña ya publicada crea un duplicado en Ads Editor.)' },
+    { codigo: 'P02', nivel: 'aviso', categoria: 'protocolo', fuente: PROTO, que: 'Estructura de nombres: campaña chl-producto-<producto>-<tipo>; grupo <abreviatura del tipo>-<naturaleza>; anuncio ads-<característica>.' },
+    { codigo: 'P03', nivel: 'aviso', categoria: 'protocolo', fuente: PROTO, que: `Títulos: ${M.PROTOCOLO.fijadosPosicion1} fijados en la posición 1 y ${M.PROTOCOLO.titulosRotativos} que rotan.` },
+    { codigo: 'P04', nivel: 'aviso', categoria: 'protocolo', fuente: PROTO, que: 'Los títulos fijados en la posición 1 llevan la marca o la oferta/precio.' },
+    { codigo: 'P05', nivel: 'aviso', categoria: 'protocolo', fuente: PROTO, que: `Al menos ${M.PROTOCOLO.sitelinksMin} sitelinks por campaña.` },
+    { codigo: 'P06', nivel: 'aviso', categoria: 'protocolo', fuente: PROTO, que: 'Cada sitelink lleva a una página DISTINTA de la URL de destino principal.' },
+    { codigo: 'P07', nivel: 'sugerencia', categoria: 'protocolo', fuente: PROTO, que: `Al menos ${M.PROTOCOLO.destacadosMin} textos destacados por campaña.` },
+    { codigo: 'P08', nivel: 'aviso', categoria: 'protocolo', fuente: PROTO, que: `UTM presentes y correctas: utm_source=${M.PROTOCOLO.utmSource}, utm_medium=clics o conversion según la puja, utm_campaign = nombre de la campaña; todo en minúsculas y con guion medio.` },
+    { codigo: 'P09', nivel: 'error', categoria: 'protocolo', fuente: PROTO, que: 'Toda URL final (anuncios, keywords, sitelinks, precios) usa https://.' },
+    { codigo: 'P10', nivel: 'aviso', categoria: 'protocolo', fuente: PROTO + ' · Google, en cambio, recomienda la amplia: ' + F.concordancias, que: 'Keywords solo en concordancia exacta o de frase (la amplia no se usa por decisión de la casa).' },
+    // COHERENCIA — la campaña se contradice
+    { codigo: 'C01', nivel: 'error', categoria: 'coherencia', fuente: F.negativas, que: 'Ninguna negativa (de campaña o del grupo) bloquea una keyword propia, según su concordancia.' },
+    { codigo: 'C03', nivel: 'aviso', categoria: 'coherencia', fuente: F.engano, que: 'Una promoción con "hasta el DD/MM" debe calzar con la fecha de término de la campaña (ofrecer algo que ya no está disponible es tergiversación).' },
+    { codigo: 'C04', nivel: 'sugerencia', categoria: 'coherencia', fuente: F.rsa, que: 'Más de 3 títulos fijados en una misma posición: Google recomienda fijar 2 o 3 por posición; fijar más le quita combinaciones y puede bajar la calidad del anuncio.' },
+    { codigo: 'C05', nivel: 'aviso', categoria: 'coherencia', fuente: F.rsa, que: 'Títulos casi iguales (mismas palabras en otro orden): Google pide títulos únicos y advierte que fijar textos similares baja la calidad del anuncio.' },
+    { codigo: 'C07', nivel: 'aviso', categoria: 'coherencia', fuente: F.rsaTips, que: 'Ningún título del anuncio contiene las palabras de alguna keyword del grupo (Google pide al menos una keyword en los títulos).' },
+    { codigo: 'C08', nivel: 'aviso', categoria: 'coherencia', fuente: F.engano, que: 'Cifras de los anuncios que no aparecen en la ficha del producto (posible dato inventado: afirmación no confiable).' },
+    // CRITERIO — válido, pero probablemente un error o una mala práctica
+    { codigo: 'K01', nivel: 'aviso', categoria: 'criterio', fuente: PROPIO + '; caso real: $25 CLP diarios', que: 'Presupuesto diario menor a $1.000 CLP: probablemente un error de unidades.' },
+    { codigo: 'K02', nivel: 'sugerencia', categoria: 'criterio', fuente: F.maxClics, que: 'Maximizar clics sin tope de CPC: Google puja lo necesario para gastar el presupuesto; el tope ayuda a controlar el costo si el CPC sale más alto de lo deseado (a costa de algunos clics).' },
+    { codigo: 'K03', nivel: 'sugerencia', categoria: 'criterio', fuente: PROPIO, que: 'Red de búsqueda asociada o de Display en una campaña Search: mide su rendimiento por separado antes de dejarla encendida.' },
+    { codigo: 'K04', nivel: 'aviso', categoria: 'criterio', fuente: F.ubicaciones, que: 'Campaña sin ubicaciones: se mostraría en todos los países.' },
+    { codigo: 'K05', nivel: 'sugerencia', categoria: 'criterio', fuente: F.ubicacion, que: 'Método de ubicación no fijado en el archivo: queda "presencia o interés", que es lo que Google recomienda en Search. Cámbialo a "presencia" en Ads Editor solo si no quieres gente que está fuera de la zona.' },
+    { codigo: 'K06', nivel: 'aviso', categoria: 'criterio', fuente: F.demografia, que: 'Edad "Desconocida" excluida: Google advierte que puede dejar fuera a una cantidad importante de personas.' },
+    { codigo: 'K09', nivel: 'sugerencia', categoria: 'criterio', fuente: F.listasNeg, que: 'Muchas negativas idénticas en varias campañas: mejor una lista compartida (hasta 5.000 por lista y 20 listas por cuenta).' },
+    { codigo: 'K10', nivel: 'sugerencia', categoria: 'criterio', fuente: F.concordancias, que: 'La misma keyword en exacta y en frase en el mismo grupo: la de frase ya cubre las búsquedas de la exacta.' },
+    { codigo: 'K11', nivel: 'sugerencia', categoria: 'criterio', fuente: F.rsa, que: 'Grupo con un solo anuncio: Google recomienda al menos 2 anuncios adaptables por grupo (en promedio +6,6 % de conversiones al pasar de 1 a 2).' },
+    { codigo: 'K12', nivel: 'sugerencia', categoria: 'criterio', fuente: F.fragmentos, que: 'Fragmento estructurado con menos de 4 valores: Google recomienda al menos 4 por encabezado.' }
   ];
   const POR_CODIGO = Object.fromEntries(REGLAS.map(r => [r.codigo, r]));
 
@@ -85,8 +102,10 @@
   const esFecha = s => /^\d{4}-\d{2}-\d{2}$/.test(s) && !isNaN(Date.parse(s + 'T00:00:00Z'));
   const esUrl = s => /^https?:\/\/[^\s]+\.[^\s]+/i.test(String(s || ''));
   const dominio = s => { try { return new URL(s).hostname.replace(/^www\d*\./, ''); } catch (e) { return ''; } };
+  const mismoSitio = (a, b) => !a || !b || a === b || a.endsWith('.' + b) || b.endsWith('.' + a);
   const duplicados = arr => { const vistos = new Set(), dup = new Set(); arr.forEach(x => { const k = norm(x); if (!k) return; if (vistos.has(k)) dup.add(k); vistos.add(k); }); return dup; };
-  const SIMBOLOS_KW = /[!@%,*()={};~`<>?\\|^]/;
+  const SIMBOLOS_KW = /[@\\^,=!`<>\[\]()%|?;~*]/;   // keywords (el * solo vale en negativas)
+  const SIMBOLOS_NEG = /[,!@%^()={};~`<>?\\|]/;      // negativas
   const PUJAS = ['Maximize clicks', 'Maximize conversions', 'Manual CPC', 'Target CPA', 'Target ROAS', 'Maximize conversion value', 'Target impression share', 'Enhanced CPC'];
   const REDES = ['Google Search', 'Search Partners', 'Display Network'];
 
@@ -133,27 +152,26 @@
       if (c.fin && !esFecha(c.fin)) H('G03', c, dc, `Fecha de término inválida: "${c.fin}".`);
       if (esFecha(c.inicio) && esFecha(c.fin) && c.fin < c.inicio) H('G03', c, dc, 'La fecha de término es anterior a la de inicio.');
       if (esFecha(c.fin) && c.fin < hoy) H('G03', c, dc, `La fecha de término (${c.fin}) ya pasó.`);
-      // K02 · K03 · K04 · K05 · K06 · K08
+      // K02 · K03 · K04 · K05 · K06
       const conTope = c.otrasColumnas && Object.keys(c.otrasColumnas).some(k => /max.*cpc|bid limit|cpc bid ceiling/i.test(k));
       if (c.puja === 'Maximize clicks' && !conTope) H('K02', c, dc, 'Maximizar clics sin tope de CPC.');
       if ((c.redes || []).includes('Search Partners')) H('K03', c, dc, 'Tiene la red de búsqueda asociada (Search Partners).');
       if ((c.redes || []).includes('Display Network')) H('K03', c, dc, 'Tiene la red de Display dentro de una campaña Search.');
-      if (!c.ubicaciones.length) H('K04', c, dc, 'No tiene ubicaciones: se mostraría en todo el mundo.');
-      else if (!(c.otrasColumnas && Object.keys(c.otrasColumnas).some(k => /targeting method|location target/i.test(k)))) H('K05', c, dc, 'El archivo no fija el método de ubicación.');
+      if (!c.ubicaciones.length) H('K04', c, dc, 'No tiene ubicaciones: se mostraría en todos los países.');
+      else if (!(c.otrasColumnas && Object.keys(c.otrasColumnas).some(k => /targeting method|location target/i.test(k)))) H('K05', c, dc, 'El archivo no fija el método de ubicación: queda «presencia o interés» (lo recomendado por Google).');
       c.ubicaciones.filter(u => !u.idGoogle).forEach(u => H('K04', u, dc + ' › Ubicación «' + u.nombre + '»', 'La ubicación no trae su ID de Google.'));
       c.edadesExcluidas.filter(e => /unknown|desconocid/i.test(e.edad)).forEach(e => H('K06', e, dc, 'Excluye la edad «Desconocida».'));
-      if (c.estado === 'Enabled') H('K08', c, dc, 'Se importaría activa.');
 
       // Grupos
       const nombresG = duplicados(c.grupos.filter(g => !g.soloReferencia).map(g => g.nombre));
       nombresG.forEach(n => H('G04', c, dc, `Hay dos grupos con el nombre «${n}»: Ads Editor los mezclaría.`));
-      const kwCampana = {};
       for (const g of c.grupos) {
         const dg = dc + ' › Grupo «' + g.nombre + '»';
         if (!g.soloReferencia) {
           if (!String(g.nombre || '').trim()) H('G04', g, dg, 'El grupo no tiene nombre.');
           if (!g.keywords.length) H('G04', g, dg, 'El grupo no tiene keywords.');
           if (!g.anuncios.length) H('G04', g, dg, 'El grupo no tiene anuncios.');
+          else if (g.anuncios.length === 1) H('K11', g, dg, 'Tiene un solo anuncio adaptable.');
         }
         // Keywords
         const vistas = {};
@@ -166,8 +184,7 @@
           const clave = k.concordancia + '|' + norm(k.texto);
           if (vistas[clave]) H('G05', k, dk, 'Está repetida en el grupo con la misma concordancia.');
           vistas[clave] = true;
-          if (k.concordancia === 'amplia') H('K07', k, dk, 'Está en concordancia amplia.');
-          (kwCampana[clave] = kwCampana[clave] || []).push({ g, k });
+          if (k.concordancia === 'amplia') H('P10', k, dk, 'Está en concordancia amplia (el protocolo usa solo exacta y frase).');
         }
         g.keywords.filter(k => k.concordancia === 'exacta' && vistas['frase|' + norm(k.texto)])
           .forEach(k => H('K10', k, dg + ' › Keyword «' + k.texto + '»', 'Está en exacta y en frase: la de frase ya la cubre.'));
@@ -175,6 +192,7 @@
         for (const n of g.negativas) {
           if (!String(n.texto).trim()) H('G11', n, dg, 'Negativa vacía.');
           else if (palabras(n.texto).length > 10) H('G11', n, dg + ' › Negativa «' + n.texto + '»', 'Tiene más de 10 palabras.');
+          if (SIMBOLOS_NEG.test(n.texto)) H('G11', n, dg + ' › Negativa «' + n.texto + '»', 'Tiene un símbolo que Google no acepta en negativas.');
         }
         for (const n of c.negativas.concat(g.negativas)) for (const k of g.keywords)
           if (bloquea(n, k)) H('C01', n, dg + ' › Negativa «' + n.texto + '»', `Bloquea la keyword «${k.texto}» del propio grupo.`, { keywordId: k.id });
@@ -189,7 +207,7 @@
           T.forEach((t, i) => {
             const dt = da + ' › Título ' + (i + 1) + ' «' + t.texto + '»';
             if (t.texto.length > L.titulo) H('G06', t, dt, `Tiene ${t.texto.length} caracteres (máx ${L.titulo}).`);
-            if (t.texto.includes('!')) H('G07', t, dt, 'Google no acepta signo de exclamación en títulos.');
+            if (t.texto.includes('!')) H('G16', t, dt, 'Signo de exclamación en un título: riesgo de rechazo.');
             if (t.posicion && !['1', '2', '3'].includes(String(t.posicion))) H('G08', t, dt, `Posición "${t.posicion}" inválida.`);
           });
           D.forEach((d, i) => {
@@ -207,7 +225,7 @@
           // C04 · C05
           ['1', '2', '3'].forEach(pos => {
             const n = T.filter(t => String(t.posicion) === pos).length;
-            if (n > M.PROTOCOLO.fijadosPosicion1) H('C04', a, da, `${n} títulos fijados en la posición ${pos}.`);
+            if (n > 3) H('C04', a, da, `${n} títulos fijados en la posición ${pos} (Google recomienda 2 o 3).`);
           });
           const porConjunto = {};
           T.forEach(t => { const k = palabras(t.texto).slice().sort().join(' '); (porConjunto[k] = porConjunto[k] || []).push(t.texto); });
@@ -223,10 +241,10 @@
             });
             if (!relevante) H('C07', a, da, 'Ningún título contiene las palabras de las keywords del grupo.');
           }
-          // C09
+          // G15 discordancia de destino
           const dA = dominio(a.urlFinal);
           const dK = [...new Set(g.keywords.map(k => dominio(k.urlFinal)).filter(Boolean))];
-          if (dA && dK.some(d => d !== dA)) H('C09', a, da, `El anuncio va a ${dA} y alguna keyword a ${dK.filter(d => d !== dA).join(', ')}.`);
+          if (dA && dK.some(d => !mismoSitio(d, dA))) H('G15', a, da, `El anuncio va a ${dA} y alguna keyword a ${dK.filter(d => !mismoSitio(d, dA)).join(', ')}.`);
           // C08
           if (cifrasFicha) T.concat(D).forEach(x => {
             const inventadas = (x.texto.match(/\d+(?:[.,]\d+)*/g) || []).map(n => n.replace(/[.,]/g, '')).filter(n => !cifrasFicha.has(n));
@@ -234,9 +252,6 @@
           });
         }
       }
-      // C02
-      Object.values(kwCampana).filter(v => new Set(v.map(x => x.g.id)).size > 1)
-        .forEach(v => H('C02', v[1].k, dc, `«${v[0].k.texto}» (${v[0].k.concordancia}) está en los grupos ${[...new Set(v.map(x => '«' + x.g.nombre + '»'))].join(' y ')}.`));
       // C03 vigencia de promociones
       const textos = [];
       c.grupos.forEach(g => g.anuncios.forEach(a => a.titulos.concat(a.descripciones).forEach(x => textos.push(x.texto))));
@@ -318,6 +333,11 @@
 
       // Recursos
       const dupSl = duplicados(c.sitelinks.map(s => s.texto));
+      const dominiosAnuncio = new Set();
+      c.grupos.forEach(g => g.anuncios.forEach(a => { const d = dominio(a.urlFinal); if (d) dominiosAnuncio.add(d); }));
+      const textosAnuncio = new Set();
+      c.grupos.forEach(g => g.anuncios.forEach(a => a.titulos.concat(a.descripciones).forEach(x => textosAnuncio.add(norm(x.texto)))));
+      const textosSitelink = new Set(c.sitelinks.map(s => norm(s.texto)));
       c.sitelinks.forEach(s => {
         const ds = dc + ' › Sitelink «' + s.texto + '»';
         if (!s.texto) H('G09', s, ds, 'Sitelink sin texto.');
@@ -325,16 +345,32 @@
         [s.linea1, s.linea2].forEach((x, i) => { if ((x || '').length > L.sitelinkLinea) H('G09', s, ds, `Línea ${i + 1} de ${x.length} caracteres (máx ${L.sitelinkLinea}).`); });
         if (!!s.linea1 !== !!s.linea2) H('G09', s, ds, 'Tiene una sola línea de descripción: van las dos o ninguna.');
         if (!esUrl(s.urlFinal)) H('G09', s, ds, 'URL final falta o no es http(s).');
+        else if (dominiosAnuncio.size && ![...dominiosAnuncio].some(d => mismoSitio(dominio(s.urlFinal), d))) H('G17', s, ds, `Lleva a ${dominio(s.urlFinal)}, otro dominio que el del anuncio (${[...dominiosAnuncio].join(', ')}).`);
+        [s.texto, s.linea1, s.linea2].forEach(x => { if (String(x || '').includes('!')) H('G17', s, ds, `Signo de exclamación en «${x}».`); });
+        [s.texto, s.linea1, s.linea2].forEach(x => { if (/([!?.])\1/.test(x || '')) H('G07', s, ds, `Puntuación repetida en «${x}».`); });
       });
       dupSl.forEach(x => H('G09', c, dc, `Sitelink repetido: «${x}».`));
-      c.destacados.forEach(d => { if (d.texto.length > L.destacado) H('G10', d, dc + ' › Destacado «' + d.texto + '»', `Tiene ${d.texto.length} caracteres (máx ${L.destacado}).`); });
+      c.destacados.forEach(d => {
+        const dd = dc + ' › Destacado «' + d.texto + '»';
+        if (d.texto.length > L.destacado) H('G10', d, dd, `Tiene ${d.texto.length} caracteres (máx ${L.destacado}).`);
+        if (textosAnuncio.has(norm(d.texto))) H('G17', d, dd, 'Repite un texto del anuncio.');
+        if (textosSitelink.has(norm(d.texto))) H('G17', d, dd, 'Repite el texto de un sitelink.');
+        if (d.texto.includes('!')) H('G17', d, dd, 'Signo de exclamación.');
+        else if (/^[^\p{L}\p{N}]/u.test(d.texto)) H('G17', d, dd, 'Empieza con puntuación o símbolo.');
+        if (/([!?.])\1/.test(d.texto)) H('G07', d, dd, 'Puntuación repetida.');
+      });
       duplicados(c.destacados.map(d => d.texto)).forEach(x => H('G10', c, dc, `Destacado repetido: «${x}».`));
       c.fragmentos.forEach(f => {
         const df = dc + ' › Fragmento «' + f.encabezado + '»';
         if (f.valores.length < L.fragmentoValoresMin || f.valores.length > L.fragmentoValoresMax) H('G10', f, df, `Tiene ${f.valores.length} valores (deben ser ${L.fragmentoValoresMin} a ${L.fragmentoValoresMax}).`);
+        if (f.valores.length >= L.fragmentoValoresMin && f.valores.length < 4) H('K12', f, df, `Tiene ${f.valores.length} valores (Google recomienda al menos 4).`);
         f.valores.filter(v => v.length > L.fragmentoValor).forEach(v => H('G10', f, df, `Valor «${v}» de ${v.length} caracteres (máx ${L.fragmentoValor}).`));
       });
-      c.negativas.forEach(n => { if (!String(n.texto).trim()) H('G11', n, dc, 'Negativa vacía.'); else if (palabras(n.texto).length > 10) H('G11', n, dc + ' › Negativa «' + n.texto + '»', 'Tiene más de 10 palabras.'); });
+      c.negativas.forEach(n => {
+        if (!String(n.texto).trim()) H('G11', n, dc, 'Negativa vacía.');
+        else if (palabras(n.texto).length > 10) H('G11', n, dc + ' › Negativa «' + n.texto + '»', 'Tiene más de 10 palabras.');
+        if (SIMBOLOS_NEG.test(n.texto)) H('G11', n, dc + ' › Negativa «' + n.texto + '»', 'Tiene un símbolo que Google no acepta en negativas.');
+      });
       negPorCampana.push({ c, set: new Set(c.negativas.map(n => n.concordancia + '|' + norm(n.texto))) });
     }
     // K09 lista compartida
