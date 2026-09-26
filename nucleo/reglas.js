@@ -73,7 +73,7 @@
     { codigo: 'P01', nivel: 'aviso', categoria: 'protocolo', fuente: PROTO, que: 'Nombres de campaña, grupo y anuncio en minúsculas, sin tildes ni símbolos, con guion medio. (Renombrar una campaña ya publicada crea un duplicado en Ads Editor.)' },
     { codigo: 'P02', nivel: 'aviso', categoria: 'protocolo', fuente: PROTO, que: 'Estructura de nombres: campaña chl-producto-<producto>-<tipo>; grupo <abreviatura del tipo>-<naturaleza>; anuncio ads-<característica>.' },
     { codigo: 'P03', nivel: 'aviso', categoria: 'protocolo', fuente: PROTO, que: `Títulos: ${M.PROTOCOLO.fijadosPosicion1} fijados en la posición 1 y ${M.PROTOCOLO.titulosRotativos} que rotan.` },
-    { codigo: 'P04', nivel: 'aviso', categoria: 'protocolo', fuente: PROTO, que: 'Los títulos fijados en la posición 1 llevan la marca o la oferta/precio.' },
+    { codigo: 'P04', nivel: 'aviso', categoria: 'protocolo', fuente: PROTO, que: 'Los 5 títulos fijados en la posición 1 llevan TODOS la marca, cada uno en una variante distinta (no la misma frase reordenada: eso lo marca C05).' },
     { codigo: 'P05', nivel: 'aviso', categoria: 'protocolo', fuente: PROTO, que: `Al menos ${M.PROTOCOLO.sitelinksMin} sitelinks por campaña.` },
     { codigo: 'P06', nivel: 'aviso', categoria: 'protocolo', fuente: PROTO, que: 'Cada sitelink lleva a una página DISTINTA de la URL de destino principal.' },
     { codigo: 'P07', nivel: 'sugerencia', categoria: 'protocolo', fuente: PROTO, que: `Al menos ${M.PROTOCOLO.destacadosMin} textos destacados por campaña.` },
@@ -323,8 +323,8 @@
           const rotan = a.titulos.filter(t => !t.posicion);
           if (fijos1.length !== P.fijadosPosicion1 || rotan.length !== P.titulosRotativos)
             H('P03', a, da, `Tiene ${fijos1.length} fijados en la posición 1 y ${rotan.length} que rotan (protocolo: ${P.fijadosPosicion1} y ${P.titulosRotativos}).`);
-          if (cx.marca) fijos1.filter(t => !norm(t.texto).includes(norm(cx.marca)) && !/\d|%|\$|gratis|dcto|descuento|cuota|oferta|precio|promo/i.test(t.texto))
-            .forEach(t => H('P04', t, da + ' › «' + t.texto + '»', 'Título fijado en la posición 1 sin la marca ni una oferta/precio.'));
+          if (cx.marca) fijos1.filter(t => !norm(t.texto).includes(norm(cx.marca)))
+            .forEach(t => H('P04', t, da + ' › «' + t.texto + '»', 'Título fijado en la posición 1 sin la marca.'));
           // P09 https
           if (a.urlFinal && !esHttps(a.urlFinal)) H('P09', a, da, 'La URL final no usa https://.');
         }

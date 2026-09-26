@@ -32,7 +32,7 @@ const GENERADO = {
     { nombre: "Cotizar seguro auto", intencion: "Quiere cotizar ya", razonamiento: "Transaccional", angulo: "Auto de reemplazo 15 días",
       keywords: kws("cotizar seguro automotriz", 22), negativas: [{ t: "empleo", motivo: "Buscan trabajo" }],
       titularesFijos: [{ t: "Seguro Automotriz Acme", rol: "keyword" }, { t: "Acme Seguro de Auto", rol: "keyword" }, { t: "2 cuotas gratis en Acme", rol: "precio" },
-                       { t: "Acme: deducible desde 3 UF", rol: "precio" }, { t: "Seguro Full con 2 cuotas gratis", rol: "precio" }],
+                       { t: "Acme: deducible desde 3 UF", rol: "precio" }, { t: "Seguro Full Acme 2 Cuotas", rol: "precio" }],
       titulares: [{ t: "Cotiza seguro automotriz", rol: "keyword" }, { t: "Seguro automotriz online", rol: "tramite" }, { t: "Cotizar seguro auto", rol: "cta" },
                   { t: "Deducible desde 3 UF", rol: "precio" }, { t: "Auto de reemplazo 15 días", rol: "respaldo" }, { t: "Grúa en todo Chile", rol: "respaldo" },
                   { t: "Más de 40 años en Chile", rol: "respaldo" }, { t: "Sin sorpresas al chocar", rol: "respaldo" }, { t: "Tu auto nunca se detiene", rol: "respaldo" }, { t: "Cotiza en 3 minutos", rol: "tramite" }],

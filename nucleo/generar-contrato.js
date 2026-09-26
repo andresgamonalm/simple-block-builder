@@ -97,7 +97,7 @@ function contrato() {
   L.push('| Grupo de anuncios | `<abreviatura del tipo>-<naturaleza>` (' + Object.entries(M.PROTOCOLO.abreviaturaTipo).map(([k, v]) => k + ' → ' + v).join(', ') + ') | `ao-coberturas` · `promo-cuotas` |');
   L.push('| Anuncio | `ads-<característica>` | `ads-anual` · `ads-bienal` · `ads-3-cuotas-gratis` |');
   L.push('');
-  L.push('**Títulos:** ' + M.PROTOCOLO.fijadosPosicion1 + ' fijados en la posición 1 (con la marca o la oferta/precio) y ' + M.PROTOCOLO.titulosRotativos + ' que rotan.');
+  L.push('**Títulos:** ' + M.PROTOCOLO.fijadosPosicion1 + ' fijados en la posición 1, TODOS con la marca en variantes distintas, y ' + M.PROTOCOLO.titulosRotativos + ' que rotan.');
   L.push('**Recursos:** al menos ' + M.PROTOCOLO.sitelinksMin + ' sitelinks, cada uno a una página distinta de la URL principal; ' + M.PROTOCOLO.destacadosMin + ' o más textos destacados.');
   L.push('');
   L.push('**UTM** — `utm_source=' + M.PROTOCOLO.utmSource + '` · `utm_medium=clics` (pujas por clic) o `conversion` (pujas por conversión) ·');

@@ -45,7 +45,7 @@
   /* ── PROTOCOLO DE LA CASA (lámina "Reglas y requisitos ADS" del usuario) ──
      Lo que Google permite es más amplio; esto es cómo SE TRABAJA aquí. */
   const PROTOCOLO = {
-    fijadosPosicion1: 5,        // 5 títulos fijados en la posición 1, con marca u oferta/precio…
+    fijadosPosicion1: 5,        // 5 títulos fijados en la posición 1, TODOS con la marca (en variantes distintas)…
     titulosRotativos: 10,       // …y los 10 siguientes rotan (15 en total)
     sitelinksMin: 4,
     destacadosMin: 4,
@@ -176,7 +176,7 @@
         { campo: 'sufijoUrlFinal', tipo: 'texto', columna: 'Final URL suffix', descripcion: 'UTM del anuncio: las de la campaña + utm_content=<nombre del anuncio>. Reemplaza al sufijo de la campaña para este anuncio.' },
         { campo: 'ruta1', tipo: 'texto', columna: 'Path 1', limite: LIMITES.ruta, descripcion: 'Minúsculas y guiones.' },
         { campo: 'ruta2', tipo: 'texto', columna: 'Path 2', limite: LIMITES.ruta },
-        { campo: 'titulos', tipo: 'lista de {id, texto, posicion}', obligatorio: true, columna: 'Headline 1…15 + Headline N position', limite: LIMITES.titulo, descripcion: `Entre ${LIMITES.titulosMin} y ${LIMITES.titulosMax} títulos de hasta ${LIMITES.titulo} caracteres, sin punto final. "posicion" = "1", "2" o "3" si el título va fijado; vacío si rota. PROTOCOLO: 15 títulos = 5 fijados en la posición 1 (con la marca o la oferta/precio) + 10 que rotan. "rol" (no se exporta) = papel del título: keyword, tramite, precio, respaldo o cta.` },
+        { campo: 'titulos', tipo: 'lista de {id, texto, posicion}', obligatorio: true, columna: 'Headline 1…15 + Headline N position', limite: LIMITES.titulo, descripcion: `Entre ${LIMITES.titulosMin} y ${LIMITES.titulosMax} títulos de hasta ${LIMITES.titulo} caracteres, sin punto final. "posicion" = "1", "2" o "3" si el título va fijado; vacío si rota. PROTOCOLO: 15 títulos = 5 fijados en la posición 1, TODOS con la marca en variantes distintas (marca + producto, marca + oferta, marca + acción…) + 10 que rotan. "rol" (no se exporta) = papel del título: keyword, tramite, precio, respaldo o cta.` },
         { campo: 'descripciones', tipo: 'lista de {id, texto, posicion}', obligatorio: true, columna: 'Description 1…4', limite: LIMITES.descripcion, descripcion: `Entre ${LIMITES.descripcionesMin} y ${LIMITES.descripcionesMax} descripciones de hasta ${LIMITES.descripcion} caracteres.` },
         { campo: 'comentario', tipo: 'texto', columna: 'Comment' }
       ] },

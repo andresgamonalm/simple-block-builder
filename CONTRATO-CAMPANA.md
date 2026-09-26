@@ -28,7 +28,7 @@ Iniciativa ─ campañas[] ─ grupos[] ─ keywords[] · negativas[] · anuncio
 - **Garantía:** importar el archivo y volver a exportarlo da el mismo archivo, byte a byte
   (prueba `pruebas/nucleo.js`). Lo que el modelo no entiende se conserva y se devuelve tal cual.
 
-- **Columnas opcionales** (se agregan al final solo si se usan): `Tracking template` · `Final URL suffix`.
+- **Columnas opcionales** (se agregan al final solo si se usan): `Tracking template` · `Final URL suffix` · `Max CPC`.
 - **Nombre del archivo:** `<base>-ads-editor-<aaaa-mm-dd>.csv`, en minúsculas y con guion. `base` = el nombre de la campaña si es
   una; el prefijo común de los nombres si son varias (`chl-producto-auto-digital-ads-editor-2026-09-26.csv`); si no, la iniciativa.
 
@@ -152,6 +152,7 @@ Una intención de búsqueda: sus keywords, sus negativas y su(s) anuncio(s).
 | `id` | texto |  |  | — | Identificador estable (grp_…). |
 | `nombre` | texto | sí |  | `Ad Group` | Nombre EXACTO del grupo (Ads Editor lo reconoce por nombre). Protocolo: <abreviatura del tipo de campaña>-<naturaleza>, p. ej. "ao-coberturas", "promo-cuotas". |
 | `estado` | texto |  |  | `Ad Group Status` | Valores: `Enabled`, `Paused`. |
+| `cpcMax` | número (CLP) |  |  | `Max CPC` | Puja máxima por clic del grupo, en pesos enteros (con puja manual). Vacío = la define la estrategia. |
 | `intencion` | texto |  |  | — | Qué busca la persona que escribe estas keywords. No se exporta. |
 | `razonamiento` | texto |  |  | — | Por qué se agrupó así y qué ángulo usan sus anuncios. No se exporta. |
 | `keywords` | lista de keyword | sí |  | — |  |
@@ -190,7 +191,7 @@ Una intención de búsqueda: sus keywords, sus negativas y su(s) anuncio(s).
 | `sufijoUrlFinal` | texto |  |  | `Final URL suffix` | UTM del anuncio: las de la campaña + utm_content=<nombre del anuncio>. Reemplaza al sufijo de la campaña para este anuncio. |
 | `ruta1` | texto |  | 15 | `Path 1` | Minúsculas y guiones. |
 | `ruta2` | texto |  | 15 | `Path 2` |  |
-| `titulos` | lista de {id, texto, posicion} | sí | 30 | `Headline 1…15 + Headline N position` | Entre 3 y 15 títulos de hasta 30 caracteres, sin punto final. "posicion" = "1", "2" o "3" si el título va fijado; vacío si rota. PROTOCOLO: 15 títulos = 5 fijados en la posición 1 (con la marca o la oferta/precio) + 10 que rotan. "rol" (no se exporta) = papel del título: keyword, tramite, precio, respaldo o cta. |
+| `titulos` | lista de {id, texto, posicion} | sí | 30 | `Headline 1…15 + Headline N position` | Entre 3 y 15 títulos de hasta 30 caracteres, sin punto final. "posicion" = "1", "2" o "3" si el título va fijado; vacío si rota. PROTOCOLO: 15 títulos = 5 fijados en la posición 1, TODOS con la marca en variantes distintas (marca + producto, marca + oferta, marca + acción…) + 10 que rotan. "rol" (no se exporta) = papel del título: keyword, tramite, precio, respaldo o cta. |
 | `descripciones` | lista de {id, texto, posicion} | sí | 90 | `Description 1…4` | Entre 2 y 4 descripciones de hasta 90 caracteres. |
 | `comentario` | texto |  |  | `Comment` |  |
 
@@ -252,7 +253,7 @@ Lámina "Reglas y requisitos ADS". Todo nombre va en **minúsculas, sin tildes, 
 | Grupo de anuncios | `<abreviatura del tipo>-<naturaleza>` (always-on → ao, promociones → promo, promocion → promo) | `ao-coberturas` · `promo-cuotas` |
 | Anuncio | `ads-<característica>` | `ads-anual` · `ads-bienal` · `ads-3-cuotas-gratis` |
 
-**Títulos:** 5 fijados en la posición 1 (con la marca o la oferta/precio) y 10 que rotan.
+**Títulos:** 5 fijados en la posición 1, TODOS con la marca en variantes distintas, y 10 que rotan.
 **Recursos:** al menos 4 sitelinks, cada uno a una página distinta de la URL principal; 4 o más textos destacados.
 
 **UTM** — `utm_source=gads` · `utm_medium=clics` (pujas por clic) o `conversion` (pujas por conversión) ·
@@ -289,7 +290,7 @@ Las aplica `nucleo/reglas.js` en la IA (antes y después de generar), en la pant
 | P01 | aviso | protocolo | Nombres de campaña, grupo y anuncio en minúsculas, sin tildes ni símbolos, con guion medio. (Renombrar una campaña ya publicada crea un duplicado en Ads Editor.) | protocolo de la casa (lámina "Reglas y requisitos ADS") |
 | P02 | aviso | protocolo | Estructura de nombres: campaña chl-producto-<producto>-<tipo>; grupo <abreviatura del tipo>-<naturaleza>; anuncio ads-<característica>. | protocolo de la casa (lámina "Reglas y requisitos ADS") |
 | P03 | aviso | protocolo | Títulos: 5 fijados en la posición 1 y 10 que rotan. | protocolo de la casa (lámina "Reglas y requisitos ADS") |
-| P04 | aviso | protocolo | Los títulos fijados en la posición 1 llevan la marca o la oferta/precio. | protocolo de la casa (lámina "Reglas y requisitos ADS") |
+| P04 | aviso | protocolo | Los 5 títulos fijados en la posición 1 llevan TODOS la marca, cada uno en una variante distinta (no la misma frase reordenada: eso lo marca C05). | protocolo de la casa (lámina "Reglas y requisitos ADS") |
 | P05 | aviso | protocolo | Al menos 4 sitelinks por campaña. | protocolo de la casa (lámina "Reglas y requisitos ADS") |
 | P06 | aviso | protocolo | Cada sitelink lleva a una página DISTINTA de la URL de destino principal. | protocolo de la casa (lámina "Reglas y requisitos ADS") |
 | P07 | sugerencia | protocolo | Al menos 4 textos destacados por campaña. | protocolo de la casa (lámina "Reglas y requisitos ADS") |
@@ -315,6 +316,7 @@ Las aplica `nucleo/reglas.js` en la IA (antes y después de generar), en la pant
 | K06 | aviso | criterio | Edad "Desconocida" excluida: Google advierte que puede dejar fuera a una cantidad importante de personas. | [google-ads/answer/2580383](https://support.google.com/google-ads/answer/2580383) |
 | K09 | sugerencia | criterio | Muchas negativas idénticas en varias campañas: mejor una lista compartida (hasta 5.000 por lista y 20 listas por cuenta). | [google-ads/answer/2453983](https://support.google.com/google-ads/answer/2453983) |
 | K10 | sugerencia | criterio | La misma keyword en exacta y en frase en el mismo grupo: la de frase ya cubre las búsquedas de la exacta. | [google-ads/answer/7478529](https://support.google.com/google-ads/answer/7478529) |
+| K13 | aviso | criterio | CPC máximo de un grupo menor a $100 CLP, o mayor que el presupuesto diario: probablemente un error de unidades (con puja manual, un tope muy bajo deja al anuncio sin salir). | criterio propio (sin documento de Google que lo respalde o lo contradiga); caso real: Max CPC $25 CLP |
 | K11 | sugerencia | criterio | Grupo con un solo anuncio: Google recomienda al menos 2 anuncios adaptables por grupo (en promedio +6,6 % de conversiones al pasar de 1 a 2). | [google-ads/answer/7684791](https://support.google.com/google-ads/answer/7684791) |
 | K12 | sugerencia | criterio | Fragmento estructurado con menos de 4 valores: Google recomienda al menos 4 por encabezado. | [google-ads/answer/6280012](https://support.google.com/google-ads/answer/6280012) |
 
@@ -364,7 +366,7 @@ Campos editables:
   campana: nombre, tipo[Search], redes[Google Search|Search Partners|Display Network], idiomas, presupuestoDiario, puja[Maximize clicks|Maximize conversions|Manual CPC|Target CPA|Target ROAS|Maximize conversion value], inicio, fin, estado[Enabled|Paused], politicaUE[No|Yes], utmEn[sufijo|plantilla], comentario
   ubicacion: nombre, idGoogle, comentario
   edad: edad[18-24|25-34|35-44|45-54|55-64|65 or more|Unknown], comentario
-  grupo: nombre, estado[Enabled|Paused], intencion, razonamiento, comentario
+  grupo: nombre, estado[Enabled|Paused], cpcMax, intencion, razonamiento, comentario
   keyword: texto(≤80), concordancia[exacta|frase], estado[Enabled|Paused], urlFinal, comentario
   negativa: texto, concordancia[amplia|frase|exacta], comentario
   anuncio: nombre, estado[Enabled|Paused], urlFinal, ruta1(≤15), ruta2(≤15), comentario

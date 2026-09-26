@@ -13,7 +13,7 @@ objetivo: **la venta directa digital** (póliza pagada), aunque medirla le ha co
 SOLO si va junto al producto ("seguro auto <marca>", "<marca> seguro automotriz", "auto digital <marca>"). Nunca la
 marca sola ni con otra cosa ("<marca>", "<marca> seguros", "<marca> chile"): esas van como NEGATIVAS en EXACTA
 ([<marca>], [<marca> seguros]…), no en amplia, para no bloquear las keywords de marca+producto. La marca SÍ va en el
-texto de los anuncios (protocolo: fijados con marca u oferta).
+texto de los anuncios: los 5 títulos fijados en la posición 1 llevan TODOS la marca, en variantes distintas; los otros 10 rotan.
 **Propósito (orden del usuario):** Claude aprende de anuncios de CONVERSIÓN y **traspasa** ese conocimiento a la IA
 del motor (Gemini, `functions/api/ia.js`), como lección explícita, legible y única — no como reglas sueltas.
 
@@ -1049,7 +1049,7 @@ y K12 (≥4 valores por fragmento) · edad `65+` → `65 or more` (valor de Ads 
 mismos), 40 avisos, 43 sugerencias. `pruebas/reglas.js` 76/76.
 
 **PROTOCOLO DE LA CASA (26-sep, lámina "Reglas y requisitos ADS" del usuario) — HECHO.**
-- `M.PROTOCOLO`: 5 títulos fijados en posición 1 (con marca u oferta/precio) + 10 que rotan · ≥4 sitelinks, cada
+- `M.PROTOCOLO`: 5 títulos fijados en posición 1 (TODOS con la marca, en variantes distintas — precisión del usuario 26-sep; antes decía "marca u oferta") + 10 que rotan · ≥4 sitelinks, cada
   uno a una página DISTINTA de la URL principal · ≥4 destacados · UTM `utm_source=gads`, `utm_medium=clics|conversion`
   (según la puja), `utm_campaign=<nombre de la campaña>`, `utm_content=<nombre del anuncio>`.
 - TAXONOMÍA (`slugTaxonomia`, `esSlug`, `nombreCampana`, `nombreGrupo`, `nombreAnuncio`): minúsculas, sin tildes ni

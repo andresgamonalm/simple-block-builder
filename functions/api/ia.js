@@ -1274,7 +1274,7 @@ async function criticarAnuncios(env, grupos, ficha, marca, opts) {
     'LÍMITES DUROS: titulares ≤30 caracteres (con espacios), descripciones ≤90. Titulares sin punto final. Español de Chile correcto.',
     'PROHIBIDO inventar cifras, precios, plazos o premios que no estén en la ficha.',
     o.protocolo
-      ? 'Mantén la MISMA cantidad de textos en cada lista y la MISMA posición de cada uno. Los titularesFijos van fijados en la posición 1: cada uno lleva el nombre de la marca o la oferta/precio.'
+      ? 'Mantén la MISMA cantidad de textos en cada lista y la MISMA posición de cada uno. Los titularesFijos van fijados en la posición 1: TODOS llevan el nombre de la marca, cada uno en una variante distinta (marca + otro mensaje), y así debe quedar tras reescribir.'
       : 'Mantén la MISMA cantidad de textos en cada lista y el orden de los titularesFijos (1 marca/producto, 2 keyword, 3 beneficio u oferta, 4 llamada a la acción).',
     o.conversion ? 'CAMPAÑA DE CONVERSIÓN: cada titular tiene un PAPEL (papelesFijos/papelesRotan, misma posición). Si lo reescribes, conserva su papel. Reescribe también toda descripción que invite a leer (conoce, infórmate, visita) o que no termine en una acción de compra.' : '',
     o.conversion ? LEC.leccionParaIA('conversion') : '',
@@ -1585,7 +1585,7 @@ async function armarAds({ env, brief, marca, refsTxt, promos, enlaces, avisos, f
     '- PROHIBIDO construir sobre los "mensajes genéricos que usan todos" y las frases trilladas: "los mejores precios", "calidad garantizada", "rápido y fácil", "atención personalizada", "la mejor opción", "no esperes más", "somos líderes", "amplia experiencia".',
     '- 15 titulares, TODOS ≤30 caracteres (con espacios), únicos, sin punto final:',
     protocolo
-      ? '  · "titularesFijos" (exactamente 5, van TODOS fijados en la posición 1 y Google elige uno): CADA UNO lleva el NOMBRE DE LA MARCA o la oferta/precio (el nombre del producto solo no basta), con 5 formulaciones realmente distintas (no la misma frase reordenada).'
+      ? '  · "titularesFijos" (exactamente 5, van TODOS fijados en la posición 1 y Google elige uno): TODOS llevan el NOMBRE DE LA MARCA, cada uno en una variante distinta: la marca combinada con un mensaje diferente (producto, oferta, trámite, respaldo, acción de compra). Nunca la misma frase reordenada. (el nombre del producto solo no basta), con 5 formulaciones realmente distintas (no la misma frase reordenada).'
       : '  · "titularesFijos" (exactamente 4, en este orden, van anclados): 1) marca o producto, 2) la keyword principal del grupo casi literal, 3) el beneficio u oferta más fuerte, 4) llamada a la acción específica (no "Haz clic aquí").',
     protocolo
       ? '  · "titulares" (exactamente 10, rotan): 3 con la keyword del grupo o su variante · 3 beneficios concretos con dato · 1 prueba/confianza con dato real · 1 que responda la objeción principal · 1 del ángulo diferencial · 1 llamada a la acción específica. Ninguno repite ni parafrasea a otro.'
