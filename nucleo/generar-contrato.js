@@ -7,6 +7,7 @@ const M = require('./modelo.js');
 const AE = require('./ads-editor.js');
 const R = require('./reglas.js');
 const V = require('./versiones.js');
+const O = require('./operaciones.js');
 
 function contrato() {
   const L = [];
@@ -140,7 +141,19 @@ function contrato() {
   L.push('  - eliminado → con `Status` / `Campaign Status` / `Ad Group Status` = `Removed` (valor documentado por Google en las columnas CSV);');
   L.push('  - campañas y grupos sin cambios propios no llevan fila (sus hijos los nombran); quitar una ubicación o una edad excluida se indica a mano.');
   L.push('');
-  L.push('## 8. Pendiente de confirmar en la primera importación real');
+  L.push('## 8. Conversación con la IA: corregir e investigar por partes');
+  L.push('La IA genera la campaña UNA vez (`POST /api/ia` modo `campana`). Después no se regenera: se conversa.');
+  L.push('- **Corregir** (modo `corregir`): el usuario da una instrucción, elige partes (ids) o señala hallazgos del motor de reglas.');
+  L.push('  La IA recibe el **objetivo** y la **ficha** guardados, el índice de la campaña y SOLO esas partes, y devuelve **operaciones**.');
+  L.push('  El núcleo (`nucleo/operaciones.js`) las valida contra este esquema antes de aplicar; si alguna se rechaza o crea un error, la');
+  L.push('  IA tiene UNA ronda para repararla. El resultado se guarda como una versión nueva (§7).');
+  L.push('- **Investigar** (modo `investigar`): una pregunta puntual con Google y la landing; actualiza SOLO los campos de la ficha que cambian.');
+  L.push('');
+  L.push('```');
+  L.push(O.operacionesParaIA());
+  L.push('```');
+  L.push('');
+  L.push('## 9. Pendiente de confirmar en la primera importación real');
   L.push('El archivo de referencia del usuario solo trae negativas amplias de campaña. Estas notaciones siguen la');
   L.push('convención de Ads Editor, pero todavía no se han visto importadas:');
   L.push('- Negativa de **frase** escrita como `"texto"` y de **exacta** como `[texto]` en la columna `Keyword`.');

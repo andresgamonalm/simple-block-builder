@@ -71,7 +71,8 @@
   };
   const HIJOS_CAMPANA = ['ubicaciones', 'edadesExcluidas', 'negativas', 'grupos', 'sitelinks', 'destacados', 'fragmentos'];
   const HIJOS_GRUPO = ['keywords', 'negativas', 'anuncios'];
-  const propios = (o, hijos) => canonico(SIN(o, 'id', ...hijos), true);
+  // Solo lo que viaja a Ads Editor: intención y razonamiento del grupo son notas internas.
+  const propios = (o, hijos) => canonico(SIN(o, 'id', 'intencion', 'razonamiento', ...hijos), true);
   const porId = arr => { const m = new Map(); (arr || []).forEach(x => { if (x && x.id) m.set(x.id, x); }); return m; };
 
   /* ── Nombres fijos tras publicar ──────────────────────────────────────── */

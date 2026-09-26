@@ -18,7 +18,8 @@
    validar(iniciativa, contexto)
      contexto.hoy    'AAAA-MM-DD' (por defecto, hoy)
      contexto.ficha  texto con los datos reales del producto (landing, ficha);
-                     si viene, se controlan las cifras de los anuncios contra él.
+                     si no viene, se usa la ficha guardada en la iniciativa (ini.ficha).
+                     Con ficha, se controlan las cifras de los anuncios contra ella.
      contexto.marca  nombre de la marca: los títulos fijados en la posición 1
                      deben llevarla (o una oferta/precio).
    ════════════════════════════════════════════════════════════════════════ */
@@ -130,7 +131,9 @@
     const H = (codigo, el, donde, mensaje, detalle) => hallazgos.push({
       codigo, nivel: POR_CODIGO[codigo].nivel, categoria: POR_CODIGO[codigo].categoria,
       id: el && el.id || null, ruta: el && el.id ? idx[el.id] : null, donde, mensaje, detalle: detalle || null });
-    const cifrasFicha = cx.ficha ? new Set((String(cx.ficha).match(/\d+(?:[.,]\d+)*/g) || []).map(n => n.replace(/[.,]/g, ''))) : null;
+    // Fuente de cifras válidas: la ficha que se pase, o la guardada en la iniciativa (+ su objetivo).
+    const fichaTxt = cx.ficha || (ini.ficha ? JSON.stringify(ini.ficha) + ' ' + JSON.stringify(ini.objetivo || {}) : null);
+    const cifrasFicha = fichaTxt ? new Set((String(fichaTxt).match(/\d+(?:[.,]\d+)*/g) || []).map(n => n.replace(/[.,]/g, ''))) : null;
 
     const negPorCampana = [];
     for (const c of ini.campanas) {

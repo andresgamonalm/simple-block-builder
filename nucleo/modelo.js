@@ -75,7 +75,34 @@
         { campo: 'id', tipo: 'texto', descripcion: 'Identificador estable (ini_…). No se muestra ni se exporta.' },
         { campo: 'nombre', tipo: 'texto', obligatorio: true, descripcion: 'Nombre interno de la iniciativa.' },
         { campo: 'moneda', tipo: 'texto', descripcion: 'Siempre "CLP". Todos los montos son pesos chilenos enteros.' },
+        { campo: 'objetivo', tipo: 'objetivo', descripcion: 'El ENCARGO del usuario: qué se vende, a quién, con qué oferta y a qué URL. Toda corrección posterior se hace sin perder este objetivo.' },
+        { campo: 'ficha', tipo: 'ficha', descripcion: 'Ficha del producto: lo investigado en la landing y en Google (beneficios, pruebas, competencia, lo que NO es). Se guarda con la iniciativa para no volver a investigar en cada corrección.' },
         { campo: 'campanas', tipo: 'lista de campaña', obligatorio: true, descripcion: 'Las campañas de Google Ads.' }
+      ] },
+    { entidad: 'objetivo', titulo: 'Objetivo (el encargo)', descripcion: 'Lo que pidió el usuario. No se exporta: orienta a la IA.',
+      campos: [
+        { campo: 'que', tipo: 'texto', obligatorio: true, descripcion: 'Qué se promociona y para quién.' },
+        { campo: 'accion', tipo: 'texto', descripcion: 'Qué debe hacer la persona (cotizar, comprar, llamar…).' },
+        { campo: 'gancho', tipo: 'texto', descripcion: 'La oferta o el gancho, TEXTUAL.' },
+        { campo: 'ctaUrl', tipo: 'url', descripcion: 'La landing: URL final de los anuncios.' },
+        { campo: 'notas', tipo: 'texto', descripcion: 'Indicaciones generales del usuario.' },
+        { campo: 'producto', tipo: 'texto', descripcion: 'Nombre del producto para la taxonomía (auto digital).' },
+        { campo: 'tipo', tipo: 'texto', descripcion: 'Tipo de campaña para la taxonomía (always-on, promociones).' }
+      ] },
+    { entidad: 'ficha', titulo: 'Ficha del producto', descripcion: 'Investigación de la landing y de la competencia en Google. No se exporta: es la materia prima de keywords, anuncios y negativas, y la base para detectar cifras inventadas.',
+      campos: [
+        { campo: 'producto', tipo: 'texto' }, { campo: 'categoria', tipo: 'texto' }, { campo: 'propuestaValor', tipo: 'texto' }, { campo: 'publico', tipo: 'texto' },
+        { campo: 'beneficios', tipo: 'lista de texto', descripcion: 'Beneficios concretos, con la cifra textual.' },
+        { campo: 'pruebas', tipo: 'lista de texto', descripcion: 'Datos verificables (años, clientes, calificaciones).' },
+        { campo: 'ofertas', tipo: 'lista de texto', descripcion: 'Promociones vigentes, textuales.' },
+        { campo: 'condiciones', tipo: 'lista de texto' }, { campo: 'objeciones', tipo: 'lista de texto' },
+        { campo: 'vocabulario', tipo: 'lista de texto', descripcion: 'Términos exactos del sitio.' },
+        { campo: 'busquedas', tipo: 'lista de texto', descripcion: 'Cómo busca la gente (base de las keywords).' },
+        { campo: 'noOfrece', tipo: 'lista de texto', descripcion: 'Lo que el producto NO es o no incluye (base de las negativas).' },
+        { campo: 'competidores', tipo: 'lista de {nombre, promesa}' },
+        { campo: 'mensajesGenericos', tipo: 'lista de texto', descripcion: 'Lo que dicen todos: prohibido construir anuncios sobre esto.' },
+        { campo: 'angulosDiferenciales', tipo: 'lista de texto' },
+        { campo: 'leyoLanding', tipo: 'sí/no' }, { campo: 'fuentes', tipo: 'lista de url' }, { campo: 'actualizada', tipo: 'fecha' }
       ] },
     { entidad: 'campana', titulo: 'Campaña', descripcion: 'Una campaña de Google Ads. Por ahora: Search.',
       campos: [
@@ -118,6 +145,8 @@
         { campo: 'id', tipo: 'texto', descripcion: 'Identificador estable (grp_…).' },
         { campo: 'nombre', tipo: 'texto', obligatorio: true, columna: 'Ad Group', descripcion: 'Nombre EXACTO del grupo (Ads Editor lo reconoce por nombre). Protocolo: <abreviatura del tipo de campaña>-<naturaleza>, p. ej. "ao-coberturas", "promo-cuotas".' },
         { campo: 'estado', tipo: 'texto', columna: 'Ad Group Status', valores: ['Enabled', 'Paused'] },
+        { campo: 'intencion', tipo: 'texto', descripcion: 'Qué busca la persona que escribe estas keywords. No se exporta.' },
+        { campo: 'razonamiento', tipo: 'texto', descripcion: 'Por qué se agrupó así y qué ángulo usan sus anuncios. No se exporta.' },
         { campo: 'keywords', tipo: 'lista de keyword', obligatorio: true },
         { campo: 'negativas', tipo: 'lista de negativa', descripcion: 'Negativas propias del grupo.' },
         { campo: 'anuncios', tipo: 'lista de anuncio', obligatorio: true },
@@ -227,7 +256,7 @@
 
   /* ── Fábricas: la forma canónica de cada entidad ────────────────────── */
   function nuevaIniciativa(nombre) {
-    return { esquema: VERSION_ESQUEMA, id: uid('ini'), nombre: nombre || 'Iniciativa', moneda: MONEDA, campanas: [], extras: [] };
+    return { esquema: VERSION_ESQUEMA, id: uid('ini'), nombre: nombre || 'Iniciativa', moneda: MONEDA, objetivo: null, ficha: null, campanas: [], extras: [] };
   }
   function nuevaCampana(nombre) {
     return { id: uid('cmp'), nombre: nombre || '', tipo: 'Search', redes: ['Google Search'], idiomas: ['es'],
@@ -237,7 +266,7 @@
       comentario: '' };
   }
   function nuevoGrupo(nombre) {
-    return { id: uid('grp'), nombre: nombre || '', estado: 'Enabled', keywords: [], negativas: [], anuncios: [], comentario: '' };
+    return { id: uid('grp'), nombre: nombre || '', estado: 'Enabled', intencion: '', razonamiento: '', keywords: [], negativas: [], anuncios: [], comentario: '' };
   }
   const nuevaKeyword = (texto, concordancia) => ({ id: uid('kw'), texto: texto || '', concordancia: concordancia || 'exacta', estado: 'Enabled', urlFinal: '', comentario: '' });
   const nuevaNegativa = (texto, concordancia, comentario) => ({ id: uid('neg'), texto: texto || '', concordancia: concordancia || 'amplia', comentario: comentario || '' });

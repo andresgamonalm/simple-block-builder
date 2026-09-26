@@ -1034,8 +1034,27 @@ mismos), 40 avisos, 43 sugerencias. `pruebas/reglas.js` 76/76.
   bundle compilado con `wrangler pages functions build` y probado en `wrangler pages dev` (workerd + D1 local). Batería
   completa en verde.
 
-**Siguientes pasos (orden aprobado):** 4) Search por IA sobre el modelo con ficha de producto persistente y
-CONVERSACIÓN por partes · 5) Display y Performance Max con espacios de imagen · 6) operación (import de
+**PASO 4 · MOTOR (HECHO, 26-sep): Search por IA sobre el modelo + conversación por partes.** Sin interfaz (va con mockup).
+- Modelo: la iniciativa guarda `objetivo` (el encargo) y `ficha` (la investigación de landing + competencia) — no se
+  exportan, orientan a la IA y el motor de reglas usa la ficha para detectar cifras inventadas (C08). El grupo guarda
+  `intencion`/`razonamiento` (notas internas: no cuentan como cambio en el archivo de solo cambios).
+- `nucleo/campana-ia.js` (`MP_CampanaIA.iniciativaDesdeIA`): convierte la salida del pipeline de Search en iniciativa con
+  el protocolo (taxonomía `chl-producto-…`, grupos `ao-`/`promo-`, anuncio `ads-<ángulo>`, 5 fijados pos. 1 + 10 que rotan,
+  UTM, https, Chile 2152, pausada, motivo de cada negativa en Comment).
+- `nucleo/operaciones.js` (`MP_Operaciones`): `aplicar(ini, ops, {nombresFijos})` con ops `cambiar`/`agregar`/`quitar` sobre
+  ids, validadas contra el ESQUEMA (campos, valores, límites, máximos 15/4); devuelve copia + aplicadas/rechazadas con
+  motivo; recalcula UTM; `resumen` (índice con ids) y `vista` (solo las partes pedidas: ~1/20 del peso) para la IA;
+  `operacionesParaIA()` sale del esquema.
+- `ia.js`: `generarAds` → `armarAds` (devuelve datos; `protocolo:true` = 5+10 títulos; suma `destacados` sin «!» ni
+  repetidos). Modos nuevos (permiso `ads`): **`campana`** {brief, marca, ficha?, opciones{producto,tipo,presupuestoDiario,
+  puja,nombre}} → {iniciativa, validacion} (con ficha no reinvestiga) · **`corregir`** {iniciativa, instruccion, ids?,
+  hallazgos? ("C01:<id>"), nombresFijos?} → la IA ve objetivo+ficha+índice+SOLO las partes, devuelve operaciones;
+  ortografía sobre textos visibles; UNA ronda de reparación si hubo rechazadas o errores nuevos · **`investigar`**
+  {iniciativa, pregunta} → Google/landing, actualiza SOLO los campos de ficha que cambian.
+- Contrato §8 (conversación) generado. Pruebas: `operaciones.js` 16/16, `campana-ia.js` 25/25; `ads-ia`/`diagnostico`
+  adaptadas (importan el núcleo). Probado en `wrangler pages dev`. Batería completa en verde.
+
+**Siguientes pasos (orden aprobado):** 4b) interfaz de la iniciativa y la conversación (MOCKUP primero) · 5) Display y Performance Max con espacios de imagen · 6) operación (import de
 informes → diagnóstico → CSV de cambios) y aprendizaje por marca. La interfaz nueva va con MOCKUP antes.
 Pendiente de confirmar en la 1ª importación real: notación de negativas frase `"x"` / exacta `[x]`,
 negativa de grupo (`Type`=`Negative`) y las columnas `Tracking template` / `Final URL suffix`.

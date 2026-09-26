@@ -10,6 +10,11 @@
 // La API key de Gemini vive en env.GEMINI_API_KEY (secreto).
 
 import { json, corsPreflight, getUserEmail, getSesion, tienePermiso, leerUsoIA, sumarUsoIA } from './_shared.js';
+// Núcleo de campañas (el mismo que usa el navegador): modelo, reglas, operaciones por partes.
+import MOD from '../../nucleo/modelo.js';
+import REG from '../../nucleo/reglas.js';
+import OPS from '../../nucleo/operaciones.js';
+import CIA from '../../nucleo/campana-ia.js';
 
 export const onRequestOptions = () => corsPreflight();
 
@@ -102,7 +107,7 @@ async function generar({ request, env }) {
   const necesita = body.producto === 'ads' ? 'ads'
                  : body.producto === 'banner' ? 'banner'
                  : (body.modo === 'textos' || body.modo === 'imagen') ? 'banner'
-                 : (body.modo === 'mas-keywords' || body.modo === 'diagnostico') ? 'ads'
+                 : ['mas-keywords', 'diagnostico', 'campana', 'corregir', 'investigar'].includes(body.modo) ? 'ads'
                  : body.modo === 'concepto' ? null   // lo valida el orquestador pieza a pieza
                  : 'email';
   if (necesita && !tienePermiso(sesion, necesita)) {
@@ -229,6 +234,10 @@ async function generar({ request, env }) {
   // Modo "diagnostico": revisa una campaña de Search que YA corre (capturas,
   // informes exportados de Google Ads y la queja del usuario).
   if (body.modo === 'diagnostico') return diagnosticarCampana({ env, brief, marca: body.marca || null, actual: body.actual });
+  // Campañas sobre el MODELO (nucleo/): generar, corregir por partes, investigar por partes.
+  if (body.modo === 'campana') return modoCampana({ env, brief, marca: body.marca || null, ficha: body.ficha || null, opciones: body.opciones || {} });
+  if (body.modo === 'corregir') return modoCorregir({ env, body });
+  if (body.modo === 'investigar') return modoInvestigar({ env, body });
 
   if (!brief.que || !String(brief.que).trim()) {
     return json({ ok: false, error: 'Dime qué necesitas (el brief está vacío).' }, 400);
@@ -1497,8 +1506,16 @@ function aprendizajeTexto(a) {
   return txt ? '════ APRENDIZAJE DE LA CAMPAÑA ACTUAL (un APORTE: el ENCARGO de arriba sigue siendo el objetivo; esto dice qué evitar y qué sí funciona) ════\n' + txt + '\n══════════════════════════════════════════════════' : '';
 }
 
-async function generarAds({ env, brief, marca, refsTxt, promos, enlaces, avisos, ficha, fuentes }) {
+async function generarAds(args) {
+  const r = await armarAds(args);
+  return json(r, r.ok ? 200 : (r.status || 500));
+}
+// El pipeline de Search, devolviendo DATOS (lo usan generarAds y el modo 'campana').
+// protocolo = protocolo de la casa: 5 títulos fijados en la posición 1 (marca u
+// oferta) + 10 que rotan, en vez de 4 anclados + 11.
+async function armarAds({ env, brief, marca, refsTxt, promos, enlaces, avisos, ficha, fuentes, protocolo }) {
   avisos = Array.isArray(avisos) ? avisos : [];
+  const NFIJ = protocolo ? 5 : 4, NROT = protocolo ? 10 : 11;
   const fTxt = fichaTexto(ficha);
   const prompt = [
     `Eres un especialista senior en Google Ads (Search) de ${marca ? (marca.nombre || marca.empresa) : 'la marca'}, con 10 años gestionando cuentas en Chile. Estructuras por INTENCIÓN de búsqueda, con concordancias controladas y negativas razonadas. Detestas la concordancia amplia y los anuncios intercambiables con los de la competencia.`,
@@ -1519,14 +1536,15 @@ async function generarAds({ env, brief, marca, refsTxt, promos, enlaces, avisos,
     '      "angulo": "el ángulo diferencial que usan los anuncios de este grupo frente a la competencia",',
     '      "keywords": [ { "t": "keyword en minúsculas", "tipo": "exacta" | "frase" } ],',
     '      "negativas": [ { "t": "término", "motivo": "por qué se excluye en este grupo" } ],',
-    '      "titularesFijos": [ "4 titulares ANCLADOS, ≤30 caracteres cada uno" ],',
-    '      "titulares": [ "11 titulares que ROTAN, ≤30 caracteres cada uno" ],',
+    `      "titularesFijos": [ "${NFIJ} titulares ANCLADOS, ≤30 caracteres cada uno" ],`,
+    `      "titulares": [ "${NROT} titulares que ROTAN, ≤30 caracteres cada uno" ],`,
     '      "descripciones": [ "4 descripciones, ≤90 caracteres cada una" ],',
     '      "path1": "ruta-1", "path2": "ruta-2"',
     '    }',
     '  ],',
     '  "negativas": [ { "t": "término negativo de campaña", "motivo": "por qué NO queremos pagar esa búsqueda en ESTE negocio" } ],',
-    '  "sitelinks": [ { "texto": "≤25 caracteres", "desc1": "≤35 caracteres", "desc2": "≤35 caracteres", "url": "ruta REAL de la landing (ej. /cotizar)" } ]',
+    '  "sitelinks": [ { "texto": "≤25 caracteres", "desc1": "≤35 caracteres", "desc2": "≤35 caracteres", "url": "ruta REAL de la landing (ej. /cotizar)" } ],',
+    '  "destacados": [ "4 a 6 textos destacados, ≤25 caracteres" ]',
     '}',
     '',
     'ESTRUCTURA Y KEYWORDS:',
@@ -1540,13 +1558,18 @@ async function generarAds({ env, brief, marca, refsTxt, promos, enlaces, avisos,
     '- PRUEBA DEL COMPETIDOR: si cambias la marca por un competidor y el titular sigue siendo verdad, es genérico y NO sirve. Cada anuncio se construye sobre beneficios con cifra, pruebas, ofertas, objeciones y ángulos diferenciales de la INVESTIGACIÓN.',
     '- PROHIBIDO construir sobre los "mensajes genéricos que usan todos" y las frases trilladas: "los mejores precios", "calidad garantizada", "rápido y fácil", "atención personalizada", "la mejor opción", "no esperes más", "somos líderes", "amplia experiencia".',
     '- 15 titulares, TODOS ≤30 caracteres (con espacios), únicos, sin punto final:',
-    '  · "titularesFijos" (exactamente 4, en este orden, van anclados): 1) marca o producto, 2) la keyword principal del grupo casi literal, 3) el beneficio u oferta más fuerte, 4) llamada a la acción específica (no "Haz clic aquí").',
-    '  · "titulares" (exactamente 11, rotan): 2 con variantes de la keyword del grupo · 3 beneficios concretos con dato · 2 pruebas/confianza con dato real · 1 que responda la objeción principal · 2 del ángulo diferencial · 1 oferta o CTA alternativa. Ninguno repite ni parafrasea a otro.',
+    protocolo
+      ? '  · "titularesFijos" (exactamente 5, van TODOS fijados en la posición 1 y Google elige uno): CADA UNO lleva el NOMBRE DE LA MARCA o la oferta/precio (el nombre del producto solo no basta), con 5 formulaciones realmente distintas (no la misma frase reordenada).'
+      : '  · "titularesFijos" (exactamente 4, en este orden, van anclados): 1) marca o producto, 2) la keyword principal del grupo casi literal, 3) el beneficio u oferta más fuerte, 4) llamada a la acción específica (no "Haz clic aquí").',
+    protocolo
+      ? '  · "titulares" (exactamente 10, rotan): 3 con la keyword del grupo o su variante · 3 beneficios concretos con dato · 1 prueba/confianza con dato real · 1 que responda la objeción principal · 1 del ángulo diferencial · 1 llamada a la acción específica. Ninguno repite ni parafrasea a otro.'
+      : '  · "titulares" (exactamente 11, rotan): 2 con variantes de la keyword del grupo · 3 beneficios concretos con dato · 2 pruebas/confianza con dato real · 1 que responda la objeción principal · 2 del ángulo diferencial · 1 oferta o CTA alternativa. Ninguno repite ni parafrasea a otro.',
     '- 4 descripciones ≤90 caracteres, cada una con un ángulo distinto: (1) beneficio principal + dato + CTA, (2) respuesta a una objeción, (3) prueba/confianza, (4) diferencial frente a la competencia u oferta. Una sola idea por descripción, con un dato concreto. Termina con punto.',
     '- El anuncio le habla AL CLIENTE, jamás habla del anuncio o de la campaña. No repitas la misma keyword más de 2 veces en un anuncio.',
     '- CIFRAS: SOLO las que aparecen en la investigación, la landing o el encargo, TEXTUALES. Una cifra inventada invalida el anuncio.',
     '- "path1"/"path2": ≤15 caracteres, minúsculas, con guiones, relacionados con el grupo.',
-    '- "sitelinks": 4 a 6 de la MISMA landing; usa los enlaces internos reales listados abajo (no inventes rutas). Texto ≤25, descripciones ≤35.',
+    '- "sitelinks": 4 a 6 de la MISMA landing; usa los enlaces internos reales listados abajo (no inventes rutas). Cada uno a una página DISTINTA de la URL final. Texto ≤25, descripciones ≤35, sin signos de exclamación.',
+    '- "destacados": 4 a 6 atributos concretos (≤25 caracteres, sin signos de exclamación, sin empezar con un símbolo) que NO repitan ningún titular ni sitelink.',
     (promos && promos.length) ? `- Promociones detectadas en la landing: ${promos.join(' · ')}. Úsalas TAL CUAL en 2-3 titulares y 1 descripción del grupo más transaccional.` : '',
     '',
     'NEGATIVAS (razonadas para ESTE negocio, no una lista de plantilla):',
@@ -1568,7 +1591,7 @@ async function generarAds({ env, brief, marca, refsTxt, promos, enlaces, avisos,
   ].filter(Boolean).join('\n');
 
   const { parsed, error } = await llamarGemini(env, prompt, 8192, 0.8, { cadena: cadenaCopy(env), pensar: -1 });
-  if (error) return json({ ok: false, error }, 500);
+  if (error) return { ok: false, error, status: 500 };
 
   // ── Validación dura del lado del servidor ──────────────────────────────
   const clean = s => String(s == null ? '' : s).replace(/\s+/g, ' ').trim();
@@ -1594,10 +1617,10 @@ async function generarAds({ env, brief, marca, refsTxt, promos, enlaces, avisos,
       t: kwLimpia(k && (typeof k === 'object' ? k.t : k)),
       tipo: (k && k.tipo === 'frase') ? 'frase' : 'exacta'   // amplia jamás
     })).filter(k => k.t && !seenK.has(k.t) && (seenK.add(k.t), true)).slice(0, 25);
-    let fijos = limpiaTit(g.titularesFijos).slice(0, 4);
+    let fijos = limpiaTit(g.titularesFijos).slice(0, NFIJ);
     let rotan = limpiaTit(g.titulares).filter(t => !fijos.some(f => f.toLowerCase() === t.toLowerCase()));
-    if (!fijos.length && rotan.length) { fijos = rotan.slice(0, 4); rotan = rotan.slice(4); }
-    rotan = rotan.slice(0, 11);
+    if (!fijos.length && rotan.length) { fijos = rotan.slice(0, NFIJ); rotan = rotan.slice(NFIJ); }
+    rotan = rotan.slice(0, NROT);
     const descripciones = dedup((Array.isArray(g.descripciones) ? g.descripciones : []).map(d => clean(d).slice(0, 90)).filter(Boolean)).slice(0, 4);
     const angulo = clean(g.angulo).slice(0, 200);
     return {
@@ -1611,7 +1634,7 @@ async function generarAds({ env, brief, marca, refsTxt, promos, enlaces, avisos,
     };
   }).filter(g => g.keywords.length && g.titulares.length);
 
-  if (!grupos.length) return json({ ok: false, error: 'La IA no produjo grupos de anuncios válidos. Reformula el brief (di qué vendes y a quién).' }, 500);
+  if (!grupos.length) return { ok: false, status: 500, error: 'La IA no produjo grupos de anuncios válidos. Reformula el brief (di qué vendes y a quién).' };
 
   // APRENDIZAJE (si viene de "Tu campaña actual"): lo que se pausó por gastar sin
   // resultado no vuelve como keyword, y las negativas confirmadas con datos entran.
@@ -1720,12 +1743,16 @@ async function generarAds({ env, brief, marca, refsTxt, promos, enlaces, avisos,
     texto: clean(s && s.texto).slice(0, 25), desc1: clean(s && s.desc1).slice(0, 35),
     desc2: clean(s && s.desc2).slice(0, 35), url: clean(s && s.url).slice(0, 200)
   })).filter(s => s.texto && !esCliche(s.texto)).slice(0, 6);
+  const titulosTodos = new Set(grupos.flatMap(g => g.titularesFijos.concat(g.titularesRotan)).map(t => t.toLowerCase()));
+  const destacados = dedup((Array.isArray(parsed.destacados) ? parsed.destacados : []).map(t => clean(t).replace(/!/g, '').replace(/^[^\p{L}\p{N}]+/u, '').slice(0, 25))
+    .filter(t => t && !esCliche(t) && !titulosTodos.has(t.toLowerCase()) && !sitelinks.some(s => s.texto.toLowerCase() === t.toLowerCase()))).slice(0, 6);
 
   // ── Etapa 5: corrector RAE sobre los textos VISIBLES. Las keywords NO se
   // corrigen: la gente busca sin tildes y así deben quedar.
   const planos = [legible(parsed.nombre || brief.que).slice(0, 80)];
   for (const g of grupos) { planos.push(g.nombre, g.intencion, g.razonamiento, g.angulo); planos.push(...g.titularesFijos, ...g.titularesRotan, ...g.descripciones); }
   for (const s of sitelinks) planos.push(s.texto, s.desc1, s.desc2);
+  planos.push(...destacados);
   const rev = await corregirOrtografia(env, planos);
   let k = 0;
   const nombreR = String(rev.textos[k++]).slice(0, 80);
@@ -1747,11 +1774,12 @@ async function generarAds({ env, brief, marca, refsTxt, promos, enlaces, avisos,
     s.desc1 = String(rev.textos[k++]).slice(0, 35);
     s.desc2 = String(rev.textos[k++]).slice(0, 35);
   }
+  for (let i = 0; i < destacados.length; i++) destacados[i] = String(rev.textos[k++]).slice(0, 25) || destacados[i];
 
   const negMotivos = {};
   for (const n of negCampana.concat(grupos.flatMap(g => g.negativas))) if (motivos[n]) negMotivos[n] = motivos[n];
 
-  return json({
+  return {
     ok: true,
     nombre: nombreR,
     urlFinal: clean(brief.ctaUrl || ''),
@@ -1759,6 +1787,7 @@ async function generarAds({ env, brief, marca, refsTxt, promos, enlaces, avisos,
     negativas: negCampana,
     negativasMotivos: negMotivos,
     sitelinks,
+    destacados,
     analisis: ficha ? {
       producto: ficha.producto, propuestaValor: ficha.propuestaValor,
       competidores: ficha.competidores, mensajesGenericos: ficha.mensajesGenericos,
@@ -1768,8 +1797,185 @@ async function generarAds({ env, brief, marca, refsTxt, promos, enlaces, avisos,
     } : null,
     avisos,
     ortografia: rev.revisado ? 'revisada' : 'sin-revisar'
-  });
+  };
+}
+
+// ════════════ CAMPAÑAS SOBRE EL MODELO (paso 4 de la nueva arquitectura) ════════════
+// La campaña vive en el modelo de nucleo/modelo.js (espejo de Ads Editor, con ids).
+//   'campana'    → la genera completa (investiga, o reutiliza la ficha si viene).
+//   'corregir'   → recibe una instrucción y SOLO las partes afectadas; la IA
+//                  devuelve operaciones sobre ids (nucleo/operaciones.js). Nunca
+//                  reescribe la campaña: gasta poco y no rompe lo que estaba bien.
+//   'investigar' → responde una pregunta con Google/la landing y actualiza SOLO
+//                  los campos de la ficha que correspondan.
+const hoyCL = () => { try { return new Intl.DateTimeFormat('en-CA', { timeZone: 'America/Santiago' }).format(new Date()); } catch { return new Date().toISOString().slice(0, 10); } };
+const resumenValidacion = (v, soloIds) => ({
+  errores: v.errores, avisos: v.avisos, sugerencias: v.sugerencias, exportable: v.exportable,
+  hallazgos: v.hallazgos.filter(h => !soloIds || soloIds.has(h.id)).map(({ codigo, nivel, id, donde, mensaje }) => ({ codigo, nivel, id, donde, mensaje }))
+});
+
+async function modoCampana({ env, brief, marca, ficha, opciones }) {
+  const urlsAds = [brief.ctaUrl].concat(Array.isArray(brief.refs) ? brief.refs : []);
+  let fuentes = [], avisos = [];
+  // Con ficha guardada no se vuelve a investigar (es lo caro): solo se relee la landing.
+  const [refs, inv] = await Promise.all([
+    leerReferencias(urlsAds, { porPagina: 6000, total: 12000 }),
+    ficha ? Promise.resolve({ ficha, urlsLeidas: [], fuentes: ficha.fuentes || [] }) : investigarAds(env, brief, marca)
+  ]);
+  avisos = avisosDeReferencias(refs, brief).filter(a => !(a.tipo === 'url-no-leida' && (inv.urlsLeidas || []).some(u => a.texto.includes(u.split('?')[0]))));
+  if (!inv.ficha) avisos.push({ tipo: 'info', texto: 'No se pudo investigar la landing y la competencia (' + (inv.error || 'sin respuesta') + '). La campaña se armó solo con el texto de la página.' });
+  fuentes = inv.fuentes || [];
+  const d = await armarAds({ env, brief, marca, refsTxt: refs.texto, promos: refs.promos, enlaces: refs.enlaces, avisos, ficha: inv.ficha, fuentes, protocolo: true });
+  if (!d.ok) return json(d, d.status || 500);
+  const fichaG = inv.ficha ? Object.assign({}, inv.ficha, { fuentes: fuentes.slice(0, 10) }) : null;
+  const objetivo = { que: brief.que || '', accion: brief.accion || '', gancho: brief.gancho || '', ctaUrl: brief.ctaUrl || '', notas: brief.notas || '',
+    producto: opciones.producto || '', tipo: opciones.tipo || '' };
+  const ini = CIA.iniciativaDesdeIA(d, { objetivo, ficha: fichaG, presupuestoDiario: Number(opciones.presupuestoDiario) || null, puja: opciones.puja, fecha: hoyCL() });
+  if (opciones.nombre) ini.nombre = String(opciones.nombre).slice(0, 120);
+  const v = REG.validar(ini, { hoy: hoyCL(), marca: marca ? (marca.nombre || marca.empresa) : '' });
+  return json({ ok: true, iniciativa: ini, validacion: resumenValidacion(v), avisos: d.avisos, ortografia: d.ortografia });
+}
+
+// Corrige la ortografía de los textos VISIBLES que traen las operaciones
+// (títulos, descripciones, sitelinks, destacados). Las keywords no: la gente
+// busca sin tildes.
+async function ortografiaDeOps(env, ini, ops) {
+  const refs = [];
+  const visible = (ent, campo) => ['titulo', 'descripcion', 'sitelink', 'destacado'].includes(ent) && ['texto', 'linea1', 'linea2'].includes(campo);
+  for (const op of ops) {
+    if (!op || typeof op !== 'object') continue;
+    if (op.op === 'cambiar' && typeof op.valor === 'string') { const u = OPS.ubicar(ini, op.id); if (u && visible(u.entidad, op.campo)) refs.push([op, 'valor']); }
+    if (op.op === 'agregar' && op.elemento && typeof op.elemento === 'object') {
+      const ent = OPS.ENTIDAD_DE_LISTA[op.lista];
+      for (const c of ['texto', 'linea1', 'linea2']) if (typeof op.elemento[c] === 'string' && visible(ent, c)) refs.push([op.elemento, c]);
+      for (const hija of ['titulos', 'descripciones']) (Array.isArray(op.elemento[hija]) ? op.elemento[hija] : []).forEach(x => { if (x && typeof x.texto === 'string') refs.push([x, 'texto']); });
+    }
+  }
+  if (!refs.length) return false;
+  const rev = await corregirOrtografia(env, refs.map(([o, k]) => o[k]));
+  refs.forEach(([o, k], i) => { if (rev.textos[i]) o[k] = rev.textos[i]; });
+  return rev.revisado;
+}
+
+async function modoCorregir({ env, body }) {
+  const ini = body.iniciativa;
+  const instruccion = String(body.instruccion || '').trim();
+  if (!ini || !Array.isArray(ini.campanas)) return json({ ok: false, error: 'Falta la iniciativa.' }, 400);
+  if (!instruccion && !(Array.isArray(body.hallazgos) && body.hallazgos.length)) return json({ ok: false, error: 'Dime qué corregir.' }, 400);
+  const marca = body.marca || null;
+  const cx = { hoy: hoyCL(), marca: marca ? (marca.nombre || marca.empresa) : '' };
+  const antes = REG.validar(ini, cx);
+  // Qué partes ve la IA: las que eligió el usuario, o las que nombran los hallazgos;
+  // si no hay ninguna, la campaña completa (la respuesta igual son solo operaciones).
+  let ids = (Array.isArray(body.ids) ? body.ids : []).filter(id => OPS.ubicar(ini, id));
+  const hallazgosPedidos = (Array.isArray(body.hallazgos) ? body.hallazgos : []).map(h => typeof h === 'string' ? antes.hallazgos.find(x => x.codigo + ':' + x.id === h) : h).filter(Boolean);
+  if (!ids.length && hallazgosPedidos.length) ids = [...new Set(hallazgosPedidos.map(h => h.id).filter(Boolean))];
+  const parcial = ids.length > 0;
+  if (!parcial) ids = ini.campanas.map(c => c.id);
+  const partes = OPS.vista(ini, ids);
+  const obj = ini.objetivo || {};
+  const cabecera = [
+    'Eres especialista senior en Google Ads (Search) en Chile. Corriges una campaña YA ARMADA, por partes: cambias SOLO lo necesario para cumplir la instrucción, sin tocar lo que está bien.',
+    '',
+    '════ OBJETIVO DE LA CAMPAÑA (no lo pierdas de vista) ════',
+    obj.que ? 'Qué se vende / para quién: ' + obj.que : '', obj.accion ? 'Acción buscada: ' + obj.accion : '', obj.gancho ? 'Oferta (textual): ' + obj.gancho : '',
+    obj.ctaUrl ? 'Landing: ' + obj.ctaUrl : '', obj.notas ? 'Indicaciones: ' + obj.notas : '',
+    ini.ficha ? '\n════ FICHA DEL PRODUCTO (investigación guardada: úsala, no inventes datos) ════\n' + fichaTexto(ini.ficha) : '',
+    marca ? '\nVOZ DE MARCA:\n' + voorMarca(marca) : '',
+    '\n' + OPS.operacionesParaIA(),
+    '\n' + REG.reglasParaIA(),
+    '\nREGLAS DE LA CORRECCIÓN: cifras SOLO de la ficha o el objetivo · títulos ≤30 sin punto final · descripciones ≤90 · keywords solo exacta o frase · una negativa nunca bloquea una keyword propia · no renombres campañas ni grupos salvo que te lo pidan.',
+    '\nÍNDICE DE LA CAMPAÑA (con ids):\n' + OPS.resumen(ini)
+  ];
+  const pedir = async (extra) => {
+    const prompt = cabecera.concat([
+      '\n════ LO QUE PIDE EL USUARIO ════\n' + (instruccion || 'Corrige los hallazgos indicados.'),
+      hallazgosPedidos.length ? '\nHALLAZGOS A RESOLVER:\n' + hallazgosPedidos.map(h => `- [${h.codigo}] ${h.donde}: ${h.mensaje} (id ${h.id})`).join('\n') : '',
+      '\n' + (parcial ? 'PARTES A CORREGIR' : 'LA CAMPAÑA') + ' (JSON, con sus ids):\n' + JSON.stringify(extra ? extra.partes : partes),
+      extra ? '\n' + extra.texto : '',
+      '\nDevuelve EXCLUSIVAMENTE: { "explicacion": "qué cambiaste y por qué, en 1-3 frases para el usuario", "operaciones": [ ... ] }',
+      'Si la instrucción no requiere cambios, "operaciones": [] y explícalo.'
+    ]).filter(Boolean).join('\n');
+    return llamarGemini(env, prompt, 6144, 0.4, { cadena: cadenaCopy(env), pensar: -1 });
+  };
+
+  let r = await pedir(null);
+  if (r.error) return json({ ok: false, error: r.error }, 500);
+  let ops = Array.isArray(r.parsed && r.parsed.operaciones) ? r.parsed.operaciones : [];
+  let explicacion = String((r.parsed && r.parsed.explicacion) || '').slice(0, 600);
+  const opciones = { nombresFijos: Array.isArray(body.nombresFijos) ? body.nombresFijos : [] };
+  let ortografia = await ortografiaDeOps(env, ini, ops);
+  let res = OPS.aplicar(ini, ops, opciones);
+
+  // Una ronda de reparación: si hubo operaciones rechazadas o la corrección creó
+  // ERRORES nuevos en lo que tocó, se le devuelve eso a la IA (una sola vez).
+  const erroresNuevos = v => { const ya = new Set(antes.hallazgos.filter(h => h.nivel === 'error').map(h => h.codigo + ':' + h.id + ':' + h.mensaje)); return v.hallazgos.filter(h => h.nivel === 'error' && !ya.has(h.codigo + ':' + h.id + ':' + h.mensaje)); };
+  let despues = REG.validar(res.iniciativa, cx);
+  let nuevos = erroresNuevos(despues);
+  let reparada = false;
+  if (res.rechazadas.length || nuevos.length) {
+    const idsRep = [...new Set(res.tocados.concat(nuevos.map(h => h.id)).filter(id => id && OPS.ubicar(res.iniciativa, id)))];
+    const texto = ['════ TU PRIMERA PROPUESTA TUVO PROBLEMAS (ya se aplicó lo válido) ════',
+      res.rechazadas.length ? 'Operaciones RECHAZADAS:\n' + res.rechazadas.map(x => '- ' + JSON.stringify(x.op) + ' → ' + x.motivo).join('\n') : '',
+      nuevos.length ? 'ERRORES que aparecieron tras tus cambios:\n' + nuevos.map(h => `- [${h.codigo}] ${h.donde}: ${h.mensaje} (id ${h.id})`).join('\n') : '',
+      'Devuelve SOLO las operaciones que faltan para resolver esto, sobre el estado ACTUAL que ves arriba.'].filter(Boolean).join('\n');
+    const r2 = await pedir({ partes: OPS.vista(res.iniciativa, idsRep.length ? idsRep : ids), texto });
+    const ops2 = Array.isArray(r2.parsed && r2.parsed.operaciones) ? r2.parsed.operaciones : [];
+    if (!r2.error && ops2.length) {
+      await ortografiaDeOps(env, res.iniciativa, ops2);
+      const res2 = OPS.aplicar(res.iniciativa, ops2, opciones);
+      res = { iniciativa: res2.iniciativa, aplicadas: res.aplicadas.concat(res2.aplicadas), rechazadas: res2.rechazadas, tocados: [...new Set(res.tocados.concat(res2.tocados))] };
+      if (r2.parsed.explicacion) explicacion = (explicacion + ' ' + String(r2.parsed.explicacion)).trim().slice(0, 900);
+      despues = REG.validar(res.iniciativa, cx);
+      nuevos = erroresNuevos(despues);
+      reparada = true;
+    }
+  }
+  return json({ ok: true, explicacion, iniciativa: res.iniciativa, aplicadas: res.aplicadas, rechazadas: res.rechazadas, tocados: res.tocados,
+    parcial, reparada, erroresNuevos: nuevos.map(({ codigo, id, donde, mensaje }) => ({ codigo, id, donde, mensaje })),
+    validacion: resumenValidacion(despues), antes: { errores: antes.errores, avisos: antes.avisos, sugerencias: antes.sugerencias },
+    ortografia: ortografia ? 'revisada' : 'sin-revisar' });
+}
+
+const CAMPOS_FICHA_LISTA = ['beneficios', 'pruebas', 'ofertas', 'condiciones', 'objeciones', 'vocabulario', 'busquedas', 'noOfrece', 'mensajesGenericos', 'angulosDiferenciales'];
+const CAMPOS_FICHA_TEXTO = ['producto', 'categoria', 'propuestaValor', 'publico'];
+async function modoInvestigar({ env, body }) {
+  const ini = body.iniciativa || null;
+  const ficha = Object.assign({}, (ini && ini.ficha) || body.ficha || {});
+  const obj = (ini && ini.objetivo) || body.objetivo || {};
+  const pregunta = String(body.pregunta || '').trim();
+  if (!pregunta) return json({ ok: false, error: '¿Qué quieres que averigüe?' }, 400);
+  const urlEnPregunta = (pregunta.match(/https?:\/\/\S+/) || [])[0];
+  const prompt = [
+    'Eres analista de marketing de búsqueda (Google Ads) en Chile. Te hacen UNA pregunta puntual sobre un producto cuya ficha ya está investigada.',
+    'Investiga SOLO eso (busca en Google, resultados de Chile; lee la URL si la hay) y responde. No rehagas la ficha entera.',
+    '', 'PREGUNTA: ' + pregunta,
+    obj.que ? 'PRODUCTO / OBJETIVO: ' + obj.que : '', obj.ctaUrl ? 'LANDING: ' + obj.ctaUrl : '',
+    '', 'FICHA ACTUAL:', fichaTexto(ficha) || '(vacía)',
+    '', 'Devuelve SOLO este JSON:',
+    '{ "respuesta": "lo que averiguaste, en 2-5 frases, con los datos concretos",',
+    '  "ficha": { SOLO los campos de la ficha que esta respuesta cambia, con su contenido COMPLETO actualizado (la lista entera, no solo lo nuevo) } }',
+    'Campos posibles de la ficha: ' + CAMPOS_FICHA_TEXTO.concat(CAMPOS_FICHA_LISTA).join(', ') + ', competidores ([{nombre, promesa}]).',
+    'REGLAS: nada inventado; cifras textuales; si no encontraste nada, dilo y deja "ficha": {}.'
+  ].filter(Boolean).join('\n');
+  const url = urlEnPregunta || (/^https?:\/\//.test(obj.ctaUrl || '') ? obj.ctaUrl : '');
+  const intentos = url ? [[{ url_context: {} }, { google_search: {} }], [{ google_search: {} }]] : [[{ google_search: {} }]];
+  let r = null;
+  for (const tools of intentos) { r = await llamarGemini(env, prompt, 3072, 0.3, { cadena: cadenaCopy(env), tools, pensar: -1, timeout: 60000 }); if (!r.error && r.parsed) break; }
+  if (!r || r.error || !r.parsed) return json({ ok: false, error: (r && r.error) || 'Sin respuesta de la investigación.' }, 500);
+  const cambio = (r.parsed.ficha && typeof r.parsed.ficha === 'object') ? r.parsed.ficha : {};
+  const cambiados = [];
+  for (const k of CAMPOS_FICHA_TEXTO) if (typeof cambio[k] === 'string' && cambio[k].trim()) { ficha[k] = cambio[k].trim().slice(0, 300); cambiados.push(k); }
+  for (const k of CAMPOS_FICHA_LISTA) if (Array.isArray(cambio[k])) { ficha[k] = aLista(cambio[k], 25, 120); cambiados.push(k); }
+  if (Array.isArray(cambio.competidores)) {
+    ficha.competidores = cambio.competidores.slice(0, 8).map(c => ({ nombre: String((c && c.nombre) || '').slice(0, 60), promesa: String((c && c.promesa) || '').slice(0, 200) })).filter(c => c.nombre);
+    cambiados.push('competidores');
+  }
+  const fuentesNuevas = (r.fuentes || []).slice(0, 10);
+  if (fuentesNuevas.length) ficha.fuentes = [...new Set((ficha.fuentes || []).concat(fuentesNuevas))].slice(0, 20);
+  if (cambiados.length) ficha.actualizada = hoyCL();
+  return json({ ok: true, respuesta: String(r.parsed.respuesta || '').slice(0, 1500), ficha, cambiados, fuentes: fuentesNuevas });
 }
 
 // Exportados SOLO para pruebas locales (Cloudflare Pages los ignora).
-export { corregirOrtografia, extraerJSON, generarEmail, generarBanner, generarAds, investigarAds, analizarTabla, numeroAds, diagnosticarCampana, detectarPromos, extraerEnlaces, extraerTextoPagina };
+export { corregirOrtografia, extraerJSON, generarEmail, generarBanner, generarAds, armarAds, modoCampana, modoCorregir, modoInvestigar, investigarAds, analizarTabla, numeroAds, diagnosticarCampana, detectarPromos, extraerEnlaces, extraerTextoPagina };

@@ -57,7 +57,46 @@ La acción comercial completa (p. ej. "Auto Digital · Septiembre"). Agrupa una 
 | `id` | texto |  |  | — | Identificador estable (ini_…). No se muestra ni se exporta. |
 | `nombre` | texto | sí |  | — | Nombre interno de la iniciativa. |
 | `moneda` | texto |  |  | — | Siempre "CLP". Todos los montos son pesos chilenos enteros. |
+| `objetivo` | objetivo |  |  | — | El ENCARGO del usuario: qué se vende, a quién, con qué oferta y a qué URL. Toda corrección posterior se hace sin perder este objetivo. |
+| `ficha` | ficha |  |  | — | Ficha del producto: lo investigado en la landing y en Google (beneficios, pruebas, competencia, lo que NO es). Se guarda con la iniciativa para no volver a investigar en cada corrección. |
 | `campanas` | lista de campaña | sí |  | — | Las campañas de Google Ads. |
+
+### Objetivo (el encargo) (`objetivo`)
+Lo que pidió el usuario. No se exporta: orienta a la IA.
+
+| Campo | Tipo | Oblig. | Límite | Columna Ads Editor | Qué es |
+|---|---|---|---|---|---|
+| `que` | texto | sí |  | — | Qué se promociona y para quién. |
+| `accion` | texto |  |  | — | Qué debe hacer la persona (cotizar, comprar, llamar…). |
+| `gancho` | texto |  |  | — | La oferta o el gancho, TEXTUAL. |
+| `ctaUrl` | url |  |  | — | La landing: URL final de los anuncios. |
+| `notas` | texto |  |  | — | Indicaciones generales del usuario. |
+| `producto` | texto |  |  | — | Nombre del producto para la taxonomía (auto digital). |
+| `tipo` | texto |  |  | — | Tipo de campaña para la taxonomía (always-on, promociones). |
+
+### Ficha del producto (`ficha`)
+Investigación de la landing y de la competencia en Google. No se exporta: es la materia prima de keywords, anuncios y negativas, y la base para detectar cifras inventadas.
+
+| Campo | Tipo | Oblig. | Límite | Columna Ads Editor | Qué es |
+|---|---|---|---|---|---|
+| `producto` | texto |  |  | — |  |
+| `categoria` | texto |  |  | — |  |
+| `propuestaValor` | texto |  |  | — |  |
+| `publico` | texto |  |  | — |  |
+| `beneficios` | lista de texto |  |  | — | Beneficios concretos, con la cifra textual. |
+| `pruebas` | lista de texto |  |  | — | Datos verificables (años, clientes, calificaciones). |
+| `ofertas` | lista de texto |  |  | — | Promociones vigentes, textuales. |
+| `condiciones` | lista de texto |  |  | — |  |
+| `objeciones` | lista de texto |  |  | — |  |
+| `vocabulario` | lista de texto |  |  | — | Términos exactos del sitio. |
+| `busquedas` | lista de texto |  |  | — | Cómo busca la gente (base de las keywords). |
+| `noOfrece` | lista de texto |  |  | — | Lo que el producto NO es o no incluye (base de las negativas). |
+| `competidores` | lista de {nombre, promesa} |  |  | — |  |
+| `mensajesGenericos` | lista de texto |  |  | — | Lo que dicen todos: prohibido construir anuncios sobre esto. |
+| `angulosDiferenciales` | lista de texto |  |  | — |  |
+| `leyoLanding` | sí/no |  |  | — |  |
+| `fuentes` | lista de url |  |  | — |  |
+| `actualizada` | fecha |  |  | — |  |
 
 ### Campaña (`campana`)
 Una campaña de Google Ads. Por ahora: Search.
@@ -112,6 +151,8 @@ Una intención de búsqueda: sus keywords, sus negativas y su(s) anuncio(s).
 | `id` | texto |  |  | — | Identificador estable (grp_…). |
 | `nombre` | texto | sí |  | `Ad Group` | Nombre EXACTO del grupo (Ads Editor lo reconoce por nombre). Protocolo: <abreviatura del tipo de campaña>-<naturaleza>, p. ej. "ao-coberturas", "promo-cuotas". |
 | `estado` | texto |  |  | `Ad Group Status` | Valores: `Enabled`, `Paused`. |
+| `intencion` | texto |  |  | — | Qué busca la persona que escribe estas keywords. No se exporta. |
+| `razonamiento` | texto |  |  | — | Por qué se agrupó así y qué ángulo usan sus anuncios. No se exporta. |
 | `keywords` | lista de keyword | sí |  | — |  |
 | `negativas` | lista de negativa |  |  | — | Negativas propias del grupo. |
 | `anuncios` | lista de anuncio | sí |  | — |  |
@@ -298,7 +339,38 @@ Se guarda diciendo sobre qué versión se trabajó: si otra persona guardó ante
   - eliminado → con `Status` / `Campaign Status` / `Ad Group Status` = `Removed` (valor documentado por Google en las columnas CSV);
   - campañas y grupos sin cambios propios no llevan fila (sus hijos los nombran); quitar una ubicación o una edad excluida se indica a mano.
 
-## 8. Pendiente de confirmar en la primera importación real
+## 8. Conversación con la IA: corregir e investigar por partes
+La IA genera la campaña UNA vez (`POST /api/ia` modo `campana`). Después no se regenera: se conversa.
+- **Corregir** (modo `corregir`): el usuario da una instrucción, elige partes (ids) o señala hallazgos del motor de reglas.
+  La IA recibe el **objetivo** y la **ficha** guardados, el índice de la campaña y SOLO esas partes, y devuelve **operaciones**.
+  El núcleo (`nucleo/operaciones.js`) las valida contra este esquema antes de aplicar; si alguna se rechaza o crea un error, la
+  IA tiene UNA ronda para repararla. El resultado se guarda como una versión nueva (§7).
+- **Investigar** (modo `investigar`): una pregunta puntual con Google y la landing; actualiza SOLO los campos de la ficha que cambian.
+
+```
+OPERACIONES (tu única forma de cambiar la campaña; nunca la devuelvas entera):
+  { "op": "cambiar", "id": "<id existente>", "campo": "<campo>", "valor": <valor> }
+  { "op": "agregar", "en": "<id del padre>", "lista": "<lista>", "elemento": { ...campos, sin id } }
+  { "op": "quitar", "id": "<id existente>" }
+Listas por entidad: iniciativa → campanas · campana → grupos, negativas, sitelinks, destacados, fragmentos, ubicaciones, edadesExcluidas · grupo → keywords, negativas, anuncios · anuncio → titulos, descripciones
+Campos editables:
+  iniciativa: nombre
+  campana: nombre, tipo[Search], redes[Google Search|Search Partners|Display Network], idiomas, presupuestoDiario, puja[Maximize clicks|Maximize conversions|Manual CPC|Target CPA|Target ROAS|Maximize conversion value], inicio, fin, estado[Enabled|Paused], politicaUE[No|Yes], utmEn[sufijo|plantilla], comentario
+  ubicacion: nombre, idGoogle, comentario
+  edad: edad[18-24|25-34|35-44|45-54|55-64|65 or more|Unknown], comentario
+  grupo: nombre, estado[Enabled|Paused], intencion, razonamiento, comentario
+  keyword: texto(≤80), concordancia[exacta|frase], estado[Enabled|Paused], urlFinal, comentario
+  negativa: texto, concordancia[amplia|frase|exacta], comentario
+  anuncio: nombre, estado[Enabled|Paused], urlFinal, ruta1(≤15), ruta2(≤15), comentario
+  sitelink: texto(≤25), linea1(≤35), linea2(≤35), urlFinal, comentario
+  destacado: texto(≤25), comentario
+  fragmento: encabezado[Servicios|Marcas|Cursos|Programas de grado|Destinos|Hoteles destacados|Cobertura de seguro|Modelos|Barrios|Catálogo de servicios|Programas|Estilos|Tipos], valores(≤25), idioma, estado, comentario
+  titulo: texto(≤30), posicion[1|2|3]
+  descripcion: texto(≤90), posicion[1|2]
+Los id NUNCA se inventan: usa los que ves. Un título o descripción se cambia con su propio id (campo "texto").
+```
+
+## 9. Pendiente de confirmar en la primera importación real
 El archivo de referencia del usuario solo trae negativas amplias de campaña. Estas notaciones siguen la
 convención de Ads Editor, pero todavía no se han visto importadas:
 - Negativa de **frase** escrita como `"texto"` y de **exacta** como `[texto]` en la columna `Keyword`.
