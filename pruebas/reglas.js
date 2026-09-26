@@ -120,7 +120,10 @@ const casos = [
   ["V01", x => { conv(x); x.g.keywords.push(M.nuevaKeyword("que es un seguro de auto", "frase")); }],
   ["V02", x => { conv(x); x.a.titulos.forEach(t => { if (t.rol === "respaldo") t.rol = ""; }); }],
   ["V03", x => { conv(x); x.a.descripciones[0].texto = "Conoce nuestros planes para tu auto."; }],
-  ["V04", x => { conv(x); x.a.descripciones[0].texto = "Tu auto protegido todo el año."; }]
+  ["V04", x => { conv(x); x.a.descripciones[0].texto = "Tu auto protegido todo el año."; }],
+  ["S01", x => { x.a.titulos[12].texto = "Prima mensual muy baja"; }],
+  ["S02", x => { x.a.titulos[12].texto = "Demo: taller multimarca"; }],
+  ["S03", x => { x.a.titulos[12].texto = "Desde $35.376"; }]
 ];
 for (const [cod, romper] of casos) {
   const x = base(); romper(x);

@@ -310,6 +310,9 @@ Las aplica `nucleo/reglas.js` en la IA (antes y después de generar), en la pant
 | V02 | aviso | conversion | El anuncio no derriba las tres barreras: entre sus títulos falta alguno con papel "tramite", "precio" o "respaldo" (o los títulos no declaran su papel). | lección de conversión (nucleo/lecciones.js) |
 | V03 | aviso | conversion | Descripción con verbo de lectura (conoce, infórmate, visita, descubre): invita a leer, no a comprar. | lección de conversión (nucleo/lecciones.js) |
 | V04 | sugerencia | conversion | Descripción sin verbo de compra (contrata, cotiza, emite, asegura, activa). | lección de conversión (nucleo/lecciones.js) |
+| S01 | aviso | seguros | «Prima» usada como pago mensual. La prima es el costo de toda la vigencia (normalmente anual); lo mensual es la CUOTA. | lección de seguros (nucleo/lecciones.js) · CMF Circular 2123 |
+| S02 | aviso | seguros | La marca como sujeto de un atributo («<Marca>: taller multimarca» dice que la compañía ES un taller). La marca acompaña al producto: «Seguro <Marca>…». | lección de seguros (nucleo/lecciones.js) |
+| S03 | sugerencia | seguros | Monto en pesos en el anuncio. En seguros el precio depende de la persona y de lo asegurado: confirma que no es un precio de ejemplo (calculado para un vehículo o perfil puntual) y que vale para todos, o que es una oferta con condiciones en la web. | lección de seguros (nucleo/lecciones.js) · CMF Circular 2123 V.4 |
 | K01 | aviso | criterio | Presupuesto diario menor a $1.000 CLP: probablemente un error de unidades. | criterio propio (sin documento de Google que lo respalde o lo contradiga); caso real: $25 CLP diarios |
 | K02 | sugerencia | criterio | Maximizar clics sin tope de CPC: Google puja lo necesario para gastar el presupuesto; el tope ayuda a controlar el costo si el CPC sale más alto de lo deseado (a costa de algunos clics). | [google-ads/answer/6268626](https://support.google.com/google-ads/answer/6268626) |
 | K03 | sugerencia | criterio | Red de búsqueda asociada o de Display en una campaña Search: mide su rendimiento por separado antes de dejarla encendida. | criterio propio (sin documento de Google que lo respalde o lo contradiga) |
@@ -420,6 +423,31 @@ LECCIÓN · ANUNCIOS DE CONVERSIÓN (BOFU) PARA UN eCOMMERCE DE SEGUROS B2C
    ❌ "Seguros para tu automóvil" · "Conoce la importancia de tener un auto asegurado. Visita nuestro sitio."  → informa, no vende.
    ✅ "Seguro de auto 100% online" [tramite] · "Cotiza y contrata en 3 min" [tramite] · "20% dcto. primer año" [precio] · "Liquidamos en 48 horas" [respaldo] ·
       "Asegura tu auto sin trámites físicos. Recibe tu póliza digital al instante."  → cada línea es un hecho y empuja a comprar.
+```
+
+### Conceptos de seguros · para escribir sin errores de rubro (`seguros`, versión 2026-09-26)
+**Aplica a:** Todo texto de seguros (anuncios, investigación, correcciones). Cualquier ramo: auto, hogar, mascota, viaje…
+
+**Precisa (sin borrar) reglas anteriores:**
+- Regla de fuentes (capa 3): además de que la cifra exista en la fuente, tiene que significar lo mismo en el anuncio (una cuota no es una prima; un precio de ejemplo no es un precio para todos).
+
+**Papel de cada título** (no se exporta): `keyword` = repite la búsqueda (la keyword del grupo, casi literal) · `tramite` = barrera del TRÁMITE: qué tan digital, cuánto tarda, qué no hay que hacer · `precio` = barrera del PRECIO: precio visible, oferta vigente, forma de pago · `respaldo` = barrera del RESPALDO: quién responde, cómo liquida, asistencia, prueba con fuente · `cta` = acción de compra concreta.
+
+**Texto exacto que recibe la IA** (investigación, generador, crítico y conversación):
+```
+LECCIÓN · CONCEPTOS DE SEGUROS (el anuncio no puede tener errores de rubro)
+1. PRIMA: lo que cuesta el seguro por TODA su vigencia (normalmente un año). Nunca es un pago mensual: no existe la «prima mensual» en un anuncio.
+2. CUOTA: cada pago en que se divide la prima (p. ej. 12 cuotas en un plan de 1 año, 24 en uno de 2 años, según el producto). Lo que se paga al mes es la cuota.
+3. VIGENCIA: el período que cubre la póliza (1 año, 2 años). PÓLIZA: el contrato; tiene condiciones generales (depositadas en la CMF, código POL…) y particulares (las de cada cliente).
+4. COBERTURA ≠ ASISTENCIA. Cobertura es lo que la compañía paga (daños, robo, pérdida total, responsabilidad civil). Asistencia es un servicio (grúa, auto de reemplazo, asistencia legal).
+5. DEDUCIBLE: la parte del daño que paga el asegurado; la compañía paga lo que excede. SINIESTRO: el hecho (choque, robo). DENUNCIO: el aviso a la compañía. LIQUIDACIÓN: la evaluación del siniestro que hace el liquidador. INDEMNIZACIÓN: lo que paga la compañía.
+6. PÉRDIDA TOTAL: daño sobre el porcentaje que fija la póliza, o robo sin recuperar en el plazo que fija la póliza. RESPONSABILIDAD CIVIL: daños a terceros (daño emergente, lucro cesante, daño moral), con tope en UF.
+7. MONTOS: «UF 500» (la sigla antes del número); pesos con punto de miles: «$35.376».
+8. PRECIOS: el precio de un seguro depende de la persona y de lo asegurado. Un «desde $X» calculado para un caso puntual (un modelo y año de auto, una edad, una comuna) NO va en un anuncio: al resto le promete un precio que no va a tener. Solo va un precio que valga para todos, o una oferta con sus condiciones visibles en la web.
+9. POR PLAN: si un beneficio depende del plan (taller de marca, asistencia full, monto de responsabilidad civil), dilo con su plan o con «hasta»; nunca como si lo tuvieran todos.
+10. UN PRODUCTO POR ANUNCIO: si la página muestra varios productos de la compañía, usa solo los datos del producto que se vende.
+11. LA MARCA ACOMPAÑA AL PRODUCTO: «Seguro <Marca>…», «Asegura tu auto con <Marca>». No la pongas como sujeto de un atributo: «<Marca>: taller multimarca» dice que la compañía ES un taller. CORREDOR ≠ COMPAÑÍA: el corredor intermedia, la compañía asegura.
+12. SOAP: seguro obligatorio de accidentes personales; no es un seguro del vehículo ni lo reemplaza.
 ```
 
 ## 10. Pendiente de confirmar en la primera importación real

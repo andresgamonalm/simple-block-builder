@@ -48,6 +48,13 @@ en `modo:'campana'`; `opciones.enfoque:''` la apaga) → la investigación orden
 (`ficha.evidencia{tramite,precio,respaldo}` + `ficha.momentos`), el generador y el crítico reciben la lección y cada
 título vuelve con su **papel** (`titulo.rol`: keyword/tramite/precio/respaldo/cta; nota interna, no se exporta ni cuenta
 como cambio), y `corregir` también la lee. A la IA le llega la regla de fuentes, NO la ley (decisión del usuario). **Mayúsculas (26-sep, corrección del usuario):** en español solo al inicio y en nombres propios, nunca "Title Case" ("Cotiza Tu Seguro Hoy" ✗); va en la lección (7b), el corrector ortográfico, el crítico y la regla **C11** (aviso).
+**LECCIÓN DE SEGUROS (26-sep, corrección del usuario):** escribí «Prima desde $35.376 al mes» con un precio referencial
+calculado para un Suzuki Swift. Error doble: la PRIMA es anual (el seguro cuesta >$450.000); lo mensual es la CUOTA; y un
+precio de ejemplo para un vehículo puntual NO va en un anuncio. `LECCIONES.seguros` (nucleo/lecciones.js): prima/cuota,
+vigencia, póliza, cobertura≠asistencia, deducible, siniestro/liquidación, pérdida total, RC, UF, precios de ejemplo, beneficios
+por plan, un producto por anuncio, la marca acompaña al producto, SOAP. Va SIEMPRE (no solo con enfoque conversión) al
+generador, al crítico y a `corregir`; la investigación distingue prima de cuota y manda los precios de ejemplo a
+"condiciones". Reglas **S01** prima mensual · **S02** «<Marca>: atributo» · **S03** monto en pesos (sugerencia).
 Reglas sumadas: **V01** keyword informativa · **V02** anuncio sin las 3 barreras · **V03** descripción con verbo de
 lectura · **V04** sin verbo de compra (solo con enfoque conversión) · **C10** superlativo sin respaldo en la ficha
 (siempre; cita CMF/SERNAC). También: el crítico ya no pide el orden viejo de 4 fijados en modo protocolo.

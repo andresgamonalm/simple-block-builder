@@ -115,7 +115,9 @@ function respuestaGemini(obj, extra) {
   T(gen.prompt.includes("ANUNCIOS DE CONVERSIÓN (BOFU)") && gen.prompt.includes("LAS TRES BARRERAS") && gen.prompt.includes('"rol": "keyword|tramite|precio|respaldo|cta"'), "el generador recibe la lección y devuelve el papel de cada título");
   T(!gen.prompt.includes("oferta vinculante") && !gen.prompt.includes("Circular"), "a la IA le llega la regla de fuentes, no la ley (sin «vinculante» ni circulares)");
   T(gen.prompt.includes("comprar/contratar · precio u oferta · inmediatez") && !gen.prompt.includes("necesidad o problema"), "grupos por intención de COMPRA (ya no «necesidad o problema»)");
+  T(gen.prompt.includes("CONCEPTOS DE SEGUROS") && gen.prompt.includes("CUOTA") && inv0.prompt.includes("Distingue PRIMA") , "la lección de seguros llega al generador y la investigación distingue prima de cuota");
   const crit = pedidos.find(p => p.prompt.includes("MATAR LO GENÉRICO"));
+  T(crit.prompt.includes("CONCEPTOS DE SEGUROS"), "el crítico también recibe la lección de seguros");
   T(crit.prompt.includes("papelesFijos") && crit.prompt.includes("conserva su papel") && !crit.prompt.includes("1 marca/producto, 2 keyword"), "el crítico conserva el papel de cada título y respeta el protocolo de 5 fijados");
   const a0 = c.grupos[0].anuncios[0], a1 = c.grupos[1].anuncios[0];
   T(a0.titulos[2].rol === "precio" && a0.titulos[9].rol === "respaldo" && a0.titulos.every(t => t.rol), "cada título guarda su papel en el modelo", a0.titulos.map(t => t.rol).join(","));

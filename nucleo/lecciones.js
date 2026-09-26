@@ -79,11 +79,41 @@
     ].join('\n')
   };
 
-  const LECCIONES = { conversion: CONVERSION };
+  /* Conceptos del rubro. Nace de un error real (26-sep): se escribió «Prima desde $35.376 al mes» con un
+     precio referencial calculado para UN modelo de auto. La prima es anual; lo mensual es la cuota; y un
+     precio calculado para un vehículo puntual no se publica. Sirve para cualquier seguro, no solo auto. */
+  const SEGUROS = {
+    id: 'seguros',
+    titulo: 'Conceptos de seguros · para escribir sin errores de rubro',
+    version: '2026-09-26',
+    aplica: 'Todo texto de seguros (anuncios, investigación, correcciones). Cualquier ramo: auto, hogar, mascota, viaje…',
+    precisa: [
+      'Regla de fuentes (capa 3): además de que la cifra exista en la fuente, tiene que significar lo mismo en el anuncio (una cuota no es una prima; un precio de ejemplo no es un precio para todos).'
+    ],
+    texto: [
+      'LECCIÓN · CONCEPTOS DE SEGUROS (el anuncio no puede tener errores de rubro)',
+      '1. PRIMA: lo que cuesta el seguro por TODA su vigencia (normalmente un año). Nunca es un pago mensual: no existe la «prima mensual» en un anuncio.',
+      '2. CUOTA: cada pago en que se divide la prima (p. ej. 12 cuotas en un plan de 1 año, 24 en uno de 2 años, según el producto). Lo que se paga al mes es la cuota.',
+      '3. VIGENCIA: el período que cubre la póliza (1 año, 2 años). PÓLIZA: el contrato; tiene condiciones generales (depositadas en la CMF, código POL…) y particulares (las de cada cliente).',
+      '4. COBERTURA ≠ ASISTENCIA. Cobertura es lo que la compañía paga (daños, robo, pérdida total, responsabilidad civil). Asistencia es un servicio (grúa, auto de reemplazo, asistencia legal).',
+      '5. DEDUCIBLE: la parte del daño que paga el asegurado; la compañía paga lo que excede. SINIESTRO: el hecho (choque, robo). DENUNCIO: el aviso a la compañía. LIQUIDACIÓN: la evaluación del siniestro que hace el liquidador. INDEMNIZACIÓN: lo que paga la compañía.',
+      '6. PÉRDIDA TOTAL: daño sobre el porcentaje que fija la póliza, o robo sin recuperar en el plazo que fija la póliza. RESPONSABILIDAD CIVIL: daños a terceros (daño emergente, lucro cesante, daño moral), con tope en UF.',
+      '7. MONTOS: «UF 500» (la sigla antes del número); pesos con punto de miles: «$35.376».',
+      '8. PRECIOS: el precio de un seguro depende de la persona y de lo asegurado. Un «desde $X» calculado para un caso puntual (un modelo y año de auto, una edad, una comuna) NO va en un anuncio: al resto le promete un precio que no va a tener. Solo va un precio que valga para todos, o una oferta con sus condiciones visibles en la web.',
+      '9. POR PLAN: si un beneficio depende del plan (taller de marca, asistencia full, monto de responsabilidad civil), dilo con su plan o con «hasta»; nunca como si lo tuvieran todos.',
+      '10. UN PRODUCTO POR ANUNCIO: si la página muestra varios productos de la compañía, usa solo los datos del producto que se vende.',
+      '11. LA MARCA ACOMPAÑA AL PRODUCTO: «Seguro <Marca>…», «Asegura tu auto con <Marca>». No la pongas como sujeto de un atributo: «<Marca>: taller multimarca» dice que la compañía ES un taller. CORREDOR ≠ COMPAÑÍA: el corredor intermedia, la compañía asegura.',
+      '12. SOAP: seguro obligatorio de accidentes personales; no es un seguro del vehículo ni lo reemplaza.'
+    ].join('\n')
+  };
+
+  const LECCIONES = { conversion: CONVERSION, seguros: SEGUROS };
   const sinTildes = s => String(s || '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '');
   const leccion = id => LECCIONES[id] || null;
   const leccionParaIA = id => { const l = leccion(id); return l ? '════ ' + l.titulo.toUpperCase() + ' ════\n' + l.texto + '\n══════════════════════════════════════' : ''; };
+  /* Varias lecciones juntas (las que falten se omiten). */
+  const leccionesParaIA = ids => ids.map(leccionParaIA).filter(Boolean).join('\n');
   const contiene = (texto, lista) => { const t = ' ' + sinTildes(texto).replace(/[^a-z0-9ñ%$ ]+/g, ' ').replace(/\s+/g, ' ') + ' '; return lista.find(x => t.includes(' ' + sinTildes(x).trim() + ' ') || (x.endsWith(' ') && t.includes(' ' + sinTildes(x)))) || null; };
 
-  return { LECCIONES, ROLES_TITULO, BARRERAS, INFORMATIVAS, VERBOS_COMPRA, VERBOS_LECTURA, SUPERLATIVOS, leccion, leccionParaIA, contiene, sinTildes };
+  return { LECCIONES, ROLES_TITULO, BARRERAS, INFORMATIVAS, VERBOS_COMPRA, VERBOS_LECTURA, SUPERLATIVOS, leccion, leccionParaIA, leccionesParaIA, contiene, sinTildes };
 });
