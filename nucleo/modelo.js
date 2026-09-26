@@ -146,6 +146,7 @@
         { campo: 'id', tipo: 'texto', descripcion: 'Identificador estable (grp_…).' },
         { campo: 'nombre', tipo: 'texto', obligatorio: true, columna: 'Ad Group', descripcion: 'Nombre EXACTO del grupo (Ads Editor lo reconoce por nombre). Protocolo: <abreviatura del tipo de campaña>-<naturaleza>, p. ej. "ao-coberturas", "promo-cuotas".' },
         { campo: 'estado', tipo: 'texto', columna: 'Ad Group Status', valores: ['Enabled', 'Paused'] },
+        { campo: 'cpcMax', tipo: 'número (CLP)', columna: 'Max CPC', descripcion: 'Puja máxima por clic del grupo, en pesos enteros (con puja manual). Vacío = la define la estrategia.' },
         { campo: 'intencion', tipo: 'texto', descripcion: 'Qué busca la persona que escribe estas keywords. No se exporta.' },
         { campo: 'razonamiento', tipo: 'texto', descripcion: 'Por qué se agrupó así y qué ángulo usan sus anuncios. No se exporta.' },
         { campo: 'keywords', tipo: 'lista de keyword', obligatorio: true },
@@ -267,7 +268,7 @@
       comentario: '' };
   }
   function nuevoGrupo(nombre) {
-    return { id: uid('grp'), nombre: nombre || '', estado: 'Enabled', intencion: '', razonamiento: '', keywords: [], negativas: [], anuncios: [], comentario: '' };
+    return { id: uid('grp'), nombre: nombre || '', estado: 'Enabled', cpcMax: null, intencion: '', razonamiento: '', keywords: [], negativas: [], anuncios: [], comentario: '' };
   }
   const nuevaKeyword = (texto, concordancia) => ({ id: uid('kw'), texto: texto || '', concordancia: concordancia || 'exacta', estado: 'Enabled', urlFinal: '', comentario: '' });
   const nuevaNegativa = (texto, concordancia, comentario) => ({ id: uid('neg'), texto: texto || '', concordancia: concordancia || 'amplia', comentario: comentario || '' });

@@ -102,6 +102,7 @@
     { codigo: 'K06', nivel: 'aviso', categoria: 'criterio', fuente: F.demografia, que: 'Edad "Desconocida" excluida: Google advierte que puede dejar fuera a una cantidad importante de personas.' },
     { codigo: 'K09', nivel: 'sugerencia', categoria: 'criterio', fuente: F.listasNeg, que: 'Muchas negativas idénticas en varias campañas: mejor una lista compartida (hasta 5.000 por lista y 20 listas por cuenta).' },
     { codigo: 'K10', nivel: 'sugerencia', categoria: 'criterio', fuente: F.concordancias, que: 'La misma keyword en exacta y en frase en el mismo grupo: la de frase ya cubre las búsquedas de la exacta.' },
+    { codigo: 'K13', nivel: 'aviso', categoria: 'criterio', fuente: PROPIO + '; caso real: Max CPC $25 CLP', que: 'CPC máximo de un grupo menor a $100 CLP, o mayor que el presupuesto diario: probablemente un error de unidades (con puja manual, un tope muy bajo deja al anuncio sin salir).' },
     { codigo: 'K11', nivel: 'sugerencia', categoria: 'criterio', fuente: F.rsa, que: 'Grupo con un solo anuncio: Google recomienda al menos 2 anuncios adaptables por grupo (en promedio +6,6 % de conversiones al pasar de 1 a 2).' },
     { codigo: 'K12', nivel: 'sugerencia', categoria: 'criterio', fuente: F.fragmentos, que: 'Fragmento estructurado con menos de 4 valores: Google recomienda al menos 4 por encabezado.' }
   ];
@@ -190,6 +191,8 @@
           if (!String(g.nombre || '').trim()) H('G04', g, dg, 'El grupo no tiene nombre.');
           if (!g.keywords.length) H('G04', g, dg, 'El grupo no tiene keywords.');
           if (!g.anuncios.length) H('G04', g, dg, 'El grupo no tiene anuncios.');
+          if (Number.isInteger(g.cpcMax) && g.cpcMax > 0 && g.cpcMax < 100) H('K13', g, dg, `CPC máximo de $${g.cpcMax} CLP por clic: con puja manual el anuncio casi no saldría. ¿Faltan ceros?`);
+          else if (Number.isInteger(g.cpcMax) && Number.isInteger(c.presupuestoDiario) && g.cpcMax > c.presupuestoDiario) H('K13', g, dg, `El CPC máximo ($${g.cpcMax}) supera el presupuesto diario ($${c.presupuestoDiario}).`);
           else if (g.anuncios.length === 1) H('K11', g, dg, 'Tiene un solo anuncio adaptable.');
         }
         // Keywords

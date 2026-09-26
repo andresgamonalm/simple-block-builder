@@ -73,6 +73,21 @@ T(AE.exportar(rt.iniciativa).includes("Max CPC") && AE.exportar(rt.iniciativa).i
 const raro = AE.importar("Campaign,Foo\r\nX,bar\r\n");
 T(raro.avisos.length === 1 && AE.exportar(raro.iniciativa).includes("bar"), "una fila desconocida se avisa y se conserva");
 
+console.log("\n4b · Archivo con columnas propias y filas en otro orden (como la v7 del usuario)");
+const cab = "Campaign,Campaign type,Networks,Language,Campaign daily budget,Bid strategy type,Ad Group,Ad Group type,Ad Group Status,Max CPC,Flexible reach,Status,Type,Keyword,Final URL,Headline 1,Headline 2,Headline 3,Description 1,Description 2,Comment";
+const v7 = "\uFEFF" + [cab,
+  "chl-producto-demo-always-on,Search,Google Search,es,35000,Manual CPC,,,,,,,,,,,,,,,",
+  "chl-producto-demo-always-on,,,,,,ao-cotizar,Standard,Enabled,1800,,,,,,,,,,,grupo antes que sus anuncios",
+  "chl-producto-demo-always-on,,,,,,ao-precio,Standard,Enabled,25,,,,,,,,,,,",
+  "chl-producto-demo-always-on,,,,,,ao-cotizar,,,,,Enabled,,,https://ejemplo.cl,Uno,Dos,Tres,Desc uno.,Desc dos.,",
+  "chl-producto-demo-always-on,,,,,,ao-cotizar,,,,,Enabled,Exact,cotizar seguro auto,https://ejemplo.cl,,,,,,"].join("\r\n") + "\r\n";
+const r7 = AE.importar(v7);
+T(AE.exportar(r7.iniciativa) === v7, "vuelve idéntico: respeta el orden de columnas (con columnas vacías propias) y el orden de filas");
+T(r7.iniciativa.campanas[0].grupos.map(g => g.cpcMax).join(",") === "1800,25", "Max CPC se lee como puja del grupo en CLP (1800 y 25)");
+const nv = AE.importar(v7).iniciativa; nv.campanas[0].grupos[0].keywords.push(M.nuevaKeyword("seguro auto online", "frase"));
+const csvNv = AE.exportar(nv);
+T(csvNv.includes("seguro auto online") && csvNv.replace("\uFEFF", "").split("\r\n")[0] === cab, "con un elemento nuevo se exporta con el mismo encabezado del archivo");
+
 console.log("\n5 · El esquema, tal como lo lee la IA");
 const txt = M.esquemaParaIA();
 T(txt.includes("máx 30 car.") && txt.includes("máx 90 car.") && txt.includes("máx 25 car."), "incluye los límites de Google");

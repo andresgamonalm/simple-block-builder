@@ -115,6 +115,7 @@ const casos = [
   ["P08", x => { x.cm.sufijoUrlFinal = "utm_source=google&utm_medium=cpc&utm_campaign=Otra"; }],
   ["P09", x => { x.a.urlFinal = "http://ejemplo.cl/auto"; }],
   ["C10", x => { x.a.titulos[9].texto = "El Seguro Más Barato"; }],
+  ["K13", x => { x.g.cpcMax = 25; }],
   ["V01", x => { conv(x); x.g.keywords.push(M.nuevaKeyword("que es un seguro de auto", "frase")); }],
   ["V02", x => { conv(x); x.a.titulos.forEach(t => { if (t.rol === "respaldo") t.rol = ""; }); }],
   ["V03", x => { conv(x); x.a.descripciones[0].texto = "Conoce nuestros planes para tu auto."; }],

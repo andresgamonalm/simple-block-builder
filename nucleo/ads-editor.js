@@ -32,7 +32,7 @@
   /* Columnas que se AGREGAN solo si alguna fila las usa (así el archivo de
      referencia, que no las trae, sigue saliendo idéntico). Pendiente de
      confirmar en la primera importación real. */
-  const COLUMNAS_OPCIONALES = ['Tracking template', 'Final URL suffix'];
+  const COLUMNAS_OPCIONALES = ['Tracking template', 'Final URL suffix', 'Max CPC'];
 
   /* ── CSV: lectura y escritura ───────────────────────────────────────── */
   function leerCSV(texto) {
@@ -99,13 +99,16 @@
       return Object.keys(o).length ? o : undefined;
     };
 
+    // _fila = posición original de la fila (nota interna): el exportador la usa
+    // para devolver el archivo en el MISMO orden en que llegó.
+    const conFila = (o, n) => { Object.defineProperty(o, '_fila', { value: n, enumerable: false, writable: true, configurable: true }); return o; };
     filas.forEach((f, n) => {
       const v = k => (f[k] == null ? '' : f[k]);
       const tipoFila = v('Type').trim().toLowerCase();
-      if (!v('Campaign')) { ini.extras.push({ fila: f }); avisos.push(`Fila ${n + 2}: sin campaña; se conserva tal cual.`); return; }
+      if (!v('Campaign')) { ini.extras.push(conFila({ fila: f }, n)); avisos.push(`Fila ${n + 2}: sin campaña; se conserva tal cual.`); return; }
 
       if (v('Campaign type')) {                                        // 1 · CAMPAÑA
-        const c = campana(v('Campaign'));
+        const c = conFila(campana(v('Campaign')), n);
         delete c.soloReferencia;
         Object.assign(c, { tipo: v('Campaign type'), redes: lista(v('Networks')), idiomas: lista(v('Language')),
           presupuestoDiario: montoCLP(v('Campaign daily budget')), puja: v('Bid strategy type'), inicio: v('Start date'),
@@ -117,24 +120,24 @@
       }
       const c = campana(v('Campaign'));
       if (v('Location')) {                                             // UBICACIÓN
-        c.ubicaciones.push({ id: M.uid('ubi'), nombre: v('Location'), idGoogle: v('Location ID'), comentario: v('Comment'),
-          otrasColumnas: resto(f, ['Campaign', 'Location', 'Location ID', 'Comment']) });
+        c.ubicaciones.push(conFila({ id: M.uid('ubi'), nombre: v('Location'), idGoogle: v('Location ID'), comentario: v('Comment'),
+          otrasColumnas: resto(f, ['Campaign', 'Location', 'Location ID', 'Comment']) }, n));
         return;
       }
       if (/negative/.test(tipoFila) && v('Age')) {                     // EDAD EXCLUIDA
-        c.edadesExcluidas.push({ id: M.uid('eda'), edad: v('Age'), comentario: v('Comment'),
-          otrasColumnas: resto(f, ['Campaign', 'Age', 'Type', 'Comment']) });
+        c.edadesExcluidas.push(conFila({ id: M.uid('eda'), edad: v('Age'), comentario: v('Comment'),
+          otrasColumnas: resto(f, ['Campaign', 'Age', 'Type', 'Comment']) }, n));
         return;
       }
       if (/negative/.test(tipoFila) && v('Keyword')) {                 // NEGATIVA (campaña o grupo)
         const nk = leerNegativa(v('Keyword'));
-        const neg = Object.assign(M.nuevaNegativa(nk.texto, nk.concordancia, v('Comment')), { tipoOriginal: v('Type'),
-          otrasColumnas: resto(f, ['Campaign', 'Ad Group', 'Type', 'Keyword', 'Comment']) });
+        const neg = conFila(Object.assign(M.nuevaNegativa(nk.texto, nk.concordancia, v('Comment')), { tipoOriginal: v('Type'),
+          otrasColumnas: resto(f, ['Campaign', 'Ad Group', 'Type', 'Keyword', 'Comment']) }), n);
         (v('Ad Group') ? grupo(c, v('Ad Group')).negativas : c.negativas).push(neg);
         return;
       }
       if (v('Headline 1')) {                                           // ANUNCIO RSA
-        const a = M.nuevoAnuncioRSA();
+        const a = conFila(M.nuevoAnuncioRSA(), n);
         Object.assign(a, { estado: v('Status'), urlFinal: v('Final URL'), ruta1: v('Path 1'), ruta2: v('Path 2'), comentario: v('Comment'),
           sufijoUrlFinal: v('Final URL suffix'),
           // El anuncio no tiene nombre en Google: se recupera de su utm_content.
@@ -153,37 +156,39 @@
         return;
       }
       if (v('Keyword') && M.CONCORDANCIA_DESDE_EDITOR[tipoFila]) {      // KEYWORD
-        const k = M.nuevaKeyword(v('Keyword'), M.CONCORDANCIA_DESDE_EDITOR[tipoFila]);
+        const k = conFila(M.nuevaKeyword(v('Keyword'), M.CONCORDANCIA_DESDE_EDITOR[tipoFila]), n);
         Object.assign(k, { estado: v('Status'), urlFinal: v('Final URL'), comentario: v('Comment'),
           otrasColumnas: resto(f, ['Campaign', 'Ad Group', 'Status', 'Type', 'Keyword', 'Final URL', 'Comment']) });
         grupo(c, v('Ad Group')).keywords.push(k);
         return;
       }
       if (v('Sitelink text')) {                                        // SITELINK
-        c.sitelinks.push({ id: M.uid('sl'), texto: v('Sitelink text'), linea1: v('Description 1'), linea2: v('Description 2'),
+        c.sitelinks.push(conFila({ id: M.uid('sl'), texto: v('Sitelink text'), linea1: v('Description 1'), linea2: v('Description 2'),
           urlFinal: v('Final URL'), comentario: v('Comment'),
-          otrasColumnas: resto(f, ['Campaign', 'Sitelink text', 'Description 1', 'Description 2', 'Final URL', 'Comment']) });
+          otrasColumnas: resto(f, ['Campaign', 'Sitelink text', 'Description 1', 'Description 2', 'Final URL', 'Comment']) }, n));
         return;
       }
       if (v('Callout text')) {                                         // DESTACADO
-        c.destacados.push({ id: M.uid('co'), texto: v('Callout text'), comentario: v('Comment'),
-          otrasColumnas: resto(f, ['Campaign', 'Callout text', 'Comment']) });
+        c.destacados.push(conFila({ id: M.uid('co'), texto: v('Callout text'), comentario: v('Comment'),
+          otrasColumnas: resto(f, ['Campaign', 'Callout text', 'Comment']) }, n));
         return;
       }
       if (v('Header')) {                                               // FRAGMENTO ESTRUCTURADO
-        c.fragmentos.push({ id: M.uid('sn'), encabezado: v('Header'), valores: lista(v('Snippet Values')), idioma: v('Language'),
+        c.fragmentos.push(conFila({ id: M.uid('sn'), encabezado: v('Header'), valores: lista(v('Snippet Values')), idioma: v('Language'),
           estado: v('Status'), comentario: v('Comment'),
-          otrasColumnas: resto(f, ['Campaign', 'Header', 'Snippet Values', 'Language', 'Status', 'Comment']) });
+          otrasColumnas: resto(f, ['Campaign', 'Header', 'Snippet Values', 'Language', 'Status', 'Comment']) }, n));
         return;
       }
       if (v('Ad Group') && v('Ad Group Status')) {                     // GRUPO
-        const g = grupo(c, v('Ad Group'));
+        const g = conFila(grupo(c, v('Ad Group')), n);
         delete g.soloReferencia;
-        Object.assign(g, { estado: v('Ad Group Status'), comentario: v('Comment'),
-          otrasColumnas: resto(f, ['Campaign', 'Ad Group', 'Ad Group Status', 'Comment']) });
+        // Puja máxima del grupo (CLP entero). Si no es un entero limpio, se conserva tal cual.
+        const cpc = v('Max CPC');
+        Object.assign(g, { estado: v('Ad Group Status'), comentario: v('Comment'), cpcMax: /^\d+$/.test(cpc) ? Number(cpc) : null,
+          otrasColumnas: resto(f, ['Campaign', 'Ad Group', 'Ad Group Status', 'Comment'].concat(/^\d+$/.test(cpc) ? ['Max CPC'] : [])) });
         return;
       }
-      ini.extras.push({ fila: f });                                    // lo que no se reconoce: se conserva
+      ini.extras.push(conFila({ fila: f }, n));                        // lo que no se reconoce: se conserva
       avisos.push(`Fila ${n + 2}: tipo de fila no reconocido; se conserva tal cual al exportar.`);
     });
 
@@ -200,7 +205,7 @@
   /* ── EXPORTAR: iniciativa → CSV de Ads Editor ───────────────────────── */
   function exportarFilas(ini) {
     const filas = [];
-    const con = (base, e) => Object.assign({}, e && e.otrasColumnas, base);
+    const con = (base, e) => { const f = Object.assign({}, e && e.otrasColumnas, base); if (e && Number.isInteger(e._fila)) Object.defineProperty(f, '_fila', { value: e._fila, enumerable: false }); return f; };
     // Negativas y recursos solo llevan Status si lo tienen (p. ej. «Removed» en un archivo de cambios).
     const conEstado = e => e.estado ? { 'Status': e.estado } : {};
     const vis = ini.campanas;
@@ -217,7 +222,8 @@
     }
     // 2 · Grupos, cada uno seguido de sus anuncios
     for (const c of vis) for (const g of c.grupos) {
-      if (!g.soloReferencia) filas.push(con({ 'Campaign': c.nombre, 'Ad Group': g.nombre, 'Ad Group Status': g.estado, 'Comment': g.comentario }, g));
+      if (!g.soloReferencia) filas.push(con({ 'Campaign': c.nombre, 'Ad Group': g.nombre, 'Ad Group Status': g.estado, 'Comment': g.comentario,
+        ...(Number.isInteger(g.cpcMax) ? { 'Max CPC': String(g.cpcMax) } : {}) }, g));
       for (const a of g.anuncios) {
         const f = { 'Campaign': c.nombre, 'Ad Group': g.nombre, 'Status': a.estado, 'Final URL': a.urlFinal, 'Path 1': a.ruta1, 'Path 2': a.ruta2, 'Comment': a.comentario };
         if (a.sufijoUrlFinal) f['Final URL suffix'] = a.sufijoUrlFinal;
@@ -241,15 +247,21 @@
       for (const d of c.destacados) filas.push(con({ 'Campaign': c.nombre, 'Callout text': d.texto, 'Comment': d.comentario, ...conEstado(d) }, d));
       for (const s of c.fragmentos) filas.push(con({ 'Campaign': c.nombre, 'Header': s.encabezado, 'Snippet Values': (s.valores || []).join(';'), 'Language': s.idioma, 'Status': s.estado, 'Comment': s.comentario }, s));
     }
-    for (const x of ini.extras || []) filas.push(Object.assign({}, x.fila));
+    for (const x of ini.extras || []) { const f = Object.assign({}, x.fila); if (Number.isInteger(x._fila)) Object.defineProperty(f, '_fila', { value: x._fila, enumerable: false }); filas.push(f); }
+    // Archivo importado y sin elementos nuevos → mismo orden de filas que el original.
+    if (filas.length && filas.every(f => Number.isInteger(f._fila))) filas.sort((a, b) => a._fila - b._fila);
     return filas;
   }
   function exportar(ini) {
     const filas = exportarFilas(ini);
     // Columnas: las 60 del contrato + las que traiga algún elemento y no estén.
-    const cols = COLUMNAS.slice();
-    COLUMNAS_OPCIONALES.forEach(k => { if (filas.some(f => f[k])) cols.push(k); });
-    for (const f of filas) for (const k of Object.keys(f)) if (!cols.includes(k)) cols.push(k);
+    // Si la iniciativa vino de un archivo, se respeta SU orden de columnas (y sus
+    // columnas vacías): así la ida y vuelta es idéntica aunque el usuario haya
+    // sumado columnas propias de Ads Editor (Max CPC, Ad Group type, Audience…).
+    const cols = Array.isArray(ini.columnasOriginales) && ini.columnasOriginales.length ? ini.columnasOriginales.slice() : COLUMNAS.slice();
+    COLUMNAS.forEach(k => { if (!cols.includes(k) && (!ini.columnasOriginales || filas.some(f => f[k]))) cols.push(k); });
+    COLUMNAS_OPCIONALES.forEach(k => { if (!cols.includes(k) && filas.some(f => f[k])) cols.push(k); });
+    for (const f of filas) for (const k of Object.keys(f)) if (!cols.includes(k) && (!ini.columnasOriginales || f[k])) cols.push(k);
     return escribirCSV(cols, filas);
   }
 
