@@ -9,6 +9,9 @@ Línea principal hoy: auto — pero **el conocimiento NO se cierra a auto**: apl
 (auto, hogar, mascota, viaje…); la línea sale del encargo y de la ficha. SOAP se vende pero NO es del apetito de la
 compañía: campaña activa solo en **enero y marzo** (fuera de eso, negativa en las demás campañas). Conversión
 objetivo: **la venta directa digital** (póliza pagada), aunque medirla le ha costado al usuario.
+**NO SE PUEDE PAUTAR MARCA (26-sep, regla del usuario):** ninguna keyword con la marca de la compañía (ni el nombre
+del producto con la marca), y la marca va como NEGATIVA de campaña para que las keywords genéricas en frase no
+aparezcan en búsquedas de marca. La marca SÍ puede ir en el texto de los anuncios (protocolo: fijados con marca u oferta).
 **Propósito (orden del usuario):** Claude aprende de anuncios de CONVERSIÓN y **traspasa** ese conocimiento a la IA
 del motor (Gemini, `functions/api/ia.js`), como lección explícita, legible y única — no como reglas sueltas.
 
