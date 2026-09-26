@@ -6,6 +6,7 @@ const fs = require('fs'), path = require('path');
 const M = require('./modelo.js');
 const AE = require('./ads-editor.js');
 const R = require('./reglas.js');
+const V = require('./versiones.js');
 
 function contrato() {
   const L = [];
@@ -120,7 +121,26 @@ function contrato() {
   L.push('');
   L.push('Cada hallazgo apunta al `id` del elemento: una corrección puede tocar solo esa parte.');
   L.push('');
-  L.push('## 7. Pendiente de confirmar en la primera importación real');
+  L.push('## 7. Estados, versiones y archivo de cambios');
+  L.push('Cada guardado con cambios es una **versión** completa (`functions/api/iniciativas.js`, lógica en `nucleo/versiones.js`).');
+  L.push('Se guarda diciendo sobre qué versión se trabajó: si otra persona guardó antes, el servidor responde 409 y no pisa nada.');
+  L.push('');
+  L.push('| Estado | Significa | Puede pasar a |');
+  L.push('|---|---|---|');
+  const QUE = { borrador: 'En edición.', aprobada: 'Pasó las reglas sin errores (lo valida el servidor).', exportada: 'Se descargó el archivo; queda anotada la versión.',
+    publicada: 'El usuario confirmó que la subió a Google Ads; queda anotada la versión.', archivada: 'Fuera de la lista.' };
+  V.ESTADOS.forEach(e => L.push('| ' + V.ETIQUETAS[e] + ' | ' + QUE[e] + ' | ' + V.TRANSICIONES[e].map(x => V.ETIQUETAS[x]).join(', ') + ' |'));
+  L.push('');
+  L.push('- Toda edición vuelve a **Borrador**. Se conservan las últimas 50 versiones más la exportada y la publicada.');
+  L.push('- **Tras publicar, los nombres de campañas y grupos quedan fijos**: Ads Editor los reconoce por su nombre y renombrar crearía un duplicado.');
+  L.push('- **Exportar solo cambios** respecto de la versión publicada (se compara por `id`):');
+  L.push('  - nuevo → su fila tal cual · modificado → su fila con los valores nuevos (misma identidad en Ads Editor);');
+  L.push('  - **reemplazado** (cambió lo que Ads Editor usa para reconocerlo: texto o concordancia de una keyword o negativa, cualquier texto de un');
+  L.push('    anuncio adaptable, un sitelink, destacado o fragmento) → el anterior con `Status` = `Removed` + el nuevo;');
+  L.push('  - eliminado → con `Status` / `Campaign Status` / `Ad Group Status` = `Removed` (valor documentado por Google en las columnas CSV);');
+  L.push('  - campañas y grupos sin cambios propios no llevan fila (sus hijos los nombran); quitar una ubicación o una edad excluida se indica a mano.');
+  L.push('');
+  L.push('## 8. Pendiente de confirmar en la primera importación real');
   L.push('El archivo de referencia del usuario solo trae negativas amplias de campaña. Estas notaciones siguen la');
   L.push('convención de Ads Editor, pero todavía no se han visto importadas:');
   L.push('- Negativa de **frase** escrita como `"texto"` y de **exacta** como `[texto]` en la columna `Keyword`.');
@@ -128,6 +148,7 @@ function contrato() {
   L.push('- El **método de ubicación** ("presencia") no tiene columna en el contrato de 60: hoy se fija en Ads Editor (regla K05).');
   L.push('- Nombres de columna `Tracking template` y `Final URL suffix` (a nivel de campaña y de anuncio).');
   L.push('- **Extensión de precio:** está modelada y validada (regla G14), pero NO se exporta hasta confirmar sus columnas.');
+  L.push('- `Status` = `Removed` en negativas, sitelinks y destacados de un archivo de cambios (en keywords, anuncios, grupos y campañas está documentado).');
   L.push('- **Display y Performance Max** aún no forman parte del contrato.');
   L.push('');
   return L.join('\n');

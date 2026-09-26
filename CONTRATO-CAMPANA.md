@@ -277,7 +277,28 @@ recomienda, la casa no la usa) manda el protocolo y la diferencia queda a la vis
 
 Cada hallazgo apunta al `id` del elemento: una corrección puede tocar solo esa parte.
 
-## 7. Pendiente de confirmar en la primera importación real
+## 7. Estados, versiones y archivo de cambios
+Cada guardado con cambios es una **versión** completa (`functions/api/iniciativas.js`, lógica en `nucleo/versiones.js`).
+Se guarda diciendo sobre qué versión se trabajó: si otra persona guardó antes, el servidor responde 409 y no pisa nada.
+
+| Estado | Significa | Puede pasar a |
+|---|---|---|
+| Borrador | En edición. | Aprobada, Archivada |
+| Aprobada | Pasó las reglas sin errores (lo valida el servidor). | Borrador, Exportada, Archivada |
+| Exportada | Se descargó el archivo; queda anotada la versión. | Borrador, Exportada, Publicada, Archivada |
+| Publicada | El usuario confirmó que la subió a Google Ads; queda anotada la versión. | Borrador, Archivada |
+| Archivada | Fuera de la lista. | Borrador |
+
+- Toda edición vuelve a **Borrador**. Se conservan las últimas 50 versiones más la exportada y la publicada.
+- **Tras publicar, los nombres de campañas y grupos quedan fijos**: Ads Editor los reconoce por su nombre y renombrar crearía un duplicado.
+- **Exportar solo cambios** respecto de la versión publicada (se compara por `id`):
+  - nuevo → su fila tal cual · modificado → su fila con los valores nuevos (misma identidad en Ads Editor);
+  - **reemplazado** (cambió lo que Ads Editor usa para reconocerlo: texto o concordancia de una keyword o negativa, cualquier texto de un
+    anuncio adaptable, un sitelink, destacado o fragmento) → el anterior con `Status` = `Removed` + el nuevo;
+  - eliminado → con `Status` / `Campaign Status` / `Ad Group Status` = `Removed` (valor documentado por Google en las columnas CSV);
+  - campañas y grupos sin cambios propios no llevan fila (sus hijos los nombran); quitar una ubicación o una edad excluida se indica a mano.
+
+## 8. Pendiente de confirmar en la primera importación real
 El archivo de referencia del usuario solo trae negativas amplias de campaña. Estas notaciones siguen la
 convención de Ads Editor, pero todavía no se han visto importadas:
 - Negativa de **frase** escrita como `"texto"` y de **exacta** como `[texto]` en la columna `Keyword`.
@@ -285,4 +306,5 @@ convención de Ads Editor, pero todavía no se han visto importadas:
 - El **método de ubicación** ("presencia") no tiene columna en el contrato de 60: hoy se fija en Ads Editor (regla K05).
 - Nombres de columna `Tracking template` y `Final URL suffix` (a nivel de campaña y de anuncio).
 - **Extensión de precio:** está modelada y validada (regla G14), pero NO se exporta hasta confirmar sus columnas.
+- `Status` = `Removed` en negativas, sitelinks y destacados de un archivo de cambios (en keywords, anuncios, grupos y campañas está documentado).
 - **Display y Performance Max** aún no forman parte del contrato.

@@ -1016,9 +1016,25 @@ mismos), 40 avisos, 43 sugerencias. `pruebas/reglas.js` 76/76.
   ("mismos fijados en varios grupos") ELIMINADA. Sobre el CSV real: P01×6, P02×4 (anuncios sin nombre), P06×3,
   P08×2. `pruebas/reglas.js` 69/69.
 
-**Siguientes pasos (orden aprobado):**
-3) guardado por iniciativa con versión y estados (borrador→…→publicada; nombres fijos tras publicar;
-export completo / solo cambios) · 4) Search por IA sobre el modelo con ficha de producto persistente y
+**PASO 3 (HECHO, 26-sep): guardado por iniciativa con versiones y estados.** SIN interfaz todavía (va con mockup).
+- `nucleo/versiones.js` (UMD, `window.MP_Versiones`): `ESTADOS` borrador→aprobada→exportada→publicada (+archivada),
+  `TRANSICIONES`/`puedePasar`, `huella` (JSON canónico: mismo contenido = misma huella), `nombresFijos(publicada, actual)`,
+  `diferencias(a,b)` por id (nuevo/modificado/**reemplazado**/eliminado; regenerar ids de títulos sin cambiar texto NO es
+  cambio) y `cambiosParaEditor(publicada, actual)` → iniciativa reducida para el exportador de siempre: lo nuevo, lo
+  modificado en su lugar, lo reemplazado (cambió la clave con que Ads Editor lo reconoce) = anterior con `Status Removed`
+  + nuevo, lo eliminado con `Removed`; campañas/grupos sin cambios propios van `soloReferencia`; quitar ubicación o
+  edad → instrucción `manual`. El exportador escribe `Status` en negativas/recursos solo si lo tienen (ida y vuelta intacta).
+- `functions/api/iniciativas.js` + tablas D1 auto-creadas `iniciativas` (meta: ws, estado, version, exportada_version,
+  publicada_version), `iniciativa_versiones` (snapshot completo por versión, con nota/autor) e `iniciativa_eventos`.
+  GET lista / `?id=` (`&version=N`) / `&historial=1` / `&desde=N&hasta=M`; POST `guardar {iniciativa, base, nota}`
+  (409 si `base` ≠ versión actual; sin cambios no crea versión; toda edición vuelve a borrador; tras publicar rechaza
+  renombres con 422) y `estado {id, estado, base}` (aprobada/exportada validan con `nucleo/reglas.js` EN EL SERVIDOR;
+  publicada solo la versión exportada). Poda: últimas 50 + exportada + publicada. Permiso `ads` o `banner`; aislado por ws.
+- Verificado: `pruebas/versiones.js` 22/22, `pruebas/iniciativas.js` 25/25 (D1 = SQLite de Node, cookie firmada real),
+  bundle compilado con `wrangler pages functions build` y probado en `wrangler pages dev` (workerd + D1 local). Batería
+  completa en verde.
+
+**Siguientes pasos (orden aprobado):** 4) Search por IA sobre el modelo con ficha de producto persistente y
 CONVERSACIÓN por partes · 5) Display y Performance Max con espacios de imagen · 6) operación (import de
 informes → diagnóstico → CSV de cambios) y aprendizaje por marca. La interfaz nueva va con MOCKUP antes.
 Pendiente de confirmar en la 1ª importación real: notación de negativas frase `"x"` / exacta `[x]`,

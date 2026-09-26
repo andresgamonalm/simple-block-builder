@@ -201,6 +201,8 @@
   function exportarFilas(ini) {
     const filas = [];
     const con = (base, e) => Object.assign({}, e && e.otrasColumnas, base);
+    // Negativas y recursos solo llevan Status si lo tienen (p. ej. «Removed» en un archivo de cambios).
+    const conEstado = e => e.estado ? { 'Status': e.estado } : {};
     const vis = ini.campanas;
     // 1 · Campañas con sus ubicaciones y edades
     for (const c of vis) {
@@ -230,13 +232,13 @@
         'Keyword': k.texto, 'Final URL': k.urlFinal, 'Comment': k.comentario }, k));
     // 4 · Negativas: primero las de grupo, luego las de campaña
     for (const c of vis) for (const g of c.grupos) for (const n of g.negativas)
-      filas.push(con({ 'Campaign': c.nombre, 'Ad Group': g.nombre, 'Type': n.tipoOriginal || 'Negative', 'Keyword': escribirNegativa(n), 'Comment': n.comentario }, n));
+      filas.push(con({ 'Campaign': c.nombre, 'Ad Group': g.nombre, 'Type': n.tipoOriginal || 'Negative', 'Keyword': escribirNegativa(n), 'Comment': n.comentario, ...conEstado(n) }, n));
     for (const c of vis) for (const n of c.negativas)
-      filas.push(con({ 'Campaign': c.nombre, 'Type': n.tipoOriginal || 'Campaign negative', 'Keyword': escribirNegativa(n), 'Comment': n.comentario }, n));
+      filas.push(con({ 'Campaign': c.nombre, 'Type': n.tipoOriginal || 'Campaign negative', 'Keyword': escribirNegativa(n), 'Comment': n.comentario, ...conEstado(n) }, n));
     // 5 · Recursos por campaña
     for (const c of vis) {
-      for (const s of c.sitelinks) filas.push(con({ 'Campaign': c.nombre, 'Sitelink text': s.texto, 'Description 1': s.linea1, 'Description 2': s.linea2, 'Final URL': s.urlFinal, 'Comment': s.comentario }, s));
-      for (const d of c.destacados) filas.push(con({ 'Campaign': c.nombre, 'Callout text': d.texto, 'Comment': d.comentario }, d));
+      for (const s of c.sitelinks) filas.push(con({ 'Campaign': c.nombre, 'Sitelink text': s.texto, 'Description 1': s.linea1, 'Description 2': s.linea2, 'Final URL': s.urlFinal, 'Comment': s.comentario, ...conEstado(s) }, s));
+      for (const d of c.destacados) filas.push(con({ 'Campaign': c.nombre, 'Callout text': d.texto, 'Comment': d.comentario, ...conEstado(d) }, d));
       for (const s of c.fragmentos) filas.push(con({ 'Campaign': c.nombre, 'Header': s.encabezado, 'Snippet Values': (s.valores || []).join(';'), 'Language': s.idioma, 'Status': s.estado, 'Comment': s.comentario }, s));
     }
     for (const x of ini.extras || []) filas.push(Object.assign({}, x.fila));
