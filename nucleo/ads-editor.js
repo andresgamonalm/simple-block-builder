@@ -72,6 +72,18 @@
     return { texto: t, concordancia: 'amplia' };
   }
   const escribirNegativa = n => n.concordancia === 'exacta' ? '[' + n.texto + ']' : n.concordancia === 'frase' ? '"' + n.texto + '"' : n.texto;
+  /* La concordancia de una negativa puede venir en el TIPO de fila ("Campaign negative phrase",
+     "Negative exact"…, así lo escribe el archivo que el usuario sube hoy y Ads Editor lo indexa) o en la
+     notación del texto ([x] exacta, "x" frase). Se lee de donde venga y se escribe igual que llegó. */
+  const TIPO_CONC = { broad: 'amplia', phrase: 'frase', exact: 'exacta' };
+  const CONC_TIPO = { amplia: 'broad', frase: 'phrase', exacta: 'exact' };
+  const concDeTipo = t => { const m = /negative\s+(broad|phrase|exact)\s*$/i.exec(String(t || '')); return m ? TIPO_CONC[m[1].toLowerCase()] : null; };
+  function filaNegativa(n, deGrupo) {
+    const base = deGrupo ? 'Negative' : 'Campaign negative';
+    if (n.tipoOriginal && !concDeTipo(n.tipoOriginal)) return { 'Type': n.tipoOriginal, 'Keyword': escribirNegativa(n) };
+    const raiz = n.tipoOriginal ? n.tipoOriginal.replace(/\s+(broad|phrase|exact)\s*$/i, '') : base;
+    return { 'Type': raiz + ' ' + CONC_TIPO[n.concordancia || 'amplia'], 'Keyword': n.texto };
+  }
 
   /* ── IMPORTAR: CSV de Ads Editor → iniciativa ───────────────────────── */
   function importar(texto, nombreIniciativa) {
@@ -130,7 +142,8 @@
         return;
       }
       if (/negative/.test(tipoFila) && v('Keyword')) {                 // NEGATIVA (campaña o grupo)
-        const nk = leerNegativa(v('Keyword'));
+        const nk = leerNegativa(v('Keyword')); const ct = concDeTipo(v('Type'));
+        if (ct && nk.concordancia === 'amplia') nk.concordancia = ct;
         const neg = conFila(Object.assign(M.nuevaNegativa(nk.texto, nk.concordancia, v('Comment')), { tipoOriginal: v('Type'),
           otrasColumnas: resto(f, ['Campaign', 'Ad Group', 'Type', 'Keyword', 'Comment']) }), n);
         (v('Ad Group') ? grupo(c, v('Ad Group')).negativas : c.negativas).push(neg);
@@ -238,9 +251,9 @@
         'Keyword': k.texto, 'Final URL': k.urlFinal, 'Comment': k.comentario }, k));
     // 4 · Negativas: primero las de grupo, luego las de campaña
     for (const c of vis) for (const g of c.grupos) for (const n of g.negativas)
-      filas.push(con({ 'Campaign': c.nombre, 'Ad Group': g.nombre, 'Type': n.tipoOriginal || 'Negative', 'Keyword': escribirNegativa(n), 'Comment': n.comentario, ...conEstado(n) }, n));
+      filas.push(con(Object.assign({ 'Campaign': c.nombre, 'Ad Group': g.nombre }, filaNegativa(n, true), { 'Comment': n.comentario }, conEstado(n)), n));
     for (const c of vis) for (const n of c.negativas)
-      filas.push(con({ 'Campaign': c.nombre, 'Type': n.tipoOriginal || 'Campaign negative', 'Keyword': escribirNegativa(n), 'Comment': n.comentario, ...conEstado(n) }, n));
+      filas.push(con(Object.assign({ 'Campaign': c.nombre }, filaNegativa(n, false), { 'Comment': n.comentario }, conEstado(n)), n));
     // 5 · Recursos por campaña
     for (const c of vis) {
       for (const s of c.sitelinks) filas.push(con({ 'Campaign': c.nombre, 'Sitelink text': s.texto, 'Description 1': s.linea1, 'Description 2': s.linea2, 'Final URL': s.urlFinal, 'Comment': s.comentario, ...conEstado(s) }, s));

@@ -59,7 +59,9 @@ const aa = M.nuevoAnuncioRSA(); aa.urlFinal = "https://ejemplo.cl"; aa.titulos.p
 aa.descripciones.push(M.nuevaDescripcion("Una, dos"), M.nuevaDescripcion("Otra"));
 gg.anuncios.push(aa); cc.grupos.push(gg); ini.campanas.push(cc);
 const csv = AE.exportar(ini);
-T(csv.includes(',"""gratis""",') && csv.includes(",[soap],") && csv.includes(",empleo,"), "negativas de frase \"…\" y exacta […] con la notación de Ads Editor");
+T(/Campaign negative phrase,gratis,/.test(csv) && /Campaign negative exact,soap,/.test(csv) && /Campaign negative broad,empleo,/.test(csv) && /Negative phrase,moto,/.test(csv), "negativas nuevas: la concordancia va en el tipo de fila, como en el archivo que el usuario sube hoy");
+{ const imp = AE.importar("\uFEFFCampaign,Ad Group,Type,Keyword\r\nC,,Campaign negative phrase,comprar auto\r\nC,G,Negative exact,zurich\r\nC,,Campaign negative,[soap]\r\n").iniciativa, cn = imp.campanas[0];
+  T(cn.negativas[0].concordancia === "frase" && cn.grupos[0].negativas[0].concordancia === "exacta" && cn.negativas[1].concordancia === "exacta", "al importar, la concordancia se lee del tipo de fila («Campaign negative phrase») o de la notación […]"); }
 const vuelta = AE.importar(csv).iniciativa.campanas[0];
 T(vuelta.negativas.map(n => n.concordancia).join(",") === "frase,exacta,amplia" && vuelta.grupos[0].negativas[0].texto === "moto", "vuelven con su concordancia (campaña y grupo)");
 T(vuelta.grupos[0].keywords[0].texto === "cotizar seguro, auto" && vuelta.grupos[0].anuncios[0].titulos[0].texto === 'Título con "comillas"', "comas y comillas dentro de los textos sobreviven");

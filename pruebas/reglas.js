@@ -176,5 +176,12 @@ console.log("\n5 · Para la IA");
 const txt = R.reglasParaIA();
 T(R.REGLAS.every(r => txt.includes(r.codigo)), "el texto para la IA lista las " + R.REGLAS.length + " reglas");
 
+{ // C11 respeta los nombres propios del negocio declarados en el objetivo (planes, programas)
+  const x = base(); x.a.titulos[12].texto = "Básico, Estándar o Premium";
+  const sin = R.validar(x.i, { hoy: "2026-09-26" }).hallazgos.some(h => h.codigo === "C11");
+  x.i.objetivo = Object.assign({}, x.i.objetivo, { nombresPropios: ["Básico", "Estándar", "Premium"] });
+  const con = R.validar(x.i, { hoy: "2026-09-26" }).hallazgos.some(h => h.codigo === "C11");
+  T(sin && !con, "C11: «Básico, Estándar o Premium» no es error si los planes están en objetivo.nombresPropios");
+}
 console.log(`\n${mal ? "FALLAN " + mal : "TODO BIEN"} · ${ok}/${ok + mal}`);
 process.exit(mal ? 1 : 0);

@@ -57,7 +57,7 @@ const lineas = F.slice(1).join("\n");
 T(/,30000,/.test(lineas) && (lineas.match(/Search \| Auto Digital \| Producto Always On,Search,/g) || []).length === 1, "la campaña modificada va con su fila (nuevo presupuesto)");
 T(!/Promo 3 Cuotas,Search,/.test(lineas) && !lineas.includes("Promo 3 Cuotas"), "la campaña sin cambios no aparece");
 T((lineas.match(/Removed/g) || []).length === 4, "4 filas «Removed»: el anuncio anterior, la keyword quitada, la keyword con la concordancia anterior y el destacado anterior", (lineas.match(/Removed/g) || []).length);
-T(lineas.includes(kwQuitada.texto) && lineas.includes("Cotiza en 3 Minutos") && lineas.includes('"""arriendo"""') && lineas.includes("Asistencia 24/7"), "van la keyword quitada, el anuncio nuevo, la negativa nueva y el destacado nuevo");
+T(lineas.includes(kwQuitada.texto) && lineas.includes("Cotiza en 3 Minutos") && /negative phrase,arriendo,/.test(lineas) && lineas.includes("Asistencia 24/7"), "van la keyword quitada, el anuncio nuevo, la negativa nueva y el destacado nuevo");
 T(!/,Chile,|Location ID/.test(lineas.replace(/^[^\n]*\n?/, "")) && !lineas.includes("Unknown"), "no repite ubicaciones ni edades que no cambiaron");
 const vuelta = AE.importar(csv).iniciativa;
 const kwv = vuelta.campanas[0].grupos[0].keywords;

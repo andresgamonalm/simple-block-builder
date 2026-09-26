@@ -73,6 +73,7 @@ Lo que pidió el usuario. No se exporta: orienta a la IA.
 | `notas` | texto |  |  | — | Indicaciones generales del usuario. |
 | `producto` | texto |  |  | — | Nombre del producto para la taxonomía (auto digital). |
 | `tipo` | texto |  |  | — | Tipo de campaña para la taxonomía (always-on, promociones). |
+| `nombresPropios` | lista de texto |  |  | — | Nombres propios del negocio que van con mayúscula en los textos (planes, programas: "Básico", "Premium", "Mundo Zurich"). La marca y el producto ya cuentan. |
 | `enfoque` | texto |  |  | — | Enfoque de la campaña. "conversion" = venta directa online (BOFU): la IA aplica la lección de conversión (nucleo/lecciones.js) y el motor de reglas sus reglas V. Valores: `conversion`, ``. |
 
 ### Ficha del producto (`ficha`)

@@ -1105,5 +1105,10 @@ mismos), 40 avisos, 43 sugerencias. `pruebas/reglas.js` 76/76.
 
 **Siguientes pasos (orden aprobado):** 4b) interfaz de la iniciativa y la conversación (MOCKUP primero) · 5) Display y Performance Max con espacios de imagen · 6) operación (import de
 informes → diagnóstico → CSV de cambios) y aprendizaje por marca. La interfaz nueva va con MOCKUP antes.
-Pendiente de confirmar en la 1ª importación real: notación de negativas frase `"x"` / exacta `[x]`,
+**Negativas (26-sep, CORRECCIÓN):** el archivo real del usuario escribe la concordancia en el TIPO de fila
+(`Campaign negative phrase` / `Negative exact`, texto sin comillas) y Ads Editor lo indexa. El importador leía esas negativas
+como amplias → el "error" de «comprar auto» bloqueando «comprar seguro de auto» era FALSO (así se le dijo al usuario). Ahora
+`concDeTipo`/`filaNegativa` leen y escriben ese formato; la notación `[x]`/`"x"` queda solo para archivos que la traigan.
+`objetivo.nombresPropios` (planes, programas) evita falsos C11. v8 de Zurich armada en el scratchpad (no en el repo).
+Pendiente de confirmar en la 1ª importación real:
 negativa de grupo (`Type`=`Negative`) y las columnas `Tracking template` / `Final URL suffix`.

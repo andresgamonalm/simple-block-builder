@@ -88,6 +88,7 @@
         { campo: 'notas', tipo: 'texto', descripcion: 'Indicaciones generales del usuario.' },
         { campo: 'producto', tipo: 'texto', descripcion: 'Nombre del producto para la taxonomía (auto digital).' },
         { campo: 'tipo', tipo: 'texto', descripcion: 'Tipo de campaña para la taxonomía (always-on, promociones).' },
+        { campo: 'nombresPropios', tipo: 'lista de texto', descripcion: 'Nombres propios del negocio que van con mayúscula en los textos (planes, programas: "Básico", "Premium", "Mundo Zurich"). La marca y el producto ya cuentan.' },
         { campo: 'enfoque', tipo: 'texto', valores: ['conversion', ''], descripcion: 'Enfoque de la campaña. "conversion" = venta directa online (BOFU): la IA aplica la lección de conversión (nucleo/lecciones.js) y el motor de reglas sus reglas V.' }
       ] },
     { entidad: 'ficha', titulo: 'Ficha del producto', descripcion: 'Investigación de la landing y de la competencia en Google. No se exporta: es la materia prima de keywords, anuncios y negativas, y la base para detectar cifras inventadas.',

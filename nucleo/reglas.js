@@ -155,7 +155,7 @@
     };
     // C11 · mayúsculas al estilo inglés. Se toleran los nombres propios conocidos:
     // la marca, el nombre del producto (objetivo/ficha) y lugares frecuentes; y las siglas.
-    const propios = new Set(['chile', 'santiago'].concat(...[cx.marca, ini.objetivo && ini.objetivo.producto, ini.ficha && ini.ficha.producto]
+    const propios = new Set(['chile', 'santiago'].concat(...[cx.marca, ini.objetivo && ini.objetivo.producto, ini.ficha && ini.ficha.producto].concat((ini.objetivo && ini.objetivo.nombresPropios) || [])
       .filter(Boolean).map(x => LEC.sinTildes(x).split(/[^a-z0-9ñ]+/).filter(Boolean))));
     const mayusculas = (x, donde) => {
       const frases = String(x.texto || '').split(/[.!?:]\s+/);
