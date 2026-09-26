@@ -735,7 +735,7 @@ async function corregirOrtografia(env, textos) {
   const prompt = [
     'Eres corrector ortográfico profesional de piezas publicitarias en español de Chile (normas RAE).',
     'Corrige SOLO: tildes y acentos, mayúsculas/minúsculas, signos de apertura y cierre (¿? ¡!), puntuación y erratas evidentes (letras cambiadas o faltantes).',
-    'MAYÚSCULAS (norma RAE): solo al inicio del texto y en nombres propios (marcas, nombres de producto, lugares, siglas). Si un texto trae mayúscula inicial en cada palabra, al estilo inglés, pásalo a minúscula: "Cotiza Tu Seguro Hoy" → "Cotiza tu seguro hoy"; "Seguro Auto Digital Zurich" se mantiene si "Auto Digital" es el nombre del producto.',
+    'MAYÚSCULAS (norma RAE): solo al inicio del texto y en nombres propios (marcas, nombres de producto, lugares, siglas). Si un texto trae mayúscula inicial en cada palabra, al estilo inglés, pásalo a minúscula: "Cotiza Tu Seguro Hoy" → "Cotiza tu seguro hoy"; "Seguro Hogar Total <Marca>" se mantiene si "Hogar Total" es el nombre del producto.',
     'NO cambies: el estilo, el orden de las palabras, el vocabulario, los números, los nombres de marca o producto, ni el largo. NO agregues punto final a un texto que no lo tenía. NO "mejores" la redacción.',
     'Devuelve EXCLUSIVAMENTE este JSON: { "textos": [ ... ] } con la MISMA cantidad de textos, en el MISMO orden (idénticos si ya estaban correctos).',
     'TEXTOS A REVISAR:',
