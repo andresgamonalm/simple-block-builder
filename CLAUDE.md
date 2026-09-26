@@ -54,7 +54,7 @@ precio de ejemplo para un vehículo puntual NO va en un anuncio. `LECCIONES.segu
 vigencia, póliza, cobertura≠asistencia, deducible, siniestro/liquidación, pérdida total, RC, UF, precios de ejemplo, beneficios
 por plan, un producto por anuncio, la marca acompaña al producto, SOAP. Va SIEMPRE (no solo con enfoque conversión) al
 generador, al crítico y a `corregir`; la investigación distingue prima de cuota y manda los precios de ejemplo a
-"condiciones". Reglas **S01** prima mensual · **S02** «<Marca>: atributo» · **S03** monto en pesos (sugerencia).
+"condiciones". **Precisión (26-sep):** un precio «desde» SÍ va si la web lo muestra con su condición → «Cuotas desde $X» (nunca prima, nunca el caso de referencia en el anuncio); la IA lo confirma en el texto de las páginas o va sin precio. Reglas **S01** prima mensual · **S02** «<Marca>: atributo» · **S03** monto en pesos (sugerencia).
 **LECCIÓN DE CONVERSIÓN v2 (26-sep, v8 de Zurich validada por el usuario):** suma 3b concordancias (frase base, exacta
 solo términos principales, nunca todo en exacta) · 4b patrón de grupos (contratar online · precio/cuotas · momento de
 necesidad por situación con su ventaja real · detalle del bien · compra por cobertura · marca+producto) · 5b dos anuncios

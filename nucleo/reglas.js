@@ -97,7 +97,7 @@
     // SEGUROS — conceptos del rubro (lección «seguros» de nucleo/lecciones.js; nace de un error real, 26-sep)
     { codigo: 'S01', nivel: 'aviso', categoria: 'seguros', fuente: 'lección de seguros (nucleo/lecciones.js) · CMF Circular 2123', que: '«Prima» usada como pago mensual. La prima es el costo de toda la vigencia (normalmente anual); lo mensual es la CUOTA.' },
     { codigo: 'S02', nivel: 'aviso', categoria: 'seguros', fuente: 'lección de seguros (nucleo/lecciones.js)', que: 'La marca como sujeto de un atributo («<Marca>: taller multimarca» dice que la compañía ES un taller). La marca acompaña al producto: «Seguro <Marca>…».' },
-    { codigo: 'S03', nivel: 'sugerencia', categoria: 'seguros', fuente: 'lección de seguros (nucleo/lecciones.js) · CMF Circular 2123 V.4', que: 'Monto en pesos en el anuncio. En seguros el precio depende de la persona y de lo asegurado: confirma que no es un precio de ejemplo (calculado para un vehículo o perfil puntual) y que vale para todos, o que es una oferta con condiciones en la web.' },
+    { codigo: 'S03', nivel: 'sugerencia', categoria: 'seguros', fuente: 'lección de seguros (nucleo/lecciones.js) · CMF Circular 2123 V.4', que: 'Monto en pesos en el anuncio. En seguros el precio depende de la persona y de lo asegurado: confirma que está en la web con su condición y que va como «desde» (si es un precio de referencia) o que vale para todos.' },
     // CRITERIO — válido, pero probablemente un error o una mala práctica
     { codigo: 'K01', nivel: 'aviso', categoria: 'criterio', fuente: PROPIO + '; caso real: $25 CLP diarios', que: 'Presupuesto diario menor a $1.000 CLP: probablemente un error de unidades.' },
     { codigo: 'K02', nivel: 'sugerencia', categoria: 'criterio', fuente: F.maxClics, que: 'Maximizar clics sin tope de CPC: Google puja lo necesario para gastar el presupuesto; el tope ayuda a controlar el costo si el CPC sale más alto de lo deseado (a costa de algunos clics).' },
@@ -305,7 +305,7 @@
             const dx = da + (i < T.length ? ' › Título ' + (i + 1) : ' › Descripción ' + (i - T.length + 1)), tx = LEC.sinTildes(x.texto);
             if (/\bprima\b/.test(tx) && /\b(mes|mensual|mensuales|al mes)\b/.test(tx)) H('S01', x, dx, `«${x.texto}»: la prima no es mensual; lo que se paga al mes es la cuota.`);
             if (cx.marca && new RegExp('^' + LEC.sinTildes(cx.marca).replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '\\s*:').test(tx.trim())) H('S02', x, dx, `«${x.texto}»: la marca queda como sujeto del atributo. Escríbelo con el producto («Seguro ${cx.marca}…»).`);
-            if (/\$\s?\d/.test(x.texto)) H('S03', x, dx, `«${x.texto}» publica un monto: confirma que vale para cualquier cliente y no es un precio de ejemplo.`);
+            if (/\$\s?\d/.test(x.texto)) H('S03', x, dx, `«${x.texto}» publica un monto: confirma que está en la web con su condición y, si es de referencia, que diga «desde».`);
           });
           T.forEach((t, i) => mayusculas(t, da + ' › Título ' + (i + 1)));
           D.forEach((d, i) => mayusculas(d, da + ' › Descripción ' + (i + 1)));
