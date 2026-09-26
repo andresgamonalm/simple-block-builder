@@ -3,6 +3,28 @@
 > Este archivo lo lee Claude Code al iniciar cada sesión. Mantiene el contexto para
 > NO empezar de cero. Si cambias algo importante de arquitectura o acuerdos, actualízalo.
 
+## EL NEGOCIO DEL USUARIO (26-sep-2026 — leer SIEMPRE antes de generar anuncios)
+**eCommerce de Seguros Generales B2C** (venta directa al consumidor final, 100 % online), principalmente
+**seguro de AUTO** (también hogar, mascota, viaje). **NO es B2B.** Cuando pida anuncios "comerciales BOFU":
+- **Comprador BOFU:** ya sabe que necesita el seguro y está con la tarjeta en la mano. Busca **rapidez** (contratar
+  ya, sin trámites físicos), **transparencia** (precio claro o descuento directo) y **respaldo** (compañía conocida,
+  liquidación rápida). Cada anuncio derriba las 3 barreras: flojera del trámite · desconfianza del precio · miedo a
+  que no respondan.
+- **Keywords solo transaccionales** (prohibidas las informativas: "cómo funciona…", "qué cubre…", consejos):
+  compra directa ("contratar seguro de auto online", "comprar seguro de hogar", "cotizar seguro [marca de auto]"),
+  precio/oferta ("seguro de auto más barato", "precio seguro de moto"), inmediatez ("asegurar auto en el acto").
+- **Títulos** con "Online", "En 3 Minutos", "Contrata Hoy", "[X]% de Descuento", "100% Digital". **Descripciones**
+  con certeza del beneficio + llamado directo a la compra ("Emite tu póliza online y viaja protegido hoy mismo").
+- Ejemplo del usuario ✅: "Seguro de Auto 100% Online" · "Cotiza y Contrata en 3 Min" · "Obtén 20% Desc. Este Mes" ·
+  "Asegura tu auto hoy sin trámites físicos. Recibe tu póliza digital de inmediato…". ❌ genérico: "Seguros para tu
+  Automóvil" · "Conoce la importancia de tener un auto asegurado…".
+- **Límites (verificados):** toda cifra/oferta/plazo debe ser REAL — en Chile la promoción de un seguro es
+  **vinculante y se incorpora al contrato** (CMF Circular 2123, V.4); la web debe mostrar condiciones, exclusiones
+  y prima (V.7); estadísticas con fuente (IV.3); comparativa solo con base objetiva y comprobable (Asociación de
+  Aseguradores); Ley 19.496 art. 28 (publicidad engañosa sobre precio/condiciones). Superlativos sin respaldo ("el más
+  barato") = riesgo CMF/SERNAC y política de tergiversación de Google. La keyword "más barato" sí se puede comprar.
+- **Integración al motor de Search: PROPUESTA, pendiente del OK del usuario** (ver la conversación del 26-sep).
+
 ## Qué es
 Editor de creatividades por bloques para **email, banners (Google Display), social
 (LinkedIn/Facebook), invitaciones y formato libre**. Stack: **Cloudflare Pages + D1**.
