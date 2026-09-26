@@ -1,0 +1,384 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Mockup · Campaña y conversación</title>
+<link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+/* MOCKUP 4b · Pantalla de campaña (Search) y conversación por partes con la IA.
+   Tokens = los del aplicativo (editor.html, Propuesta C "Portal"). No funcional: solo navegación entre pantallas. */
+:root{
+  --navy:#040764;--navy-l:#eef1fb;--blue:#1c73cb;--blue-l:#e7f0fb;--yellow:#fce865;
+  --magenta:#b318a3;--magenta-l:#f7e6f4;--teal:#20b6b6;--teal-l:#e4f6f6;
+  --ink:#12173d;--ink2:#3a4060;--ink3:#5b6178;--ink4:#a2a8bb;
+  --bg:#eef1f6;--white:#fff;--bdr:#e4e8f0;--bdr2:#c2c7d4;--ok:#1c973b;--ok-l:#e6f6ec;--warn:#b86e00;--warn-l:#fff4e0;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:Roboto,Arial,sans-serif;font-weight:400;color:var(--ink);background:var(--bg);font-size:14px;line-height:1.45}
+button{font:inherit;cursor:pointer}
+/* Barra del MOCKUP (no es parte del producto) */
+.mk{background:#fff;border-bottom:1px dashed var(--bdr2);padding:10px 20px;display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.mk b{font-weight:500;color:var(--ink3);font-size:13px;margin-right:6px}
+.mk button{border:1px solid var(--bdr2);background:#fff;border-radius:18px;padding:6px 14px;font-size:13px;color:var(--ink2)}
+.mk button.on{background:var(--navy);color:#fff;border-color:var(--navy)}
+.mk .nota{margin-left:auto;font-size:12px;color:var(--ink3)}
+.pant{display:none}.pant.on{display:block}
+
+/* Cabecera del editor (patrón existente) */
+.ed{height:56px;background:#fff;border-bottom:1px solid var(--bdr);display:flex;align-items:center;gap:14px;padding:0 20px}
+.logo{width:28px;height:28px;background:var(--navy);border-radius:7px;position:relative}
+.logo:after{content:"";position:absolute;left:6px;right:6px;bottom:6px;height:4px;background:var(--yellow);border-radius:1px}
+.crumb{font-size:14px;color:var(--ink3)}.crumb b{color:var(--ink);font-weight:500}
+.chip{font-size:11px;font-weight:500;letter-spacing:.04em;padding:3px 8px;border-radius:5px;background:#e9eaf0;color:var(--ink2)}
+.sp{flex:1}
+.estados{display:flex;align-items:center;gap:0;font-size:12px}
+.estados span{padding:5px 10px;border:1px solid var(--bdr);color:var(--ink3);background:#fff}
+.estados span:first-child{border-radius:6px 0 0 6px}.estados span:last-child{border-radius:0 6px 6px 0}
+.estados span+span{border-left:0}
+.estados .hecho{color:var(--ok);background:var(--ok-l)}
+.estados .aqui{color:#fff;background:var(--navy);border-color:var(--navy);font-weight:500}
+.ver{font-size:12px;color:var(--ink3)}
+.btn{border:1px solid var(--bdr2);background:#fff;color:var(--ink);border-radius:8px;padding:8px 14px;font-size:13px;font-weight:500}
+.btn.pri{background:var(--navy);border-color:var(--navy);color:#fff}
+.btn.ia{background:var(--magenta);border-color:var(--magenta);color:#fff}
+.btn.sm{padding:5px 10px;font-size:12px}
+.btn.link{border:0;background:none;color:var(--blue);padding:4px 0}
+
+/* Estructura 3 columnas */
+.lay{display:grid;grid-template-columns:260px minmax(0,1fr) 380px;gap:14px;padding:14px 16px;height:calc(100vh - 56px - 47px)}
+.col{background:#fff;border:1px solid var(--bdr);border-radius:10px;overflow:auto;min-height:0}
+.col h3{font-size:12px;font-weight:500;letter-spacing:.06em;text-transform:uppercase;color:var(--ink3);padding:14px 16px 6px}
+
+/* Árbol */
+.arbol{list-style:none;padding:0 8px 12px}
+.arbol li{padding:6px 8px;border-radius:6px;display:flex;align-items:center;gap:8px;font-size:13px;color:var(--ink2)}
+.arbol li .n{margin-left:auto;font-size:11px;color:var(--ink4)}
+.arbol li.cmp{font-weight:500;color:var(--ink)}
+.arbol li.l2{padding-left:22px}.arbol li.l3{padding-left:38px;font-size:12.5px}
+.arbol li.sel{background:var(--blue-l);color:var(--blue);font-weight:500}
+.dot{width:8px;height:8px;border-radius:50%;flex:none}
+.d-err{background:var(--magenta)}.d-av{background:#e0a100}.d-ok{background:var(--ok)}
+.sep{height:1px;background:var(--bdr);margin:8px 16px}
+.ficha-ent{margin:4px 16px 16px;padding:12px;border:1px solid var(--bdr);border-radius:8px;font-size:12.5px;color:var(--ink2)}
+.ficha-ent b{font-weight:500;color:var(--ink)}
+
+/* Centro */
+.cen{padding:18px 22px}
+.cab{display:flex;align-items:baseline;gap:10px;margin-bottom:4px}
+.cab h2{font-size:20px;font-weight:500}
+.mono{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:12px;color:var(--ink3);background:#f4f6fa;padding:2px 6px;border-radius:4px}
+.int{font-size:13px;color:var(--ink3);margin-bottom:14px}
+.barreras{display:flex;gap:8px;margin:0 0 16px;flex-wrap:wrap}
+.bar{display:flex;align-items:center;gap:6px;font-size:12.5px;padding:6px 10px;border-radius:7px;border:1px solid var(--bdr)}
+.bar.ok{background:var(--ok-l);border-color:#bfe6cb;color:var(--ok)}
+.bar.no{background:var(--magenta-l);border-color:#ecc3e6;color:var(--magenta)}
+.card{border:1px solid var(--bdr);border-radius:10px;margin-bottom:14px}
+.card-h{display:flex;align-items:center;gap:10px;padding:12px 14px;border-bottom:1px solid var(--bdr)}
+.card-h h4{font-size:14px;font-weight:500}
+.card-h .sp{flex:1}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th{font-weight:500;font-size:11.5px;color:var(--ink3);text-align:left;padding:8px 10px;border-bottom:1px solid var(--bdr);background:#fafbfd}
+td{padding:7px 10px;border-bottom:1px solid #f0f2f6;vertical-align:middle}
+tr.pick td{background:#f3f8fe}
+tr:last-child td{border-bottom:0}
+.cnt{font-size:11.5px;color:var(--ink4);text-align:right;white-space:nowrap}
+.cnt.mal{color:var(--magenta);font-weight:500}
+.rol{font-size:11px;padding:2px 7px;border-radius:10px;white-space:nowrap}
+.r-keyword{background:#eceff7;color:var(--ink2)}.r-tramite{background:var(--blue-l);color:var(--blue)}
+.r-precio{background:#fff7cc;color:#7a6400}.r-respaldo{background:var(--teal-l);color:#138585}.r-cta{background:var(--navy-l);color:var(--navy)}
+.fij{font-size:11px;color:var(--ink3)}
+.cb{width:15px;height:15px;accent-color:var(--blue)}
+.kw{display:inline-flex;align-items:center;gap:6px;margin:0 6px 6px 0;padding:4px 9px;border:1px solid var(--bdr);border-radius:14px;font-size:12.5px}
+.kw i{font-style:normal;font-size:10.5px;padding:1px 5px;border-radius:4px}
+.kw i.ex{background:var(--blue-l);color:var(--blue)}.kw i.fr{background:var(--teal-l);color:#138585}
+.serp{padding:14px;font-family:Arial,sans-serif}
+.serp small{font-size:12px;color:#202124}
+.serp .t{color:#1a0dab;font-size:18px;margin:2px 0}
+.serp .d{color:#4d5156;font-size:13px}
+
+/* Derecha: pestañas */
+.tabs{display:flex;border-bottom:1px solid var(--bdr);position:sticky;top:0;background:#fff;z-index:1}
+.tabs button{flex:1;border:0;background:none;padding:12px 6px;font-size:13px;color:var(--ink3);border-bottom:2px solid transparent}
+.tabs button.on{color:var(--navy);border-bottom-color:var(--navy);font-weight:500}
+.tabs .badge{display:inline-block;min-width:18px;padding:0 5px;border-radius:9px;background:var(--magenta);color:#fff;font-size:11px;margin-left:4px}
+.pane{display:none;padding:14px 16px}.pane.on{display:block}
+.hz{border:1px solid var(--bdr);border-radius:8px;padding:10px 12px;margin-bottom:8px;font-size:13px}
+.hz .top{display:flex;align-items:center;gap:8px;margin-bottom:4px}
+.hz .cod{font-size:11px;font-weight:500;padding:1px 6px;border-radius:4px}
+.cod.err{background:var(--magenta-l);color:var(--magenta)}.cod.av{background:var(--warn-l);color:var(--warn)}.cod.su{background:#eef0f4;color:var(--ink3)}
+.hz .donde{font-size:11.5px;color:var(--ink3)}
+.hz .acc{display:flex;gap:12px;margin-top:6px}
+.grp-t{font-size:12px;font-weight:500;color:var(--ink3);margin:12px 0 6px}
+/* Conversación */
+.ctx{background:var(--blue-l);border:1px solid #cfe0f6;border-radius:8px;padding:9px 11px;font-size:12.5px;color:var(--blue);margin-bottom:12px;display:flex;gap:8px;align-items:center}
+.ctx b{font-weight:500}
+.msg{margin-bottom:12px;font-size:13px}
+.msg.yo{background:var(--navy-l);border-radius:10px 10px 2px 10px;padding:9px 12px;margin-left:36px}
+.msg.ia{display:flex;gap:9px}
+.av-ia{width:26px;height:26px;border-radius:50%;background:var(--navy);flex:none;position:relative}
+.av-ia:after{content:"";position:absolute;inset:8px;border-radius:50%;background:#f28c28}
+.burbuja{background:#f6f7fa;border-radius:10px 10px 10px 2px;padding:10px 12px;flex:1}
+.cambio{border:1px solid var(--bdr);background:#fff;border-radius:8px;padding:8px 10px;margin-top:8px;font-size:12.5px}
+.cambio .antes{color:var(--ink4);text-decoration:line-through}
+.cambio .desp{color:var(--ink)}
+.cambio .meta{display:flex;align-items:center;gap:8px;margin-top:5px;font-size:11.5px;color:var(--ink3)}
+.cambio .meta .sp{flex:1}
+.acciones{display:flex;gap:8px;margin-top:10px}
+.caja{position:sticky;bottom:0;background:#fff;border-top:1px solid var(--bdr);padding:10px 16px}
+.modo{display:flex;gap:6px;margin-bottom:8px}
+.modo button{border:1px solid var(--bdr2);background:#fff;border-radius:14px;padding:4px 11px;font-size:12px;color:var(--ink2)}
+.modo button.on{border-color:var(--magenta);color:var(--magenta);background:var(--magenta-l)}
+.caja textarea{width:100%;border:1px solid var(--bdr2);border-radius:8px;padding:9px 10px;font:inherit;font-size:13px;resize:none;height:62px}
+.caja .fila{display:flex;align-items:center;margin-top:8px;gap:8px;font-size:11.5px;color:var(--ink4)}
+.caja .fila .sp{flex:1}
+.ev{font-size:12.5px;margin-bottom:10px}
+.ev h5{font-size:12px;font-weight:500;margin-bottom:4px}
+.ev ul{padding-left:16px;color:var(--ink2)}
+.ev .vacio{color:var(--magenta)}
+
+/* Pantalla 1: crear */
+.crear{max-width:880px;margin:24px auto;padding:0 16px}
+.crear .card{background:#fff;padding:22px 24px}
+.crear h1{font-size:22px;font-weight:500;margin-bottom:4px}
+.crear p.sub{color:var(--ink3);margin-bottom:18px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px 18px}
+.f label{display:block;font-size:12.5px;font-weight:500;color:var(--ink2);margin-bottom:5px}
+.f label em{font-style:normal;color:var(--ink4);font-weight:400}
+.f input,.f textarea,.f select{width:100%;border:1px solid var(--bdr2);border-radius:8px;padding:9px 10px;font:inherit;font-size:13.5px;background:#fff}
+.f textarea{height:74px;resize:vertical}
+.f .ayuda{font-size:11.5px;color:var(--ink3);margin-top:4px}
+.full{grid-column:1/-1}
+.seg{display:flex;border:1px solid var(--bdr2);border-radius:8px;overflow:hidden}
+.seg button{flex:1;border:0;background:#fff;padding:9px;font-size:13px;color:var(--ink2)}
+.seg button+button{border-left:1px solid var(--bdr2)}
+.seg button.on{background:var(--navy);color:#fff}
+.nom{margin-top:6px;font-size:12px;color:var(--ink3)}
+.pie{display:flex;align-items:center;gap:10px;margin-top:20px;padding-top:16px;border-top:1px solid var(--bdr)}
+.pie .sp{flex:1}
+.aviso-t{font-size:12px;color:var(--ink3)}
+
+/* Pantalla 3: exportar */
+.exp{max-width:920px;margin:24px auto;padding:0 16px}
+.exp .card{background:#fff}
+.opc{display:grid;grid-template-columns:1fr 1fr;gap:14px;padding:18px}
+.op{border:1px solid var(--bdr2);border-radius:10px;padding:16px}
+.op.on{border-color:var(--blue);box-shadow:inset 0 0 0 1px var(--blue)}
+.op h4{font-size:15px;font-weight:500;margin-bottom:4px}
+.op p{font-size:12.5px;color:var(--ink3)}
+.op .num{font-size:24px;font-weight:500;margin-top:10px}
+.lista{padding:0 18px 18px}
+.lista li{list-style:none;display:flex;gap:10px;align-items:center;padding:7px 0;border-bottom:1px solid #f0f2f6;font-size:13px}
+.tag{font-size:11px;padding:2px 7px;border-radius:5px;font-weight:500}
+.t-n{background:var(--ok-l);color:var(--ok)}.t-m{background:var(--blue-l);color:var(--blue)}.t-r{background:var(--warn-l);color:var(--warn)}.t-e{background:var(--magenta-l);color:var(--magenta)}
+.man{margin:0 18px 18px;padding:10px 12px;border-radius:8px;background:var(--warn-l);font-size:12.5px;color:#6b4200}
+</style>
+</head>
+<body>
+
+<div class="mk">
+  <b>Mockup 4b</b>
+  <button class="on" onclick="ver(1,this)">1 · Crear la campaña</button>
+  <button onclick="ver(2,this)">2 · Trabajarla con la IA</button>
+  <button onclick="ver(3,this)">3 · Aprobar y exportar</button>
+  <span class="nota">Datos de ejemplo (marca ficticia «Acme»). Solo navega entre pantallas.</span>
+</div>
+
+<!-- ═════════════ 1 · CREAR ═════════════ -->
+<section class="pant on" id="p1">
+  <div class="ed"><div class="logo"></div><div class="crumb">Campañas › <b>Nueva campaña de Search</b></div><span class="chip">SEARCH</span></div>
+  <div class="crear">
+    <div class="card">
+      <h1>¿Qué vamos a vender?</h1>
+      <p class="sub">La IA lee tu web, investiga la competencia en Google y arma la campaña completa con tu protocolo. Después la corriges por partes, sin rehacerla.</p>
+      <div class="grid2">
+        <div class="f full"><label>Qué se vende y a quién</label><textarea>Seguro de auto 100% online para conductores particulares en Chile. Quiero captar a quien ya decidió asegurar su auto.</textarea></div>
+        <div class="f"><label>Página donde se compra (landing)</label><input value="https://www.acme.cl/seguro-auto"></div>
+        <div class="f"><label>Oferta vigente <em>· textual, opcional</em></label><input value="2 cuotas gratis"><div class="ayuda">Solo lo que es real hoy: la IA no inventa ofertas.</div></div>
+        <div class="f"><label>Acción que buscamos</label><input value="Contratar online"></div>
+        <div class="f"><label>Frase legal <em>· obligatoria, escribe «no» si no lleva</em></label><input value="no"></div>
+        <div class="f"><label>Enfoque</label><div class="seg"><button class="on">Conversión (venta directa)</button><button>Otro</button></div><div class="ayuda">Conversión aplica la lección: tres barreras, keywords de compra, verbos de compra.</div></div>
+        <div class="f"><label>Tipo de campaña</label><div class="seg"><button class="on">Always on</button><button>Promociones</button></div></div>
+        <div class="f"><label>Producto <em>· para el nombre</em></label><input value="auto digital"><div class="nom">Nombre en Google Ads: <span class="mono">chl-producto-auto-digital-always-on</span></div></div>
+        <div class="f"><label>Presupuesto diario <em>· CLP</em></label><input value="35.000"><div class="ayuda">Entero en pesos. Menos de $1.000 se marca como posible error.</div></div>
+        <div class="f full"><label>Materiales o relato <em>· opcional</em></label><textarea placeholder="Pega aquí lo que sepas del producto que no está en la web: plazos reales, cómo se liquida, qué NO vendemos (p. ej. SOAP fuera de enero y marzo)…"></textarea></div>
+      </div>
+      <div class="pie"><button class="btn">Limpiar</button><span class="sp"></span><span class="aviso-t">Tarda 1-2 minutos: investiga antes de escribir.</span><button class="btn ia" onclick="ver(2,document.querySelectorAll('.mk button')[1])">Generar campaña</button></div>
+    </div>
+  </div>
+</section>
+
+<!-- ═════════════ 2 · TRABAJAR ═════════════ -->
+<section class="pant" id="p2">
+  <div class="ed">
+    <div class="logo"></div>
+    <div class="crumb">Campañas › <b>Auto digital · Octubre</b></div><span class="chip">SEARCH</span>
+    <span class="sp"></span>
+    <div class="estados"><span class="aqui">Borrador</span><span>Aprobada</span><span>Exportada</span><span>Publicada</span></div>
+    <span class="ver">v4 · guardado 12:40</span>
+    <button class="btn">Historial</button>
+    <button class="btn pri" onclick="ver(3,document.querySelectorAll('.mk button')[2])">Aprobar</button>
+  </div>
+  <div class="lay">
+    <!-- ÁRBOL: la campaña con forma de Ads Editor -->
+    <aside class="col">
+      <h3>Campaña</h3>
+      <ul class="arbol">
+        <li class="cmp"><span class="dot d-av"></span>chl-producto-auto-digital-always-on</li>
+        <li class="l2"><span class="dot d-ok"></span>Configuración<span class="n">$35.000/día</span></li>
+        <li class="l2 sel"><span class="dot d-ok"></span>ao-contratar-online<span class="n">22 kw</span></li>
+        <li class="l3">Keywords<span class="n">22</span></li>
+        <li class="l3">Anuncio ads-sin-tramites<span class="n">15+4</span></li>
+        <li class="l3">Negativas<span class="n">6</span></li>
+        <li class="l2"><span class="dot d-av"></span>ao-precio-seguro-auto<span class="n">20 kw</span></li>
+        <li class="l2"><span class="dot d-ok"></span>ao-auto-recien-comprado<span class="n">18 kw</span></li>
+        <li class="l2"><span class="dot d-ok"></span>Negativas de campaña<span class="n">24</span></li>
+        <li class="l2"><span class="dot d-av"></span>Sitelinks<span class="n">4</span></li>
+        <li class="l2"><span class="dot d-ok"></span>Destacados<span class="n">5</span></li>
+        <li class="l2"><span class="dot d-ok"></span>Ubicación · Chile</li>
+      </ul>
+      <div class="sep"></div>
+      <h3>Ficha del producto</h3>
+      <div class="ficha-ent"><b>Leída el 26-sep</b> desde la landing y Google. 3 competidores, 14 búsquedas reales. <button class="btn link" onclick="tab('ficha')">Ver ficha →</button></div>
+    </aside>
+
+    <!-- CENTRO: el elemento elegido -->
+    <main class="col cen">
+      <div class="cab"><h2>ao-contratar-online</h2><span class="mono">grupo</span></div>
+      <div class="int">Intención: quiere contratar el seguro ahora, sin trámites. <button class="btn link">Editar</button></div>
+      <div class="barreras">
+        <span class="bar ok">✓ Trámite · 3 títulos</span>
+        <span class="bar ok">✓ Precio · 3 títulos</span>
+        <span class="bar ok">✓ Respaldo · 2 títulos</span>
+        <span class="bar ok">✓ Keyword · 4 títulos</span>
+      </div>
+
+      <div class="card">
+        <div class="card-h"><h4>Anuncio adaptable · ads-sin-tramites</h4><span class="sp"></span><span class="fij">5 fijados en posición 1 + 10 que rotan</span></div>
+        <div class="serp"><small>Patrocinado · www.acme.cl/seguro-auto/contratar</small><div class="t">Seguro de Auto Acme | Contrata 100% Online | 2 Cuotas Gratis</div><div class="d">Asegura tu auto sin inspección física y recibe tu póliza al correo. Contrata hoy.</div></div>
+        <table>
+          <tr><th style="width:28px"></th><th>Título</th><th>Papel</th><th>Posición</th><th style="text-align:right">Largo</th></tr>
+          <tr><td><input type="checkbox" class="cb"></td><td>Seguro de Auto Acme</td><td><span class="rol r-keyword">keyword</span></td><td class="fij">Fijo 1</td><td class="cnt">19/30</td></tr>
+          <tr><td><input type="checkbox" class="cb"></td><td>Acme: 2 Cuotas Gratis</td><td><span class="rol r-precio">precio</span></td><td class="fij">Fijo 1</td><td class="cnt">21/30</td></tr>
+          <tr><td><input type="checkbox" class="cb"></td><td>Contrata Acme 100% Online</td><td><span class="rol r-tramite">trámite</span></td><td class="fij">Fijo 1</td><td class="cnt">25/30</td></tr>
+          <tr class="pick"><td><input type="checkbox" class="cb" checked></td><td>Acme, el Seguro Más Barato</td><td><span class="rol r-precio">precio</span></td><td class="fij">Fijo 1</td><td class="cnt">26/30</td></tr>
+          <tr><td><input type="checkbox" class="cb"></td><td>Seguro Auto Acme Hoy</td><td><span class="rol r-keyword">keyword</span></td><td class="fij">Fijo 1</td><td class="cnt">20/30</td></tr>
+          <tr><td><input type="checkbox" class="cb"></td><td>Sin Inspección Física</td><td><span class="rol r-tramite">trámite</span></td><td class="fij">Rota</td><td class="cnt">21/30</td></tr>
+          <tr><td><input type="checkbox" class="cb"></td><td>Tu Póliza Llega al Correo</td><td><span class="rol r-tramite">trámite</span></td><td class="fij">Rota</td><td class="cnt">25/30</td></tr>
+          <tr><td><input type="checkbox" class="cb"></td><td>Más de 40 Años en Chile</td><td><span class="rol r-respaldo">respaldo</span></td><td class="fij">Rota</td><td class="cnt">23/30</td></tr>
+          <tr class="pick"><td><input type="checkbox" class="cb" checked></td><td>Te Protegemos Siempre</td><td><span class="rol r-respaldo">respaldo</span></td><td class="fij">Rota</td><td class="cnt">21/30</td></tr>
+          <tr><td colspan="5" style="color:var(--ink3);font-size:12px">… 6 títulos más · <button class="btn link">ver todos</button></td></tr>
+        </table>
+      </div>
+
+      <div class="card">
+        <div class="card-h"><h4>Descripciones</h4></div>
+        <table>
+          <tr><td style="width:28px"><input type="checkbox" class="cb"></td><td>Asegura tu auto sin inspección física y recibe tu póliza al correo. Contrata hoy.</td><td class="cnt">84/90</td></tr>
+          <tr><td><input type="checkbox" class="cb"></td><td>Dos cuotas gratis al contratar online este mes. Cotiza en minutos y activa tu póliza.</td><td class="cnt">87/90</td></tr>
+          <tr><td><input type="checkbox" class="cb"></td><td>Más de 40 años respondiendo a conductores en Chile. Asegura tu auto ahora.</td><td class="cnt">75/90</td></tr>
+          <tr><td><input type="checkbox" class="cb"></td><td>Grúa y auto de reemplazo incluidos en el plan full. Contrátalo en línea.</td><td class="cnt">72/90</td></tr>
+        </table>
+      </div>
+
+      <div class="card">
+        <div class="card-h"><h4>Keywords · 22</h4><span class="sp"></span><span class="fij">Exacta 12 · Frase 10</span></div>
+        <div style="padding:12px 14px">
+          <span class="kw">contratar seguro de auto online <i class="fr">frase</i></span><span class="kw">seguro auto online <i class="ex">exacta</i></span>
+          <span class="kw">comprar seguro de auto <i class="ex">exacta</i></span><span class="kw">asegurar auto en el acto <i class="fr">frase</i></span>
+          <span class="kw">seguro de auto digital <i class="ex">exacta</i></span><span class="kw">contratar seguro auto hoy <i class="fr">frase</i></span>
+          <button class="btn link">+ 16 más</button>
+        </div>
+      </div>
+    </main>
+
+    <!-- DERECHA: revisión · conversación · ficha -->
+    <aside class="col" style="display:flex;flex-direction:column">
+      <div class="tabs">
+        <button id="t-rev" onclick="tab('rev')">Revisión <span class="badge">3</span></button>
+        <button id="t-ia" class="on" onclick="tab('ia')">Conversación</button>
+        <button id="t-ficha" onclick="tab('ficha')">Ficha</button>
+      </div>
+
+      <div class="pane" id="p-rev">
+        <div class="grp-t">Bloquean la aprobación · 0</div>
+        <div class="grp-t">Revisar · 3</div>
+        <div class="hz"><div class="top"><span class="cod av">C10</span>Superlativo sin respaldo</div>«Acme, el Seguro Más Barato» afirma «más barato» sin un dato en la ficha que lo respalde.<div class="donde">ao-contratar-online › Anuncio › Título 4</div><div class="acc"><button class="btn link">Ir</button><button class="btn link" style="color:var(--magenta)">Corregir con IA</button><button class="btn link" style="color:var(--ink3)">Ver por qué</button></div></div>
+        <div class="hz"><div class="top"><span class="cod av">V02</span>Falta una barrera</div>El anuncio del grupo de precio no tiene títulos de respaldo.<div class="donde">ao-precio-seguro-auto › Anuncio</div><div class="acc"><button class="btn link">Ir</button><button class="btn link" style="color:var(--magenta)">Corregir con IA</button></div></div>
+        <div class="hz"><div class="top"><span class="cod av">P06</span>Sitelink a la misma página</div>«Cotizar» lleva a la URL del anuncio: debe ir a otra página.<div class="donde">Sitelinks › Cotizar</div><div class="acc"><button class="btn link">Ir</button><button class="btn link" style="color:var(--magenta)">Corregir con IA</button></div></div>
+        <div class="grp-t">Sugerencias · 2</div>
+        <div class="hz"><div class="top"><span class="cod su">C04</span>5 fijados en la posición 1</div>Google recomienda 2 o 3; tu protocolo usa 5.<div class="donde">Todos los anuncios</div></div>
+        <div class="hz"><div class="top"><span class="cod su">K11</span>Un solo anuncio por grupo</div>Google recomienda al menos 2.<div class="donde">3 grupos</div></div>
+      </div>
+
+      <div class="pane on" id="p-ia" style="flex:1">
+        <div class="ctx"><span>Trabajando sobre</span><b>2 títulos seleccionados</b><span class="sp"></span><button class="btn link" style="color:var(--blue)">Quitar</button></div>
+        <div class="msg yo">Estos dos no me sirven: el primero no lo podemos afirmar y el segundo es genérico. Cámbialos por algo de respaldo real.</div>
+        <div class="msg ia"><div class="av-ia"></div><div class="burbuja">
+          Cambié los dos con hechos de la ficha (evidencia de precio y de respaldo). Mantengo su papel (precio y respaldo) y su posición.
+          <div class="cambio"><div class="antes">Acme, el Seguro Más Barato</div><div class="desp">Acme: 2 Cuotas Gratis Online</div><div class="meta"><span class="rol r-precio">precio</span>Fijo 1 · 28/30<span class="sp"></span><input type="checkbox" class="cb" checked> aplicar</div></div>
+          <div class="cambio"><div class="antes">Te Protegemos Siempre</div><div class="desp">Liquidación de Siniestros Online</div><div class="meta"><span class="rol r-respaldo">respaldo</span>Rota · 29/30<span class="sp"></span><input type="checkbox" class="cb" checked> aplicar</div></div>
+          <div style="margin-top:8px;font-size:12px;color:var(--ink3)">Revisado: sin errores nuevos · ortografía revisada. El resto de la campaña no se tocó.</div>
+          <div class="acciones"><button class="btn pri sm">Aplicar 2 cambios</button><button class="btn sm">Descartar</button></div>
+        </div></div>
+        <div class="msg yo">¿Qué dicen los competidores sobre la liquidación?</div>
+        <div class="msg ia"><div class="av-ia"></div><div class="burbuja">
+          Busqué en Google: Beta promete «liquidación en 48 horas» y Gama «reparación en talleres de marca». Tu web no publica un plazo, así que no lo uso en anuncios.
+          <div class="cambio"><div class="desp">Ficha · Competidores: se agregan Beta y Gama con su promesa.</div><div class="meta">Fuentes: beta.cl · gama.cl<span class="sp"></span><input type="checkbox" class="cb" checked> guardar en la ficha</div></div>
+          <div class="acciones"><button class="btn pri sm">Guardar en la ficha</button></div>
+        </div></div>
+      </div>
+
+      <div class="pane" id="p-ficha">
+        <div class="ev"><h5>Objetivo</h5><ul><li>Seguro de auto 100% online · contratar · oferta «2 cuotas gratis» · enfoque conversión</li></ul></div>
+        <div class="ev"><h5>Evidencia · Trámite</h5><ul><li>Sin inspección física</li><li>Póliza digital al correo</li></ul></div>
+        <div class="ev"><h5>Evidencia · Precio</h5><ul><li>2 cuotas gratis contratando online</li><li>Pago con tarjeta en cuotas</li></ul></div>
+        <div class="ev"><h5>Evidencia · Respaldo</h5><ul><li>Más de 40 años en Chile</li><li>Denuncia y liquidación de siniestros online</li><li class="vacio">Sin plazo de liquidación publicado en la web · la IA no lo inventa</li></ul></div>
+        <div class="ev"><h5>Momentos de necesidad</h5><ul><li>Auto recién comprado</li><li>Necesito circular hoy</li></ul></div>
+        <div class="ev"><h5>No vendemos</h5><ul><li>SOAP (fuera de enero y marzo) → negativa</li></ul></div>
+        <button class="btn sm">Editar ficha</button> <button class="btn ia sm" onclick="tab('ia')">Averiguar algo</button>
+      </div>
+
+      <div class="caja">
+        <div class="modo"><button class="on">Corregir</button><button>Averiguar</button></div>
+        <textarea placeholder="Pídele a Char-B un cambio sobre lo seleccionado, o sobre la campaña entera si no seleccionas nada."></textarea>
+        <div class="fila"><span>Solo cambia lo que pidas · verás cada cambio antes de aplicarlo</span><span class="sp"></span><button class="btn ia sm">Enviar</button></div>
+      </div>
+    </aside>
+  </div>
+</section>
+
+<!-- ═════════════ 3 · APROBAR Y EXPORTAR ═════════════ -->
+<section class="pant" id="p3">
+  <div class="ed">
+    <div class="logo"></div><div class="crumb">Campañas › <b>Auto digital · Octubre</b></div><span class="chip">SEARCH</span>
+    <span class="sp"></span>
+    <div class="estados"><span class="hecho">✓ Borrador</span><span class="hecho">✓ Aprobada</span><span class="aqui">Exportada</span><span>Publicada</span></div>
+    <span class="ver">v6</span>
+    <button class="btn">Marcar como publicada</button>
+  </div>
+  <div class="exp">
+    <div class="card">
+      <div class="card-h"><h4>Descargar para Google Ads Editor</h4><span class="sp"></span><span class="mono">chl-producto-auto-digital-ads-editor-2026-10-02.csv</span></div>
+      <div class="opc">
+        <div class="op"><h4>Campaña completa</h4><p>Todo, para una campaña que aún no existe en tu cuenta.</p><div class="num">318 filas</div></div>
+        <div class="op on"><h4>Solo cambios desde la v4 publicada</h4><p>Lo nuevo, lo modificado y lo eliminado. Lo que no cambió no se toca.</p><div class="num">9 filas</div></div>
+      </div>
+      <ul class="lista">
+        <li><span class="tag t-r">Reemplaza</span>Título «Acme, el Seguro Más Barato» → «Acme: 2 Cuotas Gratis Online» <span class="sp" style="flex:1"></span><span class="fij">el anuncio anterior sale con Status Removed</span></li>
+        <li><span class="tag t-n">Nuevo</span>Grupo ao-auto-recien-comprado · 18 keywords · 1 anuncio</li>
+        <li><span class="tag t-m">Modifica</span>Presupuesto diario $25.000 → $35.000</li>
+        <li><span class="tag t-e">Elimina</span>Keyword «seguro auto barato» (frase)</li>
+      </ul>
+      <div class="man">Hazlo a mano en Ads Editor: quitar la ubicación «Región de Antofagasta» (el archivo no lo expresa con seguridad).</div>
+      <div class="pie" style="padding:14px 18px;margin:0"><span class="aviso-t">Tras publicar, los nombres de campañas y grupos quedan fijos: Ads Editor los reconoce por su nombre.</span><span class="sp"></span><button class="btn pri">Descargar 9 filas</button></div>
+    </div>
+  </div>
+</section>
+
+<script>
+function ver(n, b){ document.querySelectorAll('.pant').forEach((p,i)=>p.classList.toggle('on', i===n-1)); document.querySelectorAll('.mk button').forEach(x=>x.classList.toggle('on', x===b)); scrollTo(0,0); }
+function tab(t){ ['rev','ia','ficha'].forEach(k=>{ document.getElementById('p-'+k).classList.toggle('on',k===t); document.getElementById('t-'+k).classList.toggle('on',k===t); }); document.querySelector('.caja').style.display = t==='rev' ? 'none' : ''; }
+</script>
+</body>
+</html>
