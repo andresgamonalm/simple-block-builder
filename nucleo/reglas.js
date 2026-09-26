@@ -6,6 +6,7 @@
 
    Cada regla tiene:
      codigo     G…  = Google (lo que Ads Editor o Google rechazan)
+                P…  = protocolo de la casa (lámina "Reglas y requisitos ADS" del usuario)
                 C…  = coherencia (la campaña se contradice a sí misma)
                 K…  = criterio (válido, pero probablemente un error o una mala práctica)
      nivel      'error'      → BLOQUEA la exportación
@@ -18,6 +19,8 @@
      contexto.hoy    'AAAA-MM-DD' (por defecto, hoy)
      contexto.ficha  texto con los datos reales del producto (landing, ficha);
                      si viene, se controlan las cifras de los anuncios contra él.
+     contexto.marca  nombre de la marca: los títulos fijados en la posición 1
+                     deben llevarla (o una oferta/precio).
    ════════════════════════════════════════════════════════════════════════ */
 (function (raiz, fabrica) {
   if (typeof module === 'object' && module.exports) module.exports = fabrica(require('./modelo.js'));
@@ -41,13 +44,24 @@
     { codigo: 'G10', nivel: 'error', categoria: 'google', que: `Destacado máx ${L.destacado}, sin repetir. Fragmento: ${L.fragmentoValoresMin}-${L.fragmentoValoresMax} valores de máx ${L.fragmentoValor}.` },
     { codigo: 'G11', nivel: 'error', categoria: 'google', que: 'Negativa con texto, máx 10 palabras.' },
     { codigo: 'G12', nivel: 'aviso', categoria: 'google', que: 'Mayúsculas excesivas: palabras enteras en mayúscula que no son siglas.' },
+    { codigo: 'G13', nivel: 'aviso', categoria: 'google', que: 'El encabezado del fragmento estructurado es uno de los predefinidos de Google.' },
+    { codigo: 'G14', nivel: 'error', categoria: 'google', que: `Extensión de precio: ${L.precioItemsMin}-${L.precioItemsMax} ítems, encabezado y descripción de máx ${L.precioTexto}, precio entero en CLP, URL propia.` },
+    // PROTOCOLO DE LA CASA
+    { codigo: 'P01', nivel: 'aviso', categoria: 'protocolo', que: 'Nombres de campaña, grupo y anuncio en minúsculas, sin tildes ni símbolos, con guion medio. (Renombrar una campaña ya publicada crea un duplicado en Ads Editor.)' },
+    { codigo: 'P02', nivel: 'aviso', categoria: 'protocolo', que: 'Estructura de nombres: campaña chl-producto-<producto>-<tipo>; grupo <abreviatura del tipo>-<naturaleza>; anuncio ads-<característica>.' },
+    { codigo: 'P03', nivel: 'aviso', categoria: 'protocolo', que: `Títulos: ${M.PROTOCOLO.fijadosPosicion1} fijados en la posición 1 y ${M.PROTOCOLO.titulosRotativos} que rotan.` },
+    { codigo: 'P04', nivel: 'aviso', categoria: 'protocolo', que: 'Los títulos fijados en la posición 1 llevan la marca o la oferta/precio.' },
+    { codigo: 'P05', nivel: 'aviso', categoria: 'protocolo', que: `Al menos ${M.PROTOCOLO.sitelinksMin} sitelinks por campaña.` },
+    { codigo: 'P06', nivel: 'aviso', categoria: 'protocolo', que: 'Cada sitelink lleva a una página DISTINTA de la URL de destino principal.' },
+    { codigo: 'P07', nivel: 'sugerencia', categoria: 'protocolo', que: `Al menos ${M.PROTOCOLO.destacadosMin} textos destacados por campaña.` },
+    { codigo: 'P08', nivel: 'aviso', categoria: 'protocolo', que: `UTM presentes y correctas: utm_source=${M.PROTOCOLO.utmSource}, utm_medium=clics o conversion según la puja, utm_campaign = nombre de la campaña; todo en minúsculas y con guion medio.` },
+    { codigo: 'P09', nivel: 'error', categoria: 'protocolo', que: 'Toda URL final (anuncios, keywords, sitelinks, precios) usa https://.' },
     // COHERENCIA
     { codigo: 'C01', nivel: 'error', categoria: 'coherencia', que: 'Ninguna negativa (de campaña o del grupo) bloquea una keyword propia, según su concordancia.' },
     { codigo: 'C02', nivel: 'aviso', categoria: 'coherencia', que: 'La misma keyword con la misma concordancia en dos grupos de la campaña (compiten entre sí).' },
     { codigo: 'C03', nivel: 'aviso', categoria: 'coherencia', que: 'Una promoción con "hasta el DD/MM" debe calzar con la fecha de término de la campaña.' },
-    { codigo: 'C04', nivel: 'aviso', categoria: 'coherencia', que: 'Más de 3 títulos fijados en la misma posición: esa posición deja de rotar y baja la eficacia del anuncio.' },
+    { codigo: 'C04', nivel: 'aviso', categoria: 'coherencia', que: `Más de ${M.PROTOCOLO.fijadosPosicion1} títulos fijados en una misma posición: el protocolo usa ${M.PROTOCOLO.fijadosPosicion1} en la posición 1; más que eso resta combinaciones.` },
     { codigo: 'C05', nivel: 'aviso', categoria: 'coherencia', que: 'Títulos casi iguales (mismas palabras en otro orden).' },
-    { codigo: 'C06', nivel: 'aviso', categoria: 'coherencia', que: 'Los mismos títulos fijados repetidos en 3 o más grupos: el anuncio no habla de la intención de cada grupo.' },
     { codigo: 'C07', nivel: 'aviso', categoria: 'coherencia', que: 'Ningún título del anuncio contiene las palabras de alguna keyword del grupo (relevancia baja).' },
     { codigo: 'C08', nivel: 'aviso', categoria: 'coherencia', que: 'Cifras de los anuncios que no aparecen en la ficha del producto (posible dato inventado).' },
     { codigo: 'C09', nivel: 'aviso', categoria: 'coherencia', que: 'Keywords y anuncios del mismo grupo apuntan a dominios distintos.' },
@@ -134,7 +148,6 @@
       const nombresG = duplicados(c.grupos.filter(g => !g.soloReferencia).map(g => g.nombre));
       nombresG.forEach(n => H('G04', c, dc, `Hay dos grupos con el nombre «${n}»: Ads Editor los mezclaría.`));
       const kwCampana = {};
-      const fijadosPorGrupo = [];
       for (const g of c.grupos) {
         const dg = dc + ' › Grupo «' + g.nombre + '»';
         if (!g.soloReferencia) {
@@ -194,12 +207,11 @@
           // C04 · C05
           ['1', '2', '3'].forEach(pos => {
             const n = T.filter(t => String(t.posicion) === pos).length;
-            if (n > 3) H('C04', a, da, `${n} títulos fijados en la posición ${pos}.`);
+            if (n > M.PROTOCOLO.fijadosPosicion1) H('C04', a, da, `${n} títulos fijados en la posición ${pos}.`);
           });
           const porConjunto = {};
           T.forEach(t => { const k = palabras(t.texto).slice().sort().join(' '); (porConjunto[k] = porConjunto[k] || []).push(t.texto); });
           Object.values(porConjunto).filter(v => v.length > 1 && norm(v[0]) !== norm(v[1])).forEach(v => H('C05', a, da, `Títulos casi iguales: «${v.join('» y «')}».`));
-          fijadosPorGrupo.push({ g, a, fijados: T.filter(t => t.posicion).map(t => norm(t.texto)).sort().join('|') });
           // C07 relevancia
           if (g.keywords.length && T.length) {
             const tit = ' ' + T.map(t => palabras(t.texto).join(' ')).join(' | ') + ' ';
@@ -225,10 +237,6 @@
       // C02
       Object.values(kwCampana).filter(v => new Set(v.map(x => x.g.id)).size > 1)
         .forEach(v => H('C02', v[1].k, dc, `«${v[0].k.texto}» (${v[0].k.concordancia}) está en los grupos ${[...new Set(v.map(x => '«' + x.g.nombre + '»'))].join(' y ')}.`));
-      // C06
-      const repetidos = {};
-      fijadosPorGrupo.filter(x => x.fijados).forEach(x => { (repetidos[x.fijados] = repetidos[x.fijados] || new Set()).add(x.g.id); });
-      Object.values(repetidos).filter(s => s.size >= 3).forEach(s => H('C06', c, dc, `Los mismos títulos fijados se repiten en ${s.size} grupos.`));
       // C03 vigencia de promociones
       const textos = [];
       c.grupos.forEach(g => g.anuncios.forEach(a => a.titulos.concat(a.descripciones).forEach(x => textos.push(x.texto))));
@@ -240,6 +248,74 @@
         if (!esFecha(c.fin)) H('C03', c, dc, `Un texto dice "hasta el ${md.slice(3)}/${md.slice(0, 2)}", pero la campaña no tiene fecha de término válida.`);
         else if (c.fin.slice(5) !== md) H('C03', c, dc, `Un texto dice "hasta el ${md.slice(3)}/${md.slice(0, 2)}" y la campaña termina el ${c.fin}.`);
       });
+      // ── PROTOCOLO ──
+      const esHttps = u => /^https:\/\//i.test(String(u || ''));
+      const P = M.PROTOCOLO;
+      const TIPOS_PROTO = Object.keys(P.abreviaturaTipo);
+      // P01 / P02 nombres
+      if (!M.esSlug(c.nombre)) H('P01', c, dc, `Nombre fuera de protocolo. Sugerido: «${M.slugTaxonomia(c.nombre)}».`);
+      else if (!/^[a-z]{3}-producto-[a-z0-9]+(-[a-z0-9]+)+$/.test(c.nombre)) H('P02', c, dc, 'El nombre no sigue «chl-producto-<producto>-<tipo>».');
+      const tipoCamp = (c.taxonomia && c.taxonomia.tipo) ? M.slugTaxonomia(c.taxonomia.tipo) : (TIPOS_PROTO.find(t => c.nombre.endsWith('-' + t)) || '');
+      const abrev = tipoCamp ? (P.abreviaturaTipo[tipoCamp] || tipoCamp) : '';
+      for (const g of c.grupos) {
+        if (g.soloReferencia) continue;
+        const dg = dc + ' › Grupo «' + g.nombre + '»';
+        if (!M.esSlug(g.nombre)) H('P01', g, dg, `Nombre fuera de protocolo. Sugerido: «${M.slugTaxonomia(g.nombre)}».`);
+        else if (!/^[a-z0-9]+-[a-z0-9-]+$/.test(g.nombre) || (abrev && !g.nombre.startsWith(abrev + '-'))) H('P02', g, dg, `El nombre no sigue «${abrev || '<abreviatura del tipo>'}-<naturaleza>».`);
+        for (const a of g.anuncios) {
+          const da = dg + ' › Anuncio' + (a.nombre ? ' «' + a.nombre + '»' : '');
+          if (!a.nombre) H('P02', a, da, 'El anuncio no tiene nombre de protocolo (ads-<característica>).');
+          else if (!M.esSlug(a.nombre)) H('P01', a, da, `Nombre fuera de protocolo. Sugerido: «${M.slugTaxonomia(a.nombre)}».`);
+          else if (!/^ads-[a-z0-9]/.test(a.nombre)) H('P02', a, da, 'El nombre del anuncio debe empezar con «ads-».');
+          // P03 / P04 títulos
+          const fijos1 = a.titulos.filter(t => String(t.posicion) === '1');
+          const rotan = a.titulos.filter(t => !t.posicion);
+          if (fijos1.length !== P.fijadosPosicion1 || rotan.length !== P.titulosRotativos)
+            H('P03', a, da, `Tiene ${fijos1.length} fijados en la posición 1 y ${rotan.length} que rotan (protocolo: ${P.fijadosPosicion1} y ${P.titulosRotativos}).`);
+          if (cx.marca) fijos1.filter(t => !norm(t.texto).includes(norm(cx.marca)) && !/\d|%|\$|gratis|dcto|descuento|cuota|oferta|precio|promo/i.test(t.texto))
+            .forEach(t => H('P04', t, da + ' › «' + t.texto + '»', 'Título fijado en la posición 1 sin la marca ni una oferta/precio.'));
+          // P09 https
+          if (a.urlFinal && !esHttps(a.urlFinal)) H('P09', a, da, 'La URL final no usa https://.');
+        }
+        g.keywords.filter(k => k.urlFinal && !esHttps(k.urlFinal)).forEach(k => H('P09', k, dg + ' › Keyword «' + k.texto + '»', 'La URL final no usa https://.'));
+      }
+      // P05 / P06 / P07 recursos
+      if (c.sitelinks.length < P.sitelinksMin) H('P05', c, dc, `Tiene ${c.sitelinks.length} sitelinks (protocolo: al menos ${P.sitelinksMin}).`);
+      const principales = new Set();
+      c.grupos.forEach(g => g.anuncios.forEach(a => { if (a.urlFinal) principales.add(String(a.urlFinal).replace(/\/+$/, '').toLowerCase()); }));
+      c.sitelinks.forEach(sl => {
+        if (principales.has(String(sl.urlFinal || '').replace(/\/+$/, '').toLowerCase())) H('P06', sl, dc + ' › Sitelink «' + sl.texto + '»', 'Lleva a la misma URL que el anuncio: debe ir a otra página.');
+        if (sl.urlFinal && !esHttps(sl.urlFinal)) H('P09', sl, dc + ' › Sitelink «' + sl.texto + '»', 'La URL no usa https://.');
+      });
+      if (c.destacados.length < P.destacadosMin) H('P07', c, dc, `Tiene ${c.destacados.length} textos destacados (protocolo: ${P.destacadosMin} o más).`);
+      // P08 UTM
+      const utm = c.utmEn === 'plantilla' ? c.plantillaSeguimiento : c.sufijoUrlFinal;
+      if (!utm) H('P08', c, dc, 'La campaña no tiene UTM.');
+      else {
+        const q = {}; String(utm).replace(/^.*?\?/, '').split('&').forEach(par => { const [k, v] = par.split('='); if (k) q[k] = v || ''; });
+        const errs = [];
+        if (q.utm_source !== P.utmSource) errs.push(`utm_source debe ser «${P.utmSource}»`);
+        if (q.utm_medium !== P.utmMedio(c.puja)) errs.push(`utm_medium debe ser «${P.utmMedio(c.puja)}» para «${c.puja}»`);
+        if (q.utm_campaign !== M.slugTaxonomia(c.nombre)) errs.push('utm_campaign debe ser el nombre de la campaña');
+        Object.values(q).filter(v => v && !/^\{?[a-z0-9-_{}]+\}?$/.test(v)).forEach(v => errs.push(`«${v}» no va en minúsculas con guion`));
+        if (errs.length) H('P08', c, dc, 'UTM incorrectas: ' + errs.join('; ') + '.');
+      }
+      // G13 / G14
+      c.fragmentos.filter(f => !M.ENCABEZADOS_FRAGMENTO.map(norm).includes(norm(f.encabezado)))
+        .forEach(f => H('G13', f, dc + ' › Fragmento «' + f.encabezado + '»', 'No es un encabezado predefinido de Google.'));
+      if (c.precios) {
+        const it = c.precios.items || [];
+        const dp = dc + ' › Extensión de precio';
+        if (it.length < L.precioItemsMin || it.length > L.precioItemsMax) H('G14', c, dp, `Tiene ${it.length} ítems (deben ser ${L.precioItemsMin} a ${L.precioItemsMax}).`);
+        it.forEach(x => {
+          if (!x.encabezado || x.encabezado.length > L.precioTexto) H('G14', x, dp, `Encabezado «${x.encabezado || ''}» vacío o de más de ${L.precioTexto}.`);
+          if ((x.descripcion || '').length > L.precioTexto) H('G14', x, dp, `Descripción de más de ${L.precioTexto}.`);
+          if (!Number.isInteger(x.precio) || x.precio <= 0) H('G14', x, dp, `Precio inválido: «${x.precio}» (entero en CLP).`);
+          if (!esUrl(x.urlFinal)) H('G14', x, dp, 'Falta la URL propia del ítem.');
+          else if (!esHttps(x.urlFinal)) H('P09', x, dp, 'La URL no usa https://.');
+        });
+      }
+
       // Recursos
       const dupSl = duplicados(c.sitelinks.map(s => s.texto));
       c.sitelinks.forEach(s => {

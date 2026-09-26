@@ -28,6 +28,10 @@ Iniciativa ─ campañas[] ─ grupos[] ─ keywords[] · negativas[] · anuncio
 - **Garantía:** importar el archivo y volver a exportarlo da el mismo archivo, byte a byte
   (prueba `pruebas/nucleo.js`). Lo que el modelo no entiende se conserva y se devuelve tal cual.
 
+- **Columnas opcionales** (se agregan al final solo si se usan): `Tracking template` · `Final URL suffix`.
+- **Nombre del archivo:** `<base>-ads-editor-<aaaa-mm-dd>.csv`, en minúsculas y con guion. `base` = el nombre de la campaña si es
+  una; el prefijo común de los nombres si son varias (`chl-producto-auto-digital-ads-editor-2026-09-26.csv`); si no, la iniciativa.
+
 ### Cómo reconoce Ads Editor cada fila
 | Fila | Columnas que la identifican |
 |---|---|
@@ -41,6 +45,7 @@ Iniciativa ─ campañas[] ─ grupos[] ─ keywords[] · negativas[] · anuncio
 | Sitelink | `Sitelink text` (+ `Description 1/2`, `Final URL`) |
 | Destacado | `Callout text` |
 | Fragmento estructurado | `Header` + `Snippet Values` (valores separados por `;`) |
+| UTM | `Tracking template` o `Final URL suffix` en la fila de la campaña; `Final URL suffix` también en la del anuncio |
 
 ## 3. Entidades y campos
 
@@ -60,7 +65,7 @@ Una campaña de Google Ads. Por ahora: Search.
 | Campo | Tipo | Oblig. | Límite | Columna Ads Editor | Qué es |
 |---|---|---|---|---|---|
 | `id` | texto |  |  | — | Identificador estable (cmp_…). |
-| `nombre` | texto | sí |  | `Campaign` | Nombre EXACTO en Google Ads. Ads Editor reconoce la campaña por este nombre: cambiarlo después de publicar crea una campaña duplicada. Convención: "Search \| Producto \| Objetivo". |
+| `nombre` | texto | sí |  | `Campaign` | Nombre EXACTO en Google Ads. Ads Editor reconoce la campaña por este nombre: cambiarlo después de publicar crea una campaña duplicada. Protocolo: sigla país-producto-nombre del producto-tipo de campaña, p. ej. "chl-producto-auto-digital-always-on". |
 | `tipo` | texto | sí |  | `Campaign type` | Tipo de campaña en Google Ads. Valores: `Search`. |
 | `redes` | lista de texto | sí |  | `Networks` | Redes donde aparece. Separadas por ";" en el CSV. Recomendado: solo "Google Search". Valores: `Google Search`, `Search Partners`, `Display Network`. |
 | `idiomas` | lista de texto | sí |  | `Language` | Códigos de idioma, p. ej. "es". |
@@ -70,6 +75,11 @@ Una campaña de Google Ads. Por ahora: Search.
 | `fin` | fecha AAAA-MM-DD |  |  | `End date` | Fecha de término. En una promoción debe calzar con su vigencia. |
 | `estado` | texto | sí |  | `Campaign Status` | Estado al importar. Recomendado: "Paused" para revisar en Ads Editor antes de activar. Valores: `Enabled`, `Paused`. |
 | `politicaUE` | texto |  |  | `EU political ads` | Declaración de anuncios políticos de la UE. Para Chile: "No". Valores: `No`, `Yes`. |
+| `taxonomia` | {pais, producto, tipo} |  |  | — | Partes del nombre según el protocolo: "chl" + "producto" + nombre del producto + tipo de campaña → chl-producto-auto-digital-always-on. Minúsculas, sin tildes ni símbolos, con guion medio. |
+| `utmEn` | texto |  |  | — | Dónde van las UTM. "sufijo" (recomendado por Google, permite utm_content por anuncio) o "plantilla" ({lpurl}?utm_…). Valores: `sufijo`, `plantilla`. |
+| `plantillaSeguimiento` | texto |  |  | `Tracking template` | Plantilla de seguimiento con {lpurl}. Se genera sola si utmEn = "plantilla". |
+| `sufijoUrlFinal` | texto |  |  | `Final URL suffix` | Parámetros que se agregan a la URL final: utm_source=gads&utm_medium=clics\|conversion&utm_campaign=<nombre de la campaña>. |
+| `precios` | extensión de precio |  |  | — | Opcional. Tipo + 3 a 8 ítems. (Modelada y validada; su exportación espera confirmar las columnas de Ads Editor.) |
 | `ubicaciones` | lista de ubicación |  |  | — | Dónde se muestra. Cada una va en su propia fila del CSV. |
 | `edadesExcluidas` | lista de edad |  |  | — | Rangos de edad excluidos ("18-24", "Unknown"…). Cada uno en su fila. |
 | `negativas` | lista de negativa |  |  | — | Negativas de campaña: búsquedas por las que NO se paga. |
@@ -100,7 +110,7 @@ Una intención de búsqueda: sus keywords, sus negativas y su(s) anuncio(s).
 | Campo | Tipo | Oblig. | Límite | Columna Ads Editor | Qué es |
 |---|---|---|---|---|---|
 | `id` | texto |  |  | — | Identificador estable (grp_…). |
-| `nombre` | texto | sí |  | `Ad Group` | Nombre EXACTO del grupo (Ads Editor lo reconoce por nombre). Convención: "AD \| Intención". |
+| `nombre` | texto | sí |  | `Ad Group` | Nombre EXACTO del grupo (Ads Editor lo reconoce por nombre). Protocolo: <abreviatura del tipo de campaña>-<naturaleza>, p. ej. "ao-coberturas", "promo-cuotas". |
 | `estado` | texto |  |  | `Ad Group Status` | Valores: `Enabled`, `Paused`. |
 | `keywords` | lista de keyword | sí |  | — |  |
 | `negativas` | lista de negativa |  |  | — | Negativas propias del grupo. |
@@ -132,11 +142,13 @@ Una intención de búsqueda: sus keywords, sus negativas y su(s) anuncio(s).
 | Campo | Tipo | Oblig. | Límite | Columna Ads Editor | Qué es |
 |---|---|---|---|---|---|
 | `id` | texto |  |  | — | Identificador estable (rsa_…). |
+| `nombre` | texto |  |  | — | Nombre del anuncio según el protocolo: "ads-" + característica (ads-anual, ads-3-cuotas-gratis). Google no tiene campo de nombre para este anuncio: viaja como utm_content y en Comment. |
 | `estado` | texto |  |  | `Status` | Valores: `Enabled`, `Paused`. |
-| `urlFinal` | url | sí |  | `Final URL` |  |
+| `urlFinal` | url | sí |  | `Final URL` | https:// obligatorio (protocolo). |
+| `sufijoUrlFinal` | texto |  |  | `Final URL suffix` | UTM del anuncio: las de la campaña + utm_content=<nombre del anuncio>. Reemplaza al sufijo de la campaña para este anuncio. |
 | `ruta1` | texto |  | 15 | `Path 1` | Minúsculas y guiones. |
 | `ruta2` | texto |  | 15 | `Path 2` |  |
-| `titulos` | lista de {id, texto, posicion} | sí | 30 | `Headline 1…15 + Headline N position` | Entre 3 y 15 títulos de hasta 30 caracteres, sin punto final. "posicion" = "1", "2" o "3" si el título va fijado; vacío si rota. |
+| `titulos` | lista de {id, texto, posicion} | sí | 30 | `Headline 1…15 + Headline N position` | Entre 3 y 15 títulos de hasta 30 caracteres, sin punto final. "posicion" = "1", "2" o "3" si el título va fijado; vacío si rota. PROTOCOLO: 15 títulos = 5 fijados en la posición 1 (con la marca o la oferta/precio) + 10 que rotan. |
 | `descripciones` | lista de {id, texto, posicion} | sí | 90 | `Description 1…4` | Entre 2 y 4 descripciones de hasta 90 caracteres. |
 | `comentario` | texto |  |  | `Comment` |  |
 
@@ -145,7 +157,7 @@ Una intención de búsqueda: sus keywords, sus negativas y su(s) anuncio(s).
 | Campo | Tipo | Oblig. | Límite | Columna Ads Editor | Qué es |
 |---|---|---|---|---|---|
 | `id` | texto |  |  | — | Identificador estable (sl_…). |
-| `texto` | texto | sí | 25 | `Sitelink text` |  |
+| `texto` | texto | sí | 25 | `Sitelink text` | PROTOCOLO: al menos 4 sitelinks por campaña, cada uno a una página DISTINTA de la URL de destino principal. |
 | `linea1` | texto |  | 35 | `Description 1` |  |
 | `linea2` | texto |  | 35 | `Description 2` |  |
 | `urlFinal` | url | sí |  | `Final URL` |  |
@@ -156,7 +168,7 @@ Una intención de búsqueda: sus keywords, sus negativas y su(s) anuncio(s).
 | Campo | Tipo | Oblig. | Límite | Columna Ads Editor | Qué es |
 |---|---|---|---|---|---|
 | `id` | texto |  |  | — | Identificador estable (co_…). |
-| `texto` | texto | sí | 25 | `Callout text` |  |
+| `texto` | texto | sí | 25 | `Callout text` | PROTOCOLO: recomendado 4 o más por campaña. |
 | `comentario` | texto |  |  | `Comment` |  |
 
 ### Fragmento estructurado (`fragmento`)
@@ -164,11 +176,19 @@ Una intención de búsqueda: sus keywords, sus negativas y su(s) anuncio(s).
 | Campo | Tipo | Oblig. | Límite | Columna Ads Editor | Qué es |
 |---|---|---|---|---|---|
 | `id` | texto |  |  | — | Identificador estable (sn_…). |
-| `encabezado` | texto | sí |  | `Header` | Uno de los encabezados que acepta Google (p. ej. "Tipos", "Servicios"). |
+| `encabezado` | texto | sí |  | `Header` | Uno de los encabezados predefinidos de Google (también se aceptan sus nombres en inglés). Valores: `Servicios`, `Marcas`, `Cursos`, `Programas de grado`, `Destinos`, `Hoteles destacados`, `Cobertura de seguro`, `Modelos`, `Barrios`, `Catálogo de servicios`, `Programas`, `Estilos`, `Tipos`. |
 | `valores` | lista de texto | sí | 25 | `Snippet Values` | Entre 3 y 10 valores de hasta 25 caracteres. Separados por ";" en el CSV. |
 | `idioma` | texto |  |  | `Language` |  |
 | `estado` | texto |  |  | `Status` |  |
 | `comentario` | texto |  |  | `Comment` |  |
+
+### Extensión de precio (opcional) (`precio`)
+Un tipo y de 3 a 8 ítems, cada uno con su precio en CLP y su propia URL.
+
+| Campo | Tipo | Oblig. | Límite | Columna Ads Editor | Qué es |
+|---|---|---|---|---|---|
+| `tipo` | texto | sí |  | — | Valores: `Marcas`, `Eventos`, `Ubicaciones`, `Barrios`, `Categorías de productos`, `Niveles de productos`, `Servicios`, `Categorías de servicios`, `Niveles de servicios`. |
+| `items` | lista de {id, encabezado, descripcion, precio, unidad, urlFinal} | sí | 25 | — | Entre 3 y 8 ítems. Encabezado y descripción de hasta 25 caracteres; precio entero en CLP; unidad opcional (por mes, por año…); URL propia del producto. |
 
 ## 4. Límites de Google (Search)
 | Elemento | Límite |
@@ -181,7 +201,27 @@ Una intención de búsqueda: sus keywords, sus negativas y su(s) anuncio(s).
 | Fragmento estructurado | valores de 25 caracteres · entre 3 y 10 |
 | Keyword | 80 caracteres · 10 palabras |
 
-## 5. Reglas que toda campaña debe cumplir
+## 5. Protocolo de la casa: nombres y UTM
+Lámina "Reglas y requisitos ADS". Todo nombre va en **minúsculas, sin tildes, sin símbolos y con guion medio**.
+
+| Nivel | Estructura | Ejemplos |
+|---|---|---|
+| Campaña | `<sigla país>-producto-<nombre del producto>-<tipo de campaña>` | `chl-producto-auto-digital-always-on` · `chl-producto-auto-digital-promociones` |
+| Grupo de anuncios | `<abreviatura del tipo>-<naturaleza>` (always-on → ao, promociones → promo, promocion → promo) | `ao-coberturas` · `promo-cuotas` |
+| Anuncio | `ads-<característica>` | `ads-anual` · `ads-bienal` · `ads-3-cuotas-gratis` |
+
+**Títulos:** 5 fijados en la posición 1 (con la marca o la oferta/precio) y 10 que rotan.
+**Recursos:** al menos 4 sitelinks, cada uno a una página distinta de la URL principal; 4 o más textos destacados.
+
+**UTM** — `utm_source=gads` · `utm_medium=clics` (pujas por clic) o `conversion` (pujas por conversión) ·
+`utm_campaign=<nombre exacto de la campaña>` · `utm_content=<nombre del anuncio>`. Van en minúsculas y con guion.
+- **Por defecto van en el sufijo de URL final** (`Final URL suffix`): es lo que recomienda Google y permite `utm_content` por
+  anuncio. El sufijo del anuncio **reemplaza** al de la campaña, por eso lleva las UTM completas + `utm_content`.
+- **Alternativa:** plantilla de seguimiento (`Tracking template`) `{lpurl}?utm_source=…`. No se mezcla con sufijos: si el anuncio
+  agregara el suyo, la URL quedaría con dos `?`.
+- Google no tiene campo "nombre" para el anuncio adaptable de búsqueda: el nombre `ads-…` viaja en `utm_content`.
+
+## 6. Reglas que toda campaña debe cumplir
 Las aplica `nucleo/reglas.js` en la IA (antes y después de generar), en la pantalla y antes de exportar.
 **error** = bloquea la exportación · **aviso** = hay que revisarlo · **sugerencia** = mejora opcional.
 
@@ -199,12 +239,22 @@ Las aplica `nucleo/reglas.js` en la IA (antes y después de generar), en la pant
 | G10 | error | google | Destacado máx 25, sin repetir. Fragmento: 3-10 valores de máx 25. |
 | G11 | error | google | Negativa con texto, máx 10 palabras. |
 | G12 | aviso | google | Mayúsculas excesivas: palabras enteras en mayúscula que no son siglas. |
+| G13 | aviso | google | El encabezado del fragmento estructurado es uno de los predefinidos de Google. |
+| G14 | error | google | Extensión de precio: 3-8 ítems, encabezado y descripción de máx 25, precio entero en CLP, URL propia. |
+| P01 | aviso | protocolo | Nombres de campaña, grupo y anuncio en minúsculas, sin tildes ni símbolos, con guion medio. (Renombrar una campaña ya publicada crea un duplicado en Ads Editor.) |
+| P02 | aviso | protocolo | Estructura de nombres: campaña chl-producto-<producto>-<tipo>; grupo <abreviatura del tipo>-<naturaleza>; anuncio ads-<característica>. |
+| P03 | aviso | protocolo | Títulos: 5 fijados en la posición 1 y 10 que rotan. |
+| P04 | aviso | protocolo | Los títulos fijados en la posición 1 llevan la marca o la oferta/precio. |
+| P05 | aviso | protocolo | Al menos 4 sitelinks por campaña. |
+| P06 | aviso | protocolo | Cada sitelink lleva a una página DISTINTA de la URL de destino principal. |
+| P07 | sugerencia | protocolo | Al menos 4 textos destacados por campaña. |
+| P08 | aviso | protocolo | UTM presentes y correctas: utm_source=gads, utm_medium=clics o conversion según la puja, utm_campaign = nombre de la campaña; todo en minúsculas y con guion medio. |
+| P09 | error | protocolo | Toda URL final (anuncios, keywords, sitelinks, precios) usa https://. |
 | C01 | error | coherencia | Ninguna negativa (de campaña o del grupo) bloquea una keyword propia, según su concordancia. |
 | C02 | aviso | coherencia | La misma keyword con la misma concordancia en dos grupos de la campaña (compiten entre sí). |
 | C03 | aviso | coherencia | Una promoción con "hasta el DD/MM" debe calzar con la fecha de término de la campaña. |
-| C04 | aviso | coherencia | Más de 3 títulos fijados en la misma posición: esa posición deja de rotar y baja la eficacia del anuncio. |
+| C04 | aviso | coherencia | Más de 5 títulos fijados en una misma posición: el protocolo usa 5 en la posición 1; más que eso resta combinaciones. |
 | C05 | aviso | coherencia | Títulos casi iguales (mismas palabras en otro orden). |
-| C06 | aviso | coherencia | Los mismos títulos fijados repetidos en 3 o más grupos: el anuncio no habla de la intención de cada grupo. |
 | C07 | aviso | coherencia | Ningún título del anuncio contiene las palabras de alguna keyword del grupo (relevancia baja). |
 | C08 | aviso | coherencia | Cifras de los anuncios que no aparecen en la ficha del producto (posible dato inventado). |
 | C09 | aviso | coherencia | Keywords y anuncios del mismo grupo apuntan a dominios distintos. |
@@ -221,10 +271,12 @@ Las aplica `nucleo/reglas.js` en la IA (antes y después de generar), en la pant
 
 Cada hallazgo apunta al `id` del elemento: una corrección puede tocar solo esa parte.
 
-## 6. Pendiente de confirmar en la primera importación real
+## 7. Pendiente de confirmar en la primera importación real
 El archivo de referencia del usuario solo trae negativas amplias de campaña. Estas notaciones siguen la
 convención de Ads Editor, pero todavía no se han visto importadas:
 - Negativa de **frase** escrita como `"texto"` y de **exacta** como `[texto]` en la columna `Keyword`.
 - Negativa **de grupo**: `Type` = `Negative` con `Ad Group` lleno.
 - El **método de ubicación** ("presencia") no tiene columna en el contrato de 60: hoy se fija en Ads Editor (regla K05).
+- Nombres de columna `Tracking template` y `Final URL suffix` (a nivel de campaña y de anuncio).
+- **Extensión de precio:** está modelada y validada (regla G14), pero NO se exporta hasta confirmar sus columnas.
 - **Display y Performance Max** aún no forman parte del contrato.

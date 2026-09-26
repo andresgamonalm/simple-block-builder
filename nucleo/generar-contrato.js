@@ -39,6 +39,10 @@ function contrato() {
   L.push('- **Garantía:** importar el archivo y volver a exportarlo da el mismo archivo, byte a byte');
   L.push('  (prueba `pruebas/nucleo.js`). Lo que el modelo no entiende se conserva y se devuelve tal cual.');
   L.push('');
+  L.push('- **Columnas opcionales** (se agregan al final solo si se usan): `' + AE.COLUMNAS_OPCIONALES.join('` · `') + '`.');
+  L.push('- **Nombre del archivo:** `<base>-ads-editor-<aaaa-mm-dd>.csv`, en minúsculas y con guion. `base` = el nombre de la campaña si es');
+  L.push('  una; el prefijo común de los nombres si son varias (`chl-producto-auto-digital-ads-editor-2026-09-26.csv`); si no, la iniciativa.');
+  L.push('');
   L.push('### Cómo reconoce Ads Editor cada fila');
   L.push('| Fila | Columnas que la identifican |');
   L.push('|---|---|');
@@ -52,6 +56,7 @@ function contrato() {
   L.push('| Sitelink | `Sitelink text` (+ `Description 1/2`, `Final URL`) |');
   L.push('| Destacado | `Callout text` |');
   L.push('| Fragmento estructurado | `Header` + `Snippet Values` (valores separados por `;`) |');
+  L.push('| UTM | `Tracking template` o `Final URL suffix` en la fila de la campaña; `Final URL suffix` también en la del anuncio |');
   L.push('');
   L.push('## 3. Entidades y campos');
   for (const e of M.ESQUEMA) {
@@ -80,7 +85,27 @@ function contrato() {
    ['Keyword', Lm.keywordCaracteres + ' caracteres · ' + Lm.keywordPalabras + ' palabras']
   ].forEach(([a, b]) => L.push('| ' + a + ' | ' + b + ' |'));
   L.push('');
-  L.push('## 5. Reglas que toda campaña debe cumplir');
+  L.push('## 5. Protocolo de la casa: nombres y UTM');
+  L.push('Lámina "Reglas y requisitos ADS". Todo nombre va en **minúsculas, sin tildes, sin símbolos y con guion medio**.');
+  L.push('');
+  L.push('| Nivel | Estructura | Ejemplos |');
+  L.push('|---|---|---|');
+  L.push('| Campaña | `<sigla país>-producto-<nombre del producto>-<tipo de campaña>` | `chl-producto-auto-digital-always-on` · `chl-producto-auto-digital-promociones` |');
+  L.push('| Grupo de anuncios | `<abreviatura del tipo>-<naturaleza>` (' + Object.entries(M.PROTOCOLO.abreviaturaTipo).map(([k, v]) => k + ' → ' + v).join(', ') + ') | `ao-coberturas` · `promo-cuotas` |');
+  L.push('| Anuncio | `ads-<característica>` | `ads-anual` · `ads-bienal` · `ads-3-cuotas-gratis` |');
+  L.push('');
+  L.push('**Títulos:** ' + M.PROTOCOLO.fijadosPosicion1 + ' fijados en la posición 1 (con la marca o la oferta/precio) y ' + M.PROTOCOLO.titulosRotativos + ' que rotan.');
+  L.push('**Recursos:** al menos ' + M.PROTOCOLO.sitelinksMin + ' sitelinks, cada uno a una página distinta de la URL principal; ' + M.PROTOCOLO.destacadosMin + ' o más textos destacados.');
+  L.push('');
+  L.push('**UTM** — `utm_source=' + M.PROTOCOLO.utmSource + '` · `utm_medium=clics` (pujas por clic) o `conversion` (pujas por conversión) ·');
+  L.push('`utm_campaign=<nombre exacto de la campaña>` · `utm_content=<nombre del anuncio>`. Van en minúsculas y con guion.');
+  L.push('- **Por defecto van en el sufijo de URL final** (`Final URL suffix`): es lo que recomienda Google y permite `utm_content` por');
+  L.push('  anuncio. El sufijo del anuncio **reemplaza** al de la campaña, por eso lleva las UTM completas + `utm_content`.');
+  L.push('- **Alternativa:** plantilla de seguimiento (`Tracking template`) `{lpurl}?utm_source=…`. No se mezcla con sufijos: si el anuncio');
+  L.push('  agregara el suyo, la URL quedaría con dos `?`.');
+  L.push('- Google no tiene campo "nombre" para el anuncio adaptable de búsqueda: el nombre `ads-…` viaja en `utm_content`.');
+  L.push('');
+  L.push('## 6. Reglas que toda campaña debe cumplir');
   L.push('Las aplica `nucleo/reglas.js` en la IA (antes y después de generar), en la pantalla y antes de exportar.');
   L.push('**error** = bloquea la exportación · **aviso** = hay que revisarlo · **sugerencia** = mejora opcional.');
   L.push('');
@@ -90,12 +115,14 @@ function contrato() {
   L.push('');
   L.push('Cada hallazgo apunta al `id` del elemento: una corrección puede tocar solo esa parte.');
   L.push('');
-  L.push('## 6. Pendiente de confirmar en la primera importación real');
+  L.push('## 7. Pendiente de confirmar en la primera importación real');
   L.push('El archivo de referencia del usuario solo trae negativas amplias de campaña. Estas notaciones siguen la');
   L.push('convención de Ads Editor, pero todavía no se han visto importadas:');
   L.push('- Negativa de **frase** escrita como `"texto"` y de **exacta** como `[texto]` en la columna `Keyword`.');
   L.push('- Negativa **de grupo**: `Type` = `Negative` con `Ad Group` lleno.');
   L.push('- El **método de ubicación** ("presencia") no tiene columna en el contrato de 60: hoy se fija en Ads Editor (regla K05).');
+  L.push('- Nombres de columna `Tracking template` y `Final URL suffix` (a nivel de campaña y de anuncio).');
+  L.push('- **Extensión de precio:** está modelada y validada (regla G14), pero NO se exporta hasta confirmar sus columnas.');
   L.push('- **Display y Performance Max** aún no forman parte del contrato.');
   L.push('');
   return L.join('\n');

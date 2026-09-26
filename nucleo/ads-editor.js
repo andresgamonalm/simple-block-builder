@@ -29,6 +29,11 @@
     .concat(['Description 1', 'Description 2', 'Description 3', 'Description 4', 'Sitelink text', 'Callout text',
       'Header', 'Snippet Values', 'Comment']);
 
+  /* Columnas que se AGREGAN solo si alguna fila las usa (así el archivo de
+     referencia, que no las trae, sigue saliendo idéntico). Pendiente de
+     confirmar en la primera importación real. */
+  const COLUMNAS_OPCIONALES = ['Tracking template', 'Final URL suffix'];
+
   /* ── CSV: lectura y escritura ───────────────────────────────────────── */
   function leerCSV(texto) {
     texto = String(texto || '').replace(/^\uFEFF/, '');
@@ -105,7 +110,9 @@
         Object.assign(c, { tipo: v('Campaign type'), redes: lista(v('Networks')), idiomas: lista(v('Language')),
           presupuestoDiario: montoCLP(v('Campaign daily budget')), puja: v('Bid strategy type'), inicio: v('Start date'),
           fin: v('End date'), estado: v('Campaign Status'), politicaUE: v('EU political ads'), comentario: v('Comment'),
-          otrasColumnas: resto(f, ['Campaign', 'Campaign type', 'Networks', 'Language', 'Campaign daily budget', 'Bid strategy type', 'Start date', 'End date', 'Campaign Status', 'EU political ads', 'Comment']) });
+          plantillaSeguimiento: v('Tracking template'), sufijoUrlFinal: v('Final URL suffix'),
+          utmEn: v('Tracking template') && !v('Final URL suffix') ? 'plantilla' : 'sufijo',
+          otrasColumnas: resto(f, ['Campaign', 'Campaign type', 'Networks', 'Language', 'Campaign daily budget', 'Bid strategy type', 'Start date', 'End date', 'Campaign Status', 'EU political ads', 'Comment', 'Tracking template', 'Final URL suffix']) });
         return;
       }
       const c = campana(v('Campaign'));
@@ -128,8 +135,11 @@
       }
       if (v('Headline 1')) {                                           // ANUNCIO RSA
         const a = M.nuevoAnuncioRSA();
-        Object.assign(a, { estado: v('Status'), urlFinal: v('Final URL'), ruta1: v('Path 1'), ruta2: v('Path 2'), comentario: v('Comment') });
-        const usadas = ['Campaign', 'Ad Group', 'Status', 'Final URL', 'Path 1', 'Path 2', 'Comment'];
+        Object.assign(a, { estado: v('Status'), urlFinal: v('Final URL'), ruta1: v('Path 1'), ruta2: v('Path 2'), comentario: v('Comment'),
+          sufijoUrlFinal: v('Final URL suffix'),
+          // El anuncio no tiene nombre en Google: se recupera de su utm_content.
+          nombre: ((v('Final URL suffix').match(/(?:^|&)utm_content=([^&]*)/) || [])[1] || '') });
+        const usadas = ['Campaign', 'Ad Group', 'Status', 'Final URL', 'Path 1', 'Path 2', 'Comment', 'Final URL suffix'];
         for (let i = 1; i <= 15; i++) {
           usadas.push('Headline ' + i, 'Headline ' + i + ' position');
           if (v('Headline ' + i)) a.titulos.push(M.nuevoTitulo(v('Headline ' + i), v('Headline ' + i + ' position')));
@@ -197,7 +207,9 @@
       if (!c.soloReferencia) filas.push(con({ 'Campaign': c.nombre, 'Campaign type': c.tipo, 'Networks': (c.redes || []).join(';'),
         'Language': (c.idiomas || []).join(';'), 'Campaign daily budget': c.presupuestoDiario == null ? '' : String(c.presupuestoDiario),
         'Bid strategy type': c.puja, 'Start date': c.inicio, 'End date': c.fin, 'Campaign Status': c.estado,
-        'EU political ads': c.politicaUE, 'Comment': c.comentario }, c));
+        'EU political ads': c.politicaUE, 'Comment': c.comentario,
+        ...(c.plantillaSeguimiento ? { 'Tracking template': c.plantillaSeguimiento } : {}),
+        ...(c.sufijoUrlFinal ? { 'Final URL suffix': c.sufijoUrlFinal } : {}) }, c));
       for (const u of c.ubicaciones) filas.push(con({ 'Campaign': c.nombre, 'Location': u.nombre, 'Location ID': u.idGoogle, 'Comment': u.comentario }, u));
       for (const e of c.edadesExcluidas) filas.push(con({ 'Campaign': c.nombre, 'Age': e.edad, 'Type': 'Campaign negative', 'Comment': e.comentario }, e));
     }
@@ -206,6 +218,7 @@
       if (!g.soloReferencia) filas.push(con({ 'Campaign': c.nombre, 'Ad Group': g.nombre, 'Ad Group Status': g.estado, 'Comment': g.comentario }, g));
       for (const a of g.anuncios) {
         const f = { 'Campaign': c.nombre, 'Ad Group': g.nombre, 'Status': a.estado, 'Final URL': a.urlFinal, 'Path 1': a.ruta1, 'Path 2': a.ruta2, 'Comment': a.comentario };
+        if (a.sufijoUrlFinal) f['Final URL suffix'] = a.sufijoUrlFinal;
         a.titulos.forEach((t, i) => { f['Headline ' + (i + 1)] = t.texto; f['Headline ' + (i + 1) + ' position'] = t.posicion || ''; });
         a.descripciones.forEach((d, i) => { f['Description ' + (i + 1)] = d.texto; if (d.posicion) f['Description ' + (i + 1) + ' position'] = d.posicion; });
         filas.push(con(f, a));
@@ -233,9 +246,26 @@
     const filas = exportarFilas(ini);
     // Columnas: las 60 del contrato + las que traiga algún elemento y no estén.
     const cols = COLUMNAS.slice();
+    COLUMNAS_OPCIONALES.forEach(k => { if (filas.some(f => f[k])) cols.push(k); });
     for (const f of filas) for (const k of Object.keys(f)) if (!cols.includes(k)) cols.push(k);
     return escribirCSV(cols, filas);
   }
 
-  return { COLUMNAS, leerCSV, escribirCSV, importar, exportar, exportarFilas };
+  /* Nombre del archivo exportado, con la misma taxonomía que los nombres:
+     <base>-ads-editor-<aaaa-mm-dd>.csv. base = el nombre de la campaña si es
+     una; el prefijo común de sus nombres si son varias; si no, la iniciativa. */
+  function nombreArchivo(ini, fecha) {
+    const slugs = ini.campanas.filter(c => !c.soloReferencia).map(c => M.slugTaxonomia(c.nombre).split('-')).filter(x => x[0]);
+    let base = '';
+    if (slugs.length === 1) base = slugs[0].join('-');
+    else if (slugs.length > 1) {   // prefijo común: chl-producto-auto-digital-always-on + …-promociones → chl-producto-auto-digital
+      const comun = [];
+      for (let i = 0; slugs.every(t => t[i] && t[i] === slugs[0][i]); i++) comun.push(slugs[0][i]);
+      if (comun.length >= 2) base = comun.join('-');
+    }
+    base = base || M.slugTaxonomia(ini.nombre) || 'campanas';
+    return base + '-ads-editor-' + (fecha || new Date().toISOString().slice(0, 10)) + '.csv';
+  }
+
+  return { COLUMNAS, COLUMNAS_OPCIONALES, nombreArchivo, leerCSV, escribirCSV, importar, exportar, exportarFilas };
 });

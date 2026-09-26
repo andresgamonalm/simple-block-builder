@@ -986,10 +986,27 @@ Sobre el CSV real: 4 errores (fecha `[]` ×2 y la negativa amplia «comprar auto
 auto» exacta y frase — no detectado en la revisión a mano), 19 avisos, 27 sugerencias. `pruebas/reglas.js` 46/46.
 K05: el método de ubicación no tiene columna en el contrato de 60; hoy se fija en Ads Editor.
 
+**PROTOCOLO DE LA CASA (26-sep, lámina "Reglas y requisitos ADS" del usuario) — HECHO.**
+- `M.PROTOCOLO`: 5 títulos fijados en posición 1 (con marca u oferta/precio) + 10 que rotan · ≥4 sitelinks, cada
+  uno a una página DISTINTA de la URL principal · ≥4 destacados · UTM `utm_source=gads`, `utm_medium=clics|conversion`
+  (según la puja), `utm_campaign=<nombre de la campaña>`, `utm_content=<nombre del anuncio>`.
+- TAXONOMÍA (`slugTaxonomia`, `esSlug`, `nombreCampana`, `nombreGrupo`, `nombreAnuncio`): minúsculas, sin tildes ni
+  símbolos, guion medio. Campaña `chl-producto-<producto>-<tipo>` · grupo `<ao|promo>-<naturaleza>` · anuncio
+  `ads-<característica>` (el RSA no tiene campo nombre en Google: viaja en `utm_content`).
+- UTM (`utmDe`, `aplicarUTM`): por defecto en `Final URL suffix` (campaña y anuncio; el del anuncio REEMPLAZA al de
+  la campaña, por eso lleva todo + utm_content). Alternativa `utmEn:'plantilla'` → `Tracking template`
+  `{lpurl}?…` sin sufijos (no se mezclan: doble `?`). Columnas opcionales `COLUMNAS_OPCIONALES`: solo aparecen si se
+  usan (el CSV de referencia sigue idéntico). `nombreArchivo(ini)` = `<campaña o prefijo común>-ads-editor-<fecha>.csv`.
+- Extensión de precio modelada (`campana.precios`) y validada (G14) pero NO exportada hasta confirmar columnas.
+- Reglas nuevas: G13 encabezado de fragmento predefinido, G14 precio, **P01-P09** protocolo (P09 https = error; el
+  resto aviso/sugerencia). **Se ajustó lo que contradecía al usuario:** C04 ahora >5 fijados (antes >3) y C06
+  ("mismos fijados en varios grupos") ELIMINADA. Sobre el CSV real: P01×6, P02×4 (anuncios sin nombre), P06×3,
+  P08×2. `pruebas/reglas.js` 69/69.
+
 **Siguientes pasos (orden aprobado):**
 3) guardado por iniciativa con versión y estados (borrador→…→publicada; nombres fijos tras publicar;
 export completo / solo cambios) · 4) Search por IA sobre el modelo con ficha de producto persistente y
 CONVERSACIÓN por partes · 5) Display y Performance Max con espacios de imagen · 6) operación (import de
 informes → diagnóstico → CSV de cambios) y aprendizaje por marca. La interfaz nueva va con MOCKUP antes.
-Pendiente de confirmar en la 1ª importación real: notación de negativas frase `"x"` / exacta `[x]` y
-negativa de grupo (`Type`=`Negative`).
+Pendiente de confirmar en la 1ª importación real: notación de negativas frase `"x"` / exacta `[x]`,
+negativa de grupo (`Type`=`Negative`) y las columnas `Tracking template` / `Final URL suffix`.
