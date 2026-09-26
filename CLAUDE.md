@@ -81,6 +81,11 @@ Backend: funciones en **`functions/api/`** (auth por magic link + JWT, persisten
 2. **Verificar SIEMPRE con Playwright antes de pushear.** Chromium en `/opt/pw-browsers/chromium-1194/chrome-linux/chrome`. Patrón: server `http` local que sirve `editor.html` + mocks de `/api/whoami` y `/api/proyectos`; manejar la app por `page.evaluate` llamando a las funciones globales. **Las imágenes externas (placehold.co) están BLOQUEADAS en el sandbox** → servir un SVG local desde el server de prueba.
 3. Subir solo cuando pasa la verificación. Mostrar capturas (SendUserFile) al usuario.
 4. No pegar secretos en el repo ni en el chat.
+5. **(26-sep, orden del usuario) NO pedirle todo al usuario ni equivocarse tanto: pierde demasiado tiempo.** Verificar en
+   las fuentes ANTES de afirmar (leer TODAS las páginas del producto, no suponer), decidir con criterio los detalles
+   menores y avisar la decisión en una línea. Preguntar solo lo que de verdad no se puede resolver (credenciales, datos
+   que no están en ninguna fuente, decisiones de negocio). Lo mismo vale para la IA: los precios se CONFIRMAN en el texto
+   de la fuente o no se usan; no se le preguntan al usuario.
 
 ## Arquitectura de datos
 - `workspace = { proyectos:[], marcas:[], banner:{}, imagenes:[], _ts }`. Se guarda en
