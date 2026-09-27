@@ -58,7 +58,8 @@ generador, al crítico y a `corregir`; la investigación distingue prima de cuot
 **LECCIÓN DE CONVERSIÓN v2 (26-sep, v8 de Zurich validada por el usuario):** suma 3b concordancias (frase base, exacta
 solo términos principales, nunca todo en exacta) · 4b patrón de grupos (contratar online · precio/cuotas · momento de
 necesidad por situación con su ventaja real · detalle del bien · compra por cobertura · marca+producto) · 5b dos anuncios
-por grupo = trámite vs respaldo (el motor AÚN genera uno por grupo: pendiente extender el pipeline) · 5c el respaldo sale
+por grupo = trámite vs respaldo (HECHO 27-sep: `segundoAnuncio` en ia.js, en paralelo con el crítico; mismos 5 fijados,
+10 que rotan propios —se completan con los del primero si los filtros dejan menos—, 4 descripciones; si queda flaco no va) · 5c el respaldo sale
 de hechos de la web, también de la página del RAMO · 7a sitelinks del mismo dominio, sin PDF de otro dominio · 7b negativas
 por tema con motivo, sin redundancias, las de ruteo a promo con fecha de retiro. La investigación lee también la página
 del ramo (paso 1b).

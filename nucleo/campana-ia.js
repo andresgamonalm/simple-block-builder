@@ -64,6 +64,17 @@
       (g.titularesRotan || []).forEach(t => a.titulos.push(M.nuevoTitulo(t, '', rol(t))));
       (g.descripciones || []).forEach(d => a.descripciones.push(M.nuevaDescripcion(d, '')));
       grp.anuncios.push(a);
+      // Segundo anuncio (otro ángulo, mismos fijados): así el grupo aprende cuál convierte.
+      if (g.anuncioB && (g.anuncioB.titularesRotan || []).length) {
+        let nb = M.nombreAnuncio(pocasPalabras(g.anuncioB.angulo || 'respaldo', 4));
+        if (nb === a.nombre) nb = M.nombreAnuncio(pocasPalabras((g.anuncioB.angulo || 'respaldo') + ' b', 4));
+        const b = M.nuevoAnuncioRSA(nb);
+        b.urlFinal = url; b.ruta1 = a.ruta1; b.ruta2 = a.ruta2;
+        (g.titularesFijos || []).forEach(t => b.titulos.push(M.nuevoTitulo(t, '1', rol(t))));
+        g.anuncioB.titularesRotan.forEach(t => b.titulos.push(M.nuevoTitulo(t, '', rol(t))));
+        (g.anuncioB.descripciones || []).forEach(d => b.descripciones.push(M.nuevaDescripcion(d, '')));
+        grp.anuncios.push(b);
+      }
       c.grupos.push(grp);
     }
     (datos.negativas || []).forEach(n => c.negativas.push(M.nuevaNegativa(n, 'frase', motivos[n] || '')));

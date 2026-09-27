@@ -51,6 +51,15 @@ const GENERADO = {
               { texto: "Deducibles", desc1: "Desde 3 UF", desc2: "Elige el tuyo", url: "/deducibles" }, { texto: "Contacto", desc1: "Te llamamos", desc2: "Sin compromiso", url: "/contacto" }],
   destacados: ["Grúa 24/7!", "Cotizar seguro auto", "Pago mensual", "Auto de reemplazo", "Sin letra chica"]
 };
+// Segundo anuncio por grupo (ángulo respaldo). El grupo 1 trae uno repetido y uno con cifra inventada
+// (se descartan); el grupo 2 trae muy pocos títulos (no alcanza: queda con un solo anuncio).
+const SEGUNDO = { grupos: [
+  { i: 0, angulo: "respaldo", titulares: [{ t: "Grúa en todo Chile", rol: "respaldo" }, { t: "Reparación con respaldo", rol: "respaldo" }, { t: "Liquidación en 24 horas", rol: "respaldo" },
+    { t: "Asistencia cuando la necesitas", rol: "respaldo" }, { t: "Auto de reemplazo incluido", rol: "respaldo" }, { t: "Deducible desde 3 UF", rol: "precio" },
+    { t: "Cotiza tu seguro hoy", rol: "cta" }, { t: "Te responde una compañía seria", rol: "respaldo" }, { t: "Contrata en línea", rol: "tramite" }, { t: "Seguro automotriz full", rol: "keyword" }],
+    descripciones: ["Si chocas, grúa y auto de reemplazo por 15 días. Asegura tu auto hoy.", "Deducible desde 3 UF y 2 cuotas gratis. Contrata en línea hoy.", "Liquidamos en 24 horas. Cotiza ya."] },
+  { i: 1, angulo: "respaldo", titulares: [{ t: "Respaldo real", rol: "respaldo" }], descripciones: ["Asegura tu auto hoy."] }
+] };
 function respuestaGemini(obj, extra) {
   return new Response(JSON.stringify(Object.assign({ candidates: [{ content: { parts: [{ text: JSON.stringify(obj) }] }, finishReason: "STOP" }] }, extra || {})),
     { status: 200, headers: { "Content-Type": "application/json" } });
@@ -75,6 +84,7 @@ function respuestaGemini(obj, extra) {
     if (prompt.includes("MATAR LO GENÉRICO")) return respuestaGemini({ grupos: [] });
     if (prompt.includes("Completa las keywords")) return respuestaGemini({ grupos: [] });
     if (prompt.includes("corrector ortográfico")) { const m = JSON.parse(prompt.slice(prompt.indexOf("TEXTOS A REVISAR:") + 17)); m.textos = m.textos.map(t => t.replace(/tambien/g, "también")); return respuestaGemini(m); }
+    if (prompt.includes("Escribe el SEGUNDO anuncio")) return respuestaGemini(SEGUNDO);
     if (prompt.includes("especialista senior en Google Ads (Search) de")) return respuestaGemini(GENERADO);
     if (prompt.includes("Corriges una campaña YA ARMADA")) { const f = colaCorregir.shift(); return respuestaGemini(typeof f === "function" ? f(prompt) : (f || { explicacion: "", operaciones: [] })); }
     if (prompt.includes("UNA pregunta puntual")) return respuestaGemini({ respuesta: "Compiten Beta y Gama; Beta promete precio bajo.", ficha: { competidores: [{ nombre: "Beta", promesa: "precio bajo" }, { nombre: "Gama", promesa: "rapidez" }] } },
@@ -106,6 +116,13 @@ function respuestaGemini(obj, extra) {
   T(ini.ficha && ini.ficha.producto === "Seguro Automotriz Full" && ini.objetivo.gancho === "2 cuotas gratis" && c.presupuestoDiario === 20000 && c.estado === "Paused", "la iniciativa guarda la ficha y el objetivo; presupuesto CLP; se importa pausada");
   T(r.validacion && r.validacion.errores === 0 && r.validacion.exportable, "sale sin errores: exportable", JSON.stringify(r.validacion && r.validacion.hallazgos.filter(h => h.nivel === "error")));
   T(!r.validacion.hallazgos.some(h => /^P0[1-9]|P10/.test(h.codigo) && h.nivel !== "sugerencia"), "cumple el protocolo de la casa (sin avisos P)", JSON.stringify(r.validacion.hallazgos.filter(h => /^P/.test(h.codigo)).map(h => h.codigo + " " + h.mensaje)));
+  const [aA, b1] = c.grupos[0].anuncios, fij = x => x.titulos.filter(t => t.posicion === "1").map(t => t.texto).join("|");
+  T(c.grupos[0].anuncios.length === 2 && b1.nombre !== aA.nombre && /^ads-/.test(b1.nombre) && fij(aA) === fij(b1), "segundo anuncio por grupo: otro nombre, los mismos 5 fijados", b1 && b1.nombre);
+  const rotA = new Set(aA.titulos.filter(t => !t.posicion).map(t => t.texto.toLowerCase()));
+  T(b1.titulos.filter(t => !t.posicion).length === 10 && b1.titulos.filter(t => !t.posicion).slice(0, 7).every(t => !rotA.has(t.texto.toLowerCase())) && !b1.titulos.some(t => /24 horas/.test(t.texto)) && !b1.descripciones.some(d => /24 horas/.test(d.texto)),
+    "el segundo trae sus propios títulos (completa a 10 con los del primero) y ninguna cifra inventada («24 horas» no está en la ficha)");
+  T(b1.titulos.filter(t => !t.posicion).some(t => t.rol === "respaldo") && b1.sufijoUrlFinal.endsWith("utm_content=" + b1.nombre), "el segundo lleva su papel por título y su propia UTM");
+  T(c.grupos[1].anuncios.length === 1, "si el segundo anuncio queda flaco (pocos títulos buenos), el grupo se queda con uno");
   const csv = AE.exportar(ini);
   T(AE.exportar(AE.importar(csv).iniciativa) === csv && csv.includes("chl-producto-seguro-automotriz-always-on,Search,"), "se exporta al CSV de Ads Editor y vuelve idéntico");
 

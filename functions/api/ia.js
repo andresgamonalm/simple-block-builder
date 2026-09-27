@@ -1297,6 +1297,32 @@ async function criticarAnuncios(env, grupos, ficha, marca, opts) {
   return Array.isArray(r.parsed && r.parsed.grupos) ? r.parsed.grupos : null;
 }
 
+// SEGUNDO ANUNCIO POR GRUPO (lección de conversión 5b, v8 validada por el usuario):
+// cada grupo lleva dos anuncios con ángulos distintos para aprender cuál convierte.
+// Los 5 fijados (con la marca) son los mismos; cambian los que rotan y las descripciones.
+async function segundoAnuncio(env, grupos, ficha, marca, opts) {
+  const o = opts || {};
+  const papel = t => (o.rolDe && o.rolDe[String(t).toLowerCase()]) || '';
+  const entrada = grupos.map((g, i) => ({ i, grupo: g.nombre, intencion: g.intencion, anguloPrimero: g.angulo,
+    titularesFijos: g.titularesFijos, titularesPrimero: g.titularesRotan.map(t => ({ t, rol: papel(t) })), descripcionesPrimero: g.descripciones }));
+  const prompt = [
+    `Eres especialista senior en Google Ads (Search)${marca ? ' de ' + (marca.nombre || marca.empresa) : ''} en Chile. Cada grupo ya tiene UN anuncio. Escribe el SEGUNDO anuncio de cada grupo, para probar cuál convierte más.`,
+    '',
+    'EL SEGUNDO ANUNCIO TIENE OTRO ÁNGULO: si el primero se carga al TRÁMITE (qué tan fácil y rápido es comprar), este se carga al RESPALDO (garantías, asistencias, atención, quién responde); si el primero ya es de respaldo, este se carga al trámite. El precio puede aparecer en ambos.',
+    'Los 5 titularesFijos se comparten (no los escribas). Tú escribes: 10 "titulares" que rotan y 4 "descripciones", DISTINTOS de los del primer anuncio (no la misma frase reordenada).',
+    'Cada titular declara su "rol": keyword, tramite, precio, respaldo o cta. Entre los 10 tienen que estar las tres barreras.',
+    'LÍMITES DUROS: titulares ≤30 caracteres (con espacios) y sin punto final; descripciones ≤90 y terminan en una acción de compra. Español de Chile correcto; mayúscula solo al inicio y en nombres propios.',
+    'PROHIBIDO inventar cifras, precios, plazos o garantías que no estén en la ficha.',
+    o.conversion ? LEC.leccionParaIA('conversion') : '',
+    LEC.leccionParaIA('seguros'),
+    '', 'FICHA DEL PRODUCTO Y LA COMPETENCIA:', fichaTexto(ficha) || '(sin ficha)',
+    '', 'GRUPOS Y SU PRIMER ANUNCIO:', JSON.stringify(entrada),
+    '', 'Devuelve SOLO: { "grupos": [ { "i": 0, "angulo": "respaldo | tramite: en 3-6 palabras", "titulares": [ { "t": "...", "rol": "respaldo" } ], "descripciones": [ "..." ] } ] }'
+  ].filter(Boolean).join('\n');
+  const r = await llamarGemini(env, prompt, 6144, 0.7, { cadena: cadenaCopy(env), pensar: -1, timeout: 70000 });
+  return Array.isArray(r.parsed && r.parsed.grupos) ? r.parsed.grupos : null;
+}
+
 // ══════════════════════════════════════════════════════════════════════════
 // TU CAMPAÑA ACTUAL — diagnóstico de una campaña que YA corre (sep-2026)
 //
@@ -1705,7 +1731,8 @@ async function armarAds({ env, brief, marca, refsTxt, promos, enlaces, avisos, f
     ...flacos.map(g => `- "${g.nombre}" · intención: ${g.intencion || '(la del nombre)'} · faltan ${MIN_KW - g.keywords.length} · ya tiene: ${g.keywords.map(k => k.t).join(', ')}`)
   ].filter(Boolean).join('\n'), 4096, 0.8, { cadena: cadenaRapida(env) }) : Promise.resolve(null);
   const critica = criticarAnuncios(env, grupos, ficha, marca, { protocolo, conversion, rolDe }).catch(() => null);
-  const [extra, revisados] = await Promise.all([relleno, critica]);
+  const segundo = protocolo ? segundoAnuncio(env, grupos, ficha, marca, { conversion, rolDe }).catch(() => null) : Promise.resolve(null);
+  const [extra, revisados, segundos] = await Promise.all([relleno, critica, segundo]);
 
   if (extra && extra.parsed && Array.isArray(extra.parsed.grupos)) {
     const lote = extra.parsed.grupos;
@@ -1768,6 +1795,21 @@ async function armarAds({ env, brief, marca, refsTxt, promos, enlaces, avisos, f
     g.descripciones = mantener(dedup(g.descripciones), 2, malo);
     g.titulares = g.titularesFijos.concat(g.titularesRotan);
   }
+  // Segundo anuncio: mismos filtros; no repite títulos del primero; si queda flaco, no va.
+  if (Array.isArray(segundos)) {
+    for (const sg of segundos) {
+      const g = grupos[Number(sg && sg.i)];
+      if (!g) continue;
+      const usados = new Set(g.titularesFijos.concat(g.titularesRotan).map(t => t.toLowerCase()));
+      const rotan = limpiaTit(sg.titulares).filter(t => t.length <= 30 && !usados.has(t.toLowerCase()) && !esCliche(t) && !inventada(t)).slice(0, NROT);
+      const descs = dedup((Array.isArray(sg.descripciones) ? sg.descripciones : []).map(d => clean(d).slice(0, 90))
+        .filter(d => d && !esCliche(d) && !inventada(d) && !g.descripciones.includes(d))).slice(0, 4);
+      // Protocolo: 10 que rotan. Si los filtros dejaron menos, se completa con títulos buenos del
+      // primer anuncio (Google permite repetir títulos entre anuncios del mismo grupo).
+      for (const t of g.titularesRotan) { if (rotan.length >= NROT) break; if (!rotan.some(x => x.toLowerCase() === t.toLowerCase())) rotan.push(t); }
+      if (rotan.length >= 5 && descs.length >= 2) g.anuncioB = { angulo: clean(sg.angulo).slice(0, 60) || 'respaldo', titularesRotan: rotan, descripciones: descs };
+    }
+  }
   if (descartados) avisos.push({ tipo: 'info', texto: `Se descartaron ${descartados} textos de anuncio con frases trilladas o cifras que no aparecen en la landing ni en tu encargo.` });
 
   // Negativas de campaña + motivos. Una negativa que está contenida en una
@@ -1791,7 +1833,7 @@ async function armarAds({ env, brief, marca, refsTxt, promos, enlaces, avisos, f
   // ── Etapa 5: corrector RAE sobre los textos VISIBLES. Las keywords NO se
   // corrigen: la gente busca sin tildes y así deben quedar.
   const planos = [legible(parsed.nombre || brief.que).slice(0, 80)];
-  for (const g of grupos) { planos.push(g.nombre, g.intencion, g.razonamiento, g.angulo); planos.push(...g.titularesFijos, ...g.titularesRotan, ...g.descripciones); }
+  for (const g of grupos) { planos.push(g.nombre, g.intencion, g.razonamiento, g.angulo); planos.push(...g.titularesFijos, ...g.titularesRotan, ...g.descripciones); if (g.anuncioB) planos.push(...g.anuncioB.titularesRotan, ...g.anuncioB.descripciones); }
   for (const s of sitelinks) planos.push(s.texto, s.desc1, s.desc2);
   planos.push(...destacados);
   const rev = await corregirOrtografia(env, planos);
@@ -1808,6 +1850,10 @@ async function armarAds({ env, brief, marca, refsTxt, promos, enlaces, avisos, f
     g.titularesRotan = g.titularesRotan.map(corregir).filter(Boolean);
     g.titulares = g.titularesFijos.concat(g.titularesRotan);
     g.descripciones = g.descripciones.map(() => String(rev.textos[k++]).slice(0, 90)).filter(Boolean);
+    if (g.anuncioB) {
+      g.anuncioB.titularesRotan = g.anuncioB.titularesRotan.map(corregir).filter(Boolean);
+      g.anuncioB.descripciones = g.anuncioB.descripciones.map(() => String(rev.textos[k++]).slice(0, 90)).filter(Boolean);
+    }
     // El ángulo se ve en la consola junto al razonamiento del grupo.
     if (g.angulo && !g.razonamiento.includes(g.angulo)) g.razonamiento = (g.razonamiento + ' Ángulo: ' + g.angulo).trim().slice(0, 420);
   }
@@ -1830,7 +1876,7 @@ async function armarAds({ env, brief, marca, refsTxt, promos, enlaces, avisos, f
     negativasMotivos: negMotivos,
     sitelinks,
     destacados,
-    rolesTitulos: conversion ? Object.fromEntries(grupos.flatMap(g => g.titularesFijos.concat(g.titularesRotan)).map(t => [t, rolDe[t.toLowerCase()] || '']).filter(x => x[1])) : null,
+    rolesTitulos: conversion ? Object.fromEntries(grupos.flatMap(g => g.titularesFijos.concat(g.titularesRotan, g.anuncioB ? g.anuncioB.titularesRotan : [])).map(t => [t, rolDe[t.toLowerCase()] || '']).filter(x => x[1])) : null,
     enfoque: conversion ? 'conversion' : '',
     analisis: ficha ? {
       producto: ficha.producto, propuestaValor: ficha.propuestaValor,
