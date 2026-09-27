@@ -2378,6 +2378,7 @@ body.sbb-arrastrando{user-select:none;-webkit-user-select:none;cursor:grabbing;}
       <button class="cnav-link" data-view="en-curso" onclick="dashIr('en-curso')">En curso</button>
       <button class="cnav-link" data-view="realizados" onclick="dashIr('realizados')">Realizados</button>
       <button class="cnav-link" data-view="proyectos" onclick="dashIr('proyectos')">Todos</button>
+      <button class="cnav-link" data-serv="ads" onclick="location.href='/campanas'">Campañas Search</button>
       <button class="cnav-link" data-view="marcas" onclick="dashIr('marcas')">Marcas</button>
       <button class="cnav-link" data-view="imagenes" onclick="dashIr('imagenes')">Fotos</button>
     </nav>
@@ -11210,7 +11211,8 @@ function iaPintaPiezas(){
 function crearConIA(plat){
   if(plat==="ads"){
     if(!puedePlat("ads")){ toast("Tu usuario no tiene acceso a este servicio"); return; }
-    iaSetFormato("ads"); abrirIA(true); return;
+    // Search se arma como CAMPAÑA (con versiones, revisión y conversación por partes): pantalla propia.
+    irACampanas(); return;
   }
   if(plat==="todas"){
     // La campaña completa: las gráficas nacen en blanco en ESTE proyecto y
@@ -11222,6 +11224,7 @@ function crearConIA(plat){
   }
   crearBannerEnBlanco(plat);
 }
+function irACampanas(){ location.href = "/campanas/nueva"; }
 // Crea una colección de banners VACÍA y la abre en el editor.
 // mantenerProyecto = no crear un proyecto nuevo (para la campaña completa).
 function crearBannerEnBlanco(plat, mantenerProyecto){

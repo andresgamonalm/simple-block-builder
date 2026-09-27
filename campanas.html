@@ -1,0 +1,733 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Campañas · My Ads</title>
+<link rel="icon" href="/brand/my-ads.svg?v=4" type="image/svg+xml">
+<link rel="alternate icon" href="/brand/icono_my_ads.ico?v=4" sizes="any">
+<link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;600&display=swap" rel="stylesheet">
+<!--
+  CAMPAÑAS DE SEARCH — la campaña con forma de Google Ads Editor (paso 4b, mockup aprobado 27-sep-2026:
+  mockups/campana-conversacion.html). Tres pantallas:
+    [1] /campanas/nueva   el encargo → la IA investiga y arma la campaña completa (modo:'campana')
+    [2] /campanas/<id>    trabajarla: árbol · detalle editable · Revisión (motor de reglas) ·
+                          Conversación (corregir / averiguar POR PARTES) · Ficha
+    [3] exportar          CSV para Ads Editor: completo o solo cambios desde la versión publicada
+  La lista (/campanas) es la entrada. Todo lo que decide vive en el núcleo (nucleo/*.js), el MISMO que
+  usa el servidor: aquí solo se muestra y se llama. Cada guardado es una versión (/api/iniciativas).
+-->
+<style>
+:root{
+  --navy:#040764;--navy-d:#02034a;--navy-l:#eef1fb;--blue:#1c73cb;--blue-l:#e7f0fb;--yellow:#fce865;
+  --magenta:#b318a3;--magenta-l:#f7e6f4;--teal:#20b6b6;--teal-l:#e4f6f6;
+  --ink:#12173d;--ink2:#3a4060;--ink3:#5b6178;--ink4:#8a90a5;
+  --bg:#eef1f6;--white:#fff;--bdr:#e4e8f0;--bdr2:#c2c7d4;--ok:#1c973b;--ok-l:#e6f6ec;--warn:#b86e00;--warn-l:#fff4e0;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%}
+body{font-family:Roboto,Arial,sans-serif;font-weight:400;color:var(--ink);background:var(--bg);font-size:14px;line-height:1.45}
+button{font:inherit;cursor:pointer}
+a{color:var(--blue);text-decoration:none}
+*::-webkit-scrollbar{width:8px;height:8px}*::-webkit-scrollbar-thumb{background:#cdd2de;border-radius:8px}
+
+/* [0] CABECERA */
+.ed{height:56px;background:#fff;border-bottom:1px solid var(--bdr);display:flex;align-items:center;gap:14px;padding:0 20px;position:sticky;top:0;z-index:5}
+.marca-app{display:flex;align-items:center;gap:10px;color:var(--ink);font-weight:500}
+.logo{width:28px;height:28px;background:var(--navy);border-radius:7px;position:relative;flex:none}
+.logo:after{content:"";position:absolute;left:6px;right:6px;top:7px;height:4px;background:var(--yellow);border-radius:1px}
+.logo:before{content:"";position:absolute;left:6px;width:7px;bottom:6px;height:8px;background:#1C73CB;border-radius:1px;box-shadow:9px 0 0 #20B6B6}
+.crumb{font-size:14px;color:var(--ink3)}.crumb b{color:var(--ink);font-weight:500}.crumb a{color:var(--ink3)}
+.chip{font-size:11px;font-weight:500;letter-spacing:.04em;padding:3px 8px;border-radius:5px;background:#e9eaf0;color:var(--ink2)}
+.sp{flex:1}
+.estados{display:flex;align-items:center;font-size:12px}
+.estados span{padding:5px 10px;border:1px solid var(--bdr);color:var(--ink3);background:#fff}
+.estados span:first-child{border-radius:6px 0 0 6px}.estados span:last-child{border-radius:0 6px 6px 0}
+.estados span+span{border-left:0}
+.estados .hecho{color:var(--ok);background:var(--ok-l)}
+.estados .aqui{color:#fff;background:var(--navy);border-color:var(--navy);font-weight:500}
+.ver{font-size:12px;color:var(--ink3);white-space:nowrap}
+.btn{border:1px solid var(--bdr2);background:#fff;color:var(--ink);border-radius:8px;padding:8px 14px;font-size:13px;font-weight:500;white-space:nowrap}
+.btn:hover{border-color:var(--blue)}
+.btn.pri{background:var(--navy);border-color:var(--navy);color:#fff}.btn.pri:hover{background:var(--navy-d)}
+.btn.ia{background:var(--magenta);border-color:var(--magenta);color:#fff}
+.btn.sm{padding:5px 10px;font-size:12px}
+.btn.link{border:0;background:none;color:var(--blue);padding:4px 0}
+.btn[disabled]{opacity:.5;cursor:default}
+
+/* [1] LISTA Y CREAR */
+.pag{max-width:980px;margin:24px auto;padding:0 16px}
+.pag h1{font-size:22px;font-weight:500}
+.pag .sub{color:var(--ink3);margin:4px 0 18px}
+.card{background:#fff;border:1px solid var(--bdr);border-radius:10px;margin-bottom:14px}
+.card-h{display:flex;align-items:center;gap:10px;padding:12px 14px;border-bottom:1px solid var(--bdr)}
+.card-h h4{font-size:14px;font-weight:500}
+.lst td,.lst th{padding:11px 14px}
+.lst tr.fila{cursor:pointer}.lst tr.fila:hover td{background:#f7f9fd}
+.vacio-grande{padding:40px 20px;text-align:center;color:var(--ink3)}
+.crear .card{padding:22px 24px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px 18px}
+.f label{display:block;font-size:12.5px;font-weight:500;color:var(--ink2);margin-bottom:5px}
+.f label em{font-style:normal;color:var(--ink4);font-weight:400}
+.f input,.f textarea,.f select{width:100%;border:1px solid var(--bdr2);border-radius:8px;padding:9px 10px;font:inherit;font-size:13.5px;background:#fff;color:var(--ink)}
+.f input:focus,.f textarea:focus,.f select:focus{outline:2px solid var(--blue-l);border-color:var(--blue)}
+.f textarea{height:74px;resize:vertical}
+.f .ayuda{font-size:11.5px;color:var(--ink3);margin-top:4px}
+.f.falta input,.f.falta textarea,.f.falta select{border-color:var(--magenta)}
+.full{grid-column:1/-1}
+.seg{display:flex;border:1px solid var(--bdr2);border-radius:8px;overflow:hidden}
+.seg button{flex:1;border:0;background:#fff;padding:9px;font-size:13px;color:var(--ink2)}
+.seg button+button{border-left:1px solid var(--bdr2)}
+.seg button.on{background:var(--navy);color:#fff}
+.nom{margin-top:6px;font-size:12px;color:var(--ink3)}
+.pie{display:flex;align-items:center;gap:10px;margin-top:20px;padding-top:16px;border-top:1px solid var(--bdr)}
+.aviso-t{font-size:12px;color:var(--ink3)}
+.mono{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:12px;color:var(--ink3);background:#f4f6fa;padding:2px 6px;border-radius:4px}
+.progreso{padding:36px 24px;text-align:center}
+.progreso .rueda{width:34px;height:34px;border-radius:50%;border:3px solid var(--blue-l);border-top-color:var(--magenta);margin:0 auto 14px;animation:gira 1s linear infinite}
+@keyframes gira{to{transform:rotate(360deg)}}
+.pasos{list-style:none;display:inline-block;text-align:left;margin-top:10px;color:var(--ink3);font-size:13px}
+.pasos li{padding:3px 0}.pasos li.hecho{color:var(--ok)}.pasos li.ahora{color:var(--ink);font-weight:500}
+
+/* [2] TRABAJAR — 3 columnas */
+.lay{display:grid;grid-template-columns:260px minmax(0,1fr) 390px;gap:14px;padding:14px 16px;height:calc(100vh - 56px)}
+.col{background:#fff;border:1px solid var(--bdr);border-radius:10px;overflow:auto;min-height:0}
+.col h3{font-size:12px;font-weight:500;letter-spacing:.06em;text-transform:uppercase;color:var(--ink3);padding:14px 16px 6px}
+.arbol{list-style:none;padding:0 8px 12px}
+.arbol li{padding:6px 8px;border-radius:6px;display:flex;align-items:center;gap:8px;font-size:13px;color:var(--ink2);cursor:pointer}
+.arbol li:hover{background:#f5f7fb}
+.arbol li .n{margin-left:auto;font-size:11px;color:var(--ink4)}
+.arbol li.cmp{font-weight:500;color:var(--ink);word-break:break-all}
+.arbol li.l2{padding-left:22px}.arbol li.l3{padding-left:38px;font-size:12.5px}
+.arbol li.sel{background:var(--blue-l);color:var(--blue);font-weight:500}
+.dot{width:8px;height:8px;border-radius:50%;flex:none;background:#d3d7e0}
+.d-err{background:var(--magenta)}.d-av{background:#e0a100}.d-ok{background:var(--ok)}
+.sepa{height:1px;background:var(--bdr);margin:8px 16px}
+.ficha-ent{margin:4px 16px 16px;padding:12px;border:1px solid var(--bdr);border-radius:8px;font-size:12.5px;color:var(--ink2)}
+.ficha-ent b{font-weight:500;color:var(--ink)}
+.cen{padding:18px 22px}
+.cab{display:flex;align-items:baseline;gap:10px;margin-bottom:4px;flex-wrap:wrap}
+.cab h2{font-size:20px;font-weight:500;word-break:break-all}
+.int{font-size:13px;color:var(--ink3);margin-bottom:14px}
+.barreras{display:flex;gap:8px;margin:0 0 12px;flex-wrap:wrap}
+.bar{display:flex;align-items:center;gap:6px;font-size:12.5px;padding:5px 10px;border-radius:7px;border:1px solid var(--bdr)}
+.bar.ok{background:var(--ok-l);border-color:#bfe6cb;color:var(--ok)}
+.bar.no{background:var(--magenta-l);border-color:#ecc3e6;color:var(--magenta)}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th{font-weight:500;font-size:11.5px;color:var(--ink3);text-align:left;padding:8px 10px;border-bottom:1px solid var(--bdr);background:#fafbfd}
+td{padding:7px 10px;border-bottom:1px solid #f0f2f6;vertical-align:middle}
+tr.pick td{background:#f3f8fe}
+tr:last-child td{border-bottom:0}
+tr.flash td{animation:flash 1.6s}
+@keyframes flash{0%,40%{background:#fff4c2}100%{background:transparent}}
+.cnt{font-size:11.5px;color:var(--ink4);text-align:right;white-space:nowrap}
+.cnt.mal{color:var(--magenta);font-weight:500}
+.rol{font-size:11px;padding:2px 7px;border-radius:10px;white-space:nowrap;border:0;cursor:pointer}
+.r-{background:#f1f2f6;color:var(--ink4)}
+.r-keyword{background:#eceff7;color:var(--ink2)}.r-tramite{background:var(--blue-l);color:var(--blue)}
+.r-precio{background:#fff7cc;color:#7a6400}.r-respaldo{background:var(--teal-l);color:#138585}.r-cta{background:var(--navy-l);color:var(--navy)}
+.fij{font-size:11px;color:var(--ink3);white-space:nowrap}
+.cb{width:15px;height:15px;accent-color:var(--blue);cursor:pointer}
+.ed-txt{outline:0;border-radius:4px;padding:2px 4px;margin:-2px -4px;display:inline-block;min-width:30px}
+.ed-txt:hover{background:#f4f6fa}.ed-txt:focus{background:#fffbe6;box-shadow:0 0 0 1px #f0d77a}
+.kw{display:inline-flex;align-items:center;gap:6px;margin:0 6px 6px 0;padding:4px 9px;border:1px solid var(--bdr);border-radius:14px;font-size:12.5px;background:#fff}
+.kw.pick{border-color:var(--blue);background:var(--blue-l)}
+.kw i{font-style:normal;font-size:10.5px;padding:1px 5px;border-radius:4px;cursor:pointer}
+.kw i.ex{background:var(--blue-l);color:var(--blue)}.kw i.fr{background:var(--teal-l);color:#138585}.kw i.am{background:var(--magenta-l);color:var(--magenta)}
+.kw .x{border:0;background:none;color:var(--ink4);font-size:14px;line-height:1;padding:0 0 0 2px}
+.kw .x:hover{color:var(--magenta)}
+.serp{padding:14px;font-family:Arial,sans-serif;border-bottom:1px solid var(--bdr)}
+.serp small{font-size:12px;color:#202124}
+.serp .t{color:#1a0dab;font-size:18px;margin:2px 0}
+.serp .d{color:#4d5156;font-size:13px}
+.tabs{display:flex;border-bottom:1px solid var(--bdr);position:sticky;top:0;background:#fff;z-index:1}
+.tabs button{flex:1;border:0;background:none;padding:12px 6px;font-size:13px;color:var(--ink3);border-bottom:2px solid transparent}
+.tabs button.on{color:var(--navy);border-bottom-color:var(--navy);font-weight:500}
+.tabs .badge{display:inline-block;min-width:18px;padding:0 5px;border-radius:9px;background:var(--magenta);color:#fff;font-size:11px;margin-left:4px}
+.pane{display:none;padding:14px 16px;flex:1}.pane.on{display:block}
+.hz{border:1px solid var(--bdr);border-radius:8px;padding:10px 12px;margin-bottom:8px;font-size:13px}
+.hz .top{display:flex;align-items:center;gap:8px;margin-bottom:4px}
+.hz .cod{font-size:11px;font-weight:500;padding:1px 6px;border-radius:4px}
+.cod.err{background:var(--magenta-l);color:var(--magenta)}.cod.av{background:var(--warn-l);color:var(--warn)}.cod.su{background:#eef0f4;color:var(--ink3)}
+.hz .donde{font-size:11.5px;color:var(--ink3);margin-top:3px}
+.hz .acc{display:flex;gap:12px;margin-top:4px}
+.grp-t{font-size:12px;font-weight:500;color:var(--ink3);margin:12px 0 6px}
+.ctx{background:var(--blue-l);border:1px solid #cfe0f6;border-radius:8px;padding:9px 11px;font-size:12.5px;color:var(--blue);margin-bottom:12px;display:flex;gap:8px;align-items:center}
+.ctx b{font-weight:500}
+.msg{margin-bottom:12px;font-size:13px}
+.msg.yo{background:var(--navy-l);border-radius:10px 10px 2px 10px;padding:9px 12px;margin-left:36px;white-space:pre-wrap}
+.msg.ia{display:flex;gap:9px}
+.av-ia{width:26px;height:26px;border-radius:50%;background:var(--navy);flex:none;position:relative}
+.av-ia:after{content:"";position:absolute;inset:8px;border-radius:50%;background:#f28c28}
+.burbuja{background:#f6f7fa;border-radius:10px 10px 10px 2px;padding:10px 12px;flex:1;min-width:0}
+.burbuja.pensando{color:var(--ink3)}
+.cambio{border:1px solid var(--bdr);background:#fff;border-radius:8px;padding:8px 10px;margin-top:8px;font-size:12.5px}
+.cambio .antes{color:var(--ink4);text-decoration:line-through;word-break:break-word}
+.cambio .desp{color:var(--ink);word-break:break-word}
+.cambio .meta{display:flex;align-items:center;gap:8px;margin-top:5px;font-size:11.5px;color:var(--ink3)}
+.cambio .meta .sp{flex:1}
+.cambio.off{opacity:.5}
+.nota-ia{margin-top:8px;font-size:12px;color:var(--ink3)}
+.nota-ia.mal{color:var(--magenta)}
+.acciones{display:flex;gap:8px;margin-top:10px}
+.caja{position:sticky;bottom:0;background:#fff;border-top:1px solid var(--bdr);padding:10px 16px}
+.modo{display:flex;gap:6px;margin-bottom:8px}
+.modo button{border:1px solid var(--bdr2);background:#fff;border-radius:14px;padding:4px 11px;font-size:12px;color:var(--ink2)}
+.modo button.on{border-color:var(--magenta);color:var(--magenta);background:var(--magenta-l)}
+.caja textarea{width:100%;border:1px solid var(--bdr2);border-radius:8px;padding:9px 10px;font:inherit;font-size:13px;resize:none;height:62px}
+.caja .fila{display:flex;align-items:center;margin-top:8px;gap:8px;font-size:11.5px;color:var(--ink4)}
+.ev{font-size:12.5px;margin-bottom:12px}
+.ev h5{font-size:12px;font-weight:500;margin-bottom:4px}
+.ev ul{padding-left:16px;color:var(--ink2)}
+.ev .vacio{color:var(--magenta);list-style:none;margin-left:-16px}
+.conf td:first-child{color:var(--ink3);width:38%}
+/* [3] EXPORTAR */
+.opc{display:grid;grid-template-columns:1fr 1fr;gap:14px;padding:18px}
+.op{border:1px solid var(--bdr2);border-radius:10px;padding:16px;cursor:pointer;background:#fff;text-align:left}
+.op.on{border-color:var(--blue);box-shadow:inset 0 0 0 1px var(--blue)}
+.op[disabled]{opacity:.5;cursor:default}
+.op h4{font-size:15px;font-weight:500;margin-bottom:4px}
+.op p{font-size:12.5px;color:var(--ink3)}
+.op .num{font-size:24px;font-weight:500;margin-top:10px}
+.lista{padding:0 18px 18px}
+.lista li{list-style:none;display:flex;gap:10px;align-items:center;padding:7px 0;border-bottom:1px solid #f0f2f6;font-size:13px}
+.tag{font-size:11px;padding:2px 7px;border-radius:5px;font-weight:500;white-space:nowrap}
+.t-n{background:var(--ok-l);color:var(--ok)}.t-m{background:var(--blue-l);color:var(--blue)}.t-r{background:var(--warn-l);color:var(--warn)}.t-e{background:var(--magenta-l);color:var(--magenta)}
+.man{margin:0 18px 18px;padding:10px 12px;border-radius:8px;background:var(--warn-l);font-size:12.5px;color:#6b4200}
+/* Modal, toast */
+.velo{position:fixed;inset:0;background:rgba(18,23,61,.35);display:flex;align-items:center;justify-content:center;z-index:20}
+.modal{background:#fff;border-radius:12px;width:min(640px,92vw);max-height:80vh;overflow:auto}
+.modal .card-h{position:sticky;top:0;background:#fff}
+#toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:var(--ink);color:#fff;padding:10px 16px;border-radius:8px;font-size:13px;display:none;z-index:30;max-width:90vw}
+@media (max-width:1100px){.lay{grid-template-columns:220px minmax(0,1fr);height:auto}.lay>aside:last-child{grid-column:1/-1;min-height:520px}}
+@media (max-width:760px){.grid2{grid-template-columns:1fr}.lay{grid-template-columns:1fr}.opc{grid-template-columns:1fr}.estados,.ver{display:none}}
+</style>
+</head>
+<body>
+<header class="ed" id="cab">
+  <a class="marca-app" href="/home" title="Inicio · My Ads"><span class="logo"></span>My Ads</a>
+  <div class="crumb" id="crumb"><a href="/campanas">Campañas</a></div>
+  <span class="chip">SEARCH</span>
+  <span class="sp"></span>
+  <div id="cab-der" style="display:flex;align-items:center;gap:10px"></div>
+</header>
+<div id="app"></div>
+<div id="toast"></div>
+
+<script src="/nucleo/modelo.js"></script>
+<script src="/nucleo/lecciones.js"></script>
+<script src="/nucleo/reglas.js"></script>
+<script src="/nucleo/ads-editor.js"></script>
+<script src="/nucleo/versiones.js"></script>
+<script src="/nucleo/operaciones.js"></script>
+<script>
+"use strict";
+const M = window.MP_Modelo, R = window.MP_Reglas, AE = window.MP_AdsEditor, V = window.MP_Versiones, OPS = window.MP_Operaciones;
+
+/* ═════ [A] UTILIDADES ═════ */
+const $ = s => document.querySelector(s);
+const esc = s => String(s == null ? "" : s).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+const clp = n => (n == null || n === "") ? "—" : "$" + Number(n).toLocaleString("es-CL");
+const plural = (n, uno, varios) => n + " " + (n === 1 ? uno : varios);
+const hoyCL = () => { try { return new Intl.DateTimeFormat("en-CA", { timeZone: "America/Santiago" }).format(new Date()); } catch { return new Date().toISOString().slice(0, 10); } };
+const hora = iso => { try { return new Date(iso).toLocaleString("es-CL", { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" }); } catch { return ""; } };
+let _tt = null;
+function toast(t, ms) { const e = $("#toast"); e.textContent = t; e.style.display = "block"; clearTimeout(_tt); _tt = setTimeout(() => e.style.display = "none", ms || 3200); }
+async function api(url, body) {
+  const r = await fetch(url, body ? { method: "POST", credentials: "include", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) } : { credentials: "include" });
+  if (r.status === 401) { location.replace("/login"); throw new Error("Sin sesión"); }
+  let d = {}; try { d = await r.json(); } catch { d = { ok: false, error: "Respuesta no válida del servidor (" + r.status + ")." }; }
+  d._status = r.status; return d;
+}
+function nav(url) { history.pushState({}, "", url); ruta(); }
+window.addEventListener("popstate", () => ruta());
+
+/* ═════ [B] ESTADO ═════ */
+const S = { user: null, marcas: [], ini: null, meta: null, sel: { tipo: "config", id: null }, selIds: new Set(),
+  tab: "ia", modo: "corregir", chat: [], vista: "trabajo", expTipo: "completa", publicada: null, guardando: false, sucio: false };
+const ROLES = ["keyword", "tramite", "precio", "respaldo", "cta"];
+const ROL_TXT = { keyword: "keyword", tramite: "trámite", precio: "precio", respaldo: "respaldo", cta: "compra", "": "sin papel" };
+const marcaDe = ini => { const o = (ini && ini.objetivo) || {}; return S.marcas.find(m => m.id === o.marcaId) || S.marcas.find(m => (m.nombre || m.empresa) === o.marca) || null; };
+const nombreMarca = ini => { const m = marcaDe(ini); return m ? (m.nombre || m.empresa) : ((ini && ini.objetivo && ini.objetivo.marca) || ""); };
+const validar = () => R.validar(S.ini, { hoy: hoyCL(), marca: nombreMarca(S.ini) });
+
+/* ═════ [C] ARRANQUE Y RUTAS ═════ */
+(async function arranque() {
+  const w = await api("/api/whoami");
+  if (!w.ok) return;
+  S.user = w;
+  const p = w.permisos || [];
+  if (!(p.includes("*") || p.includes("ads"))) { $("#app").innerHTML = `<div class="pag"><div class="card vacio-grande">Tu usuario no tiene acceso a Google Search. <a href="/home">Volver al inicio</a></div></div>`; return; }
+  try { const ws = await api("/api/proyectos"); S.marcas = ((ws.proyecto && ws.proyecto.marcas) || []).filter(m => m && (m.nombre || m.empresa)); } catch {}
+  ruta();
+})();
+function ruta() {
+  const p = location.pathname.replace(/\/+$/, "");
+  $("#cab-der").innerHTML = "";
+  if (p === "/campanas/nueva") return pantallaCrear();
+  const m = p.match(/^\/campanas\/(ini_[\w-]+)$/);
+  if (m) return abrir(m[1]);
+  return pantallaLista();
+}
+function migas(nombre) { $("#crumb").innerHTML = `<a href="/campanas" onclick="event.preventDefault();nav('/campanas')">Campañas</a>` + (nombre ? ` › <b>${esc(nombre)}</b>` : ""); }
+
+/* ═════ [D] LISTA ═════ */
+async function pantallaLista() {
+  migas("");
+  $("#app").innerHTML = `<div class="pag"><div style="display:flex;align-items:center;gap:12px"><div><h1>Campañas de Search</h1><p class="sub">Cada campaña guarda sus versiones: la IA la arma, tú la corriges por partes y la descargas para Google Ads Editor.</p></div><span class="sp"></span><button class="btn pri" onclick="nav('/campanas/nueva')">Nueva campaña</button></div><div class="card" id="lst"><div class="vacio-grande">Cargando…</div></div></div>`;
+  const r = await api("/api/iniciativas");
+  const L = (r.iniciativas || []);
+  $("#lst").innerHTML = !L.length ? `<div class="vacio-grande">Todavía no hay campañas.<br><br><button class="btn pri" onclick="nav('/campanas/nueva')">Crear la primera</button></div>` :
+    `<table class="lst"><tr><th>Campaña</th><th>Estado</th><th>Versión</th><th>Última edición</th></tr>` +
+    L.map(i => `<tr class="fila" onclick="nav('/campanas/${esc(i.id)}')"><td><b style="font-weight:500">${esc(i.nombre || "Sin nombre")}</b></td><td>${esc(V.ETIQUETAS[i.estado] || i.estado)}</td><td>v${i.version}</td><td class="fij">${esc(hora(i.actualizado_en))}${i.actualizado_por ? " · " + esc(i.actualizado_por) : ""}</td></tr>`).join("") + `</table>`;
+}
+
+/* ═════ [E] PANTALLA 1 · CREAR ═════ */
+const F = { enfoque: "conversion", tipo: "always-on" };
+function pantallaCrear() {
+  migas("Nueva campaña de Search");
+  const mes = new Date().toLocaleDateString("es-CL", { month: "long" });
+  $("#app").innerHTML = `<div class="pag crear"><div class="card" id="crear-card">
+    <h1>¿Qué vamos a vender?</h1>
+    <p class="sub">La IA lee tu web, investiga la competencia en Google y arma la campaña completa con tu protocolo. Después la corriges por partes, sin rehacerla.</p>
+    <div class="grid2">
+      <div class="f full" id="c-que"><label>Qué se vende y a quién</label><textarea id="f-que" placeholder="Ej.: seguro de auto 100% online para conductores particulares en Chile que ya decidieron asegurar su auto."></textarea></div>
+      <div class="f" id="c-marca"><label>Marca</label><select id="f-marca">${S.marcas.length ? S.marcas.map(m => `<option value="${esc(m.id)}">${esc(m.nombre || m.empresa)}</option>`).join("") : `<option value="">(sin marcas: créalas en Marcas)</option>`}</select><div class="ayuda">Da el nombre para los 5 títulos fijados y la voz de los anuncios.</div></div>
+      <div class="f" id="c-url"><label>Página donde se compra (landing)</label><input id="f-url" placeholder="https://…"></div>
+      <div class="f"><label>Oferta vigente <em>· textual, opcional</em></label><input id="f-oferta" placeholder="Ej.: 3 cuotas gratis"><div class="ayuda">Solo lo que es real hoy: la IA no inventa ofertas.</div></div>
+      <div class="f"><label>Acción que buscamos</label><input id="f-accion" value="Contratar online"></div>
+      <div class="f" id="c-legal"><label>Frase legal <em>· obligatoria, escribe «no» si no lleva</em></label><input id="f-legal"></div>
+      <div class="f"><label>Enfoque</label><div class="seg" id="s-enfoque"><button data-v="conversion">Conversión (venta directa)</button><button data-v="">Otro</button></div><div class="ayuda">Conversión aplica la lección: tres barreras, keywords de compra, verbos de compra.</div></div>
+      <div class="f"><label>Tipo de campaña</label><div class="seg" id="s-tipo"><button data-v="always-on">Always on</button><button data-v="promociones">Promociones</button></div></div>
+      <div class="f" id="c-prod"><label>Producto <em>· para el nombre</em></label><input id="f-prod" placeholder="Ej.: auto digital" oninput="nombrePrevio()"><div class="nom">Nombre en Google Ads: <span class="mono" id="nom-prev">chl-producto-…</span></div></div>
+      <div class="f" id="c-ppto"><label>Presupuesto diario <em>· CLP</em></label><input id="f-ppto" inputmode="numeric" placeholder="Ej.: 35.000"><div class="ayuda">Entero en pesos. Menos de $1.000 se marca como posible error.</div></div>
+      <div class="f full"><label>Materiales o relato <em>· opcional</em></label><textarea id="f-notas" placeholder="Pega aquí lo que sepas del producto que no está en la web: plazos reales, cómo se liquida, qué NO vendemos (p. ej. SOAP fuera de enero y marzo)…"></textarea></div>
+      <input type="hidden" id="f-mes" value="${esc(mes)}">
+    </div>
+    <div class="pie"><button class="btn" onclick="pantallaCrear()">Limpiar</button><span class="sp"></span><span class="aviso-t">Tarda 1-2 minutos: investiga antes de escribir.</span><button class="btn ia" id="b-gen" onclick="generar()">Generar campaña</button></div>
+  </div></div>`;
+  const seg = (id, key) => { const box = $(id); box.querySelectorAll("button").forEach(b => { b.classList.toggle("on", b.dataset.v === F[key]); b.onclick = () => { F[key] = b.dataset.v; seg(id, key); nombrePrevio(); }; }); };
+  seg("#s-enfoque", "enfoque"); seg("#s-tipo", "tipo"); nombrePrevio();
+  document.querySelectorAll(".crear .f").forEach(f => f.addEventListener("input", () => f.classList.remove("falta")));
+}
+function nombrePrevio() { const p = ($("#f-prod") || {}).value || ""; const el = $("#nom-prev"); if (el) el.textContent = p.trim() ? M.nombreCampana({ pais: "chl", producto: p, tipo: F.tipo }) : "chl-producto-…"; }
+async function generar() {
+  const v = id => ($(id).value || "").trim();
+  const faltas = [];
+  document.querySelectorAll(".f.falta").forEach(x => x.classList.remove("falta"));
+  const falta = (c, t) => { $(c).classList.add("falta"); faltas.push(t); };
+  if (!v("#f-que")) falta("#c-que", "qué se vende");
+  if (!/^https?:\/\/\S+\.\S+/.test(v("#f-url"))) falta("#c-url", "la landing (https://…)");
+  if (!v("#f-legal")) falta("#c-legal", "la frase legal («no» si no lleva)");
+  if (!v("#f-prod")) falta("#c-prod", "el producto");
+  const ppto = parseInt(v("#f-ppto").replace(/\D/g, ""), 10);
+  if (!ppto) falta("#c-ppto", "el presupuesto diario");
+  if (faltas.length) return toast("Falta: " + faltas.join(", ") + ".");
+  const marca = S.marcas.find(m => m.id === v("#f-marca")) || null;
+  const prod = v("#f-prod");
+  const brief = { que: v("#f-que"), ctaUrl: v("#f-url").replace(/^http:\/\//, "https://"), gancho: v("#f-oferta"), accion: v("#f-accion"), legal: v("#f-legal"), notas: v("#f-notas"), refs: [] };
+  const opciones = { producto: prod, tipo: F.tipo, presupuestoDiario: ppto, nombre: prod.charAt(0).toUpperCase() + prod.slice(1) + " · " + v("#f-mes") };
+  if (F.enfoque !== "conversion") opciones.enfoque = "";
+  const card = $("#crear-card"); const html0 = card.innerHTML;
+  const PASOS = ["Leyendo tu landing", "Buscando a la competencia en Google", "Armando grupos y keywords", "Escribiendo los anuncios (dos por grupo)", "Revisando lo genérico, las cifras y la ortografía"];
+  let k = 0;
+  const pinta = () => { card.innerHTML = `<div class="progreso"><div class="rueda"></div><b style="font-weight:500">Armando la campaña</b><ul class="pasos">${PASOS.map((p, i) => `<li class="${i < k ? "hecho" : i === k ? "ahora" : ""}">${i < k ? "✓ " : ""}${p}</li>`).join("")}</ul><p class="aviso-t" style="margin-top:12px">Tarda 1-2 minutos. No cierres esta pestaña.</p></div>`; };
+  pinta(); const tic = setInterval(() => { if (k < PASOS.length - 1) { k++; pinta(); } }, 16000);
+  let r;
+  try { r = await api("/api/ia", { modo: "campana", brief, marca, opciones }); } catch (e) { r = { ok: false, error: String(e.message || e) }; }
+  clearInterval(tic);
+  if (!r.ok) { card.innerHTML = html0; toast(r.error || "No se pudo armar la campaña.", 6000); return; }
+  const ini = r.iniciativa;
+  ini.objetivo = Object.assign({}, ini.objetivo, { marca: marca ? (marca.nombre || marca.empresa) : "", marcaId: marca ? marca.id : "", legal: brief.legal });
+  const g = await api("/api/iniciativas", { accion: "guardar", iniciativa: ini, base: 0, nota: "Generada por la IA" });
+  if (!g.ok) { card.innerHTML = html0; toast(g.error || "No se pudo guardar.", 6000); return; }
+  S.chat = [{ de: "ia", texto: "Armé la campaña: " + ini.campanas.map(c => c.grupos.length + " grupos, " + c.grupos.reduce((s, x) => s + x.keywords.length, 0) + " keywords y " + c.grupos.reduce((s, x) => s + x.anuncios.length, 0) + " anuncios").join("; ") + ". Revísala por partes: selecciona lo que no te sirva y pídeme el cambio aquí.",
+    notas: (r.avisos || []).map(a => a.texto) }];
+  S.chatDe = ini.id;
+  nav("/campanas/" + ini.id);
+}
+
+/* ═════ [F] PANTALLA 2 · TRABAJAR ═════ */
+async function abrir(id, version) {
+  if (!S.ini || S.ini.id !== id || version) {
+    $("#app").innerHTML = `<div class="pag"><div class="card vacio-grande">Cargando la campaña…</div></div>`;
+    const r = await api("/api/iniciativas?id=" + encodeURIComponent(id));
+    if (!r.ok) { $("#app").innerHTML = `<div class="pag"><div class="card vacio-grande">${esc(r.error || "No se pudo abrir.")} <a href="/campanas">Volver a Campañas</a></div></div>`; return; }
+    S.ini = r.iniciativa; S.meta = r.meta; S.publicada = null; S.selIds.clear(); S.vista = "trabajo";
+    const c0 = S.ini.campanas.find(c => !c.soloReferencia) || S.ini.campanas[0];
+    S.sel = c0 && c0.grupos[0] ? { tipo: "grupo", id: c0.grupos[0].id } : { tipo: "config", id: c0 && c0.id };
+    if (S.chatDe !== id) { S.chat = []; S.chatDe = id; }
+    if (S.meta.publicada_version) cargarPublicada();
+  }
+  pintar();
+}
+async function cargarPublicada() {
+  const r = await api("/api/iniciativas?id=" + encodeURIComponent(S.ini.id) + "&version=" + S.meta.publicada_version);
+  if (r.ok) S.publicada = r.iniciativa;
+}
+const nombresFijosIds = () => { if (!S.publicada) return []; const out = []; for (const c of S.publicada.campanas) { out.push(c.id); for (const g of c.grupos || []) out.push(g.id); } return out; };
+
+function pintar() {
+  migas(S.ini.nombre || "Campaña");
+  pintarCabecera();
+  if (S.vista === "exportar") return pintarExportar();
+  $("#app").innerHTML = `<div class="lay"><aside class="col" id="c-arbol"></aside><main class="col cen" id="c-cen"></main>
+    <aside class="col" style="display:flex;flex-direction:column" id="c-der"></aside></div>`;
+  pintarArbol(); pintarCentro(); pintarDerecha();
+}
+function pintarCabecera() {
+  const e = S.meta.estado, orden = ["borrador", "aprobada", "exportada", "publicada"], i = orden.indexOf(e);
+  const pills = orden.map((x, j) => `<span class="${j < i ? "hecho" : j === i ? "aqui" : ""}">${j < i ? "✓ " : ""}${V.ETIQUETAS[x]}</span>`).join("");
+  let acc = "";
+  if (S.vista === "exportar") acc = `<button class="btn" onclick="S.vista='trabajo';pintar()">Volver a la campaña</button>` + (e === "exportada" ? `<button class="btn" onclick="cambiarEstado('publicada')">Marcar como publicada</button>` : "");
+  else if (e === "borrador") acc = `<button class="btn pri" onclick="aprobar()">Aprobar</button>`;
+  else acc = `<button class="btn pri" onclick="S.vista='exportar';pintar()">Exportar</button>`;
+  $("#cab-der").innerHTML = `<div class="estados">${pills}</div><span class="ver" id="ver">${verTxt()}</span><button class="btn" onclick="historial()">Historial</button>${acc}`;
+}
+const verTxt = () => S.guardando ? "guardando…" : ("v" + S.meta.version + (S.meta.actualizado_en ? " · guardado " + new Date(S.meta.actualizado_en).toLocaleTimeString("es-CL", { hour: "2-digit", minute: "2-digit" }) : ""));
+
+/* Niveles por id (con herencia a los padres) para los puntos del árbol. */
+function nivelesPorId(v) {
+  const padre = {};
+  for (const c of S.ini.campanas) {
+    const hijo = (x, p) => { if (x && x.id) padre[x.id] = p; };
+    ["negativas", "sitelinks", "destacados", "fragmentos", "ubicaciones", "edadesExcluidas"].forEach(k => (c[k] || []).forEach(x => hijo(x, c.id + "#" + k)));
+    ["negativas", "sitelinks", "destacados", "fragmentos"].forEach(k => padre[c.id + "#" + k] = c.id);
+    for (const g of c.grupos || []) {
+      hijo(g, c.id);
+      (g.keywords || []).forEach(x => hijo(x, g.id)); (g.negativas || []).forEach(x => hijo(x, g.id));
+      for (const a of g.anuncios || []) { hijo(a, g.id); (a.titulos || []).forEach(x => hijo(x, a.id)); (a.descripciones || []).forEach(x => hijo(x, a.id)); }
+    }
+  }
+  const peso = { error: 2, aviso: 1 }, out = {};
+  for (const h of v.hallazgos) { const p = peso[h.nivel]; if (!p) continue; let id = h.id, n = 0; while (id && n++ < 8) { out[id] = Math.max(out[id] || 0, p); id = padre[id]; } }
+  return out;
+}
+const dot = (niv, id) => `<span class="dot ${niv[id] === 2 ? "d-err" : niv[id] === 1 ? "d-av" : "d-ok"}"></span>`;
+
+function pintarArbol() {
+  const v = validar(), niv = nivelesPorId(v), s = S.sel;
+  const li = (cls, tipo, id, txt, n, d) => `<li class="${cls}${s.tipo === tipo && s.id === id ? " sel" : ""}" onclick="elegir('${tipo}','${id}')">${d != null ? d : ""}<span>${esc(txt)}</span>${n != null ? `<span class="n">${esc(n)}</span>` : ""}</li>`;
+  let h = `<h3>Campaña</h3><ul class="arbol">`;
+  for (const c of S.ini.campanas.filter(c => !c.soloReferencia)) {
+    h += li("cmp", "config", c.id, c.nombre, null, dot(niv, c.id));
+    h += li("l2", "config", c.id, "Configuración", clp(c.presupuestoDiario) + "/día", "");
+    for (const g of c.grupos) {
+      h += li("l2", "grupo", g.id, g.nombre, g.keywords.length + " kw", dot(niv, g.id));
+      if (s.tipo === "grupo" && s.id === g.id) {
+        h += `<li class="l3" onclick="irA('kw-${g.id}')">Keywords<span class="n">${g.keywords.length}</span></li>`;
+        g.anuncios.forEach(a => { h += `<li class="l3" onclick="irA('rsa-${a.id}')">Anuncio ${esc(a.nombre || "")}<span class="n">${a.titulos.length}+${a.descripciones.length}</span></li>`; });
+        h += `<li class="l3" onclick="irA('neg-${g.id}')">Negativas<span class="n">${g.negativas.length}</span></li>`;
+      }
+    }
+    h += li("l2", "negativas", c.id, "Negativas de campaña", c.negativas.length, dot(niv, c.id + "#negativas"));
+    h += li("l2", "sitelinks", c.id, "Sitelinks", c.sitelinks.length, dot(niv, c.id + "#sitelinks"));
+    h += li("l2", "destacados", c.id, "Destacados", c.destacados.length, dot(niv, c.id + "#destacados"));
+    if ((c.fragmentos || []).length) h += li("l2", "fragmentos", c.id, "Fragmentos", c.fragmentos.length, dot(niv, c.id + "#fragmentos"));
+    h += li("l2", "config", c.id, "Ubicación · " + ((c.ubicaciones || []).map(u => u.nombre).join(", ") || "sin definir"), null, "");
+  }
+  h += `</ul><div class="sepa"></div><h3>Ficha del producto</h3>`;
+  const f = S.ini.ficha;
+  h += `<div class="ficha-ent">${f ? `<b>Investigada${f.actualizada ? " (act. " + esc(f.actualizada) + ")" : ""}</b> desde la landing y Google. ${plural((f.competidores || []).length, "competidor", "competidores")}, ${plural((f.busquedas || []).length, "búsqueda real", "búsquedas reales")}.` : "Sin ficha: la campaña se armó solo con el encargo."} <button class="btn link" onclick="setTab('ficha')">Ver ficha →</button></div>`;
+  $("#c-arbol").innerHTML = h;
+}
+function elegir(tipo, id) { S.sel = { tipo, id }; pintarArbol(); pintarCentro(); $("#c-cen").scrollTop = 0; }
+function irA(dom) { const e = document.getElementById(dom); if (e) { e.scrollIntoView({ behavior: "smooth", block: "start" }); } }
+
+/* — Centro — */
+const campanaDe = id => S.ini.campanas.find(c => c.id === id || (c.grupos || []).some(g => g.id === id));
+const chk = id => `<input type="checkbox" class="cb" ${S.selIds.has(id) ? "checked" : ""} onchange="marcar('${id}',this.checked)">`;
+const edit = (id, campo, txt, max) => `<span class="ed-txt" contenteditable="true" spellcheck="true" data-id="${id}" data-campo="${campo}" data-max="${max || ""}" onblur="editar(this)" onkeydown="if(event.key==='Enter'){event.preventDefault();this.blur()}">${esc(txt)}</span>`;
+const largo = (t, max) => `<span class="cnt${t.length > max ? " mal" : ""}">${t.length}/${max}</span>`;
+function barreras(a) {
+  const roles = new Set(a.titulos.map(t => t.rol).filter(Boolean));
+  const n = r => a.titulos.filter(t => t.rol === r).length;
+  return `<div class="barreras">${["tramite", "precio", "respaldo", "keyword"].map(r => `<span class="bar ${roles.has(r) ? "ok" : "no"}">${roles.has(r) ? "✓" : "✗"} ${ROL_TXT[r][0].toUpperCase() + ROL_TXT[r].slice(1)} · ${n(r)} título${n(r) === 1 ? "" : "s"}</span>`).join("")}</div>`;
+}
+function serp(a, c) {
+  let dom = ""; try { dom = new URL(a.urlFinal).hostname; } catch {}
+  const ruta = [a.ruta1, a.ruta2].filter(Boolean).join("/");
+  const t = a.titulos.slice(0, 3).map(x => x.texto).join(" | ");
+  return `<div class="serp"><small>Patrocinado · ${esc(dom)}${ruta ? "/" + esc(ruta) : ""}</small><div class="t">${esc(t)}</div><div class="d">${esc((a.descripciones[0] || {}).texto || "")}</div></div>`;
+}
+function tablaAnuncio(a) {
+  const T = a.titulos, fij = T.filter(t => t.posicion).length;
+  return `<div class="card" id="rsa-${a.id}"><div class="card-h"><h4>Anuncio adaptable · ${esc(a.nombre || "")}</h4><span class="sp"></span><span class="fij">${fij} fijado${fij === 1 ? "" : "s"} + ${T.length - fij} que rotan</span></div>
+    ${barreras(a)}${serp(a)}
+    <table><tr><th style="width:28px"></th><th>Título</th><th>Papel</th><th>Posición</th><th style="text-align:right">Largo</th></tr>
+    ${T.map(t => `<tr class="${S.selIds.has(t.id) ? "pick" : ""}" data-fila="${t.id}"><td>${chk(t.id)}</td><td>${edit(t.id, "texto", t.texto, M.LIMITES.titulo)}</td>
+      <td><button class="rol r-${t.rol || ""}" title="Cambiar el papel" onclick="rotarRol('${t.id}')">${esc(ROL_TXT[t.rol || ""])}</button></td>
+      <td class="fij">${t.posicion ? "Fijo " + esc(t.posicion) : "Rota"}</td><td>${largo(t.texto, M.LIMITES.titulo)}</td></tr>`).join("")}</table></div>
+    <div class="card"><div class="card-h"><h4>Descripciones · ${esc(a.nombre || "")}</h4></div><table>
+    ${a.descripciones.map(d => `<tr class="${S.selIds.has(d.id) ? "pick" : ""}" data-fila="${d.id}"><td style="width:28px">${chk(d.id)}</td><td>${edit(d.id, "texto", d.texto, M.LIMITES.descripcion)}</td><td>${largo(d.texto, M.LIMITES.descripcion)}</td></tr>`).join("")}</table></div>`;
+}
+const concTag = k => `<i class="${k.concordancia === "exacta" ? "ex" : k.concordancia === "frase" ? "fr" : "am"}" title="Clic: cambiar concordancia" onclick="event.stopPropagation();alternarConc('${k.id}')">${esc(k.concordancia)}</i>`;
+function pintarCentro() {
+  const s = S.sel, c = campanaDe(s.id) || S.ini.campanas[0];
+  let h = "";
+  if (s.tipo === "grupo") {
+    const g = c.grupos.find(x => x.id === s.id);
+    if (!g) { S.sel = { tipo: "config", id: c.id }; return pintarCentro(); }
+    const ex = g.keywords.filter(k => k.concordancia === "exacta").length;
+    h += `<div class="cab"><h2>${esc(g.nombre)}</h2><span class="mono">grupo</span></div>
+      <div class="int">Intención: ${edit(g.id, "intencion", g.intencion || "—")}</div>`;
+    h += g.anuncios.map(a => tablaAnuncio(a)).join("");
+    h += `<div class="card" id="kw-${g.id}"><div class="card-h"><h4>Keywords · ${g.keywords.length}</h4><span class="sp"></span><span class="fij">Exacta ${ex} · Frase ${g.keywords.length - ex}</span></div><div style="padding:12px 14px">
+      ${g.keywords.map(k => `<span class="kw${S.selIds.has(k.id) ? " pick" : ""}" onclick="marcar('${k.id}',!S.selIds.has('${k.id}'),true)">${esc(k.texto)} ${concTag(k)}<button class="x" title="Quitar" onclick="event.stopPropagation();quitar('${k.id}')">×</button></span>`).join("") || '<span class="fij">Sin keywords.</span>'}
+      <div style="margin-top:6px"><button class="btn sm" onclick="agregarKw('${g.id}')">+ Keyword</button></div></div></div>`;
+    h += `<div class="card" id="neg-${g.id}"><div class="card-h"><h4>Negativas del grupo · ${g.negativas.length}</h4></div>${tablaNeg(g.negativas)}</div>`;
+  } else if (s.tipo === "negativas") {
+    h += `<div class="cab"><h2>Negativas de campaña</h2><span class="mono">${esc(c.nombre)}</span></div><div class="int">Cada una con su motivo (columna Comment de Ads Editor).</div><div class="card">${tablaNeg(c.negativas)}</div>`;
+  } else if (s.tipo === "sitelinks") {
+    h += `<div class="cab"><h2>Sitelinks</h2><span class="mono">${esc(c.nombre)}</span></div><div class="int">Cada uno a una página distinta de la landing, del mismo dominio.</div><div class="card"><table><tr><th style="width:28px"></th><th>Texto</th><th>Líneas</th><th>URL</th></tr>
+      ${c.sitelinks.map(x => `<tr class="${S.selIds.has(x.id) ? "pick" : ""}" data-fila="${x.id}"><td>${chk(x.id)}</td><td>${edit(x.id, "texto", x.texto, M.LIMITES.sitelinkTexto || 25)}</td><td>${edit(x.id, "linea1", x.linea1 || "", 35)}<br>${edit(x.id, "linea2", x.linea2 || "", 35)}</td><td style="font-size:12px;word-break:break-all">${edit(x.id, "urlFinal", x.urlFinal || "")}</td></tr>`).join("")}</table></div>`;
+  } else if (s.tipo === "destacados") {
+    h += `<div class="cab"><h2>Destacados</h2><span class="mono">${esc(c.nombre)}</span></div><div class="card"><table>
+      ${c.destacados.map(x => `<tr class="${S.selIds.has(x.id) ? "pick" : ""}" data-fila="${x.id}"><td style="width:28px">${chk(x.id)}</td><td>${edit(x.id, "texto", x.texto, 25)}</td><td>${largo(x.texto, 25)}</td></tr>`).join("")}</table></div>`;
+  } else if (s.tipo === "fragmentos") {
+    h += `<div class="cab"><h2>Fragmentos estructurados</h2></div><div class="card"><table><tr><th>Encabezado</th><th>Valores</th></tr>${c.fragmentos.map(x => `<tr data-fila="${x.id}"><td>${esc(x.encabezado)}</td><td>${esc((x.valores || []).join(" · "))}</td></tr>`).join("")}</table></div>`;
+  } else {
+    h += `<div class="cab"><h2>${esc(c.nombre)}</h2><span class="mono">campaña</span></div><div class="int">Configuración con la que se importa a Ads Editor.</div>
+      <div class="card"><table class="conf">
+        <tr><td>Presupuesto diario (CLP)</td><td>${edit(c.id, "presupuestoDiario", c.presupuestoDiario == null ? "" : String(c.presupuestoDiario))}</td></tr>
+        <tr><td>Estrategia de puja</td><td>${esc(c.puja || "—")}</td></tr>
+        <tr><td>Estado al importar</td><td>${esc(c.estado || "—")}</td></tr>
+        <tr><td>Redes</td><td>${esc((c.redes || []).join(", "))}</td></tr>
+        <tr><td>Inicio / fin</td><td>${esc(c.inicio || "al activarla")} / ${esc(c.fin || "sin fin")}</td></tr>
+        <tr><td>Ubicación</td><td>${esc((c.ubicaciones || []).map(u => u.nombre).join(", ") || "—")}</td></tr>
+        <tr><td>Edades excluidas</td><td>${esc((c.edadesExcluidas || []).map(e => e.edad).join(", ") || "ninguna")}</td></tr>
+        <tr><td>UTM</td><td style="font-size:12px;word-break:break-all">${esc(c.sufijoUrlFinal || c.plantillaSeguimiento || "—")}</td></tr>
+      </table></div>`;
+  }
+  $("#c-cen").innerHTML = h;
+}
+function tablaNeg(L) {
+  if (!L.length) return `<div style="padding:12px 14px" class="fij">Sin negativas.</div>`;
+  return `<table><tr><th style="width:28px"></th><th>Negativa</th><th>Concordancia</th><th>Motivo</th><th></th></tr>${L.map(n => `<tr class="${S.selIds.has(n.id) ? "pick" : ""}" data-fila="${n.id}"><td>${chk(n.id)}</td><td>${esc(n.texto)}</td><td><span class="kw" style="margin:0">${concTag(n)}</span></td><td style="font-size:12px;color:var(--ink3)">${esc(n.comentario || "")}</td><td><button class="btn link" style="color:var(--ink4)" onclick="quitar('${n.id}')">Quitar</button></td></tr>`).join("")}</table>`;
+}
+
+/* — Ediciones directas: pasan por el MISMO validador que usa la IA (nucleo/operaciones.js) — */
+function marcar(id, on, repintar) { on ? S.selIds.add(id) : S.selIds.delete(id); const f = document.querySelector(`[data-fila="${id}"]`); if (f) f.classList.toggle("pick", on); if (repintar) pintarCentro(); pintarCtx(); }
+function aplicarOps(ops, nota) {
+  const r = OPS.aplicar(S.ini, ops, { nombresFijos: nombresFijosIds() });
+  if (r.rechazadas.length) toast(r.rechazadas[0].motivo, 5000);
+  if (!r.aplicadas.length) { pintarCentro(); return false; }
+  S.ini = r.iniciativa; guardarLuego(nota); pintarArbol(); pintarCentro(); pintarDerecha();
+  return true;
+}
+function editar(el) {
+  const id = el.dataset.id, campo = el.dataset.campo, u = OPS.ubicar(S.ini, id); if (!u) return;
+  let valor = el.textContent.replace(/\s+/g, " ").trim();
+  if (campo === "presupuestoDiario") valor = parseInt(valor.replace(/\D/g, ""), 10) || 0;
+  if (String(u.obj[campo] == null ? "" : u.obj[campo]) === String(valor)) return;
+  aplicarOps([{ op: "cambiar", id, campo, valor }], "Edición directa");
+}
+function rotarRol(id) { const u = OPS.ubicar(S.ini, id); if (!u) return; const i = ROLES.indexOf(u.obj.rol || ""); aplicarOps([{ op: "cambiar", id, campo: "rol", valor: ROLES[(i + 1) % ROLES.length] }], "Cambio de papel"); }
+function alternarConc(id) { const u = OPS.ubicar(S.ini, id); if (!u) return; aplicarOps([{ op: "cambiar", id, campo: "concordancia", valor: u.obj.concordancia === "exacta" ? "frase" : "exacta" }], "Cambio de concordancia"); }
+function quitar(id) { S.selIds.delete(id); aplicarOps([{ op: "quitar", id }], "Quitado a mano"); }
+function agregarKw(gid) { const t = prompt("Keyword nueva (minúsculas, como busca la gente):"); if (!t || !t.trim()) return; aplicarOps([{ op: "agregar", en: gid, lista: "keywords", elemento: { texto: t.trim().toLowerCase(), concordancia: "frase" } }], "Keyword agregada"); }
+
+/* — Guardado por versiones: agrupa ediciones seguidas en una sola versión — */
+let _tg = null, _notas = [];
+function guardarLuego(nota) { if (nota && !_notas.includes(nota)) _notas.push(nota); S.sucio = true; clearTimeout(_tg); _tg = setTimeout(guardar, 1200); }
+async function guardar() {
+  if (S.guardando) { clearTimeout(_tg); _tg = setTimeout(guardar, 800); return; }
+  S.guardando = true; const v = $("#ver"); if (v) v.textContent = verTxt();
+  const nota = _notas.join(" · ").slice(0, 200); _notas = [];
+  const r = await api("/api/iniciativas", { accion: "guardar", iniciativa: S.ini, base: S.meta.version, nota });
+  S.guardando = false;
+  if (r.ok) { S.sucio = false; if (!r.sinCambios) Object.assign(S.meta, { version: r.version, estado: r.estado, actualizado_en: new Date().toISOString() }); pintarCabecera(); if (r.volvioABorrador) toast("La campaña volvió a Borrador: apruébala de nuevo para exportar."); }
+  else if (r.conflicto) toast("Otra persona guardó una versión más nueva (v" + r.version + "). Recarga para verla: tus cambios no se guardaron.", 8000);
+  else toast(r.error || "No se pudo guardar.", 6000);
+}
+window.addEventListener("beforeunload", e => { if (S.sucio) { e.preventDefault(); e.returnValue = ""; } });
+
+/* — Derecha: Revisión · Conversación · Ficha — */
+function setTab(t) { S.tab = t; pintarDerecha(); }
+function pintarDerecha() {
+  const v = validar(), n = v.errores + v.avisos;
+  const box = $("#c-der"); if (!box) return;
+  box.innerHTML = `<div class="tabs"><button class="${S.tab === "rev" ? "on" : ""}" onclick="setTab('rev')">Revisión${n ? `<span class="badge">${n}</span>` : ""}</button><button class="${S.tab === "ia" ? "on" : ""}" onclick="setTab('ia')">Conversación</button><button class="${S.tab === "ficha" ? "on" : ""}" onclick="setTab('ficha')">Ficha</button></div>
+    <div class="pane on" id="pane">${S.tab === "rev" ? paneRevision(v) : S.tab === "ficha" ? paneFicha() : paneChat()}</div>
+    ${S.tab === "rev" ? "" : `<div class="caja"><div class="modo"><button class="${S.modo === "corregir" ? "on" : ""}" onclick="S.modo='corregir';pintarDerecha()">Corregir</button><button class="${S.modo === "averiguar" ? "on" : ""}" onclick="S.modo='averiguar';pintarDerecha()">Averiguar</button></div>
+      <textarea id="entrada" placeholder="${S.modo === "corregir" ? "Pídele a Char-B un cambio sobre lo seleccionado, o sobre la campaña entera si no seleccionas nada." : "Pregúntale algo para averiguar en Google o en tu web (competencia, plazos, condiciones…)."}" onkeydown="if(event.key==='Enter'&&(event.metaKey||event.ctrlKey)){enviar()}"></textarea>
+      <div class="fila"><span>${S.modo === "corregir" ? "Solo cambia lo que pidas · verás cada cambio antes de aplicarlo" : "Lo que averigüe se guarda en la ficha si lo apruebas"}</span><span class="sp"></span><button class="btn ia sm" id="b-env" onclick="enviar()">Enviar</button></div></div>`}`;
+  if (S.tab === "ia") { const p = $("#pane"); p.scrollTop = p.scrollHeight; }
+}
+function paneRevision(v) {
+  const H = v.hallazgos, g = nv => H.filter(h => h.nivel === nv);
+  const item = h => { const r = R.REGLAS.find(x => x.codigo === h.codigo); const c = h.nivel === "error" ? "err" : h.nivel === "aviso" ? "av" : "su";
+    return `<div class="hz"><div class="top"><span class="cod ${c}">${esc(h.codigo)}</span><span>${esc(r ? r.que.split(/[.(]/)[0] : "")}</span></div>${esc(h.mensaje)}<div class="donde">${esc(h.donde || "")}</div>
+      <div class="acc">${h.id ? `<button class="btn link" onclick="irAHallazgo('${h.id}')">Ir</button>` : ""}${h.nivel !== "sugerencia" && h.id ? `<button class="btn link" style="color:var(--magenta)" onclick="corregirHallazgo('${esc(h.codigo)}','${h.id}')">Corregir con IA</button>` : ""}${r && /^https?:/.test(r.fuente) ? `<a class="btn link" style="color:var(--ink3)" target="_blank" rel="noopener" href="${esc(r.fuente.split(" ")[0])}">Ver por qué</a>` : ""}</div></div>`; };
+  return `<div class="grp-t">Bloquean la aprobación · ${v.errores}</div>${g("error").map(item).join("")}
+    <div class="grp-t">Revisar · ${v.avisos}</div>${g("aviso").map(item).join("")}
+    <div class="grp-t">Sugerencias · ${v.sugerencias}</div>${g("sugerencia").map(item).join("")}`;
+}
+function irAHallazgo(id) {
+  const u = OPS.ubicar(S.ini, id); if (!u) return;
+  let obj = id, tipo = null;
+  const c = S.ini.campanas.find(c => JSON.stringify(c).includes('"' + id + '"'));
+  if (!c) return;
+  const g = (c.grupos || []).find(x => x.id === id || JSON.stringify(x).includes('"' + id + '"'));
+  if (g) S.sel = { tipo: "grupo", id: g.id };
+  else if (c.id === id) S.sel = { tipo: "config", id: c.id };
+  else for (const k of ["negativas", "sitelinks", "destacados", "fragmentos"]) if ((c[k] || []).some(x => x.id === id)) S.sel = { tipo: k, id: c.id };
+  pintarArbol(); pintarCentro();
+  setTimeout(() => { const f = document.querySelector(`[data-fila="${id}"]`) || document.getElementById("rsa-" + id); if (f) { f.scrollIntoView({ behavior: "smooth", block: "center" }); f.classList.add("flash"); setTimeout(() => f.classList.remove("flash"), 1700); } }, 60);
+}
+function paneFicha() {
+  const o = S.ini.objetivo || {}, f = S.ini.ficha || {};
+  const lista = (t, L, vacio) => `<div class="ev"><h5>${t}</h5><ul>${(L || []).length ? L.map(x => `<li>${esc(typeof x === "object" ? (x.nombre + (x.promesa ? ": " + x.promesa : "")) : x)}</li>`).join("") : `<li class="vacio">${esc(vacio || "Sin datos en las fuentes: la IA no lo inventa.")}</li>`}</ul></div>`;
+  const ev = f.evidencia || {};
+  return `<div class="ev"><h5>Objetivo</h5><ul><li>${esc([o.que, o.accion, o.gancho ? "oferta «" + o.gancho + "»" : "", o.enfoque === "conversion" ? "enfoque conversión" : ""].filter(Boolean).join(" · "))}</li>${o.marca ? `<li>Marca: ${esc(o.marca)}</li>` : ""}${o.ctaUrl ? `<li>Landing: <a href="${esc(o.ctaUrl)}" target="_blank" rel="noopener">${esc(o.ctaUrl)}</a></li>` : ""}</ul></div>
+    ${S.ini.ficha ? lista("Evidencia · Trámite", ev.tramite) + lista("Evidencia · Precio", ev.precio) + lista("Evidencia · Respaldo", ev.respaldo) + lista("Momentos de necesidad", f.momentos) +
+      lista("Ofertas", f.ofertas, "Sin ofertas en la web.") + lista("Condiciones", f.condiciones, "—") + lista("Competidores", f.competidores, "—") + lista("No vendemos", f.noOfrece, "—") + lista("Fuentes", f.fuentes, "—")
+      : `<div class="ev"><ul><li class="vacio">Esta campaña no tiene ficha investigada.</li></ul></div>`}
+    <button class="btn ia sm" onclick="S.modo='averiguar';setTab('ia')">Averiguar algo</button>`;
+}
+
+/* — Conversación — */
+function pintarCtx() { const e = $("#ctx"); if (e) e.outerHTML = ctxHTML(); }
+function ctxHTML() {
+  const n = S.selIds.size;
+  return `<div class="ctx" id="ctx"><span>Trabajando sobre</span><b>${n ? n + " elemento" + (n === 1 ? "" : "s") + " seleccionado" + (n === 1 ? "" : "s") : "la campaña completa"}</b><span class="sp"></span>${n ? `<button class="btn link" style="color:var(--blue)" onclick="S.selIds.clear();pintarCentro();pintarCtx()">Quitar</button>` : ""}</div>`;
+}
+function paneChat() {
+  return ctxHTML() + S.chat.map((m, i) => m.de === "yo" ? `<div class="msg yo">${esc(m.texto)}</div>` : `<div class="msg ia"><div class="av-ia"></div><div class="burbuja${m.pensando ? " pensando" : ""}">${esc(m.texto)}${(m.notas || []).map(t => `<div class="nota-ia">${esc(t)}</div>`).join("")}${propuestaHTML(m, i)}</div></div>`).join("")
+    || `<div class="fij" style="margin:6px 0 12px">Selecciona títulos, descripciones, keywords o negativas en el centro y pídele a Char-B que los cambie. Si no seleccionas nada, trabaja sobre la campaña completa. Solo cambia lo que pidas.</div>`;
+}
+function descOp(op, ini) {
+  const u = op.id ? OPS.ubicar(ini, op.id) : null;
+  const nombre = { titulo: "Título", descripcion: "Descripción", keyword: "Keyword", negativa: "Negativa", sitelink: "Sitelink", destacado: "Destacado", grupo: "Grupo", campana: "Campaña", anuncio: "Anuncio" };
+  if (op.op === "cambiar") return { antes: u ? String(u.obj[op.campo] == null ? "" : u.obj[op.campo]) : "", desp: String(op.valor), meta: (nombre[u && u.entidad] || "") + (op.campo !== "texto" ? " · " + op.campo : "") };
+  if (op.op === "quitar") return { antes: u ? (u.obj.texto || u.obj.nombre || "") : op.id, desp: "(se quita)", meta: "Quita " + (nombre[u && u.entidad] || "") };
+  const el = op.elemento || {}, pu = OPS.ubicar(ini, op.en);
+  return { antes: "", desp: el.texto || el.nombre || JSON.stringify(el).slice(0, 80), meta: "Nuevo en " + (pu ? (pu.obj.nombre || nombre[pu.entidad] || "") : "") + " · " + op.lista };
+}
+function propuestaHTML(m, i) {
+  if (!m.propuesta) return "";
+  const P = m.propuesta;
+  if (P.tipo === "ficha") return P.hecho ? `<div class="nota-ia">✓ Guardado en la ficha.</div>` : (P.cambiados.length ? `<div class="cambio"><div class="desp">Ficha · se actualiza: ${esc(P.cambiados.join(", "))}.</div><div class="meta">${esc((P.fuentes || []).slice(0, 3).join(" · "))}</div></div><div class="acciones"><button class="btn pri sm" onclick="guardarFicha(${i})">Guardar en la ficha</button></div>` : "");
+  if (P.hecho) return `<div class="nota-ia">✓ ${esc(P.hecho)}</div>`;
+  if (!P.ops.length) return "";
+  const n = P.ops.filter((o, j) => P.on[j]).length;
+  return P.ops.map((op, j) => { const d = descOp(op, S.ini); return `<div class="cambio${P.on[j] ? "" : " off"}">${d.antes ? `<div class="antes">${esc(d.antes)}</div>` : ""}<div class="desp">${esc(d.desp)}</div><div class="meta">${esc(d.meta)}<span class="sp"></span><label><input type="checkbox" class="cb" ${P.on[j] ? "checked" : ""} onchange="S.chat[${i}].propuesta.on[${j}]=this.checked;pintarDerecha()"> aplicar</label></div></div>`; }).join("")
+    + `<div class="acciones"><button class="btn pri sm" ${n ? "" : "disabled"} onclick="aplicarPropuesta(${i})">Aplicar ${n} cambio${n === 1 ? "" : "s"}</button><button class="btn sm" onclick="S.chat[${i}].propuesta.hecho='Descartado.';pintarDerecha()">Descartar</button></div>`;
+}
+async function enviar(texto, extra) {
+  const t = (texto != null ? texto : ($("#entrada") || {}).value || "").trim();
+  if (!t && !(extra && extra.hallazgos)) return toast("Escribe qué quieres cambiar o averiguar.");
+  const modo = extra && extra.modo || S.modo;
+  S.chat.push({ de: "yo", texto: t || "Corrige: " + extra.etiqueta });
+  const ia = { de: "ia", texto: modo === "corregir" ? "Revisando solo lo necesario…" : "Buscando…", pensando: true };
+  S.chat.push(ia); S.tab = "ia"; pintarDerecha();
+  const b = $("#b-env"); if (b) b.disabled = true;
+  const marca = marcaDe(S.ini);
+  let r;
+  try {
+    r = modo === "corregir"
+      ? await api("/api/ia", { modo: "corregir", iniciativa: S.ini, instruccion: t, ids: [...S.selIds], hallazgos: extra && extra.hallazgos, marca, nombresFijos: nombresFijosIds() })
+      : await api("/api/ia", { modo: "investigar", iniciativa: S.ini, pregunta: t });
+  } catch (e) { r = { ok: false, error: String(e.message || e) }; }
+  ia.pensando = false;
+  if (!r.ok) { ia.texto = "No pude: " + (r.error || "error desconocido") + "."; pintarDerecha(); return; }
+  if (modo === "corregir") {
+    const ops = (r.aplicadas || []).map(o => { const x = Object.assign({}, o); delete x.idNuevo; return x; });
+    ia.texto = r.explicacion || (ops.length ? "Propongo estos cambios." : "No hizo falta cambiar nada.");
+    ia.notas = [];
+    if (ops.length) ia.notas.push((r.erroresNuevos || []).length ? "Ojo: quedan " + r.erroresNuevos.length + " error(es) nuevo(s) tras el cambio." : "Revisado: sin errores nuevos · ortografía " + (r.ortografia === "revisada" ? "revisada" : "sin revisar") + ". " + (r.parcial ? "El resto de la campaña no se tocó." : ""));
+    if ((r.rechazadas || []).length) ia.notas.push(r.rechazadas.length + " propuesta(s) no cumplían las reglas y se descartaron: " + r.rechazadas.slice(0, 2).map(x => x.motivo).join(" · "));
+    ia.propuesta = { tipo: "ops", ops, on: ops.map(() => true), completa: r.iniciativa, base: JSON.stringify(S.ini).length, instruccion: t || (extra && extra.etiqueta) };
+  } else {
+    ia.texto = r.respuesta || "No encontré nada nuevo.";
+    ia.propuesta = { tipo: "ficha", ficha: r.ficha, cambiados: r.cambiados || [], fuentes: r.fuentes || [] };
+  }
+  pintarDerecha();
+}
+function corregirHallazgo(codigo, id) { S.modo = "corregir"; enviar("", { hallazgos: [codigo + ":" + id], etiqueta: codigo, modo: "corregir" }); }
+function aplicarPropuesta(i) {
+  const P = S.chat[i].propuesta, elegidas = P.ops.filter((o, j) => P.on[j]);
+  let n = 0;
+  if (elegidas.length === P.ops.length && P.completa) { S.ini = P.completa; n = elegidas.length; }
+  else { const r = OPS.aplicar(S.ini, elegidas, { nombresFijos: nombresFijosIds() }); S.ini = r.iniciativa; n = r.aplicadas.length; if (r.rechazadas.length) toast(r.rechazadas.length + " cambio(s) dependían de otros que no elegiste y no se aplicaron."); }
+  P.hecho = n + " cambio" + (n === 1 ? "" : "s") + " aplicado" + (n === 1 ? "" : "s") + ".";
+  S.selIds.clear();
+  guardarLuego("Char-B: " + String(P.instruccion || "").slice(0, 80));
+  pintarArbol(); pintarCentro(); pintarDerecha();
+}
+function guardarFicha(i) { const P = S.chat[i].propuesta; S.ini = Object.assign({}, S.ini, { ficha: P.ficha }); P.hecho = true; guardarLuego("Ficha: " + P.cambiados.join(", ")); pintarArbol(); pintarDerecha(); }
+
+/* — Estados, historial — */
+async function aprobar() {
+  if (S.sucio) await guardar();
+  const r = await api("/api/iniciativas", { accion: "estado", id: S.ini.id, estado: "aprobada", base: S.meta.version });
+  if (!r.ok) { toast(r.error || "No se pudo aprobar.", 7000); S.tab = "rev"; pintarDerecha(); return; }
+  S.meta.estado = "aprobada"; S.vista = "exportar"; pintar();
+}
+async function cambiarEstado(estado) {
+  const r = await api("/api/iniciativas", { accion: "estado", id: S.ini.id, estado, base: S.meta.version });
+  if (!r.ok) { toast(r.error || "No se pudo cambiar el estado.", 7000); return false; }
+  Object.assign(S.meta, { estado: r.estado, exportada_version: r.exportada_version, publicada_version: r.publicada_version });
+  if (estado === "publicada") { S.publicada = JSON.parse(JSON.stringify(S.ini)); toast("Publicada: desde ahora los nombres de campañas y grupos quedan fijos."); }
+  pintar(); return true;
+}
+async function historial() {
+  const r = await api("/api/iniciativas?id=" + encodeURIComponent(S.ini.id) + "&historial=1");
+  if (!r.ok) return toast(r.error || "No se pudo leer el historial.");
+  const velo = document.createElement("div"); velo.className = "velo"; velo.onclick = e => { if (e.target === velo) velo.remove(); };
+  velo.innerHTML = `<div class="modal"><div class="card-h"><h4>Historial · ${esc(S.ini.nombre || "")}</h4><span class="sp"></span><button class="btn sm" onclick="this.closest('.velo').remove()">Cerrar</button></div>
+    <table><tr><th>Versión</th><th>Cuándo</th><th>Quién</th><th>Nota</th><th></th></tr>${(r.versiones || []).map(v => `<tr><td>v${v.version}${v.version === S.meta.publicada_version ? ' <span class="tag t-n">publicada</span>' : v.version === S.meta.exportada_version ? ' <span class="tag t-m">exportada</span>' : ""}</td><td class="fij">${esc(hora(v.creado_en))}</td><td class="fij">${esc(v.autor || "")}</td><td style="font-size:12.5px">${esc(v.nota || "")}</td><td>${v.version !== S.meta.version ? `<button class="btn link" onclick="restaurar(${v.version})">Volver a esta</button>` : '<span class="fij">actual</span>'}</td></tr>`).join("")}</table></div>`;
+  document.body.appendChild(velo);
+}
+async function restaurar(n) {
+  if (!confirm("¿Volver a la versión " + n + "? Se guarda como una versión nueva: no se pierde nada.")) return;
+  const r = await api("/api/iniciativas?id=" + encodeURIComponent(S.ini.id) + "&version=" + n);
+  if (!r.ok) return toast(r.error || "No se pudo leer esa versión.");
+  S.ini = r.iniciativa; document.querySelector(".velo") && document.querySelector(".velo").remove();
+  guardarLuego("Restaurada desde v" + n); pintar();
+}
+
+/* ═════ [G] PANTALLA 3 · EXPORTAR ═════ */
+function pintarExportar() {
+  const ini = S.ini, archivo = AE.nombreArchivo(ini, hoyCL());
+  const filas = csv => Math.max(0, csv.trim().split("\r\n").length - 1);
+  const completo = AE.exportar(ini);
+  const hayPub = !!S.publicada && S.meta.publicada_version !== S.meta.version;
+  let cam = null, dif = [];
+  if (hayPub) { cam = V.cambiosParaEditor(S.publicada, ini); dif = V.diferencias(S.publicada, ini); }
+  if (!hayPub) S.expTipo = "completa";
+  const csvCambios = cam ? AE.exportar(cam.iniciativa) : "";
+  const TAG = { nuevo: ["t-n", "Nuevo"], modificado: ["t-m", "Modifica"], reemplazado: ["t-r", "Reemplaza"], eliminado: ["t-e", "Elimina"] };
+  const txt = x => x ? (x.texto || x.nombre || x.edad || "") : "";
+  // Un anuncio adaptable no se edita en Ads Editor: se reemplaza. Se dice QUÉ textos cambian.
+  const detalle = d => {
+    if (d.entidad !== "anuncio" || !d.antes || !d.ahora) return d.cambio === "reemplazado" || d.cambio === "modificado" ? "«" + esc(txt(d.antes)) + "» → «" + esc(txt(d.ahora)) + "»" : "«" + esc(txt(d.ahora || d.antes)) + "»";
+    const ts = a => (a.titulos || []).concat(a.descripciones || []).map(x => x.texto);
+    const A = ts(d.antes), B = ts(d.ahora), sale = A.filter(t => !B.includes(t)), entra = B.filter(t => !A.includes(t));
+    return "«" + esc(d.ahora.nombre) + "»: " + (sale.length || entra.length ? sale.map(t => "«" + esc(t) + "»").join(", ") + " → " + entra.map(t => "«" + esc(t) + "»").join(", ") : "cambia su configuración") + (d.cambio === "reemplazado" ? ' <span class="fij">(Ads Editor lo reemplaza: el anterior queda eliminado)</span>' : "");
+  };
+  const v = validar();
+  $("#app").innerHTML = `<div class="pag" style="max-width:920px"><div class="card">
+    <div class="card-h"><h4>Descargar para Google Ads Editor</h4><span class="sp"></span><span class="mono">${esc(archivo)}</span></div>
+    ${v.errores ? `<div class="man" style="margin-top:14px">Hay ${v.errores} error(es) que Google rechazaría. Vuelve a la campaña y corrígelos antes de exportar.</div>` : ""}
+    <div class="opc">
+      <button class="op ${S.expTipo === "completa" ? "on" : ""}" onclick="S.expTipo='completa';pintarExportar()"><h4>Campaña completa</h4><p>Todo, para una campaña que aún no existe en tu cuenta.</p><div class="num">${filas(completo)} filas</div></button>
+      <button class="op ${S.expTipo === "cambios" ? "on" : ""}" ${hayPub ? "" : "disabled"} onclick="S.expTipo='cambios';pintarExportar()"><h4>Solo cambios${hayPub ? " desde la v" + S.meta.publicada_version + " publicada" : ""}</h4><p>${hayPub ? "Lo nuevo, lo modificado y lo eliminado. Lo que no cambió no se toca." : "Disponible cuando marques una versión como publicada."}</p><div class="num">${hayPub ? filas(csvCambios) + " filas" : "—"}</div></button>
+    </div>
+    ${S.expTipo === "cambios" && dif.length ? `<ul class="lista">${dif.slice(0, 40).map(d => `<li><span class="tag ${TAG[d.cambio][0]}">${TAG[d.cambio][1]}</span><span>${esc(d.entidad)} ${detalle(d)}</span><span class="sp" style="flex:1"></span><span class="fij">${esc(d.donde)}</span></li>`).join("")}${dif.length > 40 ? `<li class="fij">… y ${dif.length - 40} más.</li>` : ""}</ul>` : ""}
+    ${S.expTipo === "cambios" && cam && cam.manual.length ? `<div class="man">Hazlo a mano en Ads Editor: ${cam.manual.map(esc).join(" · ")}</div>` : ""}
+    <div class="pie" style="padding:14px 18px;margin:0"><span class="aviso-t">Tras publicar, los nombres de campañas y grupos quedan fijos: Ads Editor los reconoce por su nombre.</span><span class="sp"></span>
+      <button class="btn pri" ${v.errores ? "disabled" : ""} onclick="descargar()">Descargar ${S.expTipo === "cambios" ? filas(csvCambios) : filas(completo)} filas</button></div>
+  </div></div>`;
+}
+async function descargar() {
+  const ini = S.ini, cambios = S.expTipo === "cambios" && S.publicada;
+  const csv = cambios ? AE.exportar(V.cambiosParaEditor(S.publicada, ini).iniciativa) : AE.exportar(ini);
+  const nombre = AE.nombreArchivo(ini, hoyCL()).replace(/\.csv$/, cambios ? "-cambios.csv" : ".csv");
+  const a = document.createElement("a"); a.href = URL.createObjectURL(new Blob([csv], { type: "text/csv;charset=utf-8" })); a.download = nombre; document.body.appendChild(a); a.click(); a.remove();
+  if (S.meta.estado === "aprobada") await cambiarEstado("exportada");
+  toast("Descargado: " + nombre);
+}
+</script>
+</body>
+</html>

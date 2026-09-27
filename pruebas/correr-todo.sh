@@ -33,7 +33,7 @@ done
 if [ "$listo" != "1" ]; then echo "El servidor de pruebas no arrancó. Mira /tmp/sbb-srv.log"; exit 1; fi
 
 # ── Qué se corre (orden: primero lo que no necesita navegador) ───────────
-TODAS=(audita-estatica nucleo nucleo-contrato reglas versiones iniciativas operaciones campana-ia poda login acceso ia-json ads-ia diagnostico geom medir insp panel arrastre libre proporciones escribir alcance iaq asis xls campana-actual fb tablet migra cierres regres recorrido)
+TODAS=(audita-estatica nucleo nucleo-contrato reglas versiones iniciativas operaciones campana-ia campanas poda login acceso ia-json ads-ia diagnostico geom medir insp panel arrastre libre proporciones escribir alcance iaq asis xls campana-actual fb tablet migra cierres regres recorrido)
 descripcion() {
   case "$1" in
     audita-estatica) echo "controles muertos, íconos y rutas (sin navegador)";;
@@ -47,6 +47,7 @@ descripcion() {
     versiones) echo "versiones y estados: diferencias por id y archivo de solo cambios (sin navegador)";;
     iniciativas) echo "guardado por iniciativa: versiones, conflictos, estados y poda sobre D1 (SQLite local)";;
     operaciones) echo "correcciones por partes: operaciones validadas contra el esquema (sin navegador)";;
+    campanas)  echo "pantallas de campañas de Search: crear, corregir por partes, aprobar, exportar completo y solo cambios";;
     campana-ia) echo "Search sobre el modelo: generar, corregir por partes e investigar (Gemini simulado)";;
     ads-ia)    echo "Search: investiga la landing y la competencia, critica y filtra (sin navegador)";;
     diagnostico) echo "Tu campaña actual: lee informes de Google Ads, diagnostica y alimenta la generación (sin navegador)";;

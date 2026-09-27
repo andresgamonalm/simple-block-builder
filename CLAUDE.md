@@ -1124,7 +1124,28 @@ mismos), 40 avisos, 43 sugerencias. `pruebas/reglas.js` 76/76.
 - Contrato §8 (conversación) generado. Pruebas: `operaciones.js` 16/16, `campana-ia.js` 25/25; `ads-ia`/`diagnostico`
   adaptadas (importan el núcleo). Probado en `wrangler pages dev`. Batería completa en verde.
 
-**Siguientes pasos (orden aprobado):** 4b) interfaz de la iniciativa y la conversación (MOCKUP primero) · 5) Display y Performance Max con espacios de imagen · 6) operación (import de
+**PASO 4b (HECHO, 27-sep, mockup `mockups/campana-conversacion.html` aprobado): `campanas.html`.** Página propia (no vive
+en editor.html) servida en `/campanas` (lista), `/campanas/nueva` (crear) y `/campanas/<id>` (trabajar + exportar);
+`_redirects` → `/campanas/* /campanas 200` (Pages sirve el .html sin extensión). Carga el núcleo por `<script>` (modelo,
+lecciones, reglas, ads-editor, versiones, operaciones): la pantalla solo muestra y llama; decide el núcleo.
+- La tarjeta **Google Search** del Home (`crearConIA('ads')`) y el enlace **Campañas Search** de la barra van aquí. El
+  asistente viejo de Search (`adsData`) queda para las piezas guardadas y para «Campaña completa».
+- Crear: encargo + marca + landing + oferta + acción + **legal obligatoria** + enfoque + tipo + producto (nombre con
+  taxonomía en vivo) + presupuesto CLP + materiales → `modo:'campana'` → guarda v1 (`objetivo.marca/marcaId/legal`).
+- Trabajar: árbol con puntos del motor de reglas (heredan a los padres) · detalle por grupo con sus DOS anuncios,
+  barreras cubiertas por `rol`, vista SERP, títulos con papel (clic rota) y largo, keywords (clic alterna concordancia),
+  negativas con motivo · edición directa `contenteditable` → `OPS.aplicar` (mismo validador que la IA) → guardado
+  agrupado (1,2 s) como versión nueva · pestañas **Revisión** (Ir / Corregir con IA desde el hallazgo / Ver por qué),
+  **Conversación** (Corregir manda SOLO los ids marcados; cada operación se muestra antes/después con casilla; se
+  aplica la iniciativa del servidor si van todas, si no se re-aplica el subconjunto) y Averiguar (→ «Guardar en la
+  ficha»), **Ficha**. Historial con «Volver a esta» (crea versión nueva).
+- Exportar: completa (`AE.exportar`) o **solo cambios** desde la versión publicada (`V.cambiosParaEditor`), con la lista
+  de diferencias (un RSA editado se REEMPLAZA: se dice qué textos entran y salen) y lo que va a mano. Descargar marca
+  Exportada; «Marcar como publicada» fija los nombres (`nombresFijos` a la IA y al guardado).
+- Prueba `pruebas/campanas.js` 34/34 (srv.js simula `/api/iniciativas` en memoria y los modos campana/corregir/investigar
+  con el núcleo real).
+
+**Siguientes pasos (orden aprobado):** 5) Display y Performance Max con espacios de imagen · 6) operación (import de
 informes → diagnóstico → CSV de cambios) y aprendizaje por marca. La interfaz nueva va con MOCKUP antes.
 **Negativas (26-sep, CORRECCIÓN):** el archivo real del usuario escribe la concordancia en el TIPO de fila
 (`Campaign negative phrase` / `Negative exact`, texto sin comillas) y Ads Editor lo indexa. El importador leía esas negativas

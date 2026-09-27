@@ -176,12 +176,12 @@ const T=(c,n,e)=>{ if(c){ok++;console.log("  ok   "+n);} else {mal++;console.log
   T(cf.asistente===0 && cf.tipo==="facebook" && cf.n===3,
     "Facebook Ads igual: en blanco, sus 3 tamaños, sin IA", JSON.stringify(cf));
   const cs = await pg.evaluate(async()=>{
-    window._ia=0; crearConIA("ads"); await new Promise(r=>setTimeout(r,500));
-    const abierto=document.getElementById("modal-ia").classList.contains("show");
-    cerrarModal("ia"); return { asistente:window._ia, abierto };
+    window._ia=0; window._camp=0; const ir=window.irACampanas; window.irACampanas=()=>{window._camp++;};
+    crearConIA("ads"); await new Promise(r=>setTimeout(r,500)); window.irACampanas=ir;
+    return { asistente:window._ia, camp:window._camp };
   });
-  T(cs.asistente===1 && cs.abierto,
-    "Google Search SÍ usa el asistente (grupos y keywords no se dibujan a mano)", JSON.stringify(cs));
+  T(cs.camp===1 && cs.asistente===0,
+    "Google Search va a la pantalla de campañas (la IA la arma allí; no se dibuja a mano)", JSON.stringify(cs));
 
   T(errs.length===0, "sin errores de consola", errs.slice(0,3).join(" | "));
   console.log("\n"+(mal?"FALLA":"TODO OK")+` — ${ok} ok · ${mal} mal`);

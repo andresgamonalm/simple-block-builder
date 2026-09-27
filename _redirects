@@ -33,3 +33,6 @@
 /papelera      /editor.html 200
 /permisos      /editor.html 200
 /configuracion /editor.html 200
+# Campañas de Search (campanas.html; Pages lo sirve en /campanas sin la extensión):
+#   /campanas (lista) · /campanas/nueva (crear) · /campanas/<id> (trabajar y exportar)
+/campanas/*    /campanas    200

@@ -64,13 +64,12 @@ const T=(c,n,e)=>{ if(c){ok++;console.log("  ok   "+n);} else {mal++;console.log
   T(s2.vacio,"y nace EN BLANCO, como pide el modelo del usuario",s2.vacio);
   T(s2.tipo==="facebook","Facebook crea su propia colección",s2.tipo);
   const s2b=await pg.evaluate(async()=>{
-    window._ia=0; crearConIA("ads"); await new Promise(r=>setTimeout(r,400));
-    const abierto=document.getElementById("modal-ia").classList.contains("show");
-    const m=IA_PLATAFORMAS.filter(k=>iaPiezas[k]); cerrarModal("ia");
-    return { asistente:window._ia, abierto, marcadas:m };
+    window._ia=0; window._camp=0; const ir=window.irACampanas; window.irACampanas=()=>{window._camp++;};
+    crearConIA("ads"); await new Promise(r=>setTimeout(r,400)); window.irACampanas=ir;
+    return { asistente:window._ia, camp:window._camp };
   });
-  T(s2b.asistente===1 && s2b.abierto,"Google Search SÍ abre el asistente",JSON.stringify(s2b));
-  T(s2b.marcadas.join(",")==="ads","con Search marcado",s2b.marcadas.join(","));
+  // 27-sep-2026: Search se arma como CAMPAÑA en su pantalla propia (/campanas/nueva), no en el asistente.
+  T(s2b.camp===1 && s2b.asistente===0,"Google Search abre la pantalla de campañas (no el asistente)",JSON.stringify(s2b));
 
   console.log("\n3 · Facebook genera SU colección, no la de Display");
   const s3=await pg.evaluate(()=>{
