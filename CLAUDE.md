@@ -1023,7 +1023,8 @@ CAMPAÑA con forma de Google Ads Editor y exportar es SERIALIZAR. Decisiones del
 - **"El entregable tiene que ser claro, especialmente para la IA"**: UNA sola definición (el esquema) de la
   que salen exportador, instrucciones a la IA y contrato legible.
 - **Moneda: siempre CLP** (enteros). **Borrar** los proyectos/borradores existentes conservando marcas y
-  fotos (aprobado, AÚN NO EJECUTADO). No se borra la IA ni los recursos gráficos ni lo externo.
+  fotos: **HECHO 27-sep** por código (`podarProyectosUnaVez`, bandera `_poda` en el workspace): la primera carga de
+  cada espacio pasa sus proyectos a la Papelera (restaurables), sin tocar `_ts`; prueba `pruebas/poda.js`. No se borra la IA ni los recursos gráficos ni lo externo.
   Respaldo previo: rama `respaldo-antes-de-poda-2026-09-26`.
 - **Contrato de salida = el CSV que el usuario sube hoy a Ads Editor** ("tiene errores pero se indexa muy
   bien"): 1 archivo, UTF-8 BOM, comas, CRLF, 60 columnas, orden fijo de filas. El real NO se sube al repo

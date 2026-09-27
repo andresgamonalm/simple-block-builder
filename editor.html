@@ -2780,14 +2780,27 @@ function rehacer(){
 }
 let _tsAlCargar = 0;  // timestamp real de la copia local al arrancar (para sync)
 // Normaliza cualquier dato cargado al modelo workspace { proyectos:[{piezas:[]}], marcas, banner }.
+/* PODA DE PROYECTOS VIEJOS (27-sep-2026, orden del usuario): una sola vez por espacio de trabajo,
+   todos los proyectos pasan a la Papelera (se pueden restaurar desde ahí). Marcas, fotos y perfil
+   no se tocan. La bandera viaja con el workspace a D1, así no se repite en otro equipo. No se toca
+   _ts: la sincronización sigue decidiendo por la fecha real del último cambio. */
+const PODA_ID = "poda-2026-09-27";
+function podarProyectosUnaVez(o){
+  if(!o || o._poda === PODA_ID) return o;
+  const ahora = Date.now();
+  (o.proyectos||[]).forEach(pr => { pr.borradoTs = ahora; o.papelera.push(pr); });
+  o.proyectos = [];
+  o._poda = PODA_ID;
+  return o;
+}
 function normalizarWorkspace(o){
-  if(!o || typeof o!=="object") return { proyectos:[], marcas:[], banner:{}, imagenes:[], papelera:[], perfil:{} };
-  if(Array.isArray(o.proyectos)){ o.marcas=o.marcas||[]; o.banner=o.banner||{}; o.imagenes=o.imagenes||[]; o.papelera=o.papelera||[]; o.perfil=o.perfil||{}; return o; }
+  if(!o || typeof o!=="object") return { proyectos:[], marcas:[], banner:{}, imagenes:[], papelera:[], perfil:{}, _poda:PODA_ID };
+  if(Array.isArray(o.proyectos)){ o.marcas=o.marcas||[]; o.banner=o.banner||{}; o.imagenes=o.imagenes||[]; o.papelera=o.papelera||[]; o.perfil=o.perfil||{}; return podarProyectosUnaVez(o); }
   if(Array.isArray(o.piezas)){
-    return { proyectos: o.piezas.length ? [{ id:uid(), nombre:"General", creado:Date.now(), piezas:o.piezas, activa:o.activa||o.piezas[0].id }] : [],
-             marcas:o.marcas||[], banner:o.banner||{}, imagenes:o.imagenes||[], papelera:o.papelera||[], perfil:o.perfil||{}, _ts:o._ts||0 };
+    return podarProyectosUnaVez({ proyectos: o.piezas.length ? [{ id:uid(), nombre:"General", creado:Date.now(), piezas:o.piezas, activa:o.activa||o.piezas[0].id }] : [],
+             marcas:o.marcas||[], banner:o.banner||{}, imagenes:o.imagenes||[], papelera:o.papelera||[], perfil:o.perfil||{}, _ts:o._ts||0 });
   }
-  return { proyectos:[], marcas:[], banner:{}, imagenes:[], papelera:[], perfil:{} };
+  return { proyectos:[], marcas:[], banner:{}, imagenes:[], papelera:[], perfil:{}, _poda:PODA_ID };
 }
 function recuperar(){
   try{
