@@ -70,7 +70,7 @@ lectura · **V04** sin verbo de compra (solo con enfoque conversión) · **C10**
 ## Qué es
 Editor de creatividades por bloques para **email, banners (Google Display), social
 (LinkedIn/Facebook), invitaciones y formato libre**. Stack: **Cloudflare Pages + D1**.
-**Desde el 2-nov-2026 el código está SEPARADO POR FUNCIÓN** en `funciones/**` (ver `LEEME.md` y la sección «CÓDIGO SEPARADO POR FUNCIÓN» al final); `editor.html` y `campanas.html` son solo las puertas (HTML) que lo cargan.
+Casi todo vive en **`editor.html`** (~4200 líneas, HTML+CSS+JS inline, 2 `<script>`).
 Backend: funciones en **`functions/api/`** (auth por magic link + JWT, persistencia, envío, IA).
 
 - Producción: **https://my-ads.gamonal.app** (Cloudflare Pages, auto-deploy desde `main`, ~1–2 min). **Nombre del aplicativo: "My Ads"** (renombrado el 26-sep-2026 desde "Mi Publicidad", que a su vez venía de "Simple Block Builder"). El proyecto de Pages y la base D1 conservan el nombre técnico `simple-block-builder` (no se pueden renombrar); los prefijos internos `sbb-` y `MP_` (núcleo) tampoco se tocan. El subdominio `my-ads.gamonal.app` se agrega en Cloudflare → Pages → Custom domains (el anterior puede convivir). Archivos de marca: `brand/my-ads.svg`, `logo_my_ads.*`, `icono_my_ads.*`, `assets/login/foto_login_my_ads.jpg`.
@@ -79,7 +79,7 @@ Backend: funciones en **`functions/api/`** (auth por magic link + JWT, persisten
 ## Acuerdos de trabajo (IMPORTANTE)
 1. **Trabajar directo en `main` y `git push origin HEAD:main`.** El usuario NO quiere ramas/duplicados. (La rama `claude/app-review-debugging-DQlgG` existe y va en paralelo, pero el objetivo es main.)
    - **Matiz (23-jul-2026, orden del usuario):** los cambios de **funcionalidad** van directo a main; los cambios de **interfaz o layout** se presentan PRIMERO como mockup, el usuario aprueba, y recién entonces se implementan.
-2. **Verificar SIEMPRE con Playwright antes de pushear.** Chromium: buscarlo en `/opt/pw-browsers/` (cambia con el contenedor; el 2-nov-2026 era `/opt/pw-browsers/chromium-1243/chrome-linux64/chrome`) y exportarlo en `SBB_CHROMIUM`. Dependencias de prueba: `npm install --no-save playwright acorn acorn-walk`. Patrón: server `http` local que sirve `editor.html` + mocks de `/api/whoami` y `/api/proyectos`; manejar la app por `page.evaluate` llamando a las funciones globales. **Las imágenes externas (placehold.co) están BLOQUEADAS en el sandbox** → servir un SVG local desde el server de prueba.
+2. **Verificar SIEMPRE con Playwright antes de pushear.** Chromium en `/opt/pw-browsers/chromium-1194/chrome-linux/chrome`. Patrón: server `http` local que sirve `editor.html` + mocks de `/api/whoami` y `/api/proyectos`; manejar la app por `page.evaluate` llamando a las funciones globales. **Las imágenes externas (placehold.co) están BLOQUEADAS en el sandbox** → servir un SVG local desde el server de prueba.
 3. Subir solo cuando pasa la verificación. Mostrar capturas (SendUserFile) al usuario.
 4. No pegar secretos en el repo ni en el chat.
 5. **(26-sep, orden del usuario) NO pedirle todo al usuario ni equivocarse tanto: pierde demasiado tiempo.** Verificar en
@@ -1154,35 +1154,3 @@ como amplias → el "error" de «comprar auto» bloqueando «comprar seguro de a
 `objetivo.nombresPropios` (planes, programas) evita falsos C11. v8 de Zurich armada en el scratchpad (no en el repo).
 Pendiente de confirmar en la 1ª importación real:
 negativa de grupo (`Type`=`Negative`) y las columnas `Tracking template` / `Final URL suffix`.
-
-## 2-nov-2026: CÓDIGO SEPARADO POR FUNCIÓN (ESTADO ACTUAL — leer antes de tocar código)
-Pedido del usuario: separar el código por función (Display · Facebook · Search, + Campaña completa) para poder
-hacer versiones de cada una por separado, **sin cambiar funcionalidad ni uso** («eso no se tranza»). Respaldo previo:
-rama `respaldo-antes-de-separar-2026-11-02`. Mapa para el usuario en **`LEEME.md`** (raíz).
-- **Cliente:** el `<script>` de 10.200 líneas de `editor.html` se cortó por sentencia de nivel superior (AST, sin
-  tocar el texto) en 30 archivos CLÁSICOS (no módulos: comparten el ámbito global como antes) que `editor.html` carga
-  en un ORDEN fijo — el arranque (`funciones/comun/arranque.js`) al final. Carpetas: `display/` (tamaños) ·
-  `facebook/` (tamaños + textos del anuncio) · `search/` (`campanas.js/.css` de /campanas + `consola.js` de las piezas
-  guardadas) · `campana-completa/crear.js` · `comun/` (estado, guardado, render, formatos, editor/despachador,
-  dashboard, marcas, imágenes, asistente, rutas, arranque) · **`comun/banners/`** = MOTOR COMPARTIDO de Display y
-  Facebook (colecciones, lienzo libre, geometría, render, inspector, edición, panel, exportar, ia-banner) ·
-  `documentos/` (email y libre: bloques, editor de bloques, email, plantillas — fuera de la creación, se conservan).
-  Cada archivo abre con un índice (qué hay · quién lo usa · secciones).
-- **Único cambio de código:** la rama `plat==="todas"` de `crearConIA` pasó a `crearCampanaCompleta()` (mismo cuerpo).
-- **CSS:** la interfaz pasó a 8 hojas enlazadas EN EL ORDEN ORIGINAL (la cascada no cambia). El `<style>` que queda en
-  `editor.html` (desde `COMPONENT STYLES`) se queda EN LÍNEA a propósito: es el CSS que viaja en cada exportación y
-  `cssComponentes()`/`generarHTMLDePieza()` lo leen del primer `<style>`. No moverlo.
-- **Servidor:** `functions/api/ia.js` quedó como puerta (permisos, tope, reparto por modo) y el trabajo pasó a
-  `functions/api/ia/{comun,display,search,documentos}.js` (módulos ES; solo dependen de `comun`). Re-exporta lo que
-  usan las pruebas. Van en `functions/` y no en `funciones/` para que NO se publiquen. Verificado con
-  `wrangler pages functions build`: las rutas generadas son idénticas (los módulos sin manejadores no crean rutas).
-- **Para versionar** una función (p. ej. Display v2): copiar `funciones/comun/banners/` a `funciones/display/motor/` y
-  cargar esa copia solo en Display. No duplicar el motor sin necesidad: cada fallo se arreglaría dos veces.
-- **Reglas al editar:** una función nueva va en el archivo de su función; si algo SE EJECUTA al cargar y usa otra
-  cosa, esa otra cosa debe cargarse antes. **`pruebas/orden-carga.js`** (nueva, en la batería) lo comprueba sobre
-  el árbol de sintaxis (incluye lo que se alcanza llamando funciones) y avisa nombres globales duplicados.
-  `audita-estatica.js` y `poda.js` leen ahora los archivos de `funciones/`; `ads-ia`, `campana-ia` y `diagnostico`
-  preparan los módulos con `pruebas/_modulos-ia.js`.
-- **Pruebas de calendario arregladas:** el CSV de referencia trae fin 30-sep-2026; desde esa fecha G03 suma «la fecha
-  de término ya pasó» y `iniciativas`/`campana-ia` fallaban (también en la línea base, antes de separar). Ahora cuentan
-  esas fechas vencidas aparte (`VENCIDAS`).

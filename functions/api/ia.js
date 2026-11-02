@@ -8,19 +8,14 @@
 //   GET  /api/ia?gemini=1   → diagnóstico + llamada mínima a Gemini
 //
 // La API key de Gemini vive en env.GEMINI_API_KEY (secreto).
-//
-// ESTE ARCHIVO ES SOLO LA PUERTA (/api/ia): permisos, tope de uso y el reparto por
-// producto/modo. El trabajo de cada función vive en functions/api/ia/:
-//   comun.js       Gemini, voz de marca, encargo, legal, URLs, ortografía (lo comparten todas)
-//   display.js     banners de Google Display y Facebook (generarBanner)
-//   search.js      Google Search: investigación, campaña, crítico, diagnóstico, corregir/investigar
-//   documentos.js  email (piezas guardadas)
 
-import { corsPreflight, getUserEmail, json, getSesion, tienePermiso, leerUsoIA, sumarUsoIA } from './_shared.js';
-import { avisosDeReferencias, cadenaCopy, cadenaRapida, corregirOrtografia, encargoDelUsuario, leerReferencias, llamarGemini, reglasBrief, voorMarca } from './ia/comun.js';
-import { aLista, diagnosticarCampana, generarAds, investigarAds, modoCampana, modoCorregir, modoInvestigar } from './ia/search.js';
-import { generarBanner } from './ia/display.js';
-import { generarEmail } from './ia/documentos.js';
+import { json, corsPreflight, getUserEmail, getSesion, tienePermiso, leerUsoIA, sumarUsoIA } from './_shared.js';
+// Núcleo de campañas (el mismo que usa el navegador): modelo, reglas, operaciones por partes.
+import MOD from '../../nucleo/modelo.js';
+import REG from '../../nucleo/reglas.js';
+import OPS from '../../nucleo/operaciones.js';
+import CIA from '../../nucleo/campana-ia.js';
+import LEC from '../../nucleo/lecciones.js';
 
 export const onRequestOptions = () => corsPreflight();
 
@@ -316,8 +311,1767 @@ async function generar({ request, env }) {
   if (producto === 'banner') return generarBanner({ env, brief, marca, imagenes, refsTxt, promos, estilo: body.estilo === 'marca' ? 'marca' : '', limites: body.limites || null, avisos });
   return generarEmail({ env, brief, marca, imagenes, refsTxt, promos, catalogo: Array.isArray(body.catalogo) ? body.catalogo : [] });
 }
-// Re-exporta lo que usan las pruebas (antes todo vivía en este archivo).
-export { corregirOrtografia, extraerJSON, detectarPromos, extraerEnlaces, extraerTextoPagina, legalDelBrief } from './ia/comun.js';
-export { generarEmail } from './ia/documentos.js';
-export { generarBanner } from './ia/display.js';
-export { generarAds, armarAds, modoCampana, modoCorregir, modoInvestigar, investigarAds, analizarTabla, numeroAds, diagnosticarCampana } from './ia/search.js';
+
+// ── Voz de marca: el bloque de contexto que comparten ambos productos ──────
+function voorMarca(marca) {
+  if (!marca) return 'Sin marca específica: usa un estilo limpio, profesional y neutral.';
+  return [
+    `Marca: ${marca.nombre || marca.empresa || '-'}${marca.empresa && marca.nombre !== marca.empresa ? ' (' + marca.empresa + ')' : ''}.`,
+    marca.negocio ? `A qué se dedica: ${marca.negocio}.` : '',
+    marca.productos ? `Productos/líneas: ${marca.productos}.` : '',
+    marca.eslogan ? `Eslogan de marca: "${marca.eslogan}".` : '',
+    marca.tono ? `TONO DE VOZ (respétalo siempre): ${marca.tono}.` : '',
+    marca.publico ? `Público objetivo: ${marca.publico}.` : '',
+    marca.usar ? `Palabras/conceptos a USAR cuando encajen: ${marca.usar}.` : '',
+    marca.evitar ? `Palabras PROHIBIDAS (NUNCA las uses): ${marca.evitar}.` : '',
+    marca.directrices ? `DIRECTRICES DE LA MARCA (obligatorias, extraidas de su manual y sus campañas — respétalas en diseño y copy):\n${marca.directrices}` : '',
+    `Paleta: principal=${marca.primary || '-'}, secundario=${marca.secondary || '-'}, CTA=${marca.cta || marca.primary || '-'}, texto-CTA=${marca.ctaText || '#fff'}, acentos=${marca.accent1 || '-'}/${marca.accent2 || '-'}, texto=${marca.text || '-'}, fondo=${marca.bg || '-'}.`,
+    `Tipografías: títulos=${marca.fontTitulo || 'Inter'}, cuerpo=${marca.fontCuerpo || 'Inter'}.`
+  ].filter(Boolean).join('\n');
+}
+
+// ── LO QUE PIDIÓ EL USUARIO ───────────────────────────────────────────────
+// Va SIEMPRE al principio del prompt, antes de cualquier contexto. Antes iba al
+// final, después de ~9.000 caracteres de texto raspado de la landing: pesaba el
+// 0,6% del prompt y en la práctica se ignoraba. Lo que la persona escribe es la
+// instrucción de mayor rango, no una nota al pie.
+function encargoDelUsuario(brief) {
+  const out = ['════ EL ENCARGO (lo que te pidió la persona — MANDA sobre todo lo demás) ════',
+               `QUÉ NECESITA: ${brief.que}`];
+  if (brief.accion) out.push(`ACCIÓN que debe provocar: ${brief.accion}`);
+  if (brief.gancho) out.push(`GANCHO / OFERTA, textual: "${brief.gancho}" — úsalo TAL CUAL. No inventes otras cifras, fechas ni precios.`);
+  const n = brief.notas && String(brief.notas).trim();
+  if (n) out.push(
+    `INDICACIONES EXPRESAS (son ÓRDENES, no sugerencias — si alguna choca con una regla de estilo de más abajo, GANA la indicación):\n  » ${n}`);
+  out.push('═════════════════════════════════════════════════════════════════════════════');
+  return out.join('\n');
+}
+
+// ── Reglas de redacción, por PRODUCTO ─────────────────────────────────────
+// Antes había un solo bloque común para email, banner y Search. Eso metía
+// reglas de email ("un solo CTA al final", bloques "hero"/"alert") dentro de los
+// prompts de banner y de Google Search, donde esos conceptos no existen — y
+// además se contradecía con la regla de la burbuja: le ordenaba poner el gancho
+// en el titular Y le prohibía poner el gancho en el titular, en el mismo prompt.
+// La frase legal la pide SIEMPRE el formulario. "no" (o "n/a", "ninguna") es una
+// respuesta válida y significa que esta campaña no lleva legal — no es un campo
+// vacío por descuido, es una decisión registrada.
+export function legalDelBrief(brief) {
+  const t = String((brief && brief.legal) || '').trim();
+  if (!t) return { texto: '', declarado: false };
+  if (/^(no|n\/a|na|ninguna|ninguno|sin legal)\.?$/i.test(t)) return { texto: '', declarado: true };
+  return { texto: t, declarado: true };
+}
+function reglasBrief(brief, promos, producto) {
+  const tipo = brief.tipo || 'comercial';
+  const out = [];
+  if (producto === 'email') {
+    out.push(tipo === 'newsletter'
+      ? 'Es un NEWSLETTER: varias secciones de novedades; puedes incluir un CTA por sección.'
+      : 'UN SOLO CTA y SIEMPRE al final de la pieza (nunca arriba ni en el medio).');
+    out.push(tipo === 'comercial'
+      ? `Texto del CTA basado en "${brief.accion || 'Saber más'}": imperativo + adverbio de tiempo/lugar (ej.: "Cotiza hoy", "Contrata ahora"). Máx 3 palabras.`
+      : `Texto del CTA basado en "${brief.accion || 'Saber más'}": claro y sobrio, sin urgencia (ej.: "Conoce más"). Máx 3 palabras.`);
+    if (brief.gancho) out.push(`El gancho va DESTACADO y arriba: en el titular principal y repetido como oferta después de la foto.`);
+  }
+  out.push('Los TITULARES nunca terminan en punto.');
+  out.push('ORTOGRAFÍA: español de Chile correcto — tildes donde corresponde, mayúscula inicial, signos ¿? ¡! de apertura y cierre. CERO faltas.');
+  if (!brief.gancho) {
+    if (promos && promos.length) out.push(`El encargo no trae gancho, pero la LANDING muestra estas promociones VIGENTES: ${promos.join(' · ')}. Puedes usarlas TAL CUAL (sin cambiar cifras ni condiciones). NO inventes ninguna otra.`);
+    else out.push('Sin oferta numérica: NO inventes precios, porcentajes ni fechas.');
+  }
+  return out.join('\n');
+}
+// Directriz de redacción según el TIPO (comercial = vende; corporativo/informativo/newsletter = más blando).
+function enfoqueDe(tipo) {
+  if (tipo === 'corporativo') return 'ENFOQUE CORPORATIVO: tono institucional, sobrio y de confianza; comunica respaldo, solidez y profesionalismo. NADA de urgencia ni lenguaje de oferta. Titular sereno; cuerpo claro y elegante; CTA suave.';
+  if (tipo === 'informativo') return 'ENFOQUE INFORMATIVO: explica con claridad y calma el producto y sus beneficios; útil y didáctico, sin presión de venta. Titular descriptivo; cuerpo que orienta; CTA suave e invitador.';
+  if (tipo === 'newsletter') return 'ENFOQUE NEWSLETTER: varias secciones cortas de novedades/contenido útil, en la voz cercana de la marca; cada sección con su mini-titular; sin sobre-venta.';
+  return [
+    'ENFOQUE COMERCIAL (que VENDA): esto es PUBLICIDAD, no comunicación corporativa.',
+    '- El titular vende un BENEFICIO concreto para el lector (persuade, no describe el producto ni habla de la empresa).',
+    '- Háblale al lector de TÚ y de lo que ÉL gana. La primera frase es sobre el lector, nunca sobre la marca.',
+    '- PROHIBIDO el tono de comunicado: "Nos complace anunciar", "En [marca] estamos comprometidos", "Queremos informarte", "Le informamos", "Nos es grato", "Estimado cliente". Si una frase podría abrir una memoria anual, reescríbela.',
+    '- Genera urgencia o escasez SOLO si el gancho la trae de verdad; lenguaje concreto y enérgico, frases cortas, cero relleno.',
+    '- CTA potente en imperativo + adverbio.'
+  ].join('\n');
+}
+
+// ── Lee 1-3 URLs de referencia y devuelve un extracto de texto ────────────
+const UA_NAVEGADOR = {
+  'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
+  'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+  'Accept-Language': 'es-ES,es;q=0.9,en;q=0.8'
+};
+// Extrae título + meta description + Open Graph + JSON-LD + texto visible
+// (sirve aun en webs JS: muchas llevan sus datos de producto/oferta en ld+json).
+function extraerTextoPagina(html, max) {
+  const pick = (re) => { const m = html.match(re); return m ? m[1].replace(/\s+/g, ' ').trim() : ''; };
+  const titulo = pick(/<title[^>]*>([\s\S]*?)<\/title>/i);
+  const ogt    = pick(/<meta[^>]+(?:property|name)=["']og:title["'][^>]+content=["']([^"']+)["']/i);
+  const desc   = pick(/<meta[^>]+name=["']description["'][^>]+content=["']([^"']+)["']/i)
+              || pick(/<meta[^>]+(?:property|name)=["']og:description["'][^>]+content=["']([^"']+)["']/i);
+  // Datos estructurados (nombre/descripcion/ofertas): oro en landings renderizadas por JS.
+  let ld = '';
+  const ldBloques = html.match(/<script[^>]+application\/ld\+json[^>]*>([\s\S]*?)<\/script>/gi) || [];
+  for (const bl of ldBloques.slice(0, 4)) {
+    try {
+      const j = JSON.parse(bl.replace(/^<script[^>]*>/i, '').replace(/<\/script>$/i, ''));
+      const nodos = Array.isArray(j) ? j : (j['@graph'] || [j]);
+      for (const n of nodos) {
+        if (!n || typeof n !== 'object') continue;
+        const partes = [n.name, n.headline, n.description, n.offers && (n.offers.price ? 'precio ' + n.offers.price + ' ' + (n.offers.priceCurrency || '') : ''), n.slogan].filter(Boolean);
+        if (partes.length) ld += partes.join(' · ') + ' · ';
+      }
+    } catch {}
+  }
+  // Quita ruido (scripts, estilos, navegación, pies, cabeceras, svg) para quedarnos con el contenido.
+  const limpio = html
+    .replace(/<script[\s\S]*?<\/script>/gi, ' ').replace(/<style[\s\S]*?<\/style>/gi, ' ')
+    .replace(/<noscript[\s\S]*?<\/noscript>/gi, ' ').replace(/<svg[\s\S]*?<\/svg>/gi, ' ')
+    .replace(/<(nav|footer|header|aside|form)[\s\S]*?<\/\1>/gi, ' ');
+  // Prioriza titulares, párrafos y BOTONES/CTAs (lo importante de una landing).
+  const destacados = (limpio.match(/<(h1|h2|h3|h4|li|p|button|strong)[^>]*>([\s\S]*?)<\/\1>/gi) || [])
+    .map(s => s.replace(/<[^>]+>/g, ' ').replace(/&[a-z#0-9]+;/gi, ' ').replace(/\s+/g, ' ').trim())
+    .filter(t => t.length > 2).slice(0, 80).join(' · ');
+  const cuerpo = limpio.replace(/<[^>]+>/g, ' ').replace(/&[a-z#0-9]+;/gi, ' ').replace(/\s+/g, ' ').trim();
+  const meta = [titulo && 'Título: ' + titulo, (ogt && ogt !== titulo) && 'OG: ' + ogt, desc && 'Descripción: ' + desc, ld && 'Datos: ' + ld.slice(0, 700)].filter(Boolean).join(' · ');
+  const texto = (destacados || cuerpo);
+  return ((meta ? meta + '\n' : '') + texto.slice(0, max || 1200)).trim().slice(0, (max || 1200) + 1000);
+}
+
+// Enlaces internos de la landing (texto + ruta): candidatos REALES a sitelinks.
+function extraerEnlaces(html, urlBase) {
+  let host = ''; try { host = new URL(urlBase).host; } catch {}
+  const out = []; const vistos = new Set();
+  const re = /<a[^>]+href=["']([^"'#?]+)[^"']*["'][^>]*>([\s\S]*?)<\/a>/gi;
+  let m;
+  while ((m = re.exec(html)) && out.length < 12) {
+    const href = m[1].trim();
+    const texto = m[2].replace(/<[^>]+>/g, ' ').replace(/&[a-z#0-9]+;/gi, ' ').replace(/\s+/g, ' ').trim();
+    if (!texto || texto.length < 3 || texto.length > 35) continue;
+    if (/^(javascript:|mailto:|tel:)/i.test(href)) continue;
+    let esInterno = href.startsWith('/');
+    let ruta = href;
+    if (/^https?:\/\//i.test(href)) { try { const u = new URL(href); esInterno = u.host === host; ruta = u.pathname; } catch { continue; } }
+    if (!esInterno || ruta === '/' || ruta === '') continue;
+    const k = (texto + '|' + ruta).toLowerCase();
+    if (vistos.has(k)) continue; vistos.add(k);
+    out.push({ texto: texto.slice(0, 30), ruta: ruta.slice(0, 80) });
+  }
+  return out;
+}
+
+// Promociones REALES visibles en el texto (cuotas, %, gratis, 2x1, sorteos).
+// Se ofrecen a la IA para usarlas TAL CUAL — lo contrario de inventar ofertas.
+function detectarPromos(texto) {
+  const t = ' ' + String(texto || '') + ' ';
+  const out = [];
+  const push = (s) => { s = String(s).replace(/\s+/g, ' ').trim(); if (s && !out.some(x => x.toLowerCase() === s.toLowerCase())) out.push(s.slice(0, 60)); };
+  const patrones = [
+    /\b\d{1,2}\s*cuotas?\s+(?:gratis|sin\s+inter[eé]s)\b/gi,
+    /\b(?:hasta\s+)?\d{1,3}\s*%\s*(?:de\s+)?(?:dcto|desc(?:uento)?|off)\b\.?/gi,
+    /\b(?:2x1|3x2)\b/gi,
+    /\b\d{1,2}\s+mes(?:es)?\s+gratis\b/gi,
+    /\benv[ií]o\s+gratis\b/gi,
+    /\bsorteo\s+(?:de\s+)?[a-z0-9áéíóúñ ]{3,30}/gi
+  ];
+  for (const re of patrones) { let m; while ((m = re.exec(t))) push(m[0]); }
+  return out.slice(0, 4);
+}
+// Lee 1-3 URLs de referencia y RASTREA hasta 2 páginas internas de cada una
+// (mismo dominio), con tope de páginas y presupuesto de tiempo.
+// Lee SOLO las URLs exactas que el usuario pasa (hasta 3). No rastrea páginas
+// internas (eso era lento); si quieres una interior, pégala como otra URL.
+// Devuelve { texto, promos, enlaces }: el extracto para el prompt, las
+// promociones REALES detectadas y los enlaces internos (candidatos a sitelinks).
+async function leerReferencias(refs, opts) {
+  const porPagina = (opts && opts.porPagina) || 1800, total = (opts && opts.total) || 2500;
+  // Dedup + hasta 3 URLs (la landing de destino + referencias).
+  const vistos = new Set();
+  const urls = (Array.isArray(refs) ? refs : []).filter(u => {
+    if (!/^https?:\/\//i.test(u || '')) return false;
+    const k = u.split('#')[0]; if (vistos.has(k)) return false; vistos.add(k); return true;
+  }).slice(0, 3);
+  if (!urls.length) return { texto: '', promos: [], enlaces: [] };
+  // En PARALELO (no una por una) → el total ≈ la página más lenta, no la suma.
+  const leerUna = async (u, esPrimera) => {
+    const norm = u.split('#')[0];
+    const bajar = async (headers) => {
+      const ctl = new AbortController(); const t = setTimeout(() => ctl.abort(), 6500);
+      try {
+        const r = await fetch(norm, { redirect: 'follow', signal: ctl.signal, headers });
+        clearTimeout(t);
+        return r.ok ? await r.text() : null;
+      } catch { clearTimeout(t); return null; }
+    };
+    let html = await bajar(UA_NAVEGADOR);
+    let extracto = html ? extraerTextoPagina(html, porPagina) : '';
+    // Landing renderizada por JS (casi sin texto) → reintenta como Googlebot:
+    // muchos sitios sirven una versión pre-renderizada a los bots.
+    if (!extracto || extracto.length < 250) {
+      const html2 = await bajar({ ...UA_NAVEGADOR, 'User-Agent': 'Mozilla/5.0 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)' });
+      if (html2) {
+        const ex2 = extraerTextoPagina(html2, porPagina);
+        if (ex2.length > extracto.length) { html = html2; extracto = ex2; }
+      }
+    }
+    if (!extracto) return { trozo: `(${norm}: no se pudo leer)`, promos: [], enlaces: [], noLeida: norm };
+    return {
+      trozo: `• ${norm}\n${extracto}`,
+      promos: detectarPromos(extracto),
+      enlaces: esPrimera && html ? extraerEnlaces(html, norm) : [],  // sitelinks: solo de la landing principal
+      leida: norm
+    };
+  };
+  const partes = await Promise.all(urls.map((u, i) => leerUna(u, i === 0)));
+  return {
+    texto: partes.map(p => p.trozo).join('\n\n').slice(0, total),   // era 9000: ahogaba el encargo del usuario
+    promos: partes.flatMap(p => p.promos).slice(0, 4),
+    enlaces: partes.flatMap(p => p.enlaces).slice(0, 12),
+    // Si una URL no se pudo leer HAY QUE DECIRLO: nunca generar en silencio como
+    // si se hubiera leído. Un anuncio escrito sin leer la landing sale genérico.
+    noLeidas: partes.filter(p => p.noLeida).map(p => p.noLeida),
+    leidas: partes.filter(p => p.leida).map(p => p.leida)
+  };
+}
+// Avisos que viajan al cliente con la generación: lo que el usuario tiene que
+// saber para no confiar a ciegas en la pieza.
+function avisosDeReferencias(refs, brief) {
+  const av = [];
+  (refs.noLeidas || []).forEach(u => av.push({
+    tipo: 'url-no-leida',
+    texto: `No se pudo leer ${u}. El copy se escribió sin el contenido de esa página, así que revisa nombres de producto y condiciones.`
+  }));
+  // Discrepancia entre el GANCHO del encargo y lo que anuncia la landing. No se
+  // elige en silencio: manda el encargo y se muestran las dos versiones. Publicar
+  // una cifra equivocada en seguros no es una errata, es un problema legal.
+  const cifraEncargo = (String(brief.gancho || '').match(/\d+(?:[.,]\d+)?\s*%?/) || [])[0];
+  if (cifraEncargo && (refs.promos || []).length) {
+    const choca = (refs.promos || []).filter(p => {
+      const c = (String(p).match(/\d+(?:[.,]\d+)?\s*%?/) || [])[0];
+      return c && c.replace(/\s/g, '') !== cifraEncargo.replace(/\s/g, '');
+    });
+    if (choca.length) av.push({
+      tipo: 'discrepancia',
+      texto: `Tu gancho dice "${String(brief.gancho).trim()}" y la página anuncia "${choca[0]}". Se generó con TU dato; revisa cuál corresponde antes de publicar.`
+    });
+  }
+  return av;
+}
+
+// ── Llamada a Gemini con parseo robusto de JSON ───────────────────────────
+// Extrae JSON de la respuesta de Gemini de forma tolerante: quita ```fences```,
+// y si hay texto alrededor, busca el primer objeto/array balanceado y lo parsea.
+function extraerJSON(texto) {
+  let t = String(texto || '').trim().replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/i, '').trim();
+  try { return JSON.parse(t); } catch {}
+  // Devuelve el indice donde CIERRA el bloque que abre en `start`, o -1.
+  const cierre = (s, start) => {
+    const open = s[start], close = open === '{' ? '}' : ']';
+    let depth = 0, inStr = false, escaped = false;
+    for (let i = start; i < s.length; i++) {
+      const ch = s[i];
+      if (inStr) { if (escaped) escaped = false; else if (ch === '\\') escaped = true; else if (ch === '"') inStr = false; continue; }
+      if (ch === '"') inStr = true;
+      else if (ch === open) depth++;
+      else if (ch === close) { depth--; if (depth === 0) return i; }
+    }
+    return -1;
+  };
+  // Se prueban TODOS los comienzos posibles, no solo el primero. Cuando el
+  // modelo razona antes de responder, el primer "{" suele estar DENTRO del
+  // razonamiento (un fragmento que el modelo cita): antes se intentaba ese,
+  // fallaba el JSON.parse y se abandonaba devolviendo undefined, aunque la
+  // respuesta buena viniera despues. Nos quedamos con el bloque valido MAS
+  // GRANDE, que es la respuesta y no una cita.
+  let mejor, mejorLargo = -1, probados = 0;
+  for (let i = 0; i < t.length && probados < 80; i++) {
+    const ch = t[i];
+    if (ch !== '{' && ch !== '[') continue;
+    probados++;
+    const j = cierre(t, i);
+    if (j < 0) continue;
+    try {
+      const v = JSON.parse(t.slice(i, j + 1));
+      if (v && typeof v === 'object' && (j - i) > mejorLargo) { mejor = v; mejorLargo = j - i; }
+    } catch {}
+  }
+  return mejor;
+}
+
+// Dos gamas de modelo, según la tarea:
+//   COPY (escribir el aviso)  → el modelo que RAZONA. Encontrar el ángulo de un
+//     titular exige descartar las tres ideas obvias antes de escribir; eso es
+//     justamente lo que hace el "pensamiento" del modelo.
+//   MECÁNICO (corrector, ampliar keywords) → el modelo rápido y barato basta.
+// Ambos se pueden forzar por variable de entorno sin tocar código.
+// Google RETIRA modelos para cuentas nuevas sin aviso (le paso a esta app con
+// gemini-2.0-flash y despues con gemini-2.5-pro: 404 "no longer available to
+// new users"). Por eso no se fija UN modelo: se prueba una cadena y se usa el
+// primero que responda. Un 404 de modelo ya no rompe la generacion.
+// Para forzar uno concreto: GEMINI_MODEL_COPY (copy) o GEMINI_MODEL (mecanico).
+const CADENA_COPY   = ['gemini-flash-latest', 'gemini-2.5-flash', 'gemini-pro-latest'];
+const CADENA_RAPIDA = ['gemini-flash-latest', 'gemini-2.5-flash', 'gemini-2.5-flash-lite'];
+const cadenaCopy   = env => [env.GEMINI_MODEL_COPY, env.GEMINI_MODEL].filter(Boolean).concat(CADENA_COPY);
+const cadenaRapida = env => [env.GEMINI_MODEL].filter(Boolean).concat(CADENA_RAPIDA);
+const modeloCopy    = env => cadenaCopy(env)[0];
+const modeloRapido  = env => cadenaRapida(env)[0];
+
+// opts: { modelo, pensar, timeout }
+//   pensar = presupuesto de razonamiento. -1 = dinámico (el modelo decide),
+//   0 = sin pensar (tareas mecánicas). Antes estaba fijo en 0 para TODO, que es
+//   la razón principal de que el copy saliera genérico: se le apagaba la cabeza.
+async function llamarGemini(env, promptOrParts, maxTokens, temp, opts) {
+  const o = opts || {};
+  // Lista de modelos a probar en orden. Si el primero ya no existe para esta
+  // cuenta (404), se pasa al siguiente en vez de fallar.
+  const cadena = o.cadena || (o.modelo ? [o.modelo] : cadenaRapida(env));
+  let ultimo = null;
+  for (let i = 0; i < cadena.length; i++) {
+    const r = await intentarGemini(env, promptOrParts, maxTokens, temp, o, cadena[i]);
+    if (!r.modeloAusente) return r;
+    ultimo = r;
+  }
+  return ultimo || { error: 'No hay ningún modelo de Gemini disponible para esta cuenta.' };
+}
+async function intentarGemini(env, promptOrParts, maxTokens, temp, o, model) {
+  const pensar = (typeof o.pensar === 'number') ? o.pensar : 0;
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${encodeURIComponent(env.GEMINI_API_KEY)}`;
+  const partesEntrada = Array.isArray(promptOrParts) ? promptOrParts : [{ text: promptOrParts }];
+  const genCfg = { temperature: (typeof temp === 'number' ? temp : 0.7), maxOutputTokens: maxTokens || 4096 };
+  // Con HERRAMIENTAS (leer URLs, buscar en Google) Gemini no acepta el modo
+  // JSON estricto: se pide el JSON en el texto y lo rescata extraerJSON.
+  if (!o.tools) genCfg.responseMimeType = 'application/json';
+  const conTools = (b) => (o.tools ? { ...b, tools: o.tools } : b);
+
+  // Pensar cuesta tokens de salida: si no se amplía el tope, el modelo gasta el
+  // presupuesto razonando y devuelve vacío (el bug que llevó a apagarlo del todo).
+  // Cuerpo sin NINGUN thinkingConfig: para el reintento cuando el modelo
+  // rechaza el parametro (no es lo mismo que pedir presupuesto 0).
+  const cuerpoSinThinking = () => JSON.stringify(conTools({ contents: [{ role: 'user', parts: partesEntrada }], generationConfig: { ...genCfg } }));
+  const cuerpoCon = (conThinking) => {
+    const g = { ...genCfg };
+    if (conThinking) { g.thinkingConfig = { thinkingBudget: pensar }; if (pensar !== 0) g.maxOutputTokens = (maxTokens || 4096) * 3; }
+    else g.thinkingConfig = { thinkingBudget: 0 };
+    return JSON.stringify(conTools({ contents: [{ role: 'user', parts: partesEntrada }], generationConfig: g }));
+  };
+
+  const pedir = async (cuerpo, ms) => {
+    const ctl = new AbortController(); const timer = setTimeout(() => ctl.abort(), ms);
+    try { return await fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, signal: ctl.signal, body: cuerpo }); }
+    finally { clearTimeout(timer); }
+  };
+
+  const espera = o.timeout || (pensar !== 0 ? 90000 : 40000);
+  let res;
+  try {
+    res = await pedir(cuerpoCon(true), espera);
+    // Si el modelo o la cuenta no aceptan este thinkingBudget, se reintenta sin
+    // él en vez de fallar: la generación nunca se cae por este parámetro.
+    // Algunos modelos NO admiten que se les desactive el pensamiento y
+    // responden 400. Antes solo se reintentaba si se habia pedido pensar; con
+    // thinkingBudget 0 (el caso normal) la generacion se caia sin red.
+    if (!res.ok && res.status === 400) res = await pedir(cuerpoSinThinking(), 40000);
+  } catch (e) {
+    return { error: (e && e.name === 'AbortError') ? `Gemini (${model}) tardó demasiado. Prueba con GEMINI_MODEL_COPY=gemini-2.5-flash.` : 'No se pudo contactar a Gemini: ' + (e.message || e) };
+  }
+  if (!res.ok) {
+    const t = await res.text().catch(() => '');
+    // 404 = ese modelo no existe para esta cuenta → probar el siguiente.
+    if (res.status === 404) return { modeloAusente: true, error: `El modelo ${model} no está disponible para esta cuenta.` };
+    // Con herramientas, un 400 suele ser "este modelo no admite url_context /
+    // google_search": se prueba el siguiente de la cadena en vez de rendirse.
+    if (o.tools && res.status === 400) return { modeloAusente: true, error: `El modelo ${model} no acepta las herramientas pedidas. ${t.slice(0, 200)}` };
+    return { error: `Gemini (${model}) respondió ${res.status}. ${t.slice(0, 400)}` };
+  }
+  let data; try { data = await res.json(); } catch { return { error: 'Respuesta de Gemini no es JSON.' }; }
+  const parts = data && data.candidates && data.candidates[0] && data.candidates[0].content && data.candidates[0].content.parts;
+  // Los modelos que RAZONAN devuelven su cadena de pensamiento en partes
+  // marcadas con `thought: true`, ADEMAS de la respuesta. Concatenarlas todas
+  // metia el razonamiento delante del JSON y la generacion se caia con "no se
+  // pudo interpretar la respuesta como JSON" (el usuario veia el modelo
+  // pensando en voz alta: "Wait, what about... Let's re-read"). Paso el
+  // 8-sep-2026 sin tocar el codigo: `gemini-flash-latest` es un ALIAS que
+  // Google repunta, y el modelo nuevo piensa aunque se le pida thinkingBudget 0.
+  const utiles = Array.isArray(parts) ? parts.filter(p => p && p.thought !== true) : [];
+  let texto = utiles.map(p => (p && p.text) || '').join('');
+  // Red de seguridad: si el modelo marco TODAS las partes como pensamiento (o
+  // no las marco y el filtro no dejo nada), se usa el texto completo y que
+  // decida extraerJSON, que ahora sabe saltarse la prosa.
+  if (!texto && Array.isArray(parts)) texto = parts.map(p => (p && p.text) || '').join('');
+  if (!texto) {
+    const motivo = (data && data.candidates && data.candidates[0] && data.candidates[0].finishReason) || (data && data.promptFeedback && data.promptFeedback.blockReason) || 'sin contenido';
+    return { error: 'Gemini no devolvió contenido (' + motivo + ').' };
+  }
+  const parsed = extraerJSON(texto);
+  // Qué leyó de verdad con las herramientas: URLs recuperadas y fuentes de Google.
+  const cand = (data && data.candidates && data.candidates[0]) || {};
+  const urlsLeidas = ((cand.urlContextMetadata || cand.url_context_metadata || {}).urlMetadata || [])
+    .filter(m => /SUCCESS/i.test(String(m.urlRetrievalStatus || m.url_retrieval_status || '')))
+    .map(m => m.retrievedUrl || m.retrieved_url).filter(Boolean);
+  const fuentes = ((cand.groundingMetadata || {}).groundingChunks || [])
+    .map(c => c && c.web && (c.web.title || c.web.uri)).filter(Boolean).slice(0, 12);
+  if (parsed === undefined) {
+    const fin = (data && data.candidates && data.candidates[0] && data.candidates[0].finishReason) || '';
+    // Si se quedo sin tokens, el JSON viene cortado: hay que decirlo asi, no
+    // "no es JSON", que manda a buscar el problema donde no esta.
+    if (fin === 'MAX_TOKENS') return { error: `Gemini (${model}) se quedo sin espacio de respuesta y el JSON llego cortado. Reintenta; si se repite, sube el tope.` };
+    return { error: 'No se pudo interpretar la respuesta de la IA como JSON. Inicio: ' + String(texto).slice(0, 160) };
+  }
+  return { parsed, urlsLeidas, fuentes, texto };
+}
+
+// ── Corrección ortográfica RAE (segunda pasada, server-side) ──────────────
+// La regla "cero faltas" en el prompt demostró NO bastar (salió un banner con
+// falta de ortografía). Ahora TODO texto visible pasa por un corrector antes
+// de devolverse: una llamada extra a Gemini con temperatura 0 que corrige SOLO
+// ortografía/puntuación RAE sin tocar estilo ni largo. Si el corrector falla,
+// la generación no se bloquea: se devuelven los originales y `ortografia:"sin-revisar"`.
+async function corregirOrtografia(env, textos) {
+  const originales = textos.map(t => String(t == null ? '' : t));
+  const conTexto = originales.map((t, i) => [i, t]).filter(p => p[1].trim().length > 1);
+  if (!conTexto.length) return { textos: originales, revisado: true };
+  const prompt = [
+    'Eres corrector ortográfico profesional de piezas publicitarias en español de Chile (normas RAE).',
+    'Corrige SOLO: tildes y acentos, mayúsculas/minúsculas, signos de apertura y cierre (¿? ¡!), puntuación y erratas evidentes (letras cambiadas o faltantes).',
+    'MAYÚSCULAS (norma RAE): solo al inicio del texto y en nombres propios (marcas, nombres de producto, lugares, siglas). Si un texto trae mayúscula inicial en cada palabra, al estilo inglés, pásalo a minúscula: "Cotiza Tu Seguro Hoy" → "Cotiza tu seguro hoy"; "Seguro Hogar Total <Marca>" se mantiene si "Hogar Total" es el nombre del producto.',
+    'NO cambies: el estilo, el orden de las palabras, el vocabulario, los números, los nombres de marca o producto, ni el largo. NO agregues punto final a un texto que no lo tenía. NO "mejores" la redacción.',
+    'Devuelve EXCLUSIVAMENTE este JSON: { "textos": [ ... ] } con la MISMA cantidad de textos, en el MISMO orden (idénticos si ya estaban correctos).',
+    'TEXTOS A REVISAR:',
+    JSON.stringify({ textos: conTexto.map(p => p[1]) })
+  ].join('\n');
+  const { parsed, error } = await llamarGemini(env, prompt, 3072, 0);
+  if (error || !parsed || !Array.isArray(parsed.textos) || parsed.textos.length !== conTexto.length) {
+    return { textos: originales, revisado: false };
+  }
+  const out = originales.slice();
+  for (let j = 0; j < conTexto.length; j++) {
+    const corregido = String(parsed.textos[j] == null ? '' : parsed.textos[j]).replace(/\s+/g, ' ').trim();
+    if (corregido) out[conTexto[j][0]] = corregido;
+  }
+  return { textos: out, revisado: true };
+}
+
+// ════════════ PRODUCTO 1: BANNERS DE GOOGLE DISPLAY (3 zonas) ════════════
+// LÍMITES DE CARACTERES: no se eligen, los calcula el cliente desde la
+// geometría del formato (ancho útil ÷ cuerpo × 0,52 × líneas permitidas) y los
+// manda aquí. Escribir sin ellos es lo que producía titulares que no caben, y
+// entonces el sistema tenía que quitar la bajada para que la pieza cerrara.
+const LIMITES_BANNER_POR_DEFECTO = { titulo: 27, cuerpo: 54, cta: 18, etiqueta: 18, burbuja: 16, legal: 27, palabra: 9 };
+function limitesBanner(l) {
+  const d = LIMITES_BANNER_POR_DEFECTO, o = {};
+  for (const k in d) {
+    const v = parseInt(l && l[k]);
+    o[k] = (v && v > 3) ? Math.min(v, d[k] * 6) : d[k];
+  }
+  return o;
+}
+// Recorte por PALABRAS (nunca a mitad de palabra) como última red: si tras pedir
+// el acortado el texto sigue pasándose, se corta por el último espacio que cabe.
+function recortarAPalabras(s, max) {
+  const t = String(s || '').replace(/\s+/g, ' ').trim();
+  if (t.length <= max) return t;
+  const corte = t.slice(0, max + 1).lastIndexOf(' ');
+  return (corte > max * 0.5 ? t.slice(0, corte) : t.slice(0, max)).trim();
+}
+// Una pasada de ACORTADO: se le pide a la IA que reescriba más corto lo que no
+// cabe, conservando el significado. Es la regla 3 del manual — si el texto no
+// cabe se reescribe el texto, no se estira la caja ni se corta la frase.
+async function acortarAlLimite(env, campos) {
+  const pasados = campos.filter(c => String(c.valor || '').length > c.max);
+  if (!pasados.length) return { valores: null, acortado: false };
+  const prompt = [
+    'Eres redactor publicitario. Estos textos de un banner NO CABEN en su espacio.',
+    'Reescríbelos MÁS CORTOS respetando el límite de caracteres de cada uno.',
+    'Conserva el significado, la oferta y las cifras EXACTAS. No inventes datos. No pongas punto final en titulares.',
+    'Ninguna palabra debe superar ' + (campos[0].palabra || 9) + ' caracteres si se puede evitar.',
+    'Devuelve EXCLUSIVAMENTE: { "textos": [ ... ] } en el MISMO orden.',
+    JSON.stringify({ textos: pasados.map(c => ({ texto: c.valor, maximoCaracteres: c.max })) })
+  ].join('\n');
+  const { parsed } = await llamarGemini(env, prompt, 1024, 0.4);
+  const out = {};
+  pasados.forEach((c, i) => {
+    const nuevo = parsed && Array.isArray(parsed.textos) ? String(parsed.textos[i] == null ? '' : parsed.textos[i]) : '';
+    out[c.clave] = recortarAPalabras(nuevo && nuevo.length <= c.max ? nuevo : c.valor, c.max);
+  });
+  return { valores: out, acortado: true };
+}
+async function generarBanner({ env, brief, marca, imagenes, refsTxt, promos, estilo, limites, avisos }) {
+  const LIM = limitesBanner(limites);
+  const imgsTxt = imagenes.length
+    ? imagenes.map(im => `- ${im.url}  →  ${im.nombre || '(sin descripción)'}`).join('\n')
+    : '(biblioteca vacía: deja "imagen" en "")';
+  const hayOferta = !!(brief.gancho || (promos && promos.length));
+  const hayFoto = imagenes.length > 0;
+  // Estilo de marca: la IA ademas ELIGE la diagramacion entre cuatro cerradas.
+  const conLayout = estilo === 'marca';
+  const bloqueLayout = conLayout ? [
+    '',
+    'ELIGE TAMBIEN LA DIAGRAMACION ("layout"), la que mejor sirva a ESTE encargo:',
+    '  "circulo"     → la oferta va en un círculo grande. SOLO si hay una cifra que manda (cuotas, precio, % dcto).',
+    '  "corte"       → foto grande con borde curvo y el dato en una banda. Cuando el producto o la persona es lo que vende.' + (hayFoto ? '' : ' (NO la elijas: no hay fotos disponibles)'),
+    '  "bloque"      → bloque de color y foto al lado, sin curvas. Para mensajes institucionales o de confianza.' + (hayFoto ? '' : ' (NO la elijas: no hay fotos disponibles)'),
+    '  "tipografica" → sin foto, manda el titular. Cuando el mensaje es corto y contundente.',
+    hayOferta ? 'Hay una oferta con cifra, así que "circulo" es la opción natural — elige otra solo si tienes una razón.' 
+              : 'NO hay oferta con cifra: NO elijas "circulo".',
+    hayFoto ? '' : 'La biblioteca está vacía: elige "tipografica".'
+  ].filter(Boolean).join('\n') : '';
+  const prompt = [
+    `Eres director creativo de ${marca ? (marca.nombre || marca.empresa) : 'la marca'}. Creas banners de Google Display que rinden y suenan 100% a la marca.`,
+    '',
+    // El encargo va PRIMERO. Todo lo demás es contexto de apoyo.
+    encargoDelUsuario(brief),
+    '',
+    enfoqueDe(brief.tipo),
+    '',
+    'PIENSA ANTES DE ESCRIBIR (no lo muestres, solo devuelve el JSON):',
+    '1. ¿Qué gana el lector? Escríbelo en una frase.',
+    '2. Propón CINCO titulares distintos por ángulo (beneficio, miedo evitado, pregunta, dato concreto, tiempo/facilidad).',
+    '3. Descarta los que podrían servirle a cualquier otra marca del rubro. Si los cinco sirven para cualquiera, escribe cinco nuevos.',
+    '4. Devuelve el mejor.',
+    '',
+    'Devuelve EXCLUSIVAMENTE este JSON (sin texto extra):',
+    conLayout ? '{ "layout": "circulo" | "corte" | "bloque" | "tipografica", "nombre": "nombre corto de la campaña", "zonas": {'
+              : '{ "nombre": "nombre corto de la campaña", "zonas": { "etiqueta": "<nombre corto del PRODUCTO en 1-3 palabras (ej. \\"Seguro Auto\\") o \\"\\">", "titular": "...", "cuerpo": "...", "cta": "..." }, "burbuja": "<la OFERTA en 2-4 palabras para el círculo de promo (ej. \\"2 Cuotas Gratis\\", \\"60% dcto.\\") — SOLO si hay oferta real, si no \\"\\">", "imagen": "<URL exacta de la biblioteca o \\"\\"> " }',
+    '',
+    bloqueLayout,
+    '',
+    'CÓMO SE REPARTE EL MENSAJE EN ESTE BANNER (importante):',
+    hayOferta
+      ? '- El banner tiene un CÍRCULO de promoción aparte. La OFERTA vive ahí y SOLO ahí ("burbuja"). El "titular" NO la repite: dice la propuesta de valor o el beneficio. Ej.: burbuja "2 Cuotas Gratis" + titular "Tu auto siempre protegido". Nunca la oferta dos veces.'
+      : '- No hay oferta que destacar: "burbuja" va vacía y el titular carga solo con el beneficio.',
+    '- "titular" y "cuerpo" no dicen lo mismo: el titular engancha, el cuerpo suma una razón concreta distinta.',
+    '- "etiqueta": el nombre del PRODUCTO, no el de la marca (la marca ya está en el logo).',
+    '',
+    'REGLAS DE ESCRITURA:',
+    '- Español de Chile. Concreto. Nada de relleno ni placeholders.',
+    '- LARGO: titular ≤ 6 palabras; cuerpo ≤ 14 palabras; cta ≤ 3 palabras. Si no cabe, REESCRIBE más corto — no lo entregues cortado a la mitad.',
+    '- El "cta" refleja la acción del encargo.',
+    '',
+    'EJEMPLOS (el nivel que se espera):',
+    'MAL  → "Te ofrecemos la mejor cobertura del mercado"   (habla la empresa, genérico, sirve para cualquiera)',
+    'BIEN → "Tu auto protegido, pase lo que pase"               (habla al lector, concreto)',
+    'MAL  → "Descubre nuestras soluciones de protección"        (vacío, no dice nada)',
+    'BIEN → "Choca, roba o granice: estás cubierto"             (específico, imagen mental)',
+    '',
+    'IMAGEN:',
+    '- Si la biblioteca tiene fotos, DEBES elegir la URL EXACTA de la que mejor calce (no la dejes vacía); solo con biblioteca vacía va "".',
+    '- NUNCA un logo ni un ícono como foto del banner.',
+    '',
+    'VOZ DE MARCA:',
+    voorMarca(marca),
+    '',
+    'BIBLIOTECA DE IMÁGENES (url → descripción):',
+    imgsTxt,
+    refsTxt ? '\nCONTEXTO DEL SITIO (material de apoyo — NO es el encargo; úsalo para el vocabulario y la propuesta de valor, no copies literal):\n' + refsTxt : '',
+    '',
+    'REGLAS FINALES:',
+    reglasBrief(brief, promos, 'banner'),
+    // El espacio de la pieza está medido: escribir por encima del límite obliga
+    // al sistema a quitar elementos para que el banner cierre.
+    '',
+    'ESPACIO DISPONIBLE — LÍMITES DUROS DE CARACTERES (cuéntalos, no los estimes):',
+    `- titular: máximo ${LIM.titulo} caracteres.`,
+    `- cuerpo (bajada): máximo ${LIM.cuerpo} caracteres, UNA sola idea.`,
+    `- cta: máximo ${LIM.cta} caracteres.`,
+    `- etiqueta (nombre del producto): máximo ${LIM.etiqueta} caracteres.`,
+    `- burbuja (la oferta): máximo ${LIM.burbuja} caracteres.`,
+    `- Ninguna palabra del titular debe pasar de ${LIM.palabra} caracteres: en los tamaños chicos la columna es angosta y una palabra más larga obliga a encoger la letra.`,
+    'Si tu mejor titular no cabe, escribe otro más corto. NO se puede ensanchar la pieza.',
+    brief.notas && String(brief.notas).trim() ? `\nRECORDATORIO — las indicaciones expresas del encargo mandan: ${String(brief.notas).trim()}` : ''
+  ].filter(Boolean).join('\n');
+
+  // Multimodal "light": si llegan miniaturas, la IA VE las imágenes (máx 10, una sola
+  // llamada) para elegir la mejor por contenido, no solo por nombre.
+  const conThumb = (imagenes || []).filter(im => im && im.thumb).slice(0, 3);
+  let entrada = prompt;
+  if (conThumb.length) {
+    const partes = [{ text: prompt }, { text: '\nIMÁGENES CANDIDATAS (míralas y elige en "imagen" la URL EXACTA de la que mejor calce visual y temáticamente; si ninguna sirve, ""):' }];
+    for (const im of conThumb) {
+      partes.push({ text: `URL: ${im.url} — ${im.nombre || '(sin nombre)'}` });
+      partes.push({ inlineData: { mimeType: im.thumbMime || 'image/jpeg', data: im.thumb } });
+    }
+    entrada = partes;
+  }
+
+  const { parsed, error } = await llamarGemini(env, entrada, 1200, 0.9, { cadena: cadenaCopy(env), pensar: -1 });
+  if (error) return json({ ok: false, error }, 500);
+  const z = (parsed && parsed.zonas) || {};
+  const limpia = (s, n) => String(s || '').replace(/\s+/g, ' ').trim().split(' ').slice(0, n).join(' ');
+  const LAYOUTS_OK = ['circulo','corte','bloque','tipografica'];
+  let layout = (conLayout && LAYOUTS_OK.includes(parsed && parsed.layout)) ? parsed.layout : '';
+  // Coherencia: el circulo exige cifra; corte y bloque exigen foto.
+  if (layout === 'circulo' && !hayOferta) layout = hayFoto ? 'corte' : 'tipografica';
+  if ((layout === 'corte' || layout === 'bloque') && !hayFoto) layout = hayOferta ? 'circulo' : 'tipografica';
+  if (conLayout && !layout) layout = hayOferta ? 'circulo' : (hayFoto ? 'corte' : 'tipografica');
+  const out = {
+    ok: true,
+    layout,
+    nombre: String((parsed && parsed.nombre) || brief.que).slice(0, 80),
+    zonas: { etiqueta: limpia(z.etiqueta, 3), titular: limpia(z.titular, 8), cuerpo: limpia(z.cuerpo, 18), cta: limpia(z.cta, 4) },
+    // La burbuja solo existe con gancho del brief o promoción REAL de la landing.
+    burbuja: (brief.gancho || (promos && promos.length)) ? limpia(parsed.burbuja, 5) : '',
+    imagen: (typeof parsed.imagen === 'string' && /^https?:\/\//.test(parsed.imagen)) ? parsed.imagen : '',
+    // La frase legal la escribe el usuario en el formulario (obligatoria); "no"
+    // significa que esta campaña no lleva. La IA NO la inventa nunca.
+    legal: legalDelBrief(brief).texto,
+    legalDeclarado: legalDelBrief(brief).declarado
+  };
+  if (!out.zonas.titular && !out.zonas.cuerpo) return json({ ok: false, error: 'La IA no produjo textos. Reformula el brief.' }, 500);
+  // Segunda pasada: corrector ortográfico RAE sobre todo texto visible.
+  const rev = await corregirOrtografia(env, [out.nombre, out.zonas.etiqueta, out.zonas.titular, out.zonas.cuerpo, out.zonas.cta, out.burbuja]);
+  out.nombre = String(rev.textos[0]).slice(0, 80);
+  out.zonas = { etiqueta: limpia(rev.textos[1], 3), titular: sinPuntoFinal(limpia(rev.textos[2], 8)), cuerpo: limpia(rev.textos[3], 18), cta: limpia(rev.textos[4], 4) };
+  out.burbuja = (brief.gancho || (promos && promos.length)) ? limpia(rev.textos[5], 5) : '';
+  out.ortografia = rev.revisado ? 'revisada' : 'sin-revisar';
+  // Tercera pasada: lo que no CABE se reescribe más corto (regla 3 del manual).
+  const ac = await acortarAlLimite(env, [
+    { clave: 'titular',  valor: out.zonas.titular,  max: LIM.titulo,   palabra: LIM.palabra },
+    { clave: 'cuerpo',   valor: out.zonas.cuerpo,   max: LIM.cuerpo,   palabra: LIM.palabra },
+    { clave: 'cta',      valor: out.zonas.cta,      max: LIM.cta },
+    { clave: 'etiqueta', valor: out.zonas.etiqueta, max: LIM.etiqueta },
+    { clave: 'burbuja',  valor: out.burbuja,        max: LIM.burbuja }
+  ]);
+  if (ac.valores) {
+    if (ac.valores.titular  !== undefined) out.zonas.titular  = sinPuntoFinal(ac.valores.titular);
+    if (ac.valores.cuerpo   !== undefined) out.zonas.cuerpo   = ac.valores.cuerpo;
+    if (ac.valores.cta      !== undefined) out.zonas.cta      = ac.valores.cta;
+    if (ac.valores.etiqueta !== undefined) out.zonas.etiqueta = ac.valores.etiqueta;
+    if (ac.valores.burbuja  !== undefined) out.burbuja        = ac.valores.burbuja;
+  }
+  out.limites = LIM;
+  out.acortado = !!ac.acortado;
+  if (avisos && avisos.length) out.avisos = avisos;
+  return json(out);
+}
+
+// ════════════════════ PRODUCTO 2: EMAIL MARKETING (plantilla por tipo) ═══════════════
+// PLANTILLAS POR TIPO: la IA solo redacta el COPY estructurado (titular, intro,
+// oferta, beneficios, cierre, cta, imagen). El ESQUELETO del email (qué bloques y
+// en qué orden) lo arma el código según el tipo (comercial/corporativo/informativo/
+// newsletter). Así el diseño es consistente, profesional y 100% editable, sin
+// depender del criterio de maquetación de la IA (se acabó el look "PowerPoint").
+const ICONOS_VALIDOS = ['check','candado','reloj','globo','regalo','corazon','estrella','casa','usuario','trending','tag','carrito','telefono','chat','info','descargar','calendario','equipo','pin','nube'];
+const sinPuntoFinal = s => String(s == null ? '' : s).replace(/\s*[.。]+\s*$/, '').replace(/\s+/g, ' ').trim();
+
+async function generarEmail({ env, brief, marca, imagenes, refsTxt, promos }) {
+  const tipo = ['comercial', 'corporativo', 'informativo', 'newsletter'].includes(brief.tipo) ? brief.tipo : 'comercial';
+  const imgsTxt = imagenes.length
+    ? imagenes.map(im => `- ${im.url}  →  ${im.nombre || '(sin descripción)'}`).join('\n')
+    : '(biblioteca vacía: deja "imagen" en "")';
+
+  const prompt = [
+    `Eres director creativo de ${marca ? (marca.nombre || marca.empresa) : 'la marca'}. Escribes el COPY de un email que suena 100% a la marca y convierte.`,
+    '',
+    // El encargo va PRIMERO, antes de cualquier contexto.
+    encargoDelUsuario(brief),
+    '',
+    enfoqueDe(tipo),
+    '',
+    'PIENSA ANTES DE ESCRIBIR (no lo muestres, solo devuelve el JSON):',
+    '1. ¿Qué gana el lector con esto? Una frase.',
+    '2. Escribe CINCO titulares por ángulos distintos (beneficio, problema evitado, pregunta, dato concreto, facilidad).',
+    '3. Tacha los que le servirían igual a cualquier competidor. Si se caen todos, escribe cinco nuevos.',
+    '4. Quédate con el mejor y construye el resto del copy alrededor de él.',
+    '',
+    'ELIGE ADEMÁS EL MOLDE del email (cómo se arma la pieza), el que mejor sirva a ESTE encargo:',
+    '  "oferta"     → la promoción manda: foto, banda de color con la oferta grande, razones, cierre. Para promos y descuentos.',
+    '  "beneficios" → tres razones bien contadas, sin gritar. Para producto o servicio que hay que explicar.',
+    '  "historia"   → una sola idea desarrollada en dos bandas de texto, sin lista. Para institucional y de confianza.',
+    '  "anuncio"    → directo y corto: foto grande, una frase, botón. Para novedades y recordatorios.',
+    'Si las indicaciones del encargo piden o prohíben algo (por ejemplo, "sin íconos" o "sin listas"), ELIGE el molde que lo respete: "historia" y "anuncio" no llevan iconos ni listas.',
+    '',
+    'Devuelve EXCLUSIVAMENTE este JSON (sin texto extra). Solo el COPY y el molde; la maquetación la pone el sistema.',
+    '{',
+    '  "molde": "oferta" | "beneficios" | "historia" | "anuncio",',
+    '  "nombre": "asunto del correo, concreto y sin relleno (máx 9 palabras)",',
+    '  "titular": "titular principal con gancho, SIN punto final, máx 8 palabras",',
+    '  "intro": "1-2 frases que presentan el mensaje (máx 30 palabras)",',
+    '  "oferta": "frase corta de la oferta/gancho a destacar (o \\"\\" si no hay oferta)",',
+    '  "beneficios": [ { "icono": "<clave de la lista>", "titulo": "máx 4 palabras SIN punto", "texto": "máx 14 palabras" } ],',
+    '  "cierre": "párrafo breve de cierre o refuerzo (o \\"\\")",',
+    '  "cta": "texto del botón, imperativo, máx 3 palabras",',
+    '  "imagen": "<URL EXACTA de la biblioteca que mejor calce, o \\"\\">"',
+    '}',
+    '',
+    'REGLAS:',
+    '- Español de Chile, concreto y persuasivo; nada de placeholders ni texto de relleno.',
+    '- Escribe como un AVISO, no como un comunicado: el lector debe sentir que le hablan a él (tú), no que la empresa se describe a sí misma.',
+    '- Tres beneficios en los moldes "oferta" y "beneficios"; en "historia" y "anuncio" devuelve la lista VACÍA y desarrolla el "cierre".',
+    '- Cada "icono" DISTINTO y relevante, de esta lista EXACTA: ' + ICONOS_VALIDOS.join(', ') + '.',
+    '- Si un texto no cabe en el largo pedido, REESCRÍBELO más corto. Nunca lo entregues cortado.',
+    '- "imagen": si la biblioteca tiene fotos, DEBES elegir la URL EXACTA de la que mejor calce (no la dejes vacía); solo con biblioteca vacía va "". NUNCA un logo ni un ícono.',
+    '',
+    'EJEMPLOS (el nivel que se espera):',
+    'MAL  → "Nos complace presentarte nuestra nueva cobertura"  (comunicado, habla la empresa)',
+    'BIEN → "Tu auto protegido, pase lo que pase"                          (habla al lector)',
+    'MAL  → "Contamos con más de 150 años de experiencia"                  (dato de la empresa, al lector le da igual)',
+    'BIEN → "Cotiza en 3 minutos, sin papeleo"                             (beneficio concreto para él)',
+    '',
+    'VOZ DE MARCA:',
+    voorMarca(marca),
+    '',
+    'BIBLIOTECA DE IMÁGENES (url → descripción):',
+    imgsTxt,
+    refsTxt ? '\nCONTEXTO DEL SITIO (material de apoyo — NO es el encargo; úsalo para el vocabulario y la propuesta de valor, no copies literal):\n' + refsTxt : '',
+    '',
+    'REGLAS FINALES:',
+    reglasBrief(brief, promos, 'email'),
+    brief.notas && String(brief.notas).trim() ? `\nRECORDATORIO — las indicaciones expresas del encargo mandan sobre cualquier regla de estilo: ${String(brief.notas).trim()}` : ''
+  ].filter(Boolean).join('\n');
+
+  const { parsed, error } = await llamarGemini(env, prompt, 2048, 0.9, { cadena: cadenaCopy(env), pensar: -1 });
+  if (error) return json({ ok: false, error }, 500);
+
+  // ── Copy normalizado ──────────────────────────────────────────────────
+  const c = parsed || {};
+  const titular = (sinPuntoFinal(c.titular) || brief.gancho || brief.que || 'Novedad').slice(0, 90);
+  const intro   = String(c.intro || '').replace(/\s+/g, ' ').trim().slice(0, 260);
+  const oferta  = sinPuntoFinal(c.oferta).slice(0, 90);
+  const cierre  = String(c.cierre || '').replace(/\s+/g, ' ').trim().slice(0, 260);
+  const cta     = (String(c.cta || brief.accion || 'Saber más').replace(/\s+/g, ' ').trim().split(' ').slice(0, 3).join(' ')) || 'Saber más';
+  const imagen  = (typeof c.imagen === 'string' && /^https?:\/\//.test(c.imagen)) ? c.imagen
+                : (imagenes[0] && imagenes[0].url) || '';
+  // Beneficios con íconos DISTINTOS y válidos.
+  let benes = Array.isArray(c.beneficios) ? c.beneficios.slice(0, 4) : [];
+  const usados = new Set();
+  benes = benes.map((b, i) => {
+    let ico = (b && ICONOS_VALIDOS.includes(b.icono)) ? b.icono : '';
+    if (!ico || usados.has(ico)) ico = ICONOS_VALIDOS.find(k => !usados.has(k)) || ICONOS_VALIDOS[i % ICONOS_VALIDOS.length];
+    usados.add(ico);
+    return { ico, t: sinPuntoFinal(b && b.titulo).slice(0, 40), s: String((b && b.texto) || '').replace(/\s+/g, ' ').trim().slice(0, 140) };
+  }).filter(b => b.t || b.s);
+
+  // ── Segunda pasada: corrector ortográfico RAE sobre todo el copy ──────
+  const nombreEmail = String(c.nombre || brief.que).slice(0, 120);
+  const planos = [titular, intro, oferta, cierre, cta].concat(benes.flatMap(b => [b.t, b.s])).concat([nombreEmail]);
+  const rev = await corregirOrtografia(env, planos);
+  const titularR = sinPuntoFinal(rev.textos[0]).slice(0, 90);
+  const introR   = rev.textos[1].slice(0, 260);
+  const ofertaR  = sinPuntoFinal(rev.textos[2]).slice(0, 90);
+  const cierreR  = rev.textos[3].slice(0, 260);
+  const ctaR     = (rev.textos[4].split(' ').slice(0, 3).join(' ')) || cta;
+  benes = benes.map((b, i) => ({ ico: b.ico, t: sinPuntoFinal(rev.textos[5 + i * 2]).slice(0, 40), s: rev.textos[6 + i * 2].slice(0, 140) }));
+  const nombreR = rev.textos[5 + benes.length * 2].slice(0, 120) || nombreEmail;
+
+  // ── MOLDES del email ──────────────────────────────────────────────────
+  // Antes había UN esqueleto fijo (hero → alert → texto → features → cta) que
+  // se aplicaba a todo: por eso todos los emails salían idénticos y ninguna
+  // indicación del usuario podía cambiarlos (la estructura la decidía el código,
+  // no el prompt). Ahora la IA elige el molde y aquí se arma con el vocabulario
+  // de las plantillas buenas: BANDAS DE COLOR full-bleed (bloque "seccion"),
+  // foto limpia a todo el ancho, y el botón dentro de la banda de cierre.
+  // Nada de "hero" con texto encima (se rompe en Outlook) ni "alert" de aviso.
+  const P = marca || {};
+  const cNavy  = P.secondary || P.primary || '#040764';   // banda oscura
+  const cClaro = P.bg || '#ffffff';                        // banda clara
+  const cTexto = P.text || '#040764';
+  const cAcento = P.accent1 || P.primary || '#1C73CB';     // banda de oferta
+  const cBoton = P.cta || P.primary || '#1C73CB';
+  const cBotonTxt = P.ctaText || '#ffffff';
+  const fTit = P.fontTitulo || '';
+  const blanco = '#ffffff';
+
+  const bloques = [];
+  const push = (t, datos) => bloques.push({ tipo: t, datos });
+  const foto = () => { if (imagen) push('imagen', { url: imagen, anchoImg: '100', radio: '0', padTop: '0', padBottom: '0', padLeft: '0', padRight: '0' }); };
+  // Banda: el primitivo de email profesional (full-bleed, con su propio color).
+  const banda = (o) => push('seccion', Object.assign({
+    bg: cClaro, colorTexto: cTexto, colorEyebrow: cBoton, alinH: 'center',
+    eyebrow: '', titulo: '', subtitulo: '', fuenteTitulo: fTit,
+    tamTitulo: '26', tamSub: '15', padV: '32', padH: '28',
+    botonTexto: '', botonUrl: '', botonVariante: 'solido', botonColor: cBoton
+  }, o));
+  const bandaCierre = (extra) => banda(Object.assign({
+    bg: cNavy, colorTexto: blanco, colorEyebrow: blanco,
+    botonTexto: ctaR, botonUrl: '', botonVariante: 'solido', botonColor: cBoton, padV: '36'
+  }, extra || {}));
+
+  const molde = ['oferta', 'beneficios', 'historia', 'anuncio'].includes(c.molde)
+    ? c.molde
+    : (ofertaR && tipo === 'comercial') ? 'oferta' : (tipo === 'corporativo' ? 'historia' : 'beneficios');
+
+  if (molde === 'oferta') {
+    foto();
+    banda({ titulo: titularR, subtitulo: introR, tamTitulo: '28' });
+    if (ofertaR) banda({ bg: cAcento, colorTexto: esOscuro(cAcento) ? blanco : cTexto, titulo: ofertaR, tamTitulo: '34', padV: '26' });
+    if (benes.length) push('features', { items: benes, disposicion: 'fila', porFila: '3', orientacion: 'vertical', colorIcono: cBoton });
+    bandaCierre({ titulo: cierreR || '' });
+  } else if (molde === 'beneficios') {
+    foto();
+    banda({ titulo: titularR, subtitulo: introR, tamTitulo: '28' });
+    if (benes.length) push('features', { items: benes, disposicion: 'fila', porFila: '3', orientacion: 'vertical', colorIcono: cBoton });
+    bandaCierre({ titulo: cierreR || '' });
+  } else if (molde === 'historia') {
+    // Sin íconos y sin listas: dos bandas de texto y el cierre.
+    foto();
+    banda({ titulo: titularR, subtitulo: introR, tamTitulo: '28' });
+    if (cierreR) banda({ bg: cClaro === '#ffffff' ? '#f4f6fa' : blanco, subtitulo: cierreR, tamSub: '16', padV: '30' });
+    bandaCierre({});
+  } else {   // anuncio: directo y corto
+    foto();
+    banda({ titulo: titularR, subtitulo: introR, tamTitulo: '30', padV: '36' });
+    bandaCierre({});
+  }
+
+  return json({ ok: true, nombre: nombreR, molde, bloques, ortografia: rev.revisado ? 'revisada' : 'sin-revisar' });
+}
+// ¿El color es oscuro? (para decidir el color del texto encima). Igual criterio
+// que esColorOscuro() del editor, para que servidor y cliente coincidan.
+function esOscuro(hex) {
+  const h = String(hex || '').replace('#', '');
+  const c = h.length === 3 ? h.split('').map(x => x + x).join('') : h;
+  if (c.length !== 6) return false;
+  const r = parseInt(c.slice(0, 2), 16), g = parseInt(c.slice(2, 4), 16), b = parseInt(c.slice(4, 6), 16);
+  return (0.299 * r + 0.587 * g + 0.114 * b) < 140;
+}
+
+// ════════════ PRODUCTO 3: GOOGLE SEARCH ADS (campaña razonada) ════════════
+// La IA piensa como un especialista de Search, NO como el "modo fácil" de Google:
+//   - Agrupa las keywords por INTENCIÓN de búsqueda (grupos temáticos coherentes).
+//   - SOLO concordancia exacta y de frase. NUNCA amplia (queda prohibida).
+//   - Entrega negativas (por grupo y de campaña) para no pagar clics basura.
+//   - Anuncios RSA con límites REALES de Google: titulares ≤30, descripciones ≤90,
+//     rutas ≤15. El servidor VALIDA y recorta: nada sale fuera de límite.
+// ══════════════════════════════════════════════════════════════════════════
+// GOOGLE SEARCH — pipeline en etapas (sep-2026)
+//
+// Antes era UNA llamada: la IA leía 2.500 caracteres de la landing, no sabía
+// nada de la competencia y escribía los anuncios que escribiría cualquiera.
+// Ahora:
+//   1. INVESTIGAR  (investigarAds): Gemini lee la landing por su cuenta y busca
+//      en Google a la competencia. Sale una FICHA: beneficios con cifras reales,
+//      pruebas, objeciones, cómo busca la gente, lo que el producto NO es (base
+//      de las negativas) y los mensajes que todos repiten (lo que NO sirve).
+//   2. ESTRUCTURAR (generarAds): grupos por intención, keywords, anuncios y
+//      negativas CON MOTIVO, escritos desde la ficha.
+//   3. CRITICAR   (criticarAnuncios): un editor reescribe lo genérico.
+//   4. FILTROS DUROS del servidor: frases trilladas fuera, cifras que no están
+//      en ninguna fuente fuera, negativas que bloquearían keywords propias fuera.
+//   5. Ortografía.
+// ══════════════════════════════════════════════════════════════════════════
+
+const aLista = (v, n, largo) => (Array.isArray(v) ? v : []).map(x => String(x == null ? '' : x).replace(/\s+/g, ' ').trim()).filter(Boolean).slice(0, n).map(x => x.slice(0, largo || 200));
+
+async function investigarAds(env, brief, marca) {
+  const url = /^https?:\/\//i.test(brief.ctaUrl || '') ? String(brief.ctaUrl).trim() : '';
+  const refs = (Array.isArray(brief.refs) ? brief.refs : []).filter(u => /^https?:\/\//i.test(u || '') && u !== url).slice(0, 2);
+  const nombreMarca = marca ? (marca.nombre || marca.empresa || '') : '';
+  const prompt = [
+    'Eres analista senior de marketing de búsqueda (Google Ads) en Chile. Investiga ANTES de que se escriba una campaña de Search. Todavía no escribes anuncios.',
+    '',
+    encargoDelUsuario(brief),
+    nombreMarca ? `MARCA: ${nombreMarca}${marca.negocio ? ' — ' + marca.negocio : ''}` : '',
+    '',
+    'TAREAS:',
+    url ? `1. LEE la landing ${url}${refs.length ? ' y también ' + refs.join(' , ') : ''}. Extrae SOLO lo que la página dice de verdad: producto, beneficios, cifras, coberturas, precios, plazos, condiciones, pruebas (años, clientes, premios, respaldo).`
+        : '1. No hay landing: usa el encargo y lo que encuentres en Google sobre la marca.',
+    url ? '1b. Si la landing es de UN producto, lee también la página del RAMO en el mismo sitio (la de la categoría, p. ej. la de seguros de auto): suele traer asistencias, garantías, cuotas de la promoción y respaldo que la página del producto no muestra. Anota de qué página sale cada dato y usa solo lo del producto encargado.' : '',
+    '2. BUSCA en Google (resultados de Chile) cómo busca la gente este producto y quiénes compiten por esas búsquedas. Identifica 3 a 6 competidores y qué promete cada uno en sus anuncios y páginas.',
+    '3. Detecta los MENSAJES GENÉRICOS que repiten todos (no sirven para diferenciar) y los ÁNGULOS DIFERENCIALES que esta marca tiene con respaldo en su landing y la competencia no usa.',
+    '4. Piensa en las búsquedas que NO queremos pagar: lo que el producto NO es o no incluye, significados confundibles, productos parecidos que no se venden aquí.',
+    '4b. SEGUROS: anota cada dato con su significado exacto. Distingue PRIMA (costo de toda la vigencia) de CUOTA (pago mensual). Si un precio es de referencia (calculado para un modelo y año de auto, una edad o un perfil), anótalo como «cuota desde $X» en evidencia de precio y su condición en "condiciones"; el caso de referencia nunca va al anuncio. Un precio o una oferta solo cuenta si lo CONFIRMAS en el texto de la página junto a su condición; lo que no puedas leer (imágenes, banners) no se anota. Si un beneficio depende del plan, anota el plan. Si la página muestra varios productos, usa solo los del producto encargado.',
+    brief.enfoque === 'conversion' ? '5. CAMPAÑA DE CONVERSIÓN (venta directa online): ordena la EVIDENCIA que encuentres en la web, los materiales y el relato del usuario según las tres barreras del comprador — TRÁMITE (qué tan digital, cuánto tarda, qué no hay que hacer), PRECIO (precio visible, oferta, forma de pago) y RESPALDO (quién responde, cómo liquida, asistencia, pruebas con fuente) — y detecta los MOMENTOS DE NECESIDAD que obligan a comprar ya. Solo hechos con respaldo; si una barrera no tiene evidencia, deja su lista vacía.' : '',
+    '',
+    'Devuelve SOLO este JSON (sin texto antes ni después):',
+    '{',
+    '  "leyoLanding": true,',
+    '  "producto": "qué se vende exactamente (nombre tal como lo usa el sitio)",',
+    '  "categoria": "categoría de búsqueda",',
+    '  "propuestaValor": "la promesa central de la landing en 1 frase",',
+    '  "beneficios": ["beneficios CONCRETOS, con la cifra tal como aparece si la hay"],',
+    '  "pruebas": ["datos verificables: años, clientes, calificaciones, respaldos, coberturas con monto"],',
+    '  "ofertas": ["promociones vigentes TEXTUALES"],',
+    '  "condiciones": ["requisitos o restricciones importantes"],',
+    '  "publico": "a quién le habla",',
+    '  "objeciones": ["dudas o miedos del cliente antes de contratar/comprar"],',
+    '  "vocabulario": ["términos exactos que usa el sitio"],',
+    '  "busquedas": ["12 a 20 consultas reales que escribe la gente en Chile para encontrar esto"],',
+    '  "noOfrece": ["lo que el producto NO es o NO incluye, y con qué se confunde"],',
+    '  "competidores": [{"nombre": "...", "promesa": "qué prometen"}],',
+    '  "mensajesGenericos": ["frases/promesas que usan todos en la categoría"],',
+    '  "angulosDiferenciales": ["ángulos propios de la marca, respaldados por su landing"],',
+    '  "evidencia": { "tramite": ["hechos"], "precio": ["hechos"], "respaldo": ["hechos"] },',
+    '  "momentos": ["situaciones que obligan a comprar ya (ej. auto recién comprado)"]',
+    '}',
+    'REGLAS: nada inventado. Si un dato no está en la landing ni en Google, no lo pongas. Las cifras van TEXTUALES. Si no pudiste leer la landing, "leyoLanding": false.'
+  ].filter(Boolean).join('\n');
+
+  const intentos = url ? [[{ url_context: {} }, { google_search: {} }], [{ google_search: {} }]] : [[{ google_search: {} }]];
+  let ultimoError = '';
+  for (const tools of intentos) {
+    const r = await llamarGemini(env, prompt, 4096, 0.3, { cadena: cadenaCopy(env), tools, pensar: -1, timeout: 60000 });
+    if (r.error || !r.parsed || typeof r.parsed !== 'object') { ultimoError = r.error || 'respuesta vacía'; continue; }
+    const f = r.parsed;
+    const ficha = {
+      leyoLanding: f.leyoLanding !== false && (!url || (r.urlsLeidas || []).length > 0 || tools.length === 1),
+      producto: String(f.producto || '').slice(0, 160),
+      categoria: String(f.categoria || '').slice(0, 120),
+      propuestaValor: String(f.propuestaValor || '').slice(0, 300),
+      beneficios: aLista(f.beneficios, 12), pruebas: aLista(f.pruebas, 10), ofertas: aLista(f.ofertas, 6),
+      condiciones: aLista(f.condiciones, 8), publico: String(f.publico || '').slice(0, 200),
+      objeciones: aLista(f.objeciones, 8), vocabulario: aLista(f.vocabulario, 25, 60),
+      busquedas: aLista(f.busquedas, 25, 80), noOfrece: aLista(f.noOfrece, 20),
+      competidores: (Array.isArray(f.competidores) ? f.competidores : []).slice(0, 6)
+        .map(c => ({ nombre: String((c && c.nombre) || '').slice(0, 60), promesa: String((c && c.promesa) || '').slice(0, 200) })).filter(c => c.nombre),
+      mensajesGenericos: aLista(f.mensajesGenericos, 12), angulosDiferenciales: aLista(f.angulosDiferenciales, 8),
+      evidencia: { tramite: aLista(f.evidencia && f.evidencia.tramite, 8), precio: aLista(f.evidencia && f.evidencia.precio, 8), respaldo: aLista(f.evidencia && f.evidencia.respaldo, 8) },
+      momentos: aLista(f.momentos, 8)
+    };
+    if (!ficha.producto && !ficha.beneficios.length) { ultimoError = 'la ficha llegó vacía'; continue; }
+    return { ficha, urlsLeidas: r.urlsLeidas || [], fuentes: r.fuentes || [] };
+  }
+  return { ficha: null, urlsLeidas: [], fuentes: [], error: ultimoError };
+}
+
+function fichaTexto(f) {
+  if (!f) return '';
+  const l = (t, a) => a && a.length ? `${t}:\n${a.map(x => '  - ' + x).join('\n')}` : '';
+  return [
+    f.producto && `PRODUCTO: ${f.producto}${f.categoria ? ' (categoría: ' + f.categoria + ')' : ''}`,
+    f.propuestaValor && `PROPUESTA DE VALOR: ${f.propuestaValor}`,
+    f.publico && `PÚBLICO: ${f.publico}`,
+    l('BENEFICIOS CONCRETOS (materia prima de titulares y descripciones)', f.beneficios),
+    l('PRUEBAS / DATOS VERIFICABLES', f.pruebas),
+    l('OFERTAS VIGENTES (textuales)', f.ofertas),
+    l('CONDICIONES', f.condiciones),
+    l('OBJECIONES DEL CLIENTE (respóndelas en los anuncios)', f.objeciones),
+    l('VOCABULARIO REAL DEL SITIO', f.vocabulario),
+    l('CÓMO BUSCA LA GENTE (base de las keywords)', f.busquedas),
+    l('LO QUE NO ES / NO INCLUYE (base de las negativas)', f.noOfrece),
+    f.competidores && f.competidores.length ? 'COMPETIDORES EN GOOGLE:\n' + f.competidores.map(c => `  - ${c.nombre}: ${c.promesa}`).join('\n') : '',
+    l('MENSAJES GENÉRICOS QUE USAN TODOS (PROHIBIDO construir anuncios sobre esto)', f.mensajesGenericos),
+    l('ÁNGULOS DIFERENCIALES DE ESTA MARCA (úsalos)', f.angulosDiferenciales),
+    f.evidencia ? l('EVIDENCIA · barrera del TRÁMITE', f.evidencia.tramite) : '',
+    f.evidencia ? l('EVIDENCIA · barrera del PRECIO', f.evidencia.precio) : '',
+    f.evidencia ? l('EVIDENCIA · barrera del RESPALDO', f.evidencia.respaldo) : '',
+    l('MOMENTOS DE NECESIDAD', f.momentos)
+  ].filter(Boolean).join('\n');
+}
+
+// Frases trilladas que no diferencian a nadie. Se comparan sin tildes.
+const CLICHES_ADS = [
+  'los mejores precios', 'mejor precio del mercado', 'precios competitivos', 'calidad garantizada',
+  'rapido y facil', 'facil y rapido', 'rapido, facil', 'rapido facil y seguro', 'la mejor opcion',
+  'no esperes mas', 'haz clic aqui', 'click aqui', 'somos lideres', 'soluciones integrales',
+  'excelente servicio', 'servicio de calidad', 'amplia experiencia', 'la mejor calidad',
+  'todo lo que necesitas', 'tu mejor aliado', 'confia en nosotros', 'esta campana', 'este anuncio'
+];
+const sinTildes = s => String(s || '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '');
+const esCliche = s => { const t = sinTildes(s); return CLICHES_ADS.some(c => t.includes(c)); };
+// Cifras de un texto, normalizadas ("$9.990" y "9990" son la misma).
+const cifrasDe = s => (String(s || '').match(/\d+(?:[.,]\d+)*/g) || []).map(n => n.replace(/[.,]/g, '')).filter(n => n.length);
+
+async function criticarAnuncios(env, grupos, ficha, marca, opts) {
+  const o = opts || {};
+  const papel = t => (o.rolDe && o.rolDe[String(t).toLowerCase()]) || '';
+  const entrada = grupos.map((g, i) => ({ i, grupo: g.nombre, intencion: g.intencion, titularesFijos: g.titularesFijos, titulares: g.titularesRotan, descripciones: g.descripciones,
+    ...(o.conversion ? { papelesFijos: g.titularesFijos.map(papel), papelesRotan: g.titularesRotan.map(papel) } : {}) }));
+  const prompt = [
+    `Eres director creativo de performance y revisas anuncios RSA de Google Search${marca ? ' de ' + (marca.nombre || marca.empresa) : ''} antes de publicarlos. Tu trabajo es MATAR LO GENÉRICO.`,
+    '',
+    'PRUEBA DEL COMPETIDOR: si cambias la marca por un competidor y el texto sigue siendo verdad, es genérico → REESCRÍBELO con un dato concreto de la ficha (beneficio con cifra, prueba, oferta, objeción respondida, ángulo diferencial).',
+    'También reescribe: frases trilladas ("rápido y fácil", "los mejores precios", "calidad garantizada", "atención personalizada"...), titulares que dicen lo mismo con otras palabras, descripciones sin un dato concreto, y todo lo que hable del anuncio en vez de al cliente.',
+    'Lo que ya es específico y bueno, DÉJALO IGUAL.',
+    'LÍMITES DUROS: titulares ≤30 caracteres (con espacios), descripciones ≤90. Titulares sin punto final. Español de Chile correcto.',
+    'PROHIBIDO inventar cifras, precios, plazos o premios que no estén en la ficha.',
+    o.protocolo
+      ? 'Mantén la MISMA cantidad de textos en cada lista y la MISMA posición de cada uno. Los titularesFijos van fijados en la posición 1: TODOS llevan el nombre de la marca, cada uno en una variante distinta (marca + otro mensaje), y así debe quedar tras reescribir.'
+      : 'Mantén la MISMA cantidad de textos en cada lista y el orden de los titularesFijos (1 marca/producto, 2 keyword, 3 beneficio u oferta, 4 llamada a la acción).',
+    o.conversion ? 'CAMPAÑA DE CONVERSIÓN: cada titular tiene un PAPEL (papelesFijos/papelesRotan, misma posición). Si lo reescribes, conserva su papel. Reescribe también toda descripción que invite a leer (conoce, infórmate, visita) o que no termine en una acción de compra.' : '',
+    'Reescribe también todo texto con mayúscula en cada palabra (estilo inglés): en español va solo al inicio y en nombres propios.',
+    o.conversion ? LEC.leccionParaIA('conversion') : '',
+    LEC.leccionParaIA('seguros'),
+    'Reescribe también todo texto con un error de rubro según la lección de seguros (prima por cuota, precio de ejemplo, beneficio de un plan presentado como de todos, la marca como sujeto de un atributo).',
+    '',
+    'FICHA DEL PRODUCTO Y LA COMPETENCIA:',
+    fichaTexto(ficha) || '(sin ficha)',
+    '',
+    'ANUNCIOS A REVISAR:',
+    JSON.stringify(entrada),
+    '',
+    'Devuelve SOLO: { "grupos": [ { "i": 0, "titularesFijos": [...], "titulares": [...], "descripciones": [...] } ] }'
+  ].join('\n');
+  const r = await llamarGemini(env, prompt, 6144, 0.6, { cadena: cadenaCopy(env), pensar: -1, timeout: 70000 });
+  return Array.isArray(r.parsed && r.parsed.grupos) ? r.parsed.grupos : null;
+}
+
+// SEGUNDO ANUNCIO POR GRUPO (lección de conversión 5b, v8 validada por el usuario):
+// cada grupo lleva dos anuncios con ángulos distintos para aprender cuál convierte.
+// Los 5 fijados (con la marca) son los mismos; cambian los que rotan y las descripciones.
+async function segundoAnuncio(env, grupos, ficha, marca, opts) {
+  const o = opts || {};
+  const papel = t => (o.rolDe && o.rolDe[String(t).toLowerCase()]) || '';
+  const entrada = grupos.map((g, i) => ({ i, grupo: g.nombre, intencion: g.intencion, anguloPrimero: g.angulo,
+    titularesFijos: g.titularesFijos, titularesPrimero: g.titularesRotan.map(t => ({ t, rol: papel(t) })), descripcionesPrimero: g.descripciones }));
+  const prompt = [
+    `Eres especialista senior en Google Ads (Search)${marca ? ' de ' + (marca.nombre || marca.empresa) : ''} en Chile. Cada grupo ya tiene UN anuncio. Escribe el SEGUNDO anuncio de cada grupo, para probar cuál convierte más.`,
+    '',
+    'EL SEGUNDO ANUNCIO TIENE OTRO ÁNGULO: si el primero se carga al TRÁMITE (qué tan fácil y rápido es comprar), este se carga al RESPALDO (garantías, asistencias, atención, quién responde); si el primero ya es de respaldo, este se carga al trámite. El precio puede aparecer en ambos.',
+    'Los 5 titularesFijos se comparten (no los escribas). Tú escribes: 10 "titulares" que rotan y 4 "descripciones", DISTINTOS de los del primer anuncio (no la misma frase reordenada).',
+    'Cada titular declara su "rol": keyword, tramite, precio, respaldo o cta. Entre los 10 tienen que estar las tres barreras.',
+    'LÍMITES DUROS: titulares ≤30 caracteres (con espacios) y sin punto final; descripciones ≤90 y terminan en una acción de compra. Español de Chile correcto; mayúscula solo al inicio y en nombres propios.',
+    'PROHIBIDO inventar cifras, precios, plazos o garantías que no estén en la ficha.',
+    o.conversion ? LEC.leccionParaIA('conversion') : '',
+    LEC.leccionParaIA('seguros'),
+    '', 'FICHA DEL PRODUCTO Y LA COMPETENCIA:', fichaTexto(ficha) || '(sin ficha)',
+    '', 'GRUPOS Y SU PRIMER ANUNCIO:', JSON.stringify(entrada),
+    '', 'Devuelve SOLO: { "grupos": [ { "i": 0, "angulo": "respaldo | tramite: en 3-6 palabras", "titulares": [ { "t": "...", "rol": "respaldo" } ], "descripciones": [ "..." ] } ] }'
+  ].filter(Boolean).join('\n');
+  const r = await llamarGemini(env, prompt, 6144, 0.7, { cadena: cadenaCopy(env), pensar: -1, timeout: 70000 });
+  return Array.isArray(r.parsed && r.parsed.grupos) ? r.parsed.grupos : null;
+}
+
+// ══════════════════════════════════════════════════════════════════════════
+// TU CAMPAÑA ACTUAL — diagnóstico de una campaña que YA corre (sep-2026)
+//
+// El usuario pega capturas, sube los informes que exporta de Google Ads y dice
+// qué le parece mal. Las CIFRAS no se las pedimos a la IA: se calculan aquí,
+// leyendo los informes (analizarTablas). La IA interpreta, prioriza y propone;
+// el servidor valida lo que propone contra esos números.
+// ══════════════════════════════════════════════════════════════════════════
+
+// Nombres de columna de Google Ads, en español y en inglés (sin tildes).
+const COLS_ADS = {
+  termino: ['search term', 'termino de busqueda', 'terminos de busqueda', 'consulta de busqueda'],
+  keyword: ['keyword', 'palabra clave', 'palabras clave', 'search keyword'],
+  concordancia: ['match type', 'tipo de concordancia', 'concordancia', 'search keyword match type', 'criterion type'],
+  campana: ['campaign', 'campana'],
+  grupo: ['ad group', 'grupo de anuncios'],
+  clics: ['clicks', 'clics'],
+  impr: ['impr.', 'impressions', 'impresiones', 'impr'],
+  costo: ['cost', 'costo', 'coste'],
+  conv: ['conversions', 'conversiones', 'conv.', 'conv'],
+  cpc: ['avg. cpc', 'cpc prom.', 'cpc promedio', 'cpc medio', 'cpc'],
+  calidad: ['quality score', 'nivel de calidad'],
+  estado: ['status', 'estado']
+};
+// "$2.000" · "1.234,5" · "2,000.50" · "12%" → número. En CLP el punto es de miles.
+function numeroAds(v) {
+  let t = String(v == null ? '' : v).replace(/[^\d.,\-]/g, '');
+  if (!t || t === '-' || t === '--') return 0;
+  const p = t.lastIndexOf('.'), c = t.lastIndexOf(',');
+  if (p >= 0 && c >= 0) t = p > c ? t.replace(/,/g, '') : t.replace(/\./g, '').replace(',', '.');
+  else if (c >= 0) t = /,\d{3}$/.test(t) && !/,\d{3},\d{1,2}$/.test(t) ? t.replace(/,/g, '') : t.replace(/,(?=\d{3}(\D|$))/g, '').replace(',', '.');
+  else if (p >= 0 && /^\-?\d{1,3}(\.\d{3})+$/.test(t)) t = t.replace(/\./g, '');
+  const n = parseFloat(t);
+  return isFinite(n) ? n : 0;
+}
+function separarFila(linea, sep) {
+  const out = []; let cur = '', q = false;
+  for (let i = 0; i < linea.length; i++) {
+    const ch = linea[i];
+    if (ch === '"') { if (q && linea[i + 1] === '"') { cur += '"'; i++; } else q = !q; }
+    else if (ch === sep && !q) { out.push(cur); cur = ''; }
+    else cur += ch;
+  }
+  out.push(cur);
+  return out.map(x => x.trim());
+}
+// Lee UN informe (texto CSV/TSV, con o sin líneas de título arriba) y calcula
+// sus totales y hallazgos. Devuelve null si no parece un informe de Google Ads.
+function analizarTabla(nombre, texto) {
+  const lineas = String(texto || '').replace(/^﻿/, '').split(/\r?\n/).filter(l => l.trim());
+  if (lineas.length < 2) return null;
+  let sep = '\t';
+  const muestra = lineas.slice(0, 8).join('\n');
+  if (!muestra.includes('\t')) sep = (muestra.split(';').length > muestra.split(',').length) ? ';' : ',';
+  // La fila de cabecera es la primera que nombra columnas conocidas.
+  let hi = -1, idx = {};
+  for (let i = 0; i < Math.min(lineas.length, 12); i++) {
+    const cab = separarFila(lineas[i], sep).map(sinTildes);
+    const m = {};
+    for (const [k, alias] of Object.entries(COLS_ADS)) { const j = cab.findIndex(h => alias.includes(h)); if (j >= 0) m[k] = j; }
+    if ((m.termino != null || m.keyword != null) && (m.costo != null || m.clics != null)) { hi = i; idx = m; break; }
+  }
+  if (hi < 0) return null;
+  const filas = lineas.slice(hi + 1).map(l => separarFila(l, sep))
+    .filter(f => !/^total/i.test(sinTildes(f[0] || '')) && f.some(x => x));
+  const col = (f, k) => idx[k] != null ? f[idx[k]] : '';
+  const tipo = idx.termino != null ? 'terminos' : 'keywords';
+  const items = filas.map(f => ({
+    t: String(col(f, tipo === 'terminos' ? 'termino' : 'keyword') || '').toLowerCase().replace(/^[\[\"+]+|[\]\"]+$/g, '').trim(),
+    concordancia: sinTildes(col(f, 'concordancia')), campana: col(f, 'campana'), grupo: col(f, 'grupo'),
+    clics: numeroAds(col(f, 'clics')), impr: numeroAds(col(f, 'impr')), costo: numeroAds(col(f, 'costo')),
+    conv: numeroAds(col(f, 'conv')), calidad: idx.calidad != null ? numeroAds(col(f, 'calidad')) : null
+  })).filter(x => x.t && !/^total/.test(sinTildes(x.t)));
+  if (!items.length) return null;
+  const suma = k => items.reduce((a, x) => a + x[k], 0);
+  const tot = { costo: Math.round(suma('costo')), clics: Math.round(suma('clics')), impr: Math.round(suma('impr')), conv: +suma('conv').toFixed(1) };
+  tot.cpc = tot.clics ? Math.round(tot.costo / tot.clics) : null;
+  tot.ctr = tot.impr ? +(tot.clics / tot.impr * 100).toFixed(2) : null;
+  tot.cpa = tot.conv ? Math.round(tot.costo / tot.conv) : null;
+  const porCosto = (a, b) => b.costo - a.costo;
+  const sinConv = items.filter(x => x.costo > 0 && !x.conv).sort(porCosto);
+  const r = {
+    nombre: String(nombre || 'informe').slice(0, 80), tipo, filas: items.length, totales: tot,
+    gastoSinConversion: Math.round(sinConv.reduce((a, x) => a + x.costo, 0)),
+    sinConversion: sinConv.slice(0, 40).map(x => ({ t: x.t, costo: Math.round(x.costo), clics: x.clics, campana: x.campana, grupo: x.grupo })),
+    convierten: items.filter(x => x.conv > 0).sort((a, b) => b.conv - a.conv).slice(0, 25)
+      .map(x => ({ t: x.t, conv: x.conv, costo: Math.round(x.costo), cpa: Math.round(x.costo / x.conv) })),
+    campanas: [...new Set(items.map(x => x.campana).filter(Boolean))].slice(0, 10)
+  };
+  if (tipo === 'keywords') {
+    r.amplias = items.filter(x => /broad|amplia/.test(x.concordancia)).sort(porCosto).slice(0, 30)
+      .map(x => ({ t: x.t, costo: Math.round(x.costo), conv: x.conv, grupo: x.grupo, campana: x.campana }));
+    r.calidadBaja = items.filter(x => x.calidad != null && x.calidad > 0 && x.calidad < 5).sort(porCosto).slice(0, 30)
+      .map(x => ({ t: x.t, calidad: x.calidad, costo: Math.round(x.costo), cpc: x.clics ? Math.round(x.costo / x.clics) : null, grupo: x.grupo, campana: x.campana }));
+    r.cpcAltos = items.filter(x => x.clics >= 3).map(x => ({ t: x.t, cpc: Math.round(x.costo / x.clics), costo: Math.round(x.costo), conv: x.conv, grupo: x.grupo, campana: x.campana }))
+      .sort((a, b) => b.cpc - a.cpc).slice(0, 15);
+  }
+  return r;
+}
+function analizarTablas(tablas) {
+  return (Array.isArray(tablas) ? tablas : []).slice(0, 6)
+    .map(t => analizarTabla(t && t.nombre, String((t && t.texto) || '').slice(0, 400000))).filter(Boolean);
+}
+const clp = n => (n == null ? '—' : '$' + Math.round(n).toLocaleString('es-CL'));
+function hechosTexto(hs) {
+  return hs.map(h => {
+    const t = h.totales;
+    const l = [`▸ ${h.nombre} (${h.tipo === 'terminos' ? 'términos de búsqueda' : 'keywords'}, ${h.filas} filas): costo ${clp(t.costo)} · ${t.clics} clics · CPC prom. ${clp(t.cpc)} · CTR ${t.ctr == null ? '—' : t.ctr + '%'} · ${t.conv} conversiones · CPA ${clp(t.cpa)}.`,
+      `  Gasto SIN ninguna conversión: ${clp(h.gastoSinConversion)} (${t.costo ? Math.round(h.gastoSinConversion / t.costo * 100) : 0}% del costo).`];
+    if (h.sinConversion.length) l.push('  Lo que más gasta sin convertir: ' + h.sinConversion.slice(0, 25).map(x => `"${x.t}" ${clp(x.costo)}/${x.clics} clics`).join(' · '));
+    if (h.convierten.length) l.push('  Lo que SÍ convierte (no bloquear): ' + h.convierten.slice(0, 15).map(x => `"${x.t}" ${x.conv} conv. CPA ${clp(x.cpa)}`).join(' · '));
+    if (h.amplias && h.amplias.length) l.push('  En concordancia AMPLIA: ' + h.amplias.slice(0, 15).map(x => `"${x.t}" ${clp(x.costo)}`).join(' · '));
+    if (h.calidadBaja && h.calidadBaja.length) l.push('  Nivel de calidad bajo 5: ' + h.calidadBaja.slice(0, 15).map(x => `"${x.t}" QS ${x.calidad}, CPC ${clp(x.cpc)}`).join(' · '));
+    if (h.cpcAltos && h.cpcAltos.length) l.push('  CPC más altos: ' + h.cpcAltos.slice(0, 10).map(x => `"${x.t}" ${clp(x.cpc)}`).join(' · '));
+    return l.join('\n');
+  }).join('\n');
+}
+
+async function diagnosticarCampana({ env, brief, marca, actual }) {
+  actual = actual || {};
+  const hechos = analizarTablas(actual.tablas);
+  const imgs = (Array.isArray(actual.imagenes) ? actual.imagenes : []).slice(0, 6)
+    .map(im => ({ mime: /^image\/(png|jpe?g|webp)$/.test(im && im.mime) ? im.mime : 'image/jpeg', data: String((im && im.data) || '').replace(/^data:[^,]+,/, '') }))
+    .filter(im => im.data.length > 100 && im.data.length < 6000000);
+  const notas = String(actual.notas || '').trim().slice(0, 3000);
+  if (!hechos.length && !imgs.length && !notas) return json({ ok: false, error: 'Pega una captura, sube un informe de Google Ads o cuéntame qué está mal.' }, 400);
+  const tablasSinLeer = (Array.isArray(actual.tablas) ? actual.tablas.length : 0) - hechos.length;
+  // Extracto crudo de los informes (para lo que las columnas conocidas no cubren).
+  const crudo = (Array.isArray(actual.tablas) ? actual.tablas : []).slice(0, 6)
+    .map(t => `• ${String(t.nombre || '').slice(0, 80)}\n${String(t.texto || '').split(/\r?\n/).slice(0, 60).join('\n').slice(0, 5000)}`).join('\n\n');
+
+  const prompt = [
+    'Eres auditor senior de Google Ads (Search) en Chile, de los que cobran por encontrar la plata que se está botando. Revisas una campaña que YA está corriendo.',
+    '',
+    '════ EL OBJETIVO DE LA CAMPAÑA (manda sobre todo: cada recomendación debe acercar a esto, nunca alejarse) ════',
+    `QUÉ SE VENDE / QUÉ SE BUSCA: ${brief.que || '(no indicado: dedúcelo de los datos)'}`,
+    brief.accion ? `ACCIÓN que se busca: ${brief.accion}` : '',
+    brief.ctaUrl ? `LANDING: ${brief.ctaUrl}` : '',
+    brief.notas ? `INDICACIONES: ${brief.notas}` : '',
+    '══════════════════════════════════════════════════',
+    notas ? `\nLO QUE AL USUARIO LE PARECE MAL (su queja, en sus palabras):\n» ${notas}` : '',
+    hechos.length ? '\nCIFRAS CALCULADAS DE SUS INFORMES (son exactas: úsalas como evidencia, no las cambies):\n' + hechosTexto(hechos) : '',
+    crudo ? '\nEXTRACTO DE LOS INFORMES:\n' + crudo : '',
+    imgs.length ? `\nADEMÁS hay ${imgs.length} captura(s) de pantalla de su cuenta: léelas (columnas, cifras, configuración visible). Si una cifra de la captura choca con las calculadas, mandan las calculadas.` : '',
+    '',
+    'QUÉ REVISAR (en este orden de impacto): términos de búsqueda que gastan sin convertir · concordancia amplia · CPC altos y su causa (nivel de calidad, competencia, estrategia de puja sin tope) · nivel de calidad (relevancia del anuncio, CTR esperado, experiencia en la landing) · configuración (red de búsqueda asociada, expansión a Display, ubicación "presencia o interés", horarios, dispositivos) · anuncios genéricos · coherencia keyword → anuncio → landing.',
+    '',
+    'Devuelve SOLO este JSON:',
+    '{',
+    '  "resumen": "el diagnóstico en 2 frases, directo",',
+    '  "problemas": [ { "titulo": "…", "evidencia": "el dato concreto que lo prueba", "impacto": "alto" | "medio" | "bajo", "ahorro": "cuánto se deja de botar, SOLO si sale de las cifras (ej. \'$84.000 al mes\'), si no \'\'" } ],',
+    '  "negativas": [ { "t": "término negativo", "motivo": "por qué, ligado al objetivo", "nivel": "campaña" | "<nombre del grupo>" } ],',
+    '  "pausar": [ { "keyword": "…", "grupo": "…", "motivo": "…" } ],',
+    '  "concordancia": [ { "keyword": "…", "de": "amplia", "a": "frase" | "exacta", "motivo": "…" } ],',
+    '  "ajustes": [ { "ajuste": "…", "recomendacion": "qué cambiar exactamente", "motivo": "…" } ],',
+    '  "anuncios": [ { "problema": "…", "recomendacion": "…" } ],',
+    '  "noHacer": [ "LECCIONES para la próxima versión de la campaña: lo que NO hay que repetir, concreto (ej. \'no usar amplia en seguro auto: 62% del gasto fue en búsquedas de SOAP\')" ]',
+    '}',
+    'REGLAS:',
+    '- Ordena "problemas" por impacto. Cada uno con EVIDENCIA concreta de los datos o las capturas; si no hay datos, dilo como hipótesis a verificar.',
+    '- NO inventes cifras: los montos y porcentajes salen de las CIFRAS CALCULADAS o de lo que se lee en las capturas.',
+    '- Negativas: saca las de los términos que gastan sin convertir y NO calzan con el objetivo. JAMÁS propongas como negativa algo que esté en "lo que SÍ convierte" ni el producto del objetivo. Minúsculas, 1 a 4 palabras.',
+    '- "noHacer": 4 a 8 lecciones accionables; son el aporte que usará la IA que rearme la campaña.',
+    '- Español de Chile, directo, sin relleno.'
+  ].filter(Boolean).join('\n');
+
+  const partes = [{ text: prompt }].concat(imgs.map(im => ({ inline_data: { mime_type: im.mime, data: im.data } })));
+  const { parsed, error } = await llamarGemini(env, partes, 6144, 0.4, { cadena: cadenaCopy(env), pensar: -1, timeout: 90000 });
+  if (error) return json({ ok: false, error }, 500);
+  const d = parsed || {};
+  const clean = s => String(s == null ? '' : s).replace(/\s+/g, ' ').trim();
+  const kw = s => clean(s).toLowerCase().replace(/^[\[\"'+-]+|[\]\"']+$/g, '').trim();
+
+  // Validación contra los números: una negativa que bloquearía un término que
+  // CONVIERTE o el producto del objetivo se descarta (con aviso).
+  const convierten = hechos.flatMap(h => h.convierten.map(x => ' ' + x.t + ' '));
+  const objetivo = ' ' + sinTildes(brief.que || '') + ' ';
+  const bloqueaBueno = n => { const k = ' ' + sinTildes(n) + ' '; return convierten.some(t => sinTildes(t).includes(k)) || (n.length >= 4 && objetivo.includes(k)); };
+  const gastoDe = n => hechos.reduce((a, h) => a + h.sinConversion.filter(x => (' ' + x.t + ' ').includes(' ' + n + ' ')).reduce((b, x) => b + x.costo, 0), 0);
+  const avisos = [];
+  const vistos = new Set();
+  const descartadas = [];
+  const negativas = (Array.isArray(d.negativas) ? d.negativas : []).map(x => ({
+    t: kw(x && typeof x === 'object' ? x.t : x), motivo: clean(x && x.motivo).slice(0, 220), nivel: clean(x && x.nivel).slice(0, 60) || 'campaña'
+  })).filter(x => {
+    if (!x.t || x.t.split(' ').length > 5 || vistos.has(x.t)) return false;
+    vistos.add(x.t);
+    if (bloqueaBueno(x.t)) { descartadas.push(x.t); return false; }
+    return true;
+  }).slice(0, 60).map(x => ({ ...x, gasto: gastoDe(x.t) || null }));
+  if (descartadas.length) avisos.push({ tipo: 'info', texto: `Se descartaron ${descartadas.length} negativas propuestas porque bloquearían búsquedas que SÍ convierten o el producto de tu objetivo (${descartadas.slice(0, 4).join(', ')}).` });
+  if (tablasSinLeer > 0) avisos.push({ tipo: 'info', texto: `${tablasSinLeer} archivo(s) no parecían un informe de Google Ads (no se encontraron columnas de término/keyword y costo/clics). Se leyeron como texto.` });
+
+  const lista = (arr, map, n) => (Array.isArray(arr) ? arr : []).map(map).filter(Boolean).slice(0, n);
+  const totalGeneral = hechos.find(h => h.tipo === 'keywords') || hechos[0] || null;
+  const diagnostico = {
+    resumen: clean(d.resumen).slice(0, 500),
+    metricas: totalGeneral ? totalGeneral.totales : null,
+    gastoSinConversion: hechos.length ? Math.max(...hechos.map(h => h.gastoSinConversion)) : null,
+    problemas: lista(d.problemas, x => x && x.titulo ? { titulo: clean(x.titulo).slice(0, 140), evidencia: clean(x.evidencia).slice(0, 400), impacto: ['alto', 'medio', 'bajo'].includes(x.impacto) ? x.impacto : 'medio', ahorro: clean(x.ahorro).slice(0, 80) } : null, 10),
+    negativas,
+    pausar: lista(d.pausar, x => x && x.keyword ? { keyword: kw(x.keyword), grupo: clean(x.grupo).slice(0, 80), motivo: clean(x.motivo).slice(0, 220) } : null, 40),
+    concordancia: lista(d.concordancia, x => x && x.keyword ? { keyword: kw(x.keyword), de: clean(x.de).slice(0, 20) || 'amplia', a: x.a === 'exacta' ? 'exacta' : 'frase', motivo: clean(x.motivo).slice(0, 220) } : null, 40),
+    ajustes: lista(d.ajustes, x => x && x.ajuste ? { ajuste: clean(x.ajuste).slice(0, 120), recomendacion: clean(x.recomendacion).slice(0, 300), motivo: clean(x.motivo).slice(0, 220) } : null, 12),
+    anuncios: lista(d.anuncios, x => x && x.problema ? { problema: clean(x.problema).slice(0, 200), recomendacion: clean(x.recomendacion).slice(0, 300) } : null, 8),
+    noHacer: lista(d.noHacer, x => clean(x).slice(0, 260) || null, 10),
+    convierten: hechos.flatMap(h => h.convierten.map(x => x.t)).slice(0, 25),
+    campanas: [...new Set(hechos.flatMap(h => h.campanas))].slice(0, 10)
+  };
+  // La lección más barata de todas, si los datos la muestran, no depende de la IA.
+  if (hechos.some(h => h.amplias && h.amplias.length) && !diagnostico.noHacer.some(t => /amplia/i.test(t)))
+    diagnostico.noHacer.push('No usar concordancia amplia: en tus datos hay keywords amplias gastando (la campaña nueva usa solo exacta y frase).');
+  return json({ ok: true, diagnostico, hechos, avisos });
+}
+
+// Lo que la generación de Search recibe de un diagnóstico: un APORTE. El
+// objetivo sigue siendo el encargo; esto dice qué no repetir.
+function aprendizajeTexto(a) {
+  if (!a || typeof a !== 'object') return '';
+  const l = (t, arr) => (Array.isArray(arr) && arr.length) ? `${t}:\n${arr.slice(0, 25).map(x => '  - ' + x).join('\n')}` : '';
+  const neg = (Array.isArray(a.negativas) ? a.negativas : []).map(n => typeof n === 'object' ? `${n.t}${n.motivo ? ' (' + n.motivo + ')' : ''}` : String(n));
+  const txt = [
+    a.resumen ? `DIAGNÓSTICO DE LA CAMPAÑA QUE YA CORRE: ${a.resumen}` : '',
+    l('LO QUE NO HAY QUE REPETIR', a.noHacer),
+    l('Problemas detectados', (a.problemas || []).map(p => typeof p === 'object' ? `${p.titulo}${p.evidencia ? ' — ' + p.evidencia : ''}` : String(p))),
+    l('Búsquedas que SÍ convierten (úsalas como keywords o como base de sus variantes)', a.convierten),
+    l('Keywords que se pausaron por gastar sin resultado (NO las vuelvas a proponer)', (a.pausar || []).map(x => typeof x === 'object' ? x.keyword : x)),
+    l('Negativas confirmadas con datos reales (inclúyelas)', neg)
+  ].filter(Boolean).join('\n');
+  return txt ? '════ APRENDIZAJE DE LA CAMPAÑA ACTUAL (un APORTE: el ENCARGO de arriba sigue siendo el objetivo; esto dice qué evitar y qué sí funciona) ════\n' + txt + '\n══════════════════════════════════════════════════' : '';
+}
+
+async function generarAds(args) {
+  const r = await armarAds(args);
+  return json(r, r.ok ? 200 : (r.status || 500));
+}
+// El pipeline de Search, devolviendo DATOS (lo usan generarAds y el modo 'campana').
+// protocolo = protocolo de la casa: 5 títulos fijados en la posición 1 (marca u
+// oferta) + 10 que rotan, en vez de 4 anclados + 11.
+async function armarAds({ env, brief, marca, refsTxt, promos, enlaces, avisos, ficha, fuentes, protocolo }) {
+  avisos = Array.isArray(avisos) ? avisos : [];
+  const NFIJ = protocolo ? 5 : 4, NROT = protocolo ? 10 : 11;
+  // Enfoque de CONVERSIÓN: la IA recibe la lección (nucleo/lecciones.js) y
+  // declara el PAPEL de cada título (keyword, tramite, precio, respaldo, cta).
+  const conversion = brief.enfoque === 'conversion';
+  const rolDe = {};   // texto (minúsculas) → papel; se hereda cuando un texto se reescribe
+  const llevarRol = (viejo, nuevo) => { const r = rolDe[String(viejo).toLowerCase()]; if (r && nuevo) rolDe[String(nuevo).toLowerCase()] = r; };
+  const fTxt = fichaTexto(ficha);
+  const prompt = [
+    `Eres un especialista senior en Google Ads (Search) de ${marca ? (marca.nombre || marca.empresa) : 'la marca'}, con 10 años gestionando cuentas en Chile. Estructuras por INTENCIÓN de búsqueda, con concordancias controladas y negativas razonadas. Detestas la concordancia amplia y los anuncios intercambiables con los de la competencia.`,
+    '',
+    encargoDelUsuario(brief),
+    '',
+    fTxt ? '════ INVESTIGACIÓN PREVIA (landing leída + competencia en Google) — TU MATERIA PRIMA ════\n' + fTxt + '\n══════════════════════════════════════════════════' : '',
+    conversion ? '\n' + LEC.leccionParaIA('conversion') : '',
+    '\n' + LEC.leccionParaIA('seguros'),
+    aprendizajeTexto(brief.aprendizaje),
+    '',
+    'Devuelve EXCLUSIVAMENTE este JSON (sin texto extra):',
+    '{',
+    '  "nombre": "nombre corto de la campaña",',
+    '  "grupos": [',
+    '    {',
+    '      "nombre": "nombre del grupo de anuncios",',
+    '      "intencion": "qué busca la persona que escribe estas keywords (1 frase)",',
+    '      "razonamiento": "por qué agrupaste así y qué esperas de este grupo (1-2 frases)",',
+    '      "angulo": "el ángulo diferencial que usan los anuncios de este grupo frente a la competencia",',
+    '      "keywords": [ { "t": "keyword en minúsculas", "tipo": "exacta" | "frase" } ],',
+    '      "negativas": [ { "t": "término", "motivo": "por qué se excluye en este grupo" } ],',
+    conversion ? `      "titularesFijos": [ { "t": "titular ANCLADO ≤30 caracteres", "rol": "keyword|tramite|precio|respaldo|cta" } ] (exactamente ${NFIJ}),` : `      "titularesFijos": [ "${NFIJ} titulares ANCLADOS, ≤30 caracteres cada uno" ],`,
+    conversion ? `      "titulares": [ { "t": "titular que ROTA ≤30 caracteres", "rol": "keyword|tramite|precio|respaldo|cta" } ] (exactamente ${NROT}),` : `      "titulares": [ "${NROT} titulares que ROTAN, ≤30 caracteres cada uno" ],`,
+    '      "descripciones": [ "4 descripciones, ≤90 caracteres cada una" ],',
+    '      "path1": "ruta-1", "path2": "ruta-2"',
+    '    }',
+    '  ],',
+    '  "negativas": [ { "t": "término negativo de campaña", "motivo": "por qué NO queremos pagar esa búsqueda en ESTE negocio" } ],',
+    '  "sitelinks": [ { "texto": "≤25 caracteres", "desc1": "≤35 caracteres", "desc2": "≤35 caracteres", "url": "ruta REAL de la landing (ej. /cotizar)" } ],',
+    '  "destacados": [ "4 a 6 textos destacados, ≤25 caracteres" ]',
+    '}',
+    '',
+    'ESTRUCTURA Y KEYWORDS:',
+    '- "nombre" de la campaña y de cada grupo: LEGIBLES, con espacios y tildes (ej. "Cotizar seguro auto"), nunca en formato slug.',
+    conversion
+      ? '- 2 a 4 grupos. Cada grupo = UNA intención de COMPRA (comprar/contratar · precio u oferta · inmediatez · detalle del objeto · momento de necesidad; la marca propia va en otra campaña). Nada informativo.'
+      : '- 2 a 4 grupos. Cada grupo = UNA intención (ej.: contratar/cotizar ya · comparar/precio · necesidad o problema · marca). No mezcles "cotizar" con "qué es".',
+    conversion ? '- PAPEL de cada titular ("rol"): entre fijos y rotativos tienen que estar la keyword y las TRES barreras (tramite, precio, respaldo). Si una barrera no tiene evidencia en las fuentes, no la inventes: cúbrela con lo que sí haya.' : '',
+    '- Por grupo: 20 a 25 keywords, tomadas de CÓMO BUSCA LA GENTE y del VOCABULARIO REAL de la investigación. Nada que esté en "lo que NO es".',
+    '- "tipo" SOLO "exacta" o "frase" (amplia PROHIBIDA). Exacta = búsquedas cortas y precisas (2-3 palabras); frase = variantes largas (4-5 palabras). Mínimo 30% de cada tipo por grupo.',
+    '- Minúsculas, sin corchetes ni comillas, 2 a 5 palabras, como escribe la gente de verdad (con y sin tildes, singular/plural, "precio", "cotizar", "online", "chile" solo cuando alguien lo escribiría).',
+    '',
+    'ANUNCIOS (aquí se gana o se pierde):',
+    '- PRUEBA DEL COMPETIDOR: si cambias la marca por un competidor y el titular sigue siendo verdad, es genérico y NO sirve. Cada anuncio se construye sobre beneficios con cifra, pruebas, ofertas, objeciones y ángulos diferenciales de la INVESTIGACIÓN.',
+    '- PROHIBIDO construir sobre los "mensajes genéricos que usan todos" y las frases trilladas: "los mejores precios", "calidad garantizada", "rápido y fácil", "atención personalizada", "la mejor opción", "no esperes más", "somos líderes", "amplia experiencia".',
+    '- 15 titulares, TODOS ≤30 caracteres (con espacios), únicos, sin punto final, con mayúscula SOLO al inicio y en nombres propios (norma del español; nada de mayúscula en cada palabra):',
+    protocolo
+      ? '  · "titularesFijos" (exactamente 5, van TODOS fijados en la posición 1 y Google elige uno): TODOS llevan el NOMBRE DE LA MARCA, cada uno en una variante distinta: la marca combinada con un mensaje diferente (producto, oferta, trámite, respaldo, acción de compra). Nunca la misma frase reordenada. (el nombre del producto solo no basta), con 5 formulaciones realmente distintas (no la misma frase reordenada).'
+      : '  · "titularesFijos" (exactamente 4, en este orden, van anclados): 1) marca o producto, 2) la keyword principal del grupo casi literal, 3) el beneficio u oferta más fuerte, 4) llamada a la acción específica (no "Haz clic aquí").',
+    protocolo
+      ? '  · "titulares" (exactamente 10, rotan): 3 con la keyword del grupo o su variante · 3 beneficios concretos con dato · 1 prueba/confianza con dato real · 1 que responda la objeción principal · 1 del ángulo diferencial · 1 llamada a la acción específica. Ninguno repite ni parafrasea a otro.'
+      : '  · "titulares" (exactamente 11, rotan): 2 con variantes de la keyword del grupo · 3 beneficios concretos con dato · 2 pruebas/confianza con dato real · 1 que responda la objeción principal · 2 del ángulo diferencial · 1 oferta o CTA alternativa. Ninguno repite ni parafrasea a otro.',
+    '- 4 descripciones ≤90 caracteres, cada una con un ángulo distinto: (1) beneficio principal + dato + CTA, (2) respuesta a una objeción, (3) prueba/confianza, (4) diferencial frente a la competencia u oferta. Una sola idea por descripción, con un dato concreto. Termina con punto.',
+    '- El anuncio le habla AL CLIENTE, jamás habla del anuncio o de la campaña. No repitas la misma keyword más de 2 veces en un anuncio.',
+    '- CIFRAS: SOLO las que aparecen en la investigación, la landing o el encargo, TEXTUALES. Una cifra inventada invalida el anuncio.',
+    '- "path1"/"path2": ≤15 caracteres, minúsculas, con guiones, relacionados con el grupo.',
+    '- "sitelinks": 4 a 6 de la MISMA landing; usa los enlaces internos reales listados abajo (no inventes rutas). Cada uno a una página DISTINTA de la URL final. Texto ≤25, descripciones ≤35, sin signos de exclamación.',
+    '- "destacados": 4 a 6 atributos concretos (≤25 caracteres, sin signos de exclamación, sin empezar con un símbolo) que NO repitan ningún titular ni sitelink.',
+    (promos && promos.length) ? `- Promociones detectadas en la landing: ${promos.join(' · ')}. Úsalas TAL CUAL en 2-3 titulares y 1 descripción del grupo más transaccional.` : '',
+    '',
+    'NEGATIVAS (razonadas para ESTE negocio, no una lista de plantilla):',
+    '- De campaña: 15 a 30, cada una con su "motivo". Sácalas de: lo que el producto NO es/no incluye, significados confundibles del término principal, productos vecinos que no se venden, búsquedas de empleo/postulación, de formación, de trámites que hace otra entidad, y búsquedas informativas si la campaña es de conversión.',
+    '- PROHIBIDO poner negativas "por costumbre": cada motivo debe explicar por qué esa búsqueda llega a ESTE negocio y no convierte. Si el motivo serviría para cualquier empresa, piénsalo otra vez.',
+    '- Una negativa NUNCA puede bloquear una keyword propia (si una keyword contiene la palabra, esa negativa está mal).',
+    '- Las marcas de la competencia NO van como negativas salvo que el encargo lo pida.',
+    '- Por grupo: 3 a 10 negativas que eviten que el grupo capture la intención de OTRO grupo o búsquedas que no calzan con su intención.',
+    '',
+    'VOZ DE MARCA:',
+    voorMarca(marca),
+    refsTxt ? '\nTEXTO DE LA LANDING (evidencia original; usa su vocabulario y datos, no copies frases largas):\n' + refsTxt : '',
+    (enlaces && enlaces.length) ? '\nENLACES INTERNOS REALES de la landing (candidatos a sitelinks, "texto → ruta"):\n' + enlaces.map(e => `- ${e.texto} → ${e.ruta}`).join('\n') : '',
+    '',
+    'BRIEF:',
+    reglasBrief(brief, promos, 'ads'),
+    brief.ctaUrl ? `URL FINAL de los anuncios (landing): ${brief.ctaUrl}` : '',
+    '- Español de Chile. Respeta el tono y las palabras de la marca.'
+  ].filter(Boolean).join('\n');
+
+  const { parsed, error } = await llamarGemini(env, prompt, 8192, 0.8, { cadena: cadenaCopy(env), pensar: -1 });
+  if (error) return { ok: false, error, status: 500 };
+
+  // ── Validación dura del lado del servidor ──────────────────────────────
+  const clean = s => String(s == null ? '' : s).replace(/\s+/g, ' ').trim();
+  const legible = s => { s = clean(s); return (!/\s/.test(s) && /-/.test(s)) ? s.replace(/-+/g, ' ') : s; };
+  const dedup = arr => { const seen = new Set(); return arr.filter(x => { const k = x.toLowerCase(); if (!k || seen.has(k)) return false; seen.add(k); return true; }); };
+  const kwLimpia = s => clean(s).toLowerCase().replace(/^[\[\"'+-]+|[\]\"']+$/g, '').trim();
+  const path = s => clean(s).toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^a-z0-9-]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 15);
+  // Negativas: aceptan string u objeto {t, motivo}. Se guardan los motivos aparte
+  // (la consola, el XLSX y los CSV siguen leyendo una lista de strings).
+  const motivos = {};
+  const negs = (arr, n) => dedup((Array.isArray(arr) ? arr : []).map(x => {
+    const t = kwLimpia(x && typeof x === 'object' ? x.t : x);
+    const m = x && typeof x === 'object' ? clean(x.motivo).slice(0, 200) : '';
+    if (t && m && !motivos[t]) motivos[t] = m;
+    return t;
+  }).filter(Boolean)).slice(0, n);
+
+  const gruposIn = Array.isArray(parsed && parsed.grupos) ? parsed.grupos.slice(0, 5) : [];
+  // Un titular puede venir como texto o como { t, rol } (enfoque de conversión).
+  const ROLES_OK = Object.keys(LEC.ROLES_TITULO);
+  const limpiaTit = arr => dedup((Array.isArray(arr) ? arr : []).map(x => {
+    const t = sinPuntoFinal(clean(x && typeof x === 'object' ? x.t : x)).slice(0, 30);
+    const rol = x && typeof x === 'object' ? String(x.rol || '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '') : '';
+    if (t && ROLES_OK.includes(rol)) rolDe[t.toLowerCase()] = rol;
+    return t;
+  }).filter(Boolean));
+  const grupos = gruposIn.map(g => {
+    const seenK = new Set();
+    let keywords = (Array.isArray(g.keywords) ? g.keywords : []).map(k => ({
+      t: kwLimpia(k && (typeof k === 'object' ? k.t : k)),
+      tipo: (k && k.tipo === 'frase') ? 'frase' : 'exacta'   // amplia jamás
+    })).filter(k => k.t && !seenK.has(k.t) && (seenK.add(k.t), true)).slice(0, 25);
+    let fijos = limpiaTit(g.titularesFijos).slice(0, NFIJ);
+    let rotan = limpiaTit(g.titulares).filter(t => !fijos.some(f => f.toLowerCase() === t.toLowerCase()));
+    if (!fijos.length && rotan.length) { fijos = rotan.slice(0, NFIJ); rotan = rotan.slice(NFIJ); }
+    rotan = rotan.slice(0, NROT);
+    const descripciones = dedup((Array.isArray(g.descripciones) ? g.descripciones : []).map(d => clean(d).slice(0, 90)).filter(Boolean)).slice(0, 4);
+    const angulo = clean(g.angulo).slice(0, 200);
+    return {
+      nombre: legible(g.nombre).slice(0, 60) || 'Grupo',
+      intencion: clean(g.intencion).slice(0, 200),
+      razonamiento: clean(g.razonamiento).slice(0, 300),
+      angulo,
+      keywords, titulares: fijos.concat(rotan), titularesFijos: fijos, titularesRotan: rotan, descripciones,
+      negativas: negs(g.negativas, 15),
+      path1: path(g.path1), path2: path(g.path2)
+    };
+  }).filter(g => g.keywords.length && g.titulares.length);
+
+  if (!grupos.length) return { ok: false, status: 500, error: 'La IA no produjo grupos de anuncios válidos. Reformula el brief (di qué vendes y a quién).' };
+
+  // APRENDIZAJE (si viene de "Tu campaña actual"): lo que se pausó por gastar sin
+  // resultado no vuelve como keyword, y las negativas confirmadas con datos entran.
+  const apr = (brief.aprendizaje && typeof brief.aprendizaje === 'object') ? brief.aprendizaje : null;
+  if (apr) {
+    const pausadas = new Set((Array.isArray(apr.pausar) ? apr.pausar : []).map(x => kwLimpia(typeof x === 'object' ? x.keyword : x)).filter(Boolean));
+    let quitadas = 0;
+    for (const g of grupos) { const n0 = g.keywords.length; g.keywords = g.keywords.filter(k => !pausadas.has(k.t)); quitadas += n0 - g.keywords.length; }
+    if (quitadas) avisos.push({ tipo: 'info', texto: `Se quitaron ${quitadas} keywords que en tu campaña actual gastaban sin resultado.` });
+    parsed.negativas = (Array.isArray(parsed.negativas) ? parsed.negativas : []).concat(
+      (Array.isArray(apr.negativas) ? apr.negativas : []).filter(n => !n || typeof n !== 'object' || !n.nivel || /campa/i.test(n.nivel))
+        .map(n => typeof n === 'object' ? { t: n.t, motivo: n.motivo ? 'Dato de tu campaña actual: ' + n.motivo : 'Dato de tu campaña actual' } : n));
+  }
+
+  // ── Etapa 3, en PARALELO: relleno de keywords de los grupos flacos + crítico ──
+  const MIN_KW = 20;
+  const flacos = grupos.filter(g => g.keywords.length < MIN_KW);
+  const relleno = flacos.length ? llamarGemini(env, [
+    'Eres especialista senior en Google Ads (Search). Completa las keywords de estos grupos.',
+    'Devuelve EXCLUSIVAMENTE: { "grupos": [ { "nombre": "<el mismo nombre>", "keywords": [ { "t": "...", "tipo": "exacta" | "frase" } ] } ] }',
+    `- De cada grupo faltan keywords hasta llegar a ${MIN_KW}. Entrega SOLO las NUEVAS.`,
+    '- Misma intención del grupo. PROHIBIDO repetir o variar trivialmente las que ya tiene.',
+    '- Solo "exacta" o "frase" (amplia prohibida). Minúsculas, 2 a 5 palabras, como busca la gente en Chile.',
+    ficha && ficha.busquedas.length ? '\nBÚSQUEDAS REALES investigadas:\n' + ficha.busquedas.join(' · ') : '',
+    ficha && ficha.noOfrece.length ? '\nNO uses nada de esto (el producto no lo es/no lo incluye):\n' + ficha.noOfrece.join(' · ') : '',
+    refsTxt ? '\nVOCABULARIO REAL de la landing:\n' + refsTxt.slice(0, 2500) : '',
+    '\nGRUPOS:',
+    ...flacos.map(g => `- "${g.nombre}" · intención: ${g.intencion || '(la del nombre)'} · faltan ${MIN_KW - g.keywords.length} · ya tiene: ${g.keywords.map(k => k.t).join(', ')}`)
+  ].filter(Boolean).join('\n'), 4096, 0.8, { cadena: cadenaRapida(env) }) : Promise.resolve(null);
+  const critica = criticarAnuncios(env, grupos, ficha, marca, { protocolo, conversion, rolDe }).catch(() => null);
+  const segundo = protocolo ? segundoAnuncio(env, grupos, ficha, marca, { conversion, rolDe }).catch(() => null) : Promise.resolve(null);
+  const [extra, revisados, segundos] = await Promise.all([relleno, critica, segundo]);
+
+  if (extra && extra.parsed && Array.isArray(extra.parsed.grupos)) {
+    const lote = extra.parsed.grupos;
+    for (const g of flacos) {
+      const src = lote.find(x => clean(x && x.nombre).toLowerCase() === g.nombre.toLowerCase()) || lote[flacos.indexOf(g)];
+      if (!src) continue;
+      const yaHay = new Set(g.keywords.map(k => k.t));
+      for (const k of (Array.isArray(src.keywords) ? src.keywords : [])) {
+        const t = kwLimpia(k && k.t);
+        if (!t || yaHay.has(t) || g.keywords.length >= 25) continue;
+        yaHay.add(t);
+        g.keywords.push({ t, tipo: (k && k.tipo === 'frase') ? 'frase' : (t.split(/\s+/).length >= 4 ? 'frase' : 'exacta') });
+      }
+    }
+  }
+
+  // El crítico solo reemplaza un texto si su versión respeta los límites.
+  let reescritos = 0;
+  if (revisados) {
+    for (const rv of revisados) {
+      const g = grupos[Number(rv && rv.i)];
+      if (!g) continue;
+      const aplicar = (orig, nuevos, max, esTit) => orig.map((o, i) => {
+        let n = Array.isArray(nuevos) ? clean(nuevos[i]) : '';
+        if (esTit) n = sinPuntoFinal(n);
+        if (!n || n.length > max || n === o) return o;
+        llevarRol(o, n);
+        reescritos++; return n;
+      });
+      g.titularesFijos = aplicar(g.titularesFijos, rv.titularesFijos, 30, true);
+      g.titularesRotan = aplicar(g.titularesRotan, rv.titulares, 30, true);
+      g.descripciones = aplicar(g.descripciones, rv.descripciones, 90, false);
+    }
+  }
+
+  // ── Etapa 4: filtros duros ──────────────────────────────────────────────
+  // Cifras permitidas = las que aparecen en alguna fuente (encargo, landing, ficha, marca).
+  const fuentesTxt = [brief.que, brief.gancho, brief.notas, brief.accion, refsTxt, JSON.stringify(ficha || {}), (promos || []).join(' '),
+    marca ? [marca.nombre, marca.empresa, marca.negocio, marca.productos, marca.eslogan, marca.directrices].join(' ') : ''].join(' ');
+  const permitidas = new Set(cifrasDe(fuentesTxt));
+  const inventada = s => cifrasDe(s).some(n => !permitidas.has(n));
+  let descartados = 0;
+  const mantener = (arr, minimo, malo) => {
+    const out = arr.slice();
+    for (let i = out.length - 1; i >= 0 && out.length > minimo; i--) if (malo(out[i])) { out.splice(i, 1); descartados++; }
+    return out;
+  };
+  for (const g of grupos) {
+    const malo = t => esCliche(t) || inventada(t);
+    g.titularesRotan = mantener(dedup(g.titularesRotan), 5, malo);
+    // Un titular fijo malo se reemplaza por el primer rotativo bueno.
+    g.titularesFijos = g.titularesFijos.map(f => {
+      if (!malo(f)) return f;
+      const k = g.titularesRotan.findIndex(t => !malo(t));
+      if (k < 0) return f;
+      descartados++;
+      return g.titularesRotan.splice(k, 1)[0];
+    });
+    g.titularesRotan = g.titularesRotan.filter(t => !g.titularesFijos.some(f => f.toLowerCase() === t.toLowerCase()));
+    g.descripciones = mantener(dedup(g.descripciones), 2, malo);
+    g.titulares = g.titularesFijos.concat(g.titularesRotan);
+  }
+  // Segundo anuncio: mismos filtros; no repite títulos del primero; si queda flaco, no va.
+  if (Array.isArray(segundos)) {
+    for (const sg of segundos) {
+      const g = grupos[Number(sg && sg.i)];
+      if (!g) continue;
+      const usados = new Set(g.titularesFijos.concat(g.titularesRotan).map(t => t.toLowerCase()));
+      const rotan = limpiaTit(sg.titulares).filter(t => t.length <= 30 && !usados.has(t.toLowerCase()) && !esCliche(t) && !inventada(t)).slice(0, NROT);
+      const descs = dedup((Array.isArray(sg.descripciones) ? sg.descripciones : []).map(d => clean(d).slice(0, 90))
+        .filter(d => d && !esCliche(d) && !inventada(d) && !g.descripciones.includes(d))).slice(0, 4);
+      // Protocolo: 10 que rotan. Si los filtros dejaron menos, se completa con títulos buenos del
+      // primer anuncio (Google permite repetir títulos entre anuncios del mismo grupo).
+      for (const t of g.titularesRotan) { if (rotan.length >= NROT) break; if (!rotan.some(x => x.toLowerCase() === t.toLowerCase())) rotan.push(t); }
+      if (rotan.length >= 5 && descs.length >= 2) g.anuncioB = { angulo: clean(sg.angulo).slice(0, 60) || 'respaldo', titularesRotan: rotan, descripciones: descs };
+    }
+  }
+  if (descartados) avisos.push({ tipo: 'info', texto: `Se descartaron ${descartados} textos de anuncio con frases trilladas o cifras que no aparecen en la landing ni en tu encargo.` });
+
+  // Negativas de campaña + motivos. Una negativa que está contenida en una
+  // keyword propia bloquearía esa keyword: se saca.
+  let negCampana = negs(parsed.negativas, apr ? 60 : 30);
+  const todasKw = grupos.flatMap(g => g.keywords.map(k => ' ' + k.t + ' '));
+  const bloquea = n => todasKw.some(k => k.includes(' ' + n + ' '));
+  const conflictos = negCampana.filter(bloquea).concat(grupos.flatMap(g => g.negativas.filter(n => g.keywords.some(k => (' ' + k.t + ' ').includes(' ' + n + ' ')))));
+  negCampana = negCampana.filter(n => !bloquea(n));
+  for (const g of grupos) g.negativas = g.negativas.filter(n => !g.keywords.some(k => (' ' + k.t + ' ').includes(' ' + n + ' ')));
+  if (conflictos.length) avisos.push({ tipo: 'info', texto: `Se quitaron ${conflictos.length} negativas que habrían bloqueado keywords de la propia campaña (${conflictos.slice(0, 4).join(', ')}).` });
+
+  const sitelinks = (Array.isArray(parsed.sitelinks) ? parsed.sitelinks : []).map(s => ({
+    texto: clean(s && s.texto).slice(0, 25), desc1: clean(s && s.desc1).slice(0, 35),
+    desc2: clean(s && s.desc2).slice(0, 35), url: clean(s && s.url).slice(0, 200)
+  })).filter(s => s.texto && !esCliche(s.texto)).slice(0, 6);
+  const titulosTodos = new Set(grupos.flatMap(g => g.titularesFijos.concat(g.titularesRotan)).map(t => t.toLowerCase()));
+  const destacados = dedup((Array.isArray(parsed.destacados) ? parsed.destacados : []).map(t => clean(t).replace(/!/g, '').replace(/^[^\p{L}\p{N}]+/u, '').slice(0, 25))
+    .filter(t => t && !esCliche(t) && !titulosTodos.has(t.toLowerCase()) && !sitelinks.some(s => s.texto.toLowerCase() === t.toLowerCase()))).slice(0, 6);
+
+  // ── Etapa 5: corrector RAE sobre los textos VISIBLES. Las keywords NO se
+  // corrigen: la gente busca sin tildes y así deben quedar.
+  const planos = [legible(parsed.nombre || brief.que).slice(0, 80)];
+  for (const g of grupos) { planos.push(g.nombre, g.intencion, g.razonamiento, g.angulo); planos.push(...g.titularesFijos, ...g.titularesRotan, ...g.descripciones); if (g.anuncioB) planos.push(...g.anuncioB.titularesRotan, ...g.anuncioB.descripciones); }
+  for (const s of sitelinks) planos.push(s.texto, s.desc1, s.desc2);
+  planos.push(...destacados);
+  const rev = await corregirOrtografia(env, planos);
+  let k = 0;
+  const nombreR = String(rev.textos[k++]).slice(0, 80);
+  for (const g of grupos) {
+    g.nombre = String(rev.textos[k++]).slice(0, 60) || g.nombre;
+    g.intencion = String(rev.textos[k++]).slice(0, 200);
+    g.razonamiento = String(rev.textos[k++]).slice(0, 300);
+    g.angulo = String(rev.textos[k++]).slice(0, 200);
+    const tit = t => sinPuntoFinal(t).slice(0, 30);
+    const corregir = v => { const n = tit(rev.textos[k++]); llevarRol(v, n); return n; };
+    g.titularesFijos = g.titularesFijos.map(corregir).filter(Boolean);
+    g.titularesRotan = g.titularesRotan.map(corregir).filter(Boolean);
+    g.titulares = g.titularesFijos.concat(g.titularesRotan);
+    g.descripciones = g.descripciones.map(() => String(rev.textos[k++]).slice(0, 90)).filter(Boolean);
+    if (g.anuncioB) {
+      g.anuncioB.titularesRotan = g.anuncioB.titularesRotan.map(corregir).filter(Boolean);
+      g.anuncioB.descripciones = g.anuncioB.descripciones.map(() => String(rev.textos[k++]).slice(0, 90)).filter(Boolean);
+    }
+    // El ángulo se ve en la consola junto al razonamiento del grupo.
+    if (g.angulo && !g.razonamiento.includes(g.angulo)) g.razonamiento = (g.razonamiento + ' Ángulo: ' + g.angulo).trim().slice(0, 420);
+  }
+  for (const s of sitelinks) {
+    s.texto = (String(rev.textos[k++]).slice(0, 25)) || s.texto;
+    s.desc1 = String(rev.textos[k++]).slice(0, 35);
+    s.desc2 = String(rev.textos[k++]).slice(0, 35);
+  }
+  for (let i = 0; i < destacados.length; i++) destacados[i] = String(rev.textos[k++]).slice(0, 25) || destacados[i];
+
+  const negMotivos = {};
+  for (const n of negCampana.concat(grupos.flatMap(g => g.negativas))) if (motivos[n]) negMotivos[n] = motivos[n];
+
+  return {
+    ok: true,
+    nombre: nombreR,
+    urlFinal: clean(brief.ctaUrl || ''),
+    grupos,
+    negativas: negCampana,
+    negativasMotivos: negMotivos,
+    sitelinks,
+    destacados,
+    rolesTitulos: conversion ? Object.fromEntries(grupos.flatMap(g => g.titularesFijos.concat(g.titularesRotan, g.anuncioB ? g.anuncioB.titularesRotan : [])).map(t => [t, rolDe[t.toLowerCase()] || '']).filter(x => x[1])) : null,
+    enfoque: conversion ? 'conversion' : '',
+    analisis: ficha ? {
+      producto: ficha.producto, propuestaValor: ficha.propuestaValor,
+      competidores: ficha.competidores, mensajesGenericos: ficha.mensajesGenericos,
+      angulosDiferenciales: ficha.angulosDiferenciales, objeciones: ficha.objeciones,
+      busquedas: ficha.busquedas, vocabulario: ficha.vocabulario, noOfrece: ficha.noOfrece,
+      leyoLanding: ficha.leyoLanding, fuentes: (fuentes || []).slice(0, 10), reescritos
+    } : null,
+    avisos,
+    ortografia: rev.revisado ? 'revisada' : 'sin-revisar'
+  };
+}
+
+// ════════════ CAMPAÑAS SOBRE EL MODELO (paso 4 de la nueva arquitectura) ════════════
+// La campaña vive en el modelo de nucleo/modelo.js (espejo de Ads Editor, con ids).
+//   'campana'    → la genera completa (investiga, o reutiliza la ficha si viene).
+//   'corregir'   → recibe una instrucción y SOLO las partes afectadas; la IA
+//                  devuelve operaciones sobre ids (nucleo/operaciones.js). Nunca
+//                  reescribe la campaña: gasta poco y no rompe lo que estaba bien.
+//   'investigar' → responde una pregunta con Google/la landing y actualiza SOLO
+//                  los campos de la ficha que correspondan.
+const hoyCL = () => { try { return new Intl.DateTimeFormat('en-CA', { timeZone: 'America/Santiago' }).format(new Date()); } catch { return new Date().toISOString().slice(0, 10); } };
+const resumenValidacion = (v, soloIds) => ({
+  errores: v.errores, avisos: v.avisos, sugerencias: v.sugerencias, exportable: v.exportable,
+  hallazgos: v.hallazgos.filter(h => !soloIds || soloIds.has(h.id)).map(({ codigo, nivel, id, donde, mensaje }) => ({ codigo, nivel, id, donde, mensaje }))
+});
+
+async function modoCampana({ env, brief, marca, ficha, opciones }) {
+  // Enfoque: por defecto CONVERSIÓN (el negocio es venta directa online); se puede
+  // pedir otro explícitamente con opciones.enfoque = ''.
+  const enfoque = opciones.enfoque === undefined ? 'conversion' : String(opciones.enfoque || '');
+  brief = Object.assign({}, brief, { enfoque });
+  const urlsAds = [brief.ctaUrl].concat(Array.isArray(brief.refs) ? brief.refs : []);
+  let fuentes = [], avisos = [];
+  // Con ficha guardada no se vuelve a investigar (es lo caro): solo se relee la landing.
+  const [refs, inv] = await Promise.all([
+    leerReferencias(urlsAds, { porPagina: 6000, total: 12000 }),
+    ficha ? Promise.resolve({ ficha, urlsLeidas: [], fuentes: ficha.fuentes || [] }) : investigarAds(env, brief, marca)
+  ]);
+  avisos = avisosDeReferencias(refs, brief).filter(a => !(a.tipo === 'url-no-leida' && (inv.urlsLeidas || []).some(u => a.texto.includes(u.split('?')[0]))));
+  if (!inv.ficha) avisos.push({ tipo: 'info', texto: 'No se pudo investigar la landing y la competencia (' + (inv.error || 'sin respuesta') + '). La campaña se armó solo con el texto de la página.' });
+  fuentes = inv.fuentes || [];
+  const d = await armarAds({ env, brief, marca, refsTxt: refs.texto, promos: refs.promos, enlaces: refs.enlaces, avisos, ficha: inv.ficha, fuentes, protocolo: true });
+  if (!d.ok) return json(d, d.status || 500);
+  const fichaG = inv.ficha ? Object.assign({}, inv.ficha, { fuentes: fuentes.slice(0, 10) }) : null;
+  const objetivo = { que: brief.que || '', accion: brief.accion || '', gancho: brief.gancho || '', ctaUrl: brief.ctaUrl || '', notas: brief.notas || '',
+    producto: opciones.producto || '', tipo: opciones.tipo || '', enfoque };
+  const ini = CIA.iniciativaDesdeIA(d, { objetivo, ficha: fichaG, presupuestoDiario: Number(opciones.presupuestoDiario) || null, puja: opciones.puja, fecha: hoyCL() });
+  if (opciones.nombre) ini.nombre = String(opciones.nombre).slice(0, 120);
+  const v = REG.validar(ini, { hoy: hoyCL(), marca: marca ? (marca.nombre || marca.empresa) : '' });
+  return json({ ok: true, iniciativa: ini, validacion: resumenValidacion(v), avisos: d.avisos, ortografia: d.ortografia });
+}
+
+// Corrige la ortografía de los textos VISIBLES que traen las operaciones
+// (títulos, descripciones, sitelinks, destacados). Las keywords no: la gente
+// busca sin tildes.
+async function ortografiaDeOps(env, ini, ops) {
+  const refs = [];
+  const visible = (ent, campo) => ['titulo', 'descripcion', 'sitelink', 'destacado'].includes(ent) && ['texto', 'linea1', 'linea2'].includes(campo);
+  for (const op of ops) {
+    if (!op || typeof op !== 'object') continue;
+    if (op.op === 'cambiar' && typeof op.valor === 'string') { const u = OPS.ubicar(ini, op.id); if (u && visible(u.entidad, op.campo)) refs.push([op, 'valor']); }
+    if (op.op === 'agregar' && op.elemento && typeof op.elemento === 'object') {
+      const ent = OPS.ENTIDAD_DE_LISTA[op.lista];
+      for (const c of ['texto', 'linea1', 'linea2']) if (typeof op.elemento[c] === 'string' && visible(ent, c)) refs.push([op.elemento, c]);
+      for (const hija of ['titulos', 'descripciones']) (Array.isArray(op.elemento[hija]) ? op.elemento[hija] : []).forEach(x => { if (x && typeof x.texto === 'string') refs.push([x, 'texto']); });
+    }
+  }
+  if (!refs.length) return false;
+  const rev = await corregirOrtografia(env, refs.map(([o, k]) => o[k]));
+  refs.forEach(([o, k], i) => { if (rev.textos[i]) o[k] = rev.textos[i]; });
+  return rev.revisado;
+}
+
+async function modoCorregir({ env, body }) {
+  const ini = body.iniciativa;
+  const instruccion = String(body.instruccion || '').trim();
+  if (!ini || !Array.isArray(ini.campanas)) return json({ ok: false, error: 'Falta la iniciativa.' }, 400);
+  if (!instruccion && !(Array.isArray(body.hallazgos) && body.hallazgos.length)) return json({ ok: false, error: 'Dime qué corregir.' }, 400);
+  const marca = body.marca || null;
+  const cx = { hoy: hoyCL(), marca: marca ? (marca.nombre || marca.empresa) : '' };
+  const antes = REG.validar(ini, cx);
+  // Qué partes ve la IA: las que eligió el usuario, o las que nombran los hallazgos;
+  // si no hay ninguna, la campaña completa (la respuesta igual son solo operaciones).
+  let ids = (Array.isArray(body.ids) ? body.ids : []).filter(id => OPS.ubicar(ini, id));
+  const hallazgosPedidos = (Array.isArray(body.hallazgos) ? body.hallazgos : []).map(h => typeof h === 'string' ? antes.hallazgos.find(x => x.codigo + ':' + x.id === h) : h).filter(Boolean);
+  if (!ids.length && hallazgosPedidos.length) ids = [...new Set(hallazgosPedidos.map(h => h.id).filter(Boolean))];
+  const parcial = ids.length > 0;
+  if (!parcial) ids = ini.campanas.map(c => c.id);
+  const partes = OPS.vista(ini, ids);
+  const obj = ini.objetivo || {};
+  const cabecera = [
+    'Eres especialista senior en Google Ads (Search) en Chile. Corriges una campaña YA ARMADA, por partes: cambias SOLO lo necesario para cumplir la instrucción, sin tocar lo que está bien.',
+    '',
+    '════ OBJETIVO DE LA CAMPAÑA (no lo pierdas de vista) ════',
+    obj.que ? 'Qué se vende / para quién: ' + obj.que : '', obj.accion ? 'Acción buscada: ' + obj.accion : '', obj.gancho ? 'Oferta (textual): ' + obj.gancho : '',
+    obj.ctaUrl ? 'Landing: ' + obj.ctaUrl : '', obj.notas ? 'Indicaciones: ' + obj.notas : '',
+    ini.ficha ? '\n════ FICHA DEL PRODUCTO (investigación guardada: úsala, no inventes datos) ════\n' + fichaTexto(ini.ficha) : '',
+    marca ? '\nVOZ DE MARCA:\n' + voorMarca(marca) : '',
+    obj.enfoque === 'conversion' ? '\n' + LEC.leccionParaIA('conversion') + '\nSi agregas o cambias un título, pon también su "rol" (keyword, tramite, precio, respaldo o cta).' : '',
+    '\n' + LEC.leccionParaIA('seguros'),
+    '\n' + OPS.operacionesParaIA(),
+    '\n' + REG.reglasParaIA(),
+    '\nREGLAS DE LA CORRECCIÓN: cifras SOLO de la ficha o el objetivo · títulos ≤30 sin punto final · descripciones ≤90 · keywords solo exacta o frase · una negativa nunca bloquea una keyword propia · no renombres campañas ni grupos salvo que te lo pidan.',
+    '\nÍNDICE DE LA CAMPAÑA (con ids):\n' + OPS.resumen(ini)
+  ];
+  const pedir = async (extra) => {
+    const prompt = cabecera.concat([
+      '\n════ LO QUE PIDE EL USUARIO ════\n' + (instruccion || 'Corrige los hallazgos indicados.'),
+      hallazgosPedidos.length ? '\nHALLAZGOS A RESOLVER:\n' + hallazgosPedidos.map(h => `- [${h.codigo}] ${h.donde}: ${h.mensaje} (id ${h.id})`).join('\n') : '',
+      '\n' + (parcial ? 'PARTES A CORREGIR' : 'LA CAMPAÑA') + ' (JSON, con sus ids):\n' + JSON.stringify(extra ? extra.partes : partes),
+      extra ? '\n' + extra.texto : '',
+      '\nDevuelve EXCLUSIVAMENTE: { "explicacion": "qué cambiaste y por qué, en 1-3 frases para el usuario", "operaciones": [ ... ] }',
+      'Si la instrucción no requiere cambios, "operaciones": [] y explícalo.'
+    ]).filter(Boolean).join('\n');
+    return llamarGemini(env, prompt, 6144, 0.4, { cadena: cadenaCopy(env), pensar: -1 });
+  };
+
+  let r = await pedir(null);
+  if (r.error) return json({ ok: false, error: r.error }, 500);
+  let ops = Array.isArray(r.parsed && r.parsed.operaciones) ? r.parsed.operaciones : [];
+  let explicacion = String((r.parsed && r.parsed.explicacion) || '').slice(0, 600);
+  const opciones = { nombresFijos: Array.isArray(body.nombresFijos) ? body.nombresFijos : [] };
+  let ortografia = await ortografiaDeOps(env, ini, ops);
+  let res = OPS.aplicar(ini, ops, opciones);
+
+  // Una ronda de reparación: si hubo operaciones rechazadas o la corrección creó
+  // ERRORES nuevos en lo que tocó, se le devuelve eso a la IA (una sola vez).
+  const erroresNuevos = v => { const ya = new Set(antes.hallazgos.filter(h => h.nivel === 'error').map(h => h.codigo + ':' + h.id + ':' + h.mensaje)); return v.hallazgos.filter(h => h.nivel === 'error' && !ya.has(h.codigo + ':' + h.id + ':' + h.mensaje)); };
+  let despues = REG.validar(res.iniciativa, cx);
+  let nuevos = erroresNuevos(despues);
+  let reparada = false;
+  if (res.rechazadas.length || nuevos.length) {
+    const idsRep = [...new Set(res.tocados.concat(nuevos.map(h => h.id)).filter(id => id && OPS.ubicar(res.iniciativa, id)))];
+    const texto = ['════ TU PRIMERA PROPUESTA TUVO PROBLEMAS (ya se aplicó lo válido) ════',
+      res.rechazadas.length ? 'Operaciones RECHAZADAS:\n' + res.rechazadas.map(x => '- ' + JSON.stringify(x.op) + ' → ' + x.motivo).join('\n') : '',
+      nuevos.length ? 'ERRORES que aparecieron tras tus cambios:\n' + nuevos.map(h => `- [${h.codigo}] ${h.donde}: ${h.mensaje} (id ${h.id})`).join('\n') : '',
+      'Devuelve SOLO las operaciones que faltan para resolver esto, sobre el estado ACTUAL que ves arriba.'].filter(Boolean).join('\n');
+    const r2 = await pedir({ partes: OPS.vista(res.iniciativa, idsRep.length ? idsRep : ids), texto });
+    const ops2 = Array.isArray(r2.parsed && r2.parsed.operaciones) ? r2.parsed.operaciones : [];
+    if (!r2.error && ops2.length) {
+      await ortografiaDeOps(env, res.iniciativa, ops2);
+      const res2 = OPS.aplicar(res.iniciativa, ops2, opciones);
+      res = { iniciativa: res2.iniciativa, aplicadas: res.aplicadas.concat(res2.aplicadas), rechazadas: res2.rechazadas, tocados: [...new Set(res.tocados.concat(res2.tocados))] };
+      if (r2.parsed.explicacion) explicacion = (explicacion + ' ' + String(r2.parsed.explicacion)).trim().slice(0, 900);
+      despues = REG.validar(res.iniciativa, cx);
+      nuevos = erroresNuevos(despues);
+      reparada = true;
+    }
+  }
+  return json({ ok: true, explicacion, iniciativa: res.iniciativa, aplicadas: res.aplicadas, rechazadas: res.rechazadas, tocados: res.tocados,
+    parcial, reparada, erroresNuevos: nuevos.map(({ codigo, id, donde, mensaje }) => ({ codigo, id, donde, mensaje })),
+    validacion: resumenValidacion(despues), antes: { errores: antes.errores, avisos: antes.avisos, sugerencias: antes.sugerencias },
+    ortografia: ortografia ? 'revisada' : 'sin-revisar' });
+}
+
+const CAMPOS_FICHA_LISTA = ['beneficios', 'pruebas', 'ofertas', 'condiciones', 'objeciones', 'vocabulario', 'busquedas', 'noOfrece', 'mensajesGenericos', 'angulosDiferenciales'];
+const CAMPOS_FICHA_TEXTO = ['producto', 'categoria', 'propuestaValor', 'publico'];
+async function modoInvestigar({ env, body }) {
+  const ini = body.iniciativa || null;
+  const ficha = Object.assign({}, (ini && ini.ficha) || body.ficha || {});
+  const obj = (ini && ini.objetivo) || body.objetivo || {};
+  const pregunta = String(body.pregunta || '').trim();
+  if (!pregunta) return json({ ok: false, error: '¿Qué quieres que averigüe?' }, 400);
+  const urlEnPregunta = (pregunta.match(/https?:\/\/\S+/) || [])[0];
+  const prompt = [
+    'Eres analista de marketing de búsqueda (Google Ads) en Chile. Te hacen UNA pregunta puntual sobre un producto cuya ficha ya está investigada.',
+    'Investiga SOLO eso (busca en Google, resultados de Chile; lee la URL si la hay) y responde. No rehagas la ficha entera.',
+    '', 'PREGUNTA: ' + pregunta,
+    obj.que ? 'PRODUCTO / OBJETIVO: ' + obj.que : '', obj.ctaUrl ? 'LANDING: ' + obj.ctaUrl : '',
+    '', 'FICHA ACTUAL:', fichaTexto(ficha) || '(vacía)',
+    '', 'Devuelve SOLO este JSON:',
+    '{ "respuesta": "lo que averiguaste, en 2-5 frases, con los datos concretos",',
+    '  "ficha": { SOLO los campos de la ficha que esta respuesta cambia, con su contenido COMPLETO actualizado (la lista entera, no solo lo nuevo) } }',
+    'Campos posibles de la ficha: ' + CAMPOS_FICHA_TEXTO.concat(CAMPOS_FICHA_LISTA).join(', ') + ', competidores ([{nombre, promesa}]).',
+    'REGLAS: nada inventado; cifras textuales; si no encontraste nada, dilo y deja "ficha": {}.'
+  ].filter(Boolean).join('\n');
+  const url = urlEnPregunta || (/^https?:\/\//.test(obj.ctaUrl || '') ? obj.ctaUrl : '');
+  const intentos = url ? [[{ url_context: {} }, { google_search: {} }], [{ google_search: {} }]] : [[{ google_search: {} }]];
+  let r = null;
+  for (const tools of intentos) { r = await llamarGemini(env, prompt, 3072, 0.3, { cadena: cadenaCopy(env), tools, pensar: -1, timeout: 60000 }); if (!r.error && r.parsed) break; }
+  if (!r || r.error || !r.parsed) return json({ ok: false, error: (r && r.error) || 'Sin respuesta de la investigación.' }, 500);
+  const cambio = (r.parsed.ficha && typeof r.parsed.ficha === 'object') ? r.parsed.ficha : {};
+  const cambiados = [];
+  for (const k of CAMPOS_FICHA_TEXTO) if (typeof cambio[k] === 'string' && cambio[k].trim()) { ficha[k] = cambio[k].trim().slice(0, 300); cambiados.push(k); }
+  for (const k of CAMPOS_FICHA_LISTA) if (Array.isArray(cambio[k])) { ficha[k] = aLista(cambio[k], 25, 120); cambiados.push(k); }
+  if (Array.isArray(cambio.competidores)) {
+    ficha.competidores = cambio.competidores.slice(0, 8).map(c => ({ nombre: String((c && c.nombre) || '').slice(0, 60), promesa: String((c && c.promesa) || '').slice(0, 200) })).filter(c => c.nombre);
+    cambiados.push('competidores');
+  }
+  const fuentesNuevas = (r.fuentes || []).slice(0, 10);
+  if (fuentesNuevas.length) ficha.fuentes = [...new Set((ficha.fuentes || []).concat(fuentesNuevas))].slice(0, 20);
+  if (cambiados.length) ficha.actualizada = hoyCL();
+  return json({ ok: true, respuesta: String(r.parsed.respuesta || '').slice(0, 1500), ficha, cambiados, fuentes: fuentesNuevas });
+}
+
+// Exportados SOLO para pruebas locales (Cloudflare Pages los ignora).
+export { corregirOrtografia, extraerJSON, generarEmail, generarBanner, generarAds, armarAds, modoCampana, modoCorregir, modoInvestigar, investigarAds, analizarTabla, numeroAds, diagnosticarCampana, detectarPromos, extraerEnlaces, extraerTextoPagina };

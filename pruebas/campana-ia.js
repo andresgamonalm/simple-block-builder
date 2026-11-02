@@ -10,13 +10,15 @@ const R = require(path.join(RAIZ, "nucleo/reglas.js"));
 let ok = 0, mal = 0;
 const T = (c, n, e) => { if (c) { ok++; console.log("  ok   " + n); } else { mal++; console.log("  MAL  " + n + (e !== undefined ? " → " + e : "")); } };
 
-// El CSV de referencia trae una fecha de término real (30-sep-2026): desde ese día la regla
-// G03 suma «la fecha de término ya pasó». Se cuenta aparte para que la prueba no dependa del calendario.
-const _hoyCL = new Intl.DateTimeFormat("en-CA", { timeZone: "America/Santiago" }).format(new Date());
-const VENCIDAS = require(path.join(RAIZ, "nucleo/reglas.js")).validar(
-  require(path.join(RAIZ, "nucleo/ads-editor.js")).importar(require("fs").readFileSync(path.join(RAIZ, "pruebas/datos/ads-editor-referencia.csv"), "utf8")).iniciativa,
-  { hoy: _hoyCL }).hallazgos.filter(h => h.codigo === "G03" && /ya pas/.test(h.mensaje)).length;
-function prepararModulos() { return require("./_modulos-ia.js")(RAIZ, "cmpia-"); }
+function prepararModulos() {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), "cmpia-"));
+  fs.mkdirSync(path.join(dir, "api"));
+  const cp = (src, dst, fix) => { let s = fs.readFileSync(path.join(RAIZ, src), "utf8"); if (fix) s = fix(s); fs.writeFileSync(path.join(dir, dst), s); };
+  cp("functions/usuarios.js", "usuarios.mjs");
+  cp("functions/api/_shared.js", "api/_shared.mjs", s => s.replace("'../usuarios.js'", "'../usuarios.mjs'"));
+  cp("functions/api/ia.js", "api/ia.mjs", s => s.replace("'./_shared.js'", "'./_shared.mjs'").replace(/'\.\.\/\.\.\/nucleo\//g, "'" + path.join(RAIZ, "nucleo") + "/"));
+  return dir;
+}
 const FICHA = {
   leyoLanding: true, producto: "Seguro Automotriz Full", categoria: "seguro de auto", propuestaValor: "Cobertura total con deducible desde 3 UF",
   beneficios: ["Deducible desde 3 UF", "Auto de reemplazo por 15 días"], pruebas: ["Más de 40 años en Chile"], ofertas: ["2 cuotas gratis"],
@@ -187,7 +189,7 @@ function respuestaGemini(obj, extra) {
   T(r.ok && pc2[0].prompt.includes("HALLAZGOS A RESOLVER") && pc2[0].prompt.includes("[C01]"), "la instrucción puede ser un hallazgo del motor de reglas (sin escribir nada)");
   T(pc2.length === 2 && pc2[1].prompt.includes("ERRORES que aparecieron tras tus cambios"), "la negativa nueva bloqueaba keywords: se le devuelve el error a la IA");
   T(r.erroresNuevos.length === 0 && !r.validacion.hallazgos.some(x => x.codigo === "C01"), "al final no queda ningún bloqueo (C01)", JSON.stringify(r.erroresNuevos));
-  T(r.antes.errores === 4 + VENCIDAS && r.validacion.errores === 2 + VENCIDAS, "errores de la campaña: 4 → 2 (quedan solo las fechas «[]», que no se pidieron)", r.antes.errores + " → " + r.validacion.errores);
+  T(r.antes.errores === 4 && r.validacion.errores === 2, "errores de la campaña: 4 → 2 (quedan solo las fechas «[]», que no se pidieron)", r.antes.errores + " → " + r.validacion.errores);
 
   console.log("\n5 · Investigar una parte");
   r = await llamar("andres", { modo: "investigar", iniciativa: ini, pregunta: "¿Quiénes compiten por «seguro automotriz» en Google Chile?" });

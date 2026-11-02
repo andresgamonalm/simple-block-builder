@@ -7,13 +7,6 @@ const { DatabaseSync } = require("node:sqlite");
 const RAIZ = process.env.SBB_RAIZ || path.resolve(__dirname, "..");
 const AE = require(path.join(RAIZ, "nucleo/ads-editor.js"));
 const V = require(path.join(RAIZ, "nucleo/versiones.js"));
-// El CSV de referencia trae una fecha de término real (30-sep-2026): desde ese día la regla
-// G03 suma «la fecha de término ya pasó». Se cuenta aparte para que la prueba no dependa del calendario.
-const _hoyCL = new Intl.DateTimeFormat("en-CA", { timeZone: "America/Santiago" }).format(new Date());
-const VENCIDAS = require(path.join(RAIZ, "nucleo/reglas.js")).validar(
-  require(path.join(RAIZ, "nucleo/ads-editor.js")).importar(require("fs").readFileSync(path.join(RAIZ, "pruebas/datos/ads-editor-referencia.csv"), "utf8")).iniciativa,
-  { hoy: _hoyCL }).hallazgos.filter(h => h.codigo === "G03" && /ya pas/.test(h.mensaje)).length;
-
 let ok = 0, mal = 0;
 const T = (c, n, e) => { if (c) { ok++; console.log("  ok   " + n); } else { mal++; console.log("  MAL  " + n + (e !== undefined ? " → " + e : "")); } };
 
@@ -83,7 +76,7 @@ function d1() {
 
   console.log("\n4 · Estados");
   r = await llamar("andres", "POST", "", { accion: "estado", id, estado: "aprobada", base: 2 });
-  T(r.status === 422 && r.hallazgos.length === 4 + VENCIDAS && r.hallazgos.every(h => h.nivel === "error"), "aprobar con los 4 errores del CSV real → rechazado, con los errores por id", r.hallazgos && r.hallazgos.length);
+  T(r.status === 422 && r.hallazgos.length === 4 && r.hallazgos.every(h => h.nivel === "error"), "aprobar con los 4 errores del CSV real → rechazado, con los errores por id", r.hallazgos && r.hallazgos.length);
   ini.campanas.forEach(c => { c.inicio = ""; c.fin = "2099-12-31"; c.negativas = c.negativas.filter(n => n.texto !== "comprar auto"); });
   r = await llamar("andres", "POST", "", { accion: "guardar", iniciativa: ini, base: 2, nota: "Corrige fechas y la negativa que bloqueaba" });
   T(r.version === 3, "corregido → versión 3");
