@@ -7,7 +7,7 @@ let ok=0, mal=0;
 const T=(c,n,e)=>{ if(c){ok++;console.log("  ok   "+n);} else {mal++;console.log("  MAL  "+n+(e!==undefined?" → "+e:""));} };
 
 (async()=>{
-  const src = require("fs").readFileSync(RAIZ+"/functions/api/ia.js","utf8");
+  const src = require("fs").readFileSync(RAIZ+"/functions/api/ia/comun.js","utf8");
 
   // extraerJSON no se exporta (es interna): se extrae su código y se evalúa.
   const ini = src.indexOf("function extraerJSON(texto) {");

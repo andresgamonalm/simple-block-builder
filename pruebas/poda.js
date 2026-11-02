@@ -1,7 +1,7 @@
-// PODA DE PROYECTOS VIEJOS (27-sep-2026) — sin navegador: se extraen las dos funciones de editor.html.
+// PODA DE PROYECTOS VIEJOS (27-sep-2026) — sin navegador: se extraen las dos funciones de funciones/comun/guardado.js.
 const fs = require("fs"), path = require("path");
 const RAIZ = process.env.SBB_RAIZ || path.resolve(__dirname, "..");
-const html = fs.readFileSync(path.join(RAIZ, "editor.html"), "utf8");
+const html = fs.readFileSync(path.join(RAIZ, "funciones/comun/guardado.js"), "utf8");
 const trozo = html.slice(html.indexOf('const PODA_ID'), html.indexOf('function recuperar()'));
 const uid = () => Math.random().toString(36).slice(2);
 const { podarProyectosUnaVez, normalizarWorkspace, PODA_ID } = new Function("uid", trozo + "\nreturn { podarProyectosUnaVez, normalizarWorkspace, PODA_ID };")(uid);

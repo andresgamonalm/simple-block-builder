@@ -7,15 +7,7 @@ const RAIZ = process.env.SBB_RAIZ || path.resolve(__dirname, "..");
 let ok = 0, mal = 0;
 const T = (c, n, e) => { if (c) { ok++; console.log("  ok   " + n); } else { mal++; console.log("  MAL  " + n + (e !== undefined ? " → " + e : "")); } };
 
-function prepararModulos() {
-  const dir = fs.mkdtempSync(path.join(os.tmpdir(), "diag-"));
-  fs.mkdirSync(path.join(dir, "api"));
-  const cp = (src, dst, fix) => { let s = fs.readFileSync(path.join(RAIZ, src), "utf8"); if (fix) s = fix(s); fs.writeFileSync(path.join(dir, dst), s); };
-  cp("functions/usuarios.js", "usuarios.mjs");
-  cp("functions/api/_shared.js", "api/_shared.mjs", s => s.replace("'../usuarios.js'", "'../usuarios.mjs'"));
-  cp("functions/api/ia.js", "api/ia.mjs", s => s.replace("'./_shared.js'", "'./_shared.mjs'").replace(/'\.\.\/\.\.\/nucleo\//g, "'" + path.join(RAIZ, "nucleo") + "/"));
-  return dir;
-}
+function prepararModulos() { return require("./_modulos-ia.js")(RAIZ, "diag-"); }
 const leerUTF16 = f => new TextDecoder("utf-16le").decode(fs.readFileSync(f).subarray(2));
 
 (async () => {

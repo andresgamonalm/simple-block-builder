@@ -16,8 +16,8 @@ export NODE_PATH="$RAIZ/node_modules"
 export SBB_URL="http://127.0.0.1:$PUERTO"
 export SBB_RAIZ="$RAIZ"
 
-if ! node -e "require('playwright')" 2>/dev/null; then
-  echo "Falta playwright. Instálalo con:  npm install playwright --no-save"
+if ! node -e "require('playwright');require('acorn');require('acorn-walk')" 2>/dev/null; then
+  echo "Faltan dependencias de prueba. Instálalas con:  npm install playwright acorn acorn-walk --no-save"
   exit 1
 fi
 
@@ -33,10 +33,11 @@ done
 if [ "$listo" != "1" ]; then echo "El servidor de pruebas no arrancó. Mira /tmp/sbb-srv.log"; exit 1; fi
 
 # ── Qué se corre (orden: primero lo que no necesita navegador) ───────────
-TODAS=(audita-estatica nucleo nucleo-contrato reglas versiones iniciativas operaciones campana-ia campanas poda login acceso ia-json ads-ia diagnostico geom medir insp panel arrastre libre proporciones escribir alcance iaq asis xls campana-actual fb tablet migra cierres regres recorrido)
+TODAS=(audita-estatica orden-carga nucleo nucleo-contrato reglas versiones iniciativas operaciones campana-ia campanas poda login acceso ia-json ads-ia diagnostico geom medir insp panel arrastre libre proporciones escribir alcance iaq asis xls campana-actual fb tablet migra cierres regres recorrido)
 descripcion() {
   case "$1" in
     audita-estatica) echo "controles muertos, íconos y rutas (sin navegador)";;
+    orden-carga) echo "código del editor separado por función: nada se usa antes de cargarse (sin navegador)";;
     login)     echo "entrar con el usuario Y con el correo (sin navegador)";;
     acceso)    echo "la pantalla de acceso: diagramación, foco, aviso y entrar";;
     ia-json)   echo "la respuesta de Gemini se interpreta aunque venga razonando";;
