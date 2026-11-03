@@ -9,15 +9,7 @@ const T = (c, n, e) => { if (c) { ok++; console.log("  ok   " + n); } else { mal
 
 // ia.js y _shared.js son módulos ES dentro de un paquete CommonJS: se copian
 // como .mjs a una carpeta temporal para poder importarlos desde node.
-function prepararModulos() {
-  const dir = fs.mkdtempSync(path.join(os.tmpdir(), "adsia-"));
-  fs.mkdirSync(path.join(dir, "api"));
-  const cp = (src, dst, fix) => { let s = fs.readFileSync(path.join(RAIZ, src), "utf8"); if (fix) s = fix(s); fs.writeFileSync(path.join(dir, dst), s); };
-  cp("functions/usuarios.js", "usuarios.mjs");
-  cp("functions/api/_shared.js", "api/_shared.mjs", s => s.replace("'../usuarios.js'", "'../usuarios.mjs'"));
-  cp("functions/api/ia.js", "api/ia.mjs", s => s.replace("'./_shared.js'", "'./_shared.mjs'").replace(/'\.\.\/\.\.\/nucleo\//g, "'" + path.join(RAIZ, "nucleo") + "/"));
-  return dir;
-}
+function prepararModulos() { return require("./_modulos-ia.js")(RAIZ, "adsia-"); }
 
 const FICHA = {
   leyoLanding: true, producto: "Seguro Automotriz Full", categoria: "seguro de auto",

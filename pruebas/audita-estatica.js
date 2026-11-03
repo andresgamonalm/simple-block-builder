@@ -6,7 +6,11 @@
 // nombre que no está en el registro deja un hueco.
 const fs = require("fs");
 const RAIZ = process.env.SBB_RAIZ || require("path").resolve(__dirname, "..");
-const src = fs.readFileSync(RAIZ + "/editor.html", "utf8");
+// El editor carga su código desde funciones/** (ver editor.html): se audita el HTML más
+// esos archivos, en el mismo orden en que se cargan.
+const _html = fs.readFileSync(RAIZ + "/editor.html", "utf8");
+const src = _html + "\n" + [..._html.matchAll(/<script src="\/(funciones\/[^"]+\.js)"><\/script>/g)]
+  .map(m => fs.readFileSync(RAIZ + "/" + m[1], "utf8")).join("\n");
 
 // ── 1 · Manejadores en el HTML ──────────────────────────────────────────
 const atributos = ["onclick", "oninput", "onchange", "onsubmit", "onkeydown", "onblur", "onfocus", "ondblclick"];
@@ -76,7 +80,7 @@ const rutasServidas = new Set((redir.match(/^\/[a-z0-9-]+/gm) || []).map(x => x.
 const rutasSinServir = [...rutasCodigo].filter(x => !rutasServidas.has(x)).sort();
 
 // ── Informe ─────────────────────────────────────────────────────────────
-console.log("AUDITORÍA ESTÁTICA · " + (src.length / 1024).toFixed(0) + " KB de editor.html\n");
+console.log("AUDITORÍA ESTÁTICA · " + (src.length / 1024).toFixed(0) + " KB de editor.html + funciones/\n");
 console.log(`Manejadores distintos referenciados en el HTML: ${llamadas.size}`);
 console.log(`Funciones/constantes declaradas:               ${declarados.size}`);
 console.log(`\n1 · CONTROLES MUERTOS (llaman a algo que no existe): ${muertos.length}`);
